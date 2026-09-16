@@ -19,8 +19,8 @@
 
 | | |
 |---|---|
-| **Phase** | **0 — not started.** Step 1.0 (the phase door) is the next action. |
-| **Branch** | 🔴 ✏️ **16/09/2026 — cut a FRESH branch from `dev`.** `ishay/dashboard-legend-ucd` is **merged and dead**: `git rev-list --left-right --count ishay/dashboard-legend-ucd...origin/dev` ⇒ **0 ahead · 6 behind**, and the six it lacks include this module's own rulings. **Building on it reads stale spec files with no symptom.** See §9 D-1. |
+| **Phase** | **1 — DB, started 16/09/2026 04:2X** (step 1.0 done: branch cut · MCP live `PostgreSQL 17.6` · `params`=43 · AI tables 0 · `recommended_rank` 0 · m11 params 0 · 35 open invoices). ✏️ *(was: 0 — not started)* |
+| **Branch** | ✅ **`ishay/module-11-build`, cut 16/09/2026 04:2X from `origin/dev` @ `9b5ea534` (0 ahead · 0 behind at cut).** *(history:)* 🔴 ✏️ **16/09/2026 — cut a FRESH branch from `dev`.** `ishay/dashboard-legend-ucd` is **merged and dead**: `git rev-list --left-right --count ishay/dashboard-legend-ucd...origin/dev` ⇒ **0 ahead · 6 behind**, and the six it lacks include this module's own rulings. **Building on it reads stale spec files with no symptom.** See §9 D-1. |
 | **Spec** | `docs/specs/module_11_reports/spec.md` — approved 11/09/2026 |
 | **Surfaces** | **16**, in **4** files under `docs/mockups/management-report-screen/approved/` |
 | **Deadline** | 🔴 **Conference 15/10/2026.** m11 is zero lines of code today. |
@@ -103,6 +103,82 @@ Radix is the unified `radix-ui` package · timestamps `DD/MM/YYYY HH:MM` from th
 
 ---
 
+## 2ב. 🔒 Build conventions — ruled 16/09/2026 (every agent task file opens with "read this section in full")
+
+> **Source:** Ishay's rulings in the planning chat of 16/09/2026 (quoted verbatim where they are his) + the approved spec set.
+> **Precedence:** on behaviour · data · population · permissions the approved spec (tier 2) wins over this section; on *how we work* this section wins.
+
+### C1 · Session mode
+- **One writing session — this one.** Agents write only the files their task file names; **agents never commit** — the orchestrator commits by explicit pathspec.
+- **No stop-points, by Ishay's rulings 16/09/2026:** *"כן — מזג ל-dev וגם ל-main בלי לשאול"* · typed-echo waived *"על כולם — מיגרציות (~8) · חתימת-DoD · ריצת-הזריעה של הסיווג"* · **one-time, not a precedent.**
+- **Product-flavoured gaps:** the most spec-faithful reading + tag `הנחתי` + a row in §9 + the morning table for Ishay; stop only if a gap blocks a whole surface.
+
+### C2 · What binds appearance vs behaviour (Ishay: *"רציתי לפי המלצתך אבל שכן תיקח את המוקאפ בחשבון מסוים אבל במידה"*)
+- **Structure · order · which tiles/charts/tables ⇐ the approved mockup** (`docs/mockups/management-report-screen/approved/0N_tab_*.html`; surfaces are `section.page#p1..p4`, customers `#c1..c4`).
+- **Labels ⇐ `spec.md §1.4` verbatim** (74 tile labels · 19 page titles). A label changes **only** when it breaks a written copy rule (`stage2-review/m11-copy-rules.md` כ1–כ20 or `docs/plans/ui-copy-styleguide.md`) — and the change is logged with the rule that fired.
+- **Pixels** (spacing · sizes · radii · card widths) ⇐ `design-contract.md` + Ishay's taste (`~/.claude/references/ishay-visual-taste.md`: controls hug their content · no over-information · real colours, teal `#0F766E`).
+- **Behaviour · data · population · permissions · states ⇐ the cards** (`stage2-cards/cards-*.md` §③ · §⑤ · §⑧ · §⑩) and `processes-approved.md` — **always, even against the drawing.**
+- Status labels from `PROJECT_STATUS_LABELS` (`src/lib/projects.js`), never re-translated. Report names from `processes-approved.md §🏷️` (short name = chip · question = subtitle · no report numbers on screen).
+- ⏸️ Deferred surfaces (מ5 · מ10 · מ11 · מ13 · מ18 · מ26 · מ23 · מ24) are **not built** even where they are drawn in the finance file.
+
+### C3 · Onboarding layer — modes 0 and 2 only (Ishay: *"מצב הטמעה צריך מצבים 0 ו-2"*)
+- Every m11 `<Hint id="reports.<slug>.<field>" />` carries **`guided` text only**; no `pointer` text is authored.
+- Keys copied **verbatim from each card's §⑩ table** (never from the mockup HTML — the four files use four different markup conventions). `<span class="ltr">X</span>` ⇒ `U+2066 X U+2069` (LRI…PDI). **No data counts in copy** — structural numbers only (thresholds · windows · scales · formula constants). The Gini comparison hint injects both `n` from the query.
+- **Deletion test per surface:** at mode 0 the page is fully usable. The population line (📐2), the "אז מה" line (📐23) and the metric-definitions line (📐16) are **base**, never hints.
+- m11 copy lives in `src/lib/onboardingCopy.m11.<tab>.js` (one file per tab, owned by that tab's builder) and is spread into `src/lib/onboardingCopy.js` by the foundation step.
+
+### C4 · RTL and numbers
+- Physical Tailwind utilities only (`mr-`, `pr-`, `right-0`); never `ms-/me-/ps-/pe-/start-/end-`. Every Radix portal surface gets `dir="rtl"`.
+- Money `1,250 ₪` (amount · NBSP · sign) through the existing formatter; ₪ without agorot · % one decimal · Gini two decimals (📐4).
+- Charts: `<div dir="ltr">` around `ResponsiveContainer`; Hebrew title outside it; tooltip box `dir="rtl"`; the time axis runs LTR inside the RTL page (ruled) — the 12 principles of `design-contract §⑤` bind, and its `לא אומת` items are verified in a real browser by the foundation step.
+
+### C5 · Data access
+- **One RPC per surface:** `report_m<NN>_<slug>(p_from date, p_to date, p_customer_id integer default null, p_drill jsonb default null) returns jsonb` = `{population, tiles, chart, rows, meta}` · `language plpgsql stable security definer set search_path to ''` · every relation `public.`-qualified · first statement `perform public.assert_module_permission('<owning module>', array['edit','view'])` — הנהלה+כספים ⇐ `'כספים'` · דיילות ⇐ `'דיילות'` · לקוחות ⇐ `'לקוחות'` · then `revoke execute … from public, anon, authenticated; grant execute … to authenticated`. **Precedent to copy:** `supabase/migrations/20260903182735_module7_dashboard_summary_rpc.sql`.
+- Client: `src/modules/11_reports/api.js` `callReport(fn, params)` → `supabase.rpc` → `toError` (`src/lib/apiError.js`); tri-state loading; a network failure is **never** rendered as "no data" (`PermissionAwareEmpty state="error"` + *"נסי שוב"*).
+- Missing `params` row ⇒ *"חסר פרמטר מערכת: <name>"* (pattern `missingDashboardParamsMessage`, `src/lib/dashboard.js`), never a silent default.
+- Money population = ruling 36 · aging measured against the **due date** (`deriveDaysOverdue`, `src/lib/projectFinance.js`) · Gini = **population** variant (`spec.md §🔢 3.3`) · cost basis `planned_qty` (ruling 5) · comparison = company median (ruling 6).
+- **Acceptance oracle:** `spec.md §🔢` and `stage2-review/signoff-baseline-2026-09-10.md` — copied digit for digit. **A mismatch is a finding to report, never a number to "fix".**
+
+### C6 · Code shape and gates
+- Shared components (`ChartCard` · `KpiTile` · `ReportTable` · `ExportBar` · `Envelope` · `DrillCrumbs` · `ReportChips` · `FiltersBar`) are the only way those things are rendered — **jscpd fails at 3 %** and sixteen similar surfaces will trip it if code is copied between pages. Cognitive complexity ≤ 20 per function (SonarJS error). knip: no unused export/file (a stub must be imported).
+- Tests: pure logic in `src/lib/reports*.js` with `*.test.js` beside it, **test first**; components `vi.mock('@/supabaseClient')` and `vi.mock('recharts')`; E2E in `e2e/reports.spec.js` (login helper copied from `e2e/permissions.spec.js`; identities `E2E_CEO` · `E2E_FINANCE` · `E2E_RECRUIT` · `E2E_STAFF` = מנהלת לוגיסטיקה).
+- No secrets in code or chat · LF only (CR count 0) · Prettier-formatted (lint-staged rewrites on commit) · `format:check` may OOM on the whole tree — run it per directory and say so.
+- The five `check:declared-counts` files (screens-approved · `spec.md §1.4` · the step guide · this guide's `לא אומת` count · `design-contract`) keep every declared number equal to the counted one.
+
+### C7 · Reporting discipline for every agent
+- Tag every claim `אומת-על-ידי` / `דווח-לי` / `הנחתי`, and state the method behind every number.
+- 🔴 **A finding that contradicts a RECORDED decision is not a fix instruction — it is a conflict question.** Before reporting a defect, search the decision registers in your field of view (`processes-approved.md §🗳️` · this guide §3 and §9 · `spec.md §🎯` · why-comments); a contradiction is reported as the TWO sources side by side, never patched. A MECHANISM measured broken is a real defect even with a recorded ruling behind it; what may not be "fixed" on your own authority is the recorded PRODUCT decision.
+- End every report with three lines: **what I did not verify · my blind spot · what I assumed.**
+
+### C8 · The RPC ↔ UI payload contract (locked 16/09/2026 so the SQL builders and the tab builders speak one shape)
+
+**Function names — fixed, used by both `reportsCatalog.js` and the migrations:**
+`report_m02_exec_overview` · `report_m03_trends` · `report_m04_discounts` · `report_m06_staffing` (הנהלה ⇐ `'כספים'`) ·
+`report_m07_finance_overview` · `report_m08_profitability` · `report_m09_aging` · `report_m12_equipment` (כספים ⇐ `'כספים'`) ·
+`report_m14_hostess_overview` · `report_m15_reliability` · `report_m16_quality_cost` · `report_m17_fairness` (דיילות ⇐ `'דיילות'`) ·
+`report_m19_customers_overview` · `report_m20_satisfaction` · `report_m21_drifting` · `report_m22_notes` (לקוחות ⇐ `'לקוחות'`) ·
+write: `approve_feedback_ai_run(p_run_id bigint)` (`'דו"חות'` edit).
+
+**Every read RPC returns one `jsonb` object with exactly these top-level keys** (a key with nothing to say is `null` or `[]`, never absent):
+
+| key | type | what |
+|---|---|---|
+| `population` | object | `{ "n": int, "label": "<the 📐2 sentence: who is in · who is out · n>", "excluded": { "<reason>": int } }` |
+| `window` | object | `{ "from": "YYYY-MM-DD", "to": "YYYY-MM-DD", "label": "<📐17 period text>" }` — half-open `(from, to]` as the cards define |
+| `tiles` | array | `{ "key", "label": "<spec §1.4 label verbatim>", "value", "format": "money|percent|gini|int|days|ratio|text", "window": "<📐3>", "compare": { "value", "label": "<e.g. אשתקד / חציון-החברה>", "direction": "up|down|flat" } | null, "target": { "tab", "report", "drill" } | null }` — the `compare` half is the 📐1 comparison; `target` is the ruling-33 door |
+| `chart` | object∣null | `{ "type": "bar|line|stackedBar|scatter|histogram|lorenz|pareto", "title", "series": [{ "key", "label" }], "data": [ {...} ], "xKey", "domain": [min,max] | null, "refLines": [{ "axis": "x|y", "value", "label" }], "unit" }` — at most **2** charts per page ⇒ `chart` may be an array of ≤ 2 such objects |
+| `columns` | array | `{ "key", "label", "format", "align": "start|end" }` for the table |
+| `rows` | array | table rows, already sorted per 📐7, each with the keys of `columns` plus `"drill_key"` when the row is a drill door (ruling 19: the whole row is the link) and `"owner"` where 📐18 applies |
+| `so_what` | string∣null | the 📐23 line, action first |
+| `definitions` | string | the 📐16 metric-definitions line |
+| `drill` | object∣null | `{ "level": int, "levels": ["<name of level 0>", …], "crumbs": [{ "label", "drill": {...} }] }` — only for מ3 · מ9 · מ17; `p_drill` echo |
+| `meta` | object | `{ "measured_at": timestamptz, "missing_params": ["<param_name>", …], "frozen_count": int | null, "notes": [ "<data caveat the card requires on screen, e.g. 'נמדד על 162 שורות מתוך 1,771'>" ], "run": { … } | null }` — `missing_params` non-empty ⇒ the UI shows *"חסר פרמטר מערכת: X"* and paints no tile that depends on it |
+
+**Parameters:** `p_from date default null`, `p_to date default null` (null ⇒ the card's default window, computed in Israel time), `p_customer_id integer default null` (the global customer filter — ignored by surfaces the card says are not customer-filterable, and `meta.notes` says so), `p_drill jsonb default null`.
+**Numbers are returned raw** (numeric, not formatted strings) — the UI formats per 📐4 through `reportsFormat.js`. Labels are Hebrew strings copied from `spec.md §1.4`; nothing English reaches the UI except keys.
+
+---
+
 ## 3. 🧭 Decisions Ledger
 
 ### 3.1 §7 items — **six, all closed, verified 11/09/2026**
@@ -155,6 +231,7 @@ step is not closed until each of the rulings above that touches that surface is 
 says **"~21 פונקציות-שרת"** and marks the choice `⚙️ הכרעת-בלופרינט`. **The guide changed the number
 silently.** Decide it at step 1.0 and write it down — a drill report may need one function with
 parameters or three.
+✅ **Decided at step 1.0, 16/09/2026: 17 functions** — 16 read RPCs (one per built surface; drill = a `p_drill jsonb` parameter on the same function, never a second function) + 1 write RPC (`approve_feedback_ai_run`). The classification runner is an edge function, not an RPC. *(Orchestrator ruling, technical, reversible — §2ב C5 carries the signature.)*
 
 ### 3.4 🚧 Cross-module debts targeted at m11 — **every one mapped**
 ✏️ **Mapped 11/09.** 🔑 **And first, the arithmetic, because `grep '🚧 מ11'` on §6 returns 10 lines and
@@ -573,6 +650,7 @@ reality-kill row** *(§3.3)*.
 | ~~**D-2**~~ | ~~🔴 **מ1, the shell, has no mockup** — the single largest guess in this guide~~ | ✅ **CLOSED 11/09/2026, and the original wording was wrong twice over.** ① **"No drawn reference" was false:** `design-contract §⑥` is a **401-line copyable HTML skeleton written for מ1** — sidebar, four tabs, chip row, filters, the "אז מה" line, and **real markup for all five envelope states** — plus §⑥.1 with the four pickers. ② **"It has no mockup" was true but irrelevant:** measured across the four approved files, **every one renders `side` · `tabs` · `picker` · `filters` · `stamp`, and three of four render the masked tab.** ⇒ **the shell is drawn four times over; a fifth file would have shown the same screen a fifth time.** **Ishay ruled it deleted** *(11/09: "המעטפת לא טובה תמחק לדעתי מיותרת גם")*, and `§⑥.2` records the reasoning. 🔑 **What the exercise did produce, and it was the real defect:** the skeleton rendered the picker as a **220px vertical rail** while the approved mockups render a **horizontal chip row** — and **§⑥ is what the build copies**, so it would have shipped with no visible symptom. **Fixed in §⑥.** ⚠️ **The lesson, not the file: a gap recorded once as "no reference" is never re-checked, and it kept being repeated to Ishay as a blocker.** |
 | **D-3** | §7's RLS matrix row for m11 reads *"none (5 reports as Views/RPC, read-only)"* | Written before the Discovery. **Corrected once, in Phase 4**, with all three writes — correcting it now would describe tables that do not exist. |
 | **D-4** | `docs/schema.sql` missing three live columns | Fixed in step 1.1 before anything depends on it. |
+| 🆕 **D-9** | **Ishay's 16/09/2026 session rulings — one-time, not precedent:** *"כן — מזג ל-dev וגם ל-main בלי לשאול"* · typed-echo waived *"על כולם — מיגרציות (~8) · חתימת-DoD · ריצת-הזריעה של הסיווג"* · mockups *"בחשבון מסוים אבל במידה"* · product gaps ⇒ faithful reading + `הנחתי` + morning table · onboarding modes 0 and 2 only · *"רק אתה כותב היום ומנהל הכל"* (rule 16) | Recorded so the closing audit and any resuming session know why this module merged without a typed echo and why `main` was merged by Claude. **Full conventions: §2ב.** Iron rule 10's `dev`-only carve-out was extended to `main` **for this module only**, in Ishay's own words in chat. |
 | 🆕 **D-7** | **‏מ23 and מ24 had no owning step in any phase, and three files disagreed about whether they were m11's job at all** | ✅ **RULED 15/09/2026 — Ishay: defer both, with a return trigger** *(§2.2)*. **The defect was not the scope — it was that the scope was never stated:** ruling 30 enumerated **16 built + 6 deferred = 22** of the 26 surface rows, and **these two fell in the gap between the two lists**, so every later sweep read past them. `processes-approved.md` §1-ג2 billed them as m11 build items, `data-set.md` marked them out-of-scope, and `processes-approved.md` §⏳ג recorded plainly that they *"have no home"* — **three live statements, in the same spec folder, never reconciled.** 🔑 **The lesson for the closing audit: an enumeration is only a control if its parts sum to the whole** — 22 of 26 looked complete because nobody subtracted. |
 | 🆕 **D-8** | **The module-11 seed exists only as live rows in the production database — no migration, no script** | Recorded 15/09/2026. The `seed(m11):` commits touch **markdown only** — measured with `git show --name-only`; **zero SQL**. In-database snapshots exist (`bak_projects_20260910` · `bak_assignments_20260910` · `bak_project_finance_20260910`) but **no copy outside the database**. ⇒ **every number the sixteen surfaces display, and all four conference stories, rest on state that `supabase db reset` + migrations cannot rebuild.** **Ishay's ruling 15/09: snapshot now, and a real re-seed script is a debt for after the conference** — see `PROJECT_MASTER §6` and `db_roadmap`. ⚠️ **Not a blocker for the build**; it is a blocker for recovery. |
 | ~~**D-5**~~ | ~~The step guide §① still says **"5 דו"חות"**~~ | ✅ **CLOSED 11/09/2026 — verified this turn, not remembered.** The guide was rewritten end to end: §① now reads **16**, and the old sentence survives only struck through with its correction note *(`module_11_reports.md:15–16`)*. ⚠️ **Left as a closed row rather than deleted, because a builder who inherits "the guide says 5" from anywhere else needs to see it was checked and when.** |
