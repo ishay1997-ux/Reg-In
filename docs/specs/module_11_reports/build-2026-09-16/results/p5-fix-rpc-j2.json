@@ -1,0 +1,212 @@
+{
+  "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql",
+  "functions": [
+    {
+      "name": "report_m02_exec_overview",
+      "items": ["[2] compare wording"],
+      "chunk_name": "module11_j2_m02",
+      "registry_row": true,
+      "md5_file": "8e7fa713ced1cc0e69d0664f85f3e878",
+      "md5_live": "8e7fa713ced1cc0e69d0664f85f3e878",
+      "equal": true,
+      "probe": "200 · all four tiles now carry compare.label = 'אשתקד' (revenue · margin · finished_events · top5_share). The denominators that lived in compare.note are untouched ('⁦184⁩ אירועים', 'אז ⁦57⁩ לקוחות עם הכנסה'). definitions already said '\"אשתקד\" = אותם ימים בדיוק בשנה שעברה' and now matches the labels above it. chart xKey stayed 'label' (ינואר…ספטמבר, single-year axis, unchanged)."
+    },
+    {
+      "name": "report_m04_discounts",
+      "items": ["[1] format:'id'", "[2] compare wording + its two ripples"],
+      "chunk_name": "module11_j2_m04",
+      "registry_row": true,
+      "md5_file": "8807bba12d646a9e4c04059e278cd58a",
+      "md5_live": "8807bba12d646a9e4c04059e278cd58a",
+      "equal": true,
+      "probe": "200 · four tiles = 'אשתקד'; columns[0] = {quote_id, format:'id'}. TWO RIPPLES the brief did not list and I took because they are the same sentence on the same screen: the chart legend key margin_prev was labelled 'לפני שנה' (📐19 locks slate-400 to one meaning) — now 'אשתקד'; and the definitions line ended '· \"לפני שנה\" = בדיוק אותו חישוב…' explaining a label that no longer exists — now '\"אשתקד\" = …'. A grep for the old wordings over all 16 live bodies returns 0 outside comments."
+    },
+    {
+      "name": "report_m06_staffing",
+      "items": ["[2] compare wording"],
+      "chunk_name": "module11_j2_m06",
+      "registry_row": true,
+      "md5_file": "818ac4d6fbd0044f3c0661d8eaff689d",
+      "md5_live": "818ac4d6fbd0044f3c0661d8eaff689d",
+      "equal": true,
+      "probe": "200 · four tiles = 'אשתקד' (median_ratio · over_estimate · above_param · both_numbers); the 'מתוך ⁦N⁩' denominators stay in compare.note."
+    },
+    {
+      "name": "report_m07_finance_overview",
+      "items": ["[1] format:'id'", "[3] month axis"],
+      "chunk_name": "module11_j2_m07",
+      "registry_row": true,
+      "md5_file": "a31218bb81461e7baddc7a781c7a2ad9",
+      "md5_live": "a31218bb81461e7baddc7a781c7a2ad9",
+      "equal": true,
+      "probe": "200 · columns[0] = {project_id, format:'id'}. Chart xKey moved 'month' ⇒ 'label'; the axis now reads 'אוקטובר ⁦2025⁩' … 'ספטמבר ⁦2026⁩' instead of 09/2025. The machine key `month` ('MM/YYYY') is still on every datum — nothing was deleted, and `asof`/`is_today` are untouched. NOT touched here: the four compare labels ('לפני חודש' · 'שנכנסו בפועל ב-30 הימים האחרונים' · two Hebrew month names) — none of them is a year-ago base."
+    },
+    {
+      "name": "report_m08_profitability",
+      "items": ["[1] format:'id'", "[2] compare wording"],
+      "chunk_name": "module11_j2_m08",
+      "registry_row": true,
+      "md5_file": "b085053262bdf121a53cd4e63b2ff3cf",
+      "md5_live": "b085053262bdf121a53cd4e63b2ff3cf",
+      "equal": true,
+      "probe": "200 · five tiles = 'אשתקד' (was the bare year ⁦2025⁩, and ⁦2025⁩ באותו טווח on the first). columns[0] = {project_id, format:'id'}; rows[0].project_id = 1416 and the so-what still names 1416 with 361 ₪ — J1's agreement survived."
+    },
+    {
+      "name": "report_m09_aging",
+      "items": ["[1] format:'id' ×2", "[4ג] the three 'דלי' inside v_chart_note"],
+      "chunk_name": "module11_j2_m09",
+      "registry_row": true,
+      "md5_file": "e1f296d8b450fc16b663ae724479b587",
+      "md5_live": "e1f296d8b450fc16b663ae724479b587",
+      "equal": true,
+      "probe": "200 · root columns[0] = {project_id, format:'id'}; drill level 2 columns[0] = {project_id, format:'id'} (level 1 is customer-level and has no project_id — that is the source, not an omission). chart.note: 'מדרג' ×3, 'דלי' ×0 — the paragraph is exactly as long as before, three words changed ('כל עמודה היא מדרג של איחור' · 'שממתין באותו מדרג' · 'לשם המדרג'). Whole payload: 0 occurrences of 'דלי'. compare labels left alone: all four are 'לפני חודש', a month-ago base."
+    },
+    {
+      "name": "report_m12_equipment",
+      "items": ["[1] format:'id'", "[2] compare wording"],
+      "chunk_name": "module11_j2_m12",
+      "registry_row": true,
+      "md5_file": "3d91d4180b6daa7b5b3c3a6f122f38cf",
+      "md5_live": "3d91d4180b6daa7b5b3c3a6f122f38cf",
+      "equal": true,
+      "probe": "200 · two tiles = 'אשתקד' (cost_window · gap_pct); the 'יחידות מתוך' note is untouched. The project_id column lives in meta.extra_tables[no_cost_source] and is now format:'id' — and I checked the renderer rather than assuming it: ReportSurface.jsx:734 maps extra_tables through ExtraTable, which passes table.columns straight into ReportTable, so the declaration is honoured there too."
+    },
+    {
+      "name": "report_m14_hostess_overview",
+      "items": ["[2] compare wording", "[3] month axis + the sentence under it", "[4] חלון קפוא ⇒ חלון קבוע"],
+      "chunk_name": "module11_j2_m14",
+      "registry_row": true,
+      "md5_file": "b18c4c2466b4ffa3ea197d26e5115034",
+      "md5_live": "b18c4c2466b4ffa3ea197d26e5115034",
+      "equal": true,
+      "probe": "200 · on_time/red_hostesses = 'אשתקד', gini = 'אשתקד (n=97)'; gap_events keeps '31–60 הימים הבאים' (a forward window, not a year-ago base). red_hostesses tile window = 'חלון קבוע · 12 חודשים'; 0 'חלון קפוא' anywhere in the payload. Chart xKey 'month' ⇒ 'label': 'ספטמבר ⁦2025⁩' … 'אוגוסט ⁦2026⁩' (was 2025-09 … 2026-08), machine key `month` kept and still the jsonb_agg sort key so the order is unchanged. The sentence that sits under the same chart moved with it: 'החודש ספטמבר ⁦2026⁩ אינו בגרף: 109 שיבוצים…' (was 09/2026). Re-probed on a month preset (p_from 01/08/2026): axis 'אוגוסט ⁦2026⁩', frozen tile still 'חלון קבוע · 12 חודשים'."
+    },
+    {
+      "name": "report_m15_reliability",
+      "items": ["[2] compare wording", "[4] חלון קפוא ⇒ חלון קבוע ×8"],
+      "chunk_name": "module11_j2_m15",
+      "registry_row": true,
+      "md5_file": "eaff4bacfc2ab9e428a96f7b6e37c7a7",
+      "md5_live": "eaff4bacfc2ab9e428a96f7b6e37c7a7",
+      "equal": true,
+      "probe": "200 · four tiles = 'אשתקד'. 'קפוא' count in the payload = 0; 'קבוע' now carries all eight on-screen places: window.label ('חלון קבוע · 12 החודשים האחרונים') · four tile windows · two runs inside `definitions` ('ורק בחלון הקבוע' · 'קבוע ואינו נגרר אחרי מסנן-התקופה') · the extra-table note ('בחלון הקבוע'). The three prose places are the ones the brief did not enumerate — they are on screen, and leaving them would have put both words on one page. `comment on function` and the code comments keep 'קפוא': they are not on screen and they are what an engineer greps for."
+    },
+    {
+      "name": "report_m17_fairness",
+      "items": ["[2] compare wording"],
+      "chunk_name": "module11_j2_m17",
+      "registry_row": true,
+      "md5_file": "035c10c16c126fc400a1f601457e81a1",
+      "md5_live": "035c10c16c126fc400a1f601457e81a1",
+      "equal": true,
+      "probe": "200 · gini = 'אשתקד · ⁦n=97⁩ מול ⁦n=106⁩ היום' (the population caveat is information and stayed); median_response · p90_response · response_rate = 'אשתקד'."
+    },
+    {
+      "name": "report_m19_customers_overview",
+      "items": ["[3] month axis — the year only when it distinguishes"],
+      "chunk_name": "module11_j2_m19",
+      "registry_row": true,
+      "md5_file": "9cc575033cc5782afdf5f6d17585a410",
+      "md5_live": "9cc575033cc5782afdf5f6d17585a410",
+      "equal": true,
+      "probe": "200 · BOTH branches exercised, not one. Default window (01/01–17/09/2026, inside one year): 'ינואר' … 'אוגוסט' — identical in form to מ2/מ3. p_from 01/06/2025–31/05/2026 (crosses a year): 'יוני ⁦2025⁩' … 'מאי ⁦2026⁩', and all 12 labels are distinct, so the cross-year branch cannot collide two Januaries. Machine key `month` ('YYYY-MM') kept and still the sort key. No compare label changed here — all four are sentences or non-year bases."
+    },
+    {
+      "name": "report_m20_satisfaction",
+      "items": ["[2] compare wording"],
+      "chunk_name": "module11_j2_m20",
+      "registry_row": true,
+      "md5_file": "9d9414572c71343c448213b5e24582cb",
+      "md5_live": "9d9414572c71343c448213b5e24582cb",
+      "equal": true,
+      "probe": "200 · 'אשתקד (⁦109⁩ מתוך ⁦136⁩)' · 'אשתקד (⁦136⁩ מתוך ⁦184⁩)' · 'אשתקד' · 'אשתקד, מתוך ⁦136⁩ משובים'. The parenthesised denominators are exactly what the brief said to keep — only 'באותו טווח' was dropped."
+    },
+    {
+      "name": "report_m22_notes",
+      "items": ["[4ב] stops echoing a period it never queries"],
+      "chunk_name": "module11_j2_m22",
+      "registry_row": true,
+      "md5_file": "bea5231289d128d3bc80465033e7d80a",
+      "md5_live": "bea5231289d128d3bc80465033e7d80a",
+      "equal": true,
+      "probe": "200 · window.from = null (was v_from) and meta.period_filter_ignored = {p_from, p_to} — both signals the shell reads (ReportsPage.readScope:135 keys on either). window.to kept = 2026-09-17 and window.label kept its as-of date ('כל הזמנים · נכון ל-⁦17/09/2026⁩'); I did NOT shorten the label to the bare 'כל הזמנים' the brief suggested, because the date is the 📐3 window statement and the label already says 'כל הזמנים'. v_from was DELETED — declaration and assignment both — rather than left unused. No compare label changed (all four are sentences)."
+    }
+  ],
+  "compare_labels": [
+    { "fn": "report_m02_exec_overview", "before": "⁦<year>⁩ באותו טווח (×3) · לפני שנה, אותו חישוב (×1)", "after": "אשתקד (×4)" },
+    { "fn": "report_m04_discounts", "before": "לפני שנה, אותו חישוב (×2) · לפני שנה (×1) · ⁦<year>⁩ באותו טווח (×1)", "after": "אשתקד (×4)" },
+    { "fn": "report_m04_discounts", "before": "chart series label 'לפני שנה' · definitions '\"לפני שנה\" = …'", "after": "chart series 'אשתקד' · definitions '\"אשתקד\" = …' (ripple, not in the brief)" },
+    { "fn": "report_m06_staffing", "before": "לפני שנה, אותו חישוב (×1) · לפני שנה (×3)", "after": "אשתקד (×4)" },
+    { "fn": "report_m08_profitability", "before": "⁦<year>⁩ באותו טווח (×1) · ⁦<year>⁩ (×4)", "after": "אשתקד (×5)" },
+    { "fn": "report_m12_equipment", "before": "⁦<year>⁩ באותו טווח (×2)", "after": "אשתקד (×2)" },
+    { "fn": "report_m14_hostess_overview", "before": "התקופה המקבילה אשתקד (×2) · התקופה המקבילה אשתקד (n=⁦N⁩)", "after": "אשתקד (×2) · אשתקד (n=⁦N⁩)" },
+    { "fn": "report_m15_reliability", "before": "התקופה המקבילה אשתקד (×4)", "after": "אשתקד (×4)" },
+    { "fn": "report_m17_fairness", "before": "התקופה המקבילה אשתקד · ⁦n=…⁩ מול ⁦n=…⁩ היום · התקופה המקבילה אשתקד (×3)", "after": "אשתקד · ⁦n=…⁩ מול ⁦n=…⁩ היום · אשתקד (×3)" },
+    { "fn": "report_m20_satisfaction", "before": "אשתקד באותו טווח (⁦X⁩ מתוך ⁦Y⁩) (×2) · אשתקד באותו טווח · אשתקד באותו טווח, מתוך ⁦N⁩ משובים", "after": "אשתקד (⁦X⁩ מתוך ⁦Y⁩) (×2) · אשתקד · אשתקד, מתוך ⁦N⁩ משובים" }
+  ],
+  "id_columns": [
+    { "fn": "report_m04_discounts", "key": "quote_id" },
+    { "fn": "report_m07_finance_overview", "key": "project_id" },
+    { "fn": "report_m08_profitability", "key": "project_id" },
+    { "fn": "report_m09_aging", "key": "project_id (level 0)" },
+    { "fn": "report_m09_aging", "key": "project_id (drill level 2)" },
+    { "fn": "report_m12_equipment", "key": "project_id (meta.extra_tables[no_cost_source])" }
+  ],
+  "month_axis": [
+    { "fn": "report_m07_finance_overview", "before": "09/2025 (xKey='month', to_char MM/YYYY)", "after": "ספטמבר ⁦2025⁩ (xKey='label'; `month` kept as the machine key)" },
+    { "fn": "report_m14_hostess_overview", "before": "2025-09 (xKey='month', to_char YYYY-MM)", "after": "ספטמבר ⁦2025⁩ (xKey='label'; `month` kept and still the sort key)" },
+    { "fn": "report_m14_hostess_overview", "before": "the 'month not in the chart' sentence said 09/2025", "after": "ספטמבר ⁦2026⁩ — same form as the axis above it" },
+    { "fn": "report_m19_customers_overview", "before": "ינואר ⁦2026⁩ even on a window inside one year", "after": "ינואר inside one year · ינואר ⁦2026⁩ when the window crosses a calendar year" },
+    { "fn": "report_m02_exec_overview / report_m03_trends", "before": "—", "after": "unchanged: already Hebrew month name alone on a single-year axis — they are the form everything else was harmonised TO" }
+  ],
+  "schema_sql_updated": true,
+  "db_roadmap_row": true,
+  "spec_md_1_4_updated": false,
+  "gates": {
+    "npm run check:declared-counts": "exit=0 — 'check:declared-counts ✅ 6 מספרים מוצהרים נבדקו מול המקור, כולם תואמים' (scratchpad/j2/gate-counts.log)",
+    "npm run check:docs-structure": "exit=0 — 'check:docs-structure ✅ 164 קבצים נסרקו, אפס ממצאים' (scratchpad/j2/gate-docs.log)",
+    "npm run format:check": "exit=0 — 'All matched files use Prettier code style!' (scratchpad/j2/gate-format.log); run because I edited two .md/.sql docs",
+    "CR count": "0 on all three files I touched (perl -ne '$n+=tr/\\r//'): the migration · docs/schema.sql · docs/db_roadmap.md",
+    "registry names": "13 rows, compared by NAME not count: module11_j2_m02 · _m04 · _m06 · _m07 · _m08 · _m09 · _m12 · _m14 · _m15 · _m17 · _m19 · _m20 · _m22",
+    "md5 file == live": "13/13 identical, re-measured after the doc edits (pg_proc md5(prosrc) vs the $function$ body in the file)",
+    "untouched functions unchanged": "m03 e27c9aeb… · m16 98448331… · m21 1ba64fd1… — byte-identical to their pre-J2 values, so the three exceptions really are exceptions and not omissions",
+    "grants": "proacl on all 16 = postgres=X | service_role=X | authenticated=X — no PUBLIC, no anon",
+    "blocked identity": "E2E_RECRUIT ⇒ HTTP 403 / SQLSTATE 42501 on report_m08_profitability AND report_m07_finance_overview",
+    "signed-in probe": "13/13 surfaces HTTP 200 as CEO over PostgREST (scratchpad/j2/probe.json · probe2.mjs · probe3.mjs); credentials read from .env.local and never printed",
+    "spec.md §1.4": "no change required, and that is measured not assumed: §1.4 lists tile labels and page titles only (79 + 19). None of the strings J2 renames is one — they are compare labels, window labels, chart-axis labels and column formats. check:declared-counts still exits 0 at 79."
+  },
+  "not_done": [
+    {
+      "item": "[2] — report_m03_trends compare labels left as the year ('⁦2025⁩' · '⁦2025⁩ המלאה' · 'ינואר ⁦2025⁩')",
+      "why": "Its base is NOT 'the same range one year back'. '⁦2025⁩ המלאה' is the FULL previous year measured against a YTD tile, and the monthly tiles compare to the parallel month by name. Writing 'אשתקד' over them would delete the fact that the two sides are different-length windows — the opposite of what 📐1 asks. Read before deciding: the four v_p_* assignments in m03 and 📐1 at processes-approved.md:781."
+    },
+    {
+      "item": "[2] — report_m16_quality_cost 'חציון כלל המאגר (⁦50⁩)' left as it is",
+      "why": "It compares to a MEDIAN, not to last year — the brief's own exception (📐15). Listed here as instructed rather than silently skipped."
+    },
+    {
+      "item": "[2] — 'לפני חודש' on m07 (×1), m09 (×4) and m21 (×1) left as it is",
+      "why": "A month-ago base. Harmonising it to 'אשתקד' would make the label lie about the window it measures."
+    },
+    {
+      "item": "[4ג]-adjacent — 'דלי' still appears once on מ19 ('הדלי הגדול מכל ארבע הקטגוריות') and once on מ22 ('הדלי השלילי הגדול במערכת')",
+      "why": "Different concept, and I checked the definition rather than the word: spec.md §1.4 locks 'מדרג' for the AGING TIERS of מ9 ('מדרג 90+' · 'חוב במדרג 61–90'). On מ19/מ22 'דלי' means a bucket of negative-feedback reasons, where 'מדרג' would be wrong — it implies an ordered ladder. Swapping it is a wording ruling, not a harmonisation."
+    },
+    {
+      "item": "[5] round-1 not_done — [C5] third half (the מ22 run bar says 'מציג את הריצה', singular, while two approved runs are shown)",
+      "why": "The sentence is composed in src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx, outside my file set. The server already hands it meta.run.run_count = 2 and my J2 did not change that. git status shows that file modified by the parallel shell agent this round."
+    },
+    {
+      "item": "[5] round-1 not_done — [C4] adjacent and [5] ripple (onboardingCopy.m11.customers.js · onboardingCopy.m11.finance.js)",
+      "why": "Both are src/lib files the orchestrator assigned to shell-2, not to me. Both show as modified in git status this round."
+    }
+  ],
+  "not_verified": [
+    "Nothing was seen rendered in a browser. Every assertion above is the RPC payload read over PostgREST as a signed-in CEO. The month labels are the case that matters: 'ספטמבר ⁦2025⁩' is a Hebrew word, a space, and an LRI-isolated year, rendered by ChartCard straight into an SVG axis tick. I copied the expression verbatim from m19, which the mode-0 copy evaluator DID see drawn as 'ינואר 2026' — but m14's axis has 12 ticks in a bar chart, not 8 points in a line chart, and I did not see it drawn or measure whether the longer tick now wraps or collides.",
+    "report_m14_hostess_overview gained v_lri/v_pdi constants it never had. They are used by the month label ONLY; the rest of m14's sentences still write digit runs into Hebrew without isolation, exactly as before. That is not a regression, but m14 is now internally mixed — one isolated run among many unisolated ones — and the next person to read it may conclude the file follows the isolation rule when it does not.",
+    "The tab test fixtures still carry the OLD strings, and I did not change them because they are not my files: grep -c 'התקופה המקבילה|באותו טווח|חלון קפוא' over src/modules/11_reports/tabs/*.test.jsx returns HostessesTab 10 · ExecutiveTab 4 · CustomersTab 1 · FinanceTab 1 = 16. They are hand-written payload fixtures, not assertions on RPC output, so nothing fails and the suite stays green — which is precisely why nobody will notice that they no longer mirror the server.",
+    "meta.period_filter_ignored on מ22 was verified as PRESENT in the payload; I did not load the page to watch the shell actually disable the period pills and print the reason line. The shell contract is read (ReportsPage.jsx:130–137) and window.from is null, which is the primary signal — but the rendered result is inferred.",
+    "The 'אשתקד' harmonisation was checked for the labels; I did not re-derive any of the compare VALUES. If a previous round put the wrong number behind one of those labels, J2 changed only the words in front of it."
+  ],
+  "blind_spot": "Two of the three functions I did NOT touch are now the only places on the product where an old month format could still reach a screen, and neither is covered by anything I ran. (1) `report_m21_drifting` draws a histogram (`xKey: 'bucket'`) — no month axis, so it is genuinely out of scope; but its compare label 'לפני חודש (⁦DD/MM/YYYY⁩)' is the only surviving tile that prints a DATE inside a compare label, and 15(ח) rules dates but not this composition. Checkable: call report_m21_drifting as CEO and read tiles[0].compare.label. (2) The real one is the FIXTURES: `src/modules/11_reports/tabs/HostessesTab.test.jsx` still builds its payloads with `window: 'חלון קפוא · 12 חודשים'` (lines 144, 242, 251) and `label: 'התקופה המקבילה אשתקד'` (lines 135, 145, 154, 438, 470, 488) — 16 stale strings across four tab test files. They are fixtures, so `npm run test:run` stays green while the server says something else, and the next agent who reads a fixture to learn 'what the payload looks like' will copy the wording J2 just removed. The mechanical check is one line: `grep -c 'התקופה המקבילה\\|באותו טווח\\|חלון קפוא' src/modules/11_reports/tabs/*.test.jsx` — expect 0 once someone owns those files; it returns 16 today."
+}

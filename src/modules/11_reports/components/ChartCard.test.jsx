@@ -594,6 +594,13 @@ describe('ChartCard — 📐10: גרף ריק אומר זאת', () => {
     expect(screen.queryByTestId('chart-empty')).toBeNull()
     expect(screen.getByTestId('chart-figure')).toBeInTheDocument()
   })
+
+  // ✏️ 17/09/2026 — כשהמסנן שרוקן הוא הלקוח, המעטפת מוסרת את משפט-הלקוח (כלל כ17), והגרף
+  // אומר אותו ולא את משפט-התקופה — אחרת מסך אחד היה אומר שני משפטים על אותו מסנן.
+  it('משפט-הריקות מגיע מהמעטפת כשהיא מוסרת אותו (מסנן-לקוח)', () => {
+    render(<ChartCard chart={EMPTY} emptyText="אין נתונים ללקוח שנבחר" />)
+    expect(screen.getByTestId('chart-empty').textContent).toBe('אין נתונים ללקוח שנבחר')
+  })
 })
 
 // ── 📐20 · תאים לכל סדרת-עמודות ─────────────────────────────────────────────

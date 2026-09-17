@@ -20,11 +20,15 @@ import { Button } from '@/components/ui/button'
 // דאטה. **העברה ולא עותק** — ר' הנימוק המלא שם.
 import { CLEAR_FILTERS_LABEL, EMPTY_AFTER_FILTER, EMPTY_ENTIRELY } from './reportsCopy'
 
-function EmptyAfterFilter({ onClearFilters, testId }) {
+// ✏️ **`title` נפתח למצב 2 (17/09/2026, פריט [5])** — עד כאן הוא היה מקובע לנוסח-התקופה,
+// ומצב 2 נולד מאז גם מבחירת-לקוח. ‏`?? EMPTY_AFTER_FILTER` שומר על 15(ו): מי שאינו נוקב
+// בנוסח מקבל בדיוק את המשפט שהיה. **המחליט הוא המשטח** (`ReportSurface.EmptyPage`), כי
+// הוא היחיד שיודע איזה מסנן פעיל; המעטפת מציירת ואינה מנסחת.
+function EmptyAfterFilter({ onClearFilters, testId, title }) {
   return (
     <PermissionAwareEmpty
       state="empty"
-      title={EMPTY_AFTER_FILTER}
+      title={title ?? EMPTY_AFTER_FILTER}
       testId={testId}
       action={
         onClearFilters ? (
@@ -91,7 +95,9 @@ export default function Envelope({
   }
 
   if (state === 'empty') {
-    return <EmptyAfterFilter onClearFilters={onClearFilters} testId={`${testId}-empty`} />
+    return (
+      <EmptyAfterFilter onClearFilters={onClearFilters} testId={`${testId}-empty`} title={title} />
+    )
   }
 
   if (state === 'blank') {

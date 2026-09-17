@@ -24,10 +24,13 @@
 --    **הספירות החיות:** 38 טבלאות-בסיס · 67 פונקציות · 65 מדיניות (53 ב-`public`, 12 על `storage.objects`) ·
 --    77 אינדקסים · 29 טריגרים. **השאילתה שמחזירה את חמשתן בשורה אחת יושבת בסעיף 24, מעל ספירת-הפונקציות** —
 --    כדי שהמספר הבא שייכתב כאן יימדד ולא ייגזר מהקודם.
---    ⚠️ **ומה שהריענון הזה אינו כולל: `20260916194500_module11_i2_rpc_round3.sql`** — הקובץ על הדיסק
---    ו**טרם הוחל** (נמדד: 0 שורות `module11_i2%` ב-`schema_migrations`). הוא תוספתי בלבד (פורמטים · יעדי-דלת ·
---    הערות) ואינו נוגע בטבלה, בעמודה, ב-policy או בחתימה — ולכן **אינו משנה דבר בקובץ הזה**, אבל
---    גוף-פונקציה יזוז כשיוחל. ר' `docs/db_roadmap.md §10ב`, השורה הראשונה.
+--    ✅ ✏️ **תוקן-במקום 17/09/2026 (סבב J2):** הפסקה שעמדה כאן אמרה
+--    ש-`20260916194500_module11_i2_rpc_round3.sql` **טרם הוחל**. הוא הוחל באותו ערב ב-20:4X,
+--    ואחריו הוחלו גם J1 (`…005500`, סבב 4) ו-J2 (`…021500`, סבב 5) — שלושתם
+--    מזיזים **גופי-פונקציה בלבד** (טקסט · פורמטים · יעדי-דלת) ואינם נוגעים בטבלה,
+--    בעמודה, ב-policy או בחתימה ⇒ **הספירות שלמעלה לא זזו**, והמצביעים בסעיף 24
+--    עודכנו. ‏🔴 **ואל תצטט גם את זה — הרץ:**
+--      select name from supabase_migrations.schema_migrations where name like 'module11_%' order by version;
 --    *(רוענן קודם: 16/09/2026 04:4X — מודול 11 צעד 1.1, **ריענון-במקום** מול הקטלוג
 --    החי, בלי לייצר את הקובץ מחדש. הדלתא שנמצאה ותוקנה: ① שלוש עמודות-המשוב ב-`projects` +
 --    שלושת ה-CHECK שלהן — `positive_feedback_reason` · `negative_feedback_reasons` ·
@@ -2511,7 +2514,8 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 -- report_m02_exec_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
 --   → supabase/migrations/20260916052600_module11_d_rpcs_executive.sql (המקור)
---   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (הגוף החי)
+--   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד')
 -- report_m03_trends(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים' · **דוח-קידוח** (שנה←חודש←אירוע)
 --   → supabase/migrations/20260916052600_module11_d_rpcs_executive.sql (המקור)
@@ -2519,41 +2523,49 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
 -- report_m04_discounts(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
---   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (הגוף החי)
+--   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה + מקרא-הגרף = 'אשתקד' · `quote_id` ב-`format:'id'`)
 -- report_m06_staffing(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
---   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (הגוף החי)
+--   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד')
 -- report_m07_finance_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb, p_asof date) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים' · **חתימה בת 5**
 --   → supabase/migrations/20260916051950_module11_e_rpcs_finance.sql (המקור)
---   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (הגוף החי)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — `project_id` ב-`format:'id'` · ציר-החודשים עברי (`xKey='label'`, המפתח `month` נשמר))
 -- report_m08_profitability(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
 --   🔴 **רצפת-המהותיות מוצאת את השורות מ-`rows`** (📑ב#5 — *"אינו בדירוג"*), ולא רק ממיינת
 --      אותן לסוף. ‏`meta.below_materiality` ממשיך למנות אותן על כל האוכלוסייה.
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · `project_id` ב-`format:'id'`)
 -- report_m09_aging(p_from date, p_to date, p_customer_id integer, p_drill jsonb, p_asof date) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים' · **דוח-קידוח** · **חתימה בת 5**
 --   🔴 ימי-האיחור נמדדים מול **מועד-הפירעון** (`invoice_sent_at` + `תנאי_תשלום_ימים`), לא מול יום-השליחה.
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
 --   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
---   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — `project_id` ב-`format:'id'` (שתי הרמות) · פסקת-הגרף עוברת ל-'מדרג' (אין 'דלי' על המסך))
 -- report_m12_equipment(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
---   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (הגוף החי)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · `project_id` ב-`format:'id'` (ב-`meta.extra_tables`))
 -- report_m14_hostess_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   → supabase/migrations/20260916052359_module11_f_rpcs_hostesses.sql (המקור)
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
 --   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
---   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · 'חלון קבוע' במקום 'קפוא' · ציר-החודשים עברי)
 -- report_m15_reliability(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   הציון הוא `reliabilityScore` של Smart Match מילה-במילה (הכרעה 38); הספים 0.87/0.95 נקראים מ-`params`.
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
 --   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
---   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · 'חלון קבוע' במקום 'קפוא' (תווית-החלון · ארבעה אריחים · ההגדרות))
 -- report_m16_quality_cost(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
@@ -2562,17 +2574,20 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   → supabase/migrations/20260916065642_module11_f2_rpcs_hostesses_fixes.sql (המקור)
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד')
 -- report_m19_customers_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
 --   → supabase/migrations/20260916052511_module11_g_rpcs_customers.sql (המקור)
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
---   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (הגוף החי, סבב 3)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — תווית-החודש נושאת שנה רק כשהציר חוצה שנה קלנדרית)
 -- report_m20_satisfaction(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
 --   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
---   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' (המכנה נשמר בסוגריים))
 -- report_m21_drifting(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
@@ -2584,7 +2599,8 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   אריח הדגלים האדומים מחזיר `null` **ולא 0** — "אין נתון" אינו "אפס".
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
 --   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
---   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4 — `meta.run.approved_by` נושא שם-אדם, הדוא"ל ב-`approved_by_email`)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4 — `meta.run.approved_by` נושא שם-אדם, הדוא"ל ב-`approved_by_email`)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — `window.from = null` + `meta.period_filter_ignored` — הדף מפסיק להדהד תקופה שאינו שואל בה)
 -- approve_feedback_ai_run(p_run_id bigint) returns jsonb
 --   SD · **volatile** · plpgsql · [authenticated, service_role]   ← **חדשה** · שער **edit** על 'דו"חות'
 --   🔴 **פונקציית-הכתיבה היחידה של מודול 11.** מסרבת לריצה ב-`running`, לריצה `failed` ולאישור שני
@@ -2593,9 +2609,9 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 -- ✅ **`20260916194500_module11_i2_rpc_round3.sql` — הוחל במלואו 16/09/2026 (נמדד 20:4X).**
 --    **תשע רשומות רשם, לפי סדר ההחלה:** `module11_i2_m17` · `_m21` · `_m20` · `_m22` · `_m14` ·
 --    `_m15` · `_m19` · `_m03` · `_m09` *(האחרונה, גרסה `20260916171421`)*.
---    ⇒ **תשע הפונקציות שלמעלה נושאות שני מצביעים:** ‏I1 כמקור-הביניים (סבב 2) ו-**I2 כגוף החי**.
---    שמונה הפונקציות האחרות לא זזו: `m07` · `m08` · `m12` · `m16` נשארות על I1 · `m02` · `m04` ·
---    `m06` על D2 · `approve_feedback_ai_run` על A.
+--    ⇒ **תשע הפונקציות שלמעלה נשאו שני מצביעים:** ‏I1 כמקור-הביניים (סבב 2) ו-I2 כגוף החי.
+--    ⚠️ **המשפט הזה נכון ל-16/09 בלבד, וסבבי J1/J2 שמתחתיו עידנו אותו** —
+--    המצביע הקובע הוא **השורה האחרונה של כל פונקציה למעלה**, ולא הסיכום הזה.
 -- 🔑 **וההוכחה שהקובץ הוא באמת מה שרץ, כי "הוחל" לבדו אינו מוכיח זאת בקובץ שמוחל בחלקים:**
 --    ‏`md5(prosrc)` החי הושווה ל-md5 של גוף ה-`$function$` שבקובץ — **9 מתוך 9 זהים** *(ובנוסף:
 --    חתימה · `comment on function` · `revoke` · `grant` זהים-בייט ל-I1, 9/9)*. המקור:
@@ -2604,6 +2620,15 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --     "טעון בדיקה" עד שנמדד שוב.)*
 -- 🔴 **ואל תצטט את השורות האלה לסבב הבא — הרץ את הבדיקה:**
 --      select name from supabase_migrations.schema_migrations where name like 'module11_i2%' order by version;
+-- ✅ **`20260917021500_module11_j2_rpc_round5.sql` — הוחל במלואו 17/09/2026.**
+--    **שלוש-עשרה רשומות רשם, לפי סדר ההחלה:** `module11_j2_m02` · `_m04` · `_m06` ·
+--    `_m07` · `_m08` · `_m09` · `_m12` · `_m14` · `_m15` · `_m17` · `_m19` · `_m20` · `_m22`.
+--    **שלוש שלא זזו:** `m03` · `m16` · `m21` — והנימוק לכל אחת כתוב בכותרת המיגרציה
+--    (בסיס-ההשוואה שלהן אינו "אותו טווח שנה אחורה": שנה נקובה · חציון · חודש קודם).
+-- 🔑 **וההוכחה:** ‏`md5(prosrc)` החי הושווה ל-md5 של גוף ה-`$function$` שבקובץ — **13 מתוך 13
+--    זהים**, ו-`proacl` של כל שש-עשרה נשאר `postgres=X | service_role=X | authenticated=X` (אין PUBLIC, אין anon).
+-- 🔴 **ואל תצטט גם את אלה — הרץ:**
+--      select name from supabase_migrations.schema_migrations where name like 'module11_j2%' order by version;
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)

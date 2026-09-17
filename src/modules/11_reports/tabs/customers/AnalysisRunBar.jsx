@@ -152,6 +152,36 @@ function serverRunState(active) {
   }
 }
 
+/**
+ * ✏️ **המשפט המיושב, ושתי הצורות שלו** (17/09/2026, פריט [C5] סבב ב').
+ *
+ * 🔴 **מה שנמדד:** הכרטיס ⑧22.4 נועל *"מציג את הריצה מ-DD/MM/YYYY, אושרה ע"י X"* —
+ * **ביחיד**, כי כשהוא נכתב הדף הציג ריצה מאושרת אחת. מיגרציה G2-1 איחדה את **כל**
+ * הריצות המאושרות לשורות ולאריחים (זרות זו לזו, יחד ⁦426⁩ הפרויקטים), והמשפט המשיך
+ * להכריז "הריצה" ביחיד. **נמדד חי 17/09/2026:** ‏`meta.run.run_count = 2`.
+ * ⇒ המשפט מסתעף: אחת — הנוסח הנעול, מילה-במילה. יותר מאחת — נוסח שאומר **כמה**,
+ * ושהתאריך והמאשרת שייכים ל**אחרונה** שבהן.
+ *
+ * 🔤 **התאמת-מספר (כ12 · §2.7):** *"‏1 ריצות"* היא בדיוק התקלה שהכלל נולד ממנה, ולכן
+ * הענף הוא על המונה ולא על ריבוי-קוסמטי. 🔢 **המונה מבודד** (`isolateLtr`) — ספרה
+ * לטינית בין שתי מילים עבריות קופצת ממקומה בלי בידוד (§5ב).
+ *
+ * 🪤 **`run_count` ולא `runs.length`, ושניהם ולא אף אחד מהם:** ‏`run_count` הוא
+ * ‏`count(*)` על הריצות המאושרות ו-`runs` הוא הפירוט שלהן — אותו `select` בדיוק
+ * (מיגרציית J1, ‏`report_m22_notes`). המונה מועדף כי הוא המספר עצמו; `runs.length`
+ * הוא נפילה-לאחור למטען ישן, ו-⁦1⁩ היא הנפילה האחרונה — מטען שהגיע לכאן עם
+ * ‏`approved_at` נושא **לפחות** ריצה אחת מאושרת, ולכן ⁦0⁩ אינו מצב אפשרי.
+ */
+function approvedState(run) {
+  const day = isolateLtr(formatIsraelDate(String(run.approved_at).slice(0, 10)))
+  const count = run.run_count ?? (Array.isArray(run.runs) ? run.runs.length : 1) ?? 1
+  const text =
+    count > 1
+      ? `מציג ${isolateLtr(String(count))} ריצות-ניתוח מאושרות, האחרונה מ-${day} · אושרה ע"י ${run.approved_by}`
+      : `מציג את הריצה מ-${day}, אושרה ע"י ${run.approved_by}`
+  return { text, sub: null, action: null, tone: 'plain' }
+}
+
 function barState({ run, runInProgress, local, pending, notesCount, canEdit }) {
   if (pending) return { text: 'מסווג…', sub: RUNNING_SUB, action: null, tone: 'plain' }
   if (local) return localState(local)
@@ -160,13 +190,7 @@ function barState({ run, runInProgress, local, pending, notesCount, canEdit }) {
     return serverRunState(runInProgress)
   }
   if (run?.approved_at) {
-    const day = isolateLtr(formatIsraelDate(String(run.approved_at).slice(0, 10)))
-    return {
-      text: `מציג את הריצה מ-${day}, אושרה ע"י ${run.approved_by}`,
-      sub: null,
-      action: null,
-      tone: 'plain',
-    }
+    return approvedState(run)
   }
   if (!canEdit) return { text: VIEWER_SENTENCE, sub: null, action: null, tone: 'warn' }
   return {

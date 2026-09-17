@@ -205,16 +205,18 @@ const profitabilityPayload = () =>
       },
     ],
     columns: [
-      { key: 'project_id', label: 'פרויקט', format: 'int', align: 'start' },
+      // ✏️ 17/09/2026 — מזהה-פרויקט מוצהר `format:'id'` (מיגרציית J2), לא כמות.
+      { key: 'project_id', label: 'פרויקט', format: 'id', align: 'start' },
       { key: 'deviation', label: 'סטייה ₪', format: 'money', align: 'end' },
       { key: 'deviation_pct', label: 'סטייה %', format: 'percent', align: 'end' },
     ],
-    // הסדר החי: ממוין לפי ₪ יורד **בתוך** כל אחת משתי קבוצות-המהותיות (📑ב#5 · §⑦).
+    // ✏️ 17/09/2026 — הסדר החי אחרי J1: ממוין לפי ₪ יורד לאורך כל הדירוג; פרויקט מתחת
+    // לרצפת-המהותיות **אינו בדירוג** (📑ב#5), ולכן כל שורה נושאת `below_materiality:false`.
     rows: [
       { project_id: 1416, deviation: 361, deviation_pct: 21.1, below_materiality: false },
+      { project_id: 1465, deviation: 285, deviation_pct: 29.1, below_materiality: false },
       { project_id: 1340, deviation: 202, deviation_pct: 15, below_materiality: false },
-      { project_id: 1465, deviation: 285, deviation_pct: 29.1, below_materiality: true },
-      { project_id: 1458, deviation: 23, deviation_pct: 16.7, below_materiality: true },
+      { project_id: 1458, deviation: 23, deviation_pct: 16.7, below_materiality: false },
     ],
     so_what: 'לפתוח את פרויקט 1427',
     definitions: 'סטיית-תקציב = צד-העבודה בלבד',

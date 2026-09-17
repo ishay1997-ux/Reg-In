@@ -109,8 +109,7 @@ for a in merged['anomalies']:
     sev[a.get('severity', '?')] = sev.get(a.get('severity', '?'), 0) + 1
 merged['anomaly_totals'] = {'total': len(merged['anomalies']), 'by_severity': sev}
 
-json.dump(merged, open(os.path.join(results, 'p3-evidence.json'), 'w', encoding='utf-8', newline='
-'), ensure_ascii=False, indent=2)
+json.dump(merged, open(os.path.join(results, 'p3-evidence.json'), 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=2)
 
 # contact sheet: concatenate the four per-tab sheets' bodies
 parts = []

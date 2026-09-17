@@ -382,10 +382,22 @@ describe('מ1 — מצבי-המעטפת (📐10)', () => {
     expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
   })
 
-  it('ריק עם מסנן-לקוח ⇒ "ריק-אחרי-סינון" עם כפתור-ניקוי', async () => {
+  // ✏️ **פריט [5], 17/09/2026 — שני נוסחים למצב 2, לפי המסנן שרוקן** (כ17). שלוש בדיקות
+  // ולא אחת: הלקוח, התקופה, והכלל ש"נקי מסננים" נשאר בשתיהן. **הבדיקה הזו הייתה קודם
+  // מנוסחת הפוך** — היא בחרה לקוח וציפתה למשפט-התקופה, וזו בדיוק ההפרה שנמדדה על מ21.
+  it('ריק עם מסנן-לקוח ⇒ המשפט נוקב בלקוח, עם כפתור-ניקוי', async () => {
     callReport.mockResolvedValue(emptyPayload())
     renderPage('/reports?customer=42')
+    expect(await screen.findByText('אין נתונים ללקוח שנבחר')).toBeInTheDocument()
+    expect(screen.queryByText('אין נתונים בתקופה שנבחרה')).toBeNull()
+    expect(screen.getByTestId('reports-clear-filters')).toBeInTheDocument()
+  })
+
+  it('ריק בלי לקוח, עם תקופה מסוננת ⇒ המשפט הנעול של 15(ו) נשאר כפי שהוא', async () => {
+    callReport.mockResolvedValue(emptyPayload())
+    renderPage('/reports?period=12m')
     expect(await screen.findByText('אין נתונים בתקופה שנבחרה')).toBeInTheDocument()
+    expect(screen.queryByText('אין נתונים ללקוח שנבחר')).toBeNull()
     expect(screen.getByTestId('reports-clear-filters')).toBeInTheDocument()
   })
 
@@ -409,7 +421,8 @@ describe('מ1 — מצבי-המעטפת (📐10)', () => {
   it('לקוח שנבחר והטבלה התרוקנה ⇒ "ריק-אחרי-סינון", גם כשהאוכלוסייה גדולה', async () => {
     callReport.mockResolvedValue(payload({ population: { n: 52, label: 'אוכלוסייה · n=52' } }))
     renderPage('/reports?customer=411')
-    expect(await screen.findByText('אין נתונים בתקופה שנבחרה')).toBeInTheDocument()
+    // ‏17/09: אותו מצב בדיוק, והמשפט נוקב עכשיו במסנן שבאמת רוקן (פריט [5]).
+    expect(await screen.findByText('אין נתונים ללקוח שנבחר')).toBeInTheDocument()
     expect(screen.getByTestId('reports-clear-filters')).toBeInTheDocument()
   })
 })
@@ -787,6 +800,42 @@ describe('מ1 — משטח שאינו מחיל מסנן-לקוח (פריט [8])'
       expect(screen.getByTestId('reports-window-label')).toHaveTextContent('בטא הפקות')
     })
     expect(screen.getByTestId('reports-customer-filter')).not.toBeDisabled()
+  })
+})
+
+describe('מ1 — הכותרת לפני שיש מטען, עם לקוח בכתובת (פריט [6])', () => {
+  const CUSTOMERS = [{ customer_id: 414, company_name: 'בטא הפקות' }]
+
+  // 🔴 **הנקודה-העיוורת של סבב א', והתרחיש שהיא נקבה בו:** ‏`readScope` נורה רק מתשובה
+  // שהצליחה ⇒ בזמן-טעינה ובתקלה-שלפני-התשובה-הראשונה הדגל אינו קיים, והכותרת הדהדה שם
+  // של לקוח על משטח שאולי אינו מסנן לפיו כלל. **בדיקת ה-RPC המבוטל היא בדיוק אותו מצב.**
+  it('‏RPC שלא חוזר — שם-הלקוח אינו מהודהד, וסעיף-האוכלוסייה נשאר', async () => {
+    listCustomers.mockResolvedValueOnce(CUSTOMERS)
+    callReport.mockReturnValue(new Promise(() => {}))
+    renderPage('/reports?period=12m&customer=414')
+    const label = await screen.findByTestId('reports-window-label')
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-customer-filter')).toHaveValue('414')
+    })
+    expect(label).not.toHaveTextContent('בטא הפקות')
+    expect(label).toHaveTextContent('12 חודשים')
+    // 🔑 *"כל הלקוחות"* היא הצהרה על האוכלוסייה ונכונה בכל משטח — ולכן היא נשארת
+    // (תיקון [27] של סבב א'), ומה שיורד הוא **השם** בלבד.
+    expect(label).toHaveTextContent('כל הלקוחות')
+    // ⚠️ ולא ידוע עדיין שהבורר לא-רלוונטי ⇒ הוא פעיל, ואינו נושא נימוק-נטרול.
+    expect(screen.getByTestId('reports-customer-filter')).not.toBeDisabled()
+    expect(screen.queryByTestId('reports-customer-disabled')).toBeNull()
+  })
+
+  // 🔑 **והצד השני — ברגע שהמטען חוזר וממשטח שכן מסנן לפי לקוח, השם חוזר.** בלי הבדיקה
+  // הזו "הסתרת השם" הייתה יכולה להיות קבועה, ואיש לא היה מבחין.
+  it('ברגע שהמטען חוזר, השם מופיע בכותרת', async () => {
+    listCustomers.mockResolvedValueOnce(CUSTOMERS)
+    callReport.mockResolvedValue(payload())
+    renderPage('/reports?period=12m&customer=414')
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-window-label')).toHaveTextContent('בטא הפקות')
+    })
   })
 })
 

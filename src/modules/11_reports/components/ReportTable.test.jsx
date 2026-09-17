@@ -13,10 +13,11 @@ vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }
 
 import ReportTable from './ReportTable'
 
-// 🌱 עמודות ושורות מתוך מטען חי של מ4 (`report_m04_discounts`, 16/09/2026) — לא הומצאו:
-// ‏`quote_id` **מוכרז `int`** במיגרציה (`…d2_rpcs_executive_fixes.sql:1280`), וזה כל הפגם.
+// 🌱 עמודות ושורות מתוך מטען חי של מ4 (`report_m04_discounts`) — לא הומצאו. ‏`quote_id`
+// הוכרז `int` עד 17/09/2026 וזה היה כל הפגם; מיגרציית J2 מצהירה עליו `'format','id'`,
+// **וזה המקור היחיד** — כלל-סיומת-ה-`_id` שהיה כאן בבוקר נמחק (שני מנגנונים, D-30).
 const COLUMNS = [
-  { key: 'quote_id', label: 'הצעה', format: 'int' },
+  { key: 'quote_id', label: 'הצעה', format: 'id' },
   { key: 'customer_name', label: 'לקוח', format: 'text' },
   { key: 'discount_pct', label: 'הנחה', format: 'percent' },
 ]
@@ -26,14 +27,14 @@ const LRI = '⁦'
 const PDI = '⁩'
 
 describe('ReportTable — מזהה אינו כמות (פריט [2])', () => {
-  it('עמודה שסיומת-מפתחה _id מוצגת בלי מפריד-אלפים', () => {
+  it('עמודה שהוכרזה format:"id" מוצגת בלי מפריד-אלפים', () => {
     render(<ReportTable columns={COLUMNS} rows={ROWS} />)
     expect(screen.getByRole('cell', { name: `${LRI}1907${PDI}` })).toBeInTheDocument()
     expect(screen.queryByText('⁦1,907⁩')).not.toBeInTheDocument()
   })
 
-  // 🔑 הצהרת-שרת מפורשת עובדת בלי כלל-הסיומת — זהו החוזה מכאן והלאה (C8).
-  it('‏format:"id" מפורש נותן את אותה תוצאה גם למפתח שאינו _id', () => {
+  // 🔑 ההצהרה עובדת גם על מפתח שאינו `_id` — זהו החוזה היחיד (C8), ולא שם-העמודה.
+  it('‏format:"id" עובד גם למפתח שאינו _id', () => {
     render(
       <ReportTable
         columns={[{ key: 'quote_no', label: 'הצעה', format: 'id' }]}
@@ -41,6 +42,18 @@ describe('ReportTable — מזהה אינו כמות (פריט [2])', () => {
       />,
     )
     expect(screen.getByRole('cell', { name: `${LRI}2288${PDI}` })).toBeInTheDocument()
+  })
+
+  // 🚫 **והנעילה על מחלקת-הפגם שנמחקה:** מפתח שמסתיים ב-`_id` אך הוכרז `int` נשאר `int`.
+  // ‏אילו כלל-הסיומת היה חוזר, הבדיקה הזו תיפול — וזה בדיוק תפקידה.
+  it('מפתח _id שהוכרז int אינו הופך למזהה מאחורי גב ההצהרה', () => {
+    render(
+      <ReportTable
+        columns={[{ key: 'quote_id', label: 'הצעה', format: 'int' }]}
+        rows={[{ quote_id: 1907 }]}
+      />,
+    )
+    expect(screen.getByRole('cell', { name: `${LRI}1,907${PDI}` })).toBeInTheDocument()
   })
 
   // 🚫 **והכלל אינו גולש לעמודות-כמות** — `int` נשאר `int` בכל עמודה שאינה מזהה.

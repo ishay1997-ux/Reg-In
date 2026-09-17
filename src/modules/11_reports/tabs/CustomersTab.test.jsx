@@ -392,13 +392,18 @@ const driftingPayload = () =>
 
 // ‏`meta.run` אחרי G2-1: איחוד שתי הריצות המאושרות. ⚠️ `sent_count` כאן הוא **סכום**
 // (⁦812⁩) ולא מכנה — הפס לעולם אינו מחלק בו.
+// ✏️ **‏17/09/2026: `approved_by` הוא שם ולא כתובת.** מיגרציית J1 מצרפת
+// ‏`users.full_name` (`coalesce(nullif(btrim(u.full_name),''), r.approved_by)`), והערך
+// כאן הוא **מה שנמדד חי** באותו יום מול `report_m22_notes` כ-CEO: `ישי אטיאס`,
+// ‏`run_count: 2`. הכתובת הגולמית לא אבדה — היא `approved_by_email`, והפס אינו מדפיס אותה.
 const APPROVED_RUN = {
   run_id: 6,
   status: 'done',
   run_count: 2,
   model: 'gemini-3.5-flash-lite + gemini-3.8-flash',
   approved_at: '2026-09-16T04:28:26.605176+00:00',
-  approved_by: 'ishay1997@gmail.com',
+  approved_by: 'ישי אטיאס',
+  approved_by_email: 'ishay1997@gmail.com',
   sent_count: 812,
   ok_count: 426,
   failed_count: 0,
@@ -765,7 +770,9 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     callReport.mockResolvedValue(notesPayload())
     renderTab(SURFACES.מ22)
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('16/09/2026')
-    expect(screen.getByTestId('m25-run-text')).toHaveTextContent('ishay1997@gmail.com')
+    // 🔤 שם, לא כתובת-התחברות (J1) — וכתובת-הדוא"ל **אינה** עולה למסך.
+    expect(screen.getByTestId('m25-run-text')).toHaveTextContent('ישי אטיאס')
+    expect(screen.getByTestId('m25-run-text')).not.toHaveTextContent('ishay1997@gmail.com')
     // 🎨 ממצא 14 — המוקאפ שומר את הענבר ל-`.runbar.warn`; מצב מיושב שאין בו מה לעשות
     // מצויר לבן. פס שענבר תמיד — אינו אומר דבר כשהוא באמת צריך לומר.
     expect(screen.getByTestId('m25-run-bar')).toHaveAttribute('data-tone', 'plain')
@@ -774,6 +781,46 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     expect(row).toHaveTextContent('כן')
     expect(row).not.toHaveTextContent('true')
     expect(screen.queryByTestId('m22-no-run')).toBeNull()
+  })
+
+  // ✏️ **פריט [C5] סבב ב' — התאמת-מספר בפס** (17/09/2026). ‏`run_count` נמדד חי = ⁦2⁩,
+  // והפס הכריז *"מציג את **הריצה**"* ביחיד על שתי ריצות שאוחדו ב-G2-1. שתי הבדיקות
+  // נועלות את **שני** הענפים, כי כ12 נופל דווקא בקצה: *"‏1 ריצות"*.
+  it('שתי ריצות מאושרות — הפס אומר כמה, ושהתאריך שייך לאחרונה', async () => {
+    callReport.mockResolvedValue(notesPayload())
+    renderTab(SURFACES.מ22)
+    const text = await screen.findByTestId('m25-run-text')
+    expect(text).toHaveTextContent('מציג ⁦2⁩ ריצות-ניתוח מאושרות')
+    expect(text).toHaveTextContent('האחרונה מ-⁦16/09/2026⁩')
+    expect(text).toHaveTextContent('אושרה ע"י ישי אטיאס')
+    expect(text).not.toHaveTextContent('מציג את הריצה')
+  })
+
+  it('ריצה מאושרת אחת — הנוסח הנעול של הכרטיס, ולא "‏1 ריצות"', async () => {
+    callReport.mockResolvedValue(
+      notesPayload({ run: { ...APPROVED_RUN, run_count: 1, runs: undefined } }),
+    )
+    renderTab(SURFACES.מ22)
+    const text = await screen.findByTestId('m25-run-text')
+    expect(text).toHaveTextContent('מציג את הריצה מ-⁦16/09/2026⁩, אושרה ע"י ישי אטיאס')
+    expect(text).not.toHaveTextContent('ריצות')
+  })
+
+  // 🪤 מטען ישן שאין בו `run_count` כלל — הנפילה-לאחור היא `runs.length`, ולא ⁦1⁩ שקרי.
+  it('מטען בלי run_count נופל אחורה לאורך runs[]', async () => {
+    callReport.mockResolvedValue(
+      notesPayload({
+        run: {
+          ...APPROVED_RUN,
+          run_count: undefined,
+          runs: [{ run_id: 6 }, { run_id: 5 }, { run_id: 3 }],
+        },
+      }),
+    )
+    renderTab(SURFACES.מ22)
+    expect(await screen.findByTestId('m25-run-text')).toHaveTextContent(
+      'מציג ⁦3⁩ ריצות-ניתוח מאושרות',
+    )
   })
 
   it('🔴 `run_in_progress` במצב `failed` אינו "ריצה בתהליך" — הדף מתנהג כאילו אין אחת', async () => {

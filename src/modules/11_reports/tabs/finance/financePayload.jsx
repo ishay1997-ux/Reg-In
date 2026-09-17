@@ -71,11 +71,12 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
       table: ['reports.profitability.sortWhy'],
       extras: [],
     }),
-    // 📑ב#5 נועל מיון-ברירת-מחדל **לפי ₪**. `groupKey`: שורות מתחת לרצפת-המהותיות יורדות
-    // לסוף הרשימה (כרטיס §⑦), ולכן הטור יורד **בתוך כל אחת משתי הקבוצות** ולא לאורך כולו.
+    // 📑ב#5 נועל מיון-ברירת-מחדל **לפי ₪**.
+    // ✏️ 17/09/2026 — `groupKey: 'below_materiality'` הוסר: מאז מיגרציית J1 פרויקט מתחת
+    // לרצפת-המהותיות **אינו בדירוג כלל** (הוא בתוך האוכלוסייה ובהערת-השוליים בלבד), ולכן
+    // כל שורה שחוזרת נושאת `below_materiality:false` והקיבוץ היה מת — מנגנון שמתאר עולם שהוסר.
     sort: Object.freeze({
       columns: [{ key: 'deviation', direction: 'descending' }],
-      groupKey: 'below_materiality',
     }),
   }),
   aging: Object.freeze({

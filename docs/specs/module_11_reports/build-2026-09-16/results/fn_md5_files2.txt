@@ -1,0 +1,106 @@
+== supabase/migrations\20260916043300_module11_a_feedback_ai_tables.sql  bytes=16104 CR=0
+   approve_feedback_ai_run          n=  1369 md5=69221f3ed61af0cf2724059262c28360
+== supabase/migrations\20260916043400_module11_b_assignments_recommended_rank.sql  bytes=3627 CR=0
+== supabase/migrations\20260916043500_module11_c_report_params.sql  bytes=3897 CR=0
+== supabase/migrations\20260916045200_module11_h0_harden_backup_tables.sql  bytes=1894 CR=0
+== supabase/migrations\20260916051950_module11_e_rpcs_finance.sql  bytes=75730 CR=0
+   report_m07_finance_overview      n= 17127 md5=4979746229e6f06ac160eb0f066fbae6
+   report_m08_profitability         n= 11293 md5=486f7edc7017b6b77ba92f20d2728ceb
+   report_m09_aging                 n= 20548 md5=677ea580e8f2a4476c1b6718ac9be390
+   report_m12_equipment             n= 14426 md5=360113bada40e700272ec5b35669ad78
+== supabase/migrations\20260916052359_module11_f_rpcs_hostesses.sql  bytes=90849 CR=0
+   report_m14_hostess_overview      n= 23332 md5=8ca690d6459a77e940bd92c8eb515d11
+   report_m15_reliability           n= 21888 md5=e16c8575743fa9e808d52f9d0f0364d0
+   report_m16_quality_cost          n= 10712 md5=c3389041da1b7cd311f3a90922e24bc5
+   report_m17_fairness              n= 18179 md5=f195461a25d556cf6e0fac4d4bbf3bfd
+== supabase/migrations\20260916052500_module11_h1_one_running_ai_run.sql  bytes=1017 CR=0
+== supabase/migrations\20260916052511_module11_g_rpcs_customers.sql  bytes=92731 CR=0
+   report_m19_customers_overview    n= 23152 md5=a6cf969ff38072fd30aebeaf1e76249b
+   report_m20_satisfaction          n= 16901 md5=de8cc842f5174d2bb296d1eb1b54e78f
+   report_m21_drifting              n= 22696 md5=2124220a404ec3e5a0d4bd24d5d9bc5f
+   report_m22_notes                 n= 17644 md5=064ba91c214672f9137fbcb670c19f8a
+== supabase/migrations\20260916052600_module11_d_rpcs_executive.sql  bytes=90334 CR=0
+   report_m02_exec_overview         n= 16581 md5=e934dfef8f00ed179bfc015598a6fd31
+   report_m03_trends                n= 29237 md5=16749ea9bf6af74d78a50c7fa65ff3a2
+   report_m04_discounts             n= 16351 md5=b457f8d74f51e367f3d876075cbeeb30
+   report_m06_staffing              n= 15574 md5=09c9d81b8b2b952ed6687140f26cb3ec
+== supabase/migrations\20260916063400_module11_e2_rpcs_finance_fixes.sql  bytes=95916 CR=0
+   report_m07_finance_overview      n= 23071 md5=03530a7043684c1cd0faf99378f7815e
+   report_m08_profitability         n= 15916 md5=8c93ef4389144c45691a44a51c4a272b
+   report_m09_aging                 n= 29219 md5=fee95ba960a529d3b65d2dc8534a0de1
+   report_m12_equipment             n= 17284 md5=0fbde1633b5b4e468f2a11a2915af9ee
+== supabase/migrations\20260916065642_module11_f2_rpcs_hostesses_fixes.sql  bytes=107587 CR=0
+   report_m14_hostess_overview      n= 27766 md5=f83581cb01fd2bdde5e5203759e2ab0f
+   report_m15_reliability           n= 27450 md5=80be2d9ed1db48d08d95eb17d0b843a9
+   report_m16_quality_cost          n= 12303 md5=f0603ab07e966cca20a3d700ef108445
+   report_m17_fairness              n= 23704 md5=0ad0fbbc952faa14b28beed097f2413b
+== supabase/migrations\20260916081500_module11_e3_rpcs_finance_rounding.sql  bytes=29358 CR=0
+   report_m07_finance_overview      n= 23787 md5=ea31e0abdcfd58f1476a149fada9b52b
+== supabase/migrations\20260916082900_module11_g2_rpcs_customers_fixes.sql  bytes=106337 CR=0
+   report_m19_customers_overview    n= 26590 md5=13ce300f0098e5b2199faf84df29a802
+   report_m20_satisfaction          n= 18928 md5=84393f08eeb96f59ea9417faccec19f3
+   report_m21_drifting              n= 24915 md5=3e893608a3db20c56bf291fd186b4b5f
+   report_m22_notes                 n= 26264 md5=1386a8ee1e923b1295349332d6267f96
+== supabase/migrations\20260916083000_module11_d2_rpcs_executive_fixes.sql  bytes=97323 CR=0
+   report_m02_exec_overview         n= 18659 md5=6e36ac7a572b9adbaca7818d45da6b52
+   report_m03_trends                n= 30718 md5=76ff102aa8a600fcde4235f3f55560be
+   report_m04_discounts             n= 17529 md5=f3954e3b7267c124c74d44a9eb26a8e6
+   report_m06_staffing              n= 19567 md5=e9db5c4dc8fdc1f9b90cd8ed0a8be17d
+== supabase/migrations\20260916085900_module11_h2_sentence_isolation.sql  bytes=179500 CR=0
+   report_m07_finance_overview      n= 23793 md5=14c9e6fd476602a4cf6a0c8eadbdc7c9
+   report_m08_profitability         n= 15922 md5=154f92f1da1422628bfddec9291839cb
+   report_m09_aging                 n= 29225 md5=d72ecd836b628b0709d5f21a7ae9292a
+   report_m12_equipment             n= 17290 md5=55eb3018addb3b2b121acdf212ce6840
+   report_m14_hostess_overview      n= 27862 md5=f6f65a4142be389f054cce26d7161331
+   report_m15_reliability           n= 27562 md5=3804c05285454a955c6986ed96e3299a
+   report_m17_fairness              n= 23722 md5=cabb0a87f87745d6ca87916b29ea163e
+== supabase/migrations\20260916103000_module11_g3_customers_filter_keys.sql  bytes=54933 CR=0
+   report_m20_satisfaction          n= 21568 md5=be326d46a5e2e81ff5cbcc9494054525
+   report_m22_notes                 n= 27298 md5=2f059710a3fbe611a7c795b59fcd7b94
+== supabase/migrations\20260916114500_module11_i1_rpc_formats_and_notes.sql  bytes=355095 CR=0
+   report_m03_trends                n= 31367 md5=8c31f8d0214fca6429d0b1668a11124c
+   report_m07_finance_overview      n= 24346 md5=7db4955cd505261d9812b290a95d6347
+   report_m08_profitability         n= 16540 md5=0f7c4f276a82ae7a65373c233044b7d6
+   report_m09_aging                 n= 32432 md5=104a9943baafb363849fd68187f6d4a0
+   report_m12_equipment             n= 17987 md5=3ac71684bb962302c84c9ba120384a37
+   report_m14_hostess_overview      n= 28957 md5=32b06e97605b9109f2a46c7a710292b8
+   report_m15_reliability           n= 28327 md5=f091c55655bb6be6642c3d0c9d1030f6
+   report_m16_quality_cost          n= 15030 md5=d71339cce8cfadb9d06f5f8ffc5dc7ee
+   report_m17_fairness              n= 25786 md5=e59ef2d2be2d5426cb590b355762b7d1
+   report_m19_customers_overview    n= 29954 md5=b3a5dfeb2f6d644b869de6eaa21010ce
+   report_m20_satisfaction          n= 25257 md5=2dc24cb1b9042b769d825221f0dd4d08
+   report_m21_drifting              n= 26695 md5=40f05c75d747b83fd1ec850a81be5616
+   report_m22_notes                 n= 28967 md5=b9a31f816e97c6b925862fc919b3b37a
+== supabase/migrations\20260916194500_module11_i2_rpc_round3.sql  bytes=278359 CR=0
+   report_m03_trends                n= 32922 md5=e27c9aeb1e8fc4d1a41b00b7a64d6c6c
+   report_m09_aging                 n= 34931 md5=ae78d82d29510c1f7d4d66aa5568439f
+   report_m14_hostess_overview      n= 29396 md5=320b7b0da3f22b5838cf3ec3c9c6504c
+   report_m15_reliability           n= 29448 md5=77ad27ff84dc2ef572733522cea3b41a
+   report_m17_fairness              n= 25866 md5=eac50e57b114424c9c42cbafd06a7a75
+   report_m19_customers_overview    n= 30250 md5=65b71309a7edeb52d213162774239a41
+   report_m20_satisfaction          n= 25274 md5=c1775a8731094569dca36221839d3ddd
+   report_m21_drifting              n= 26701 md5=517510cdf31d2000dd7922c24a88e157
+   report_m22_notes                 n= 28973 md5=25052fc8e4d430aada2bb6841faef599
+== supabase/migrations\20260917005500_module11_j1_rpc_round4.sql  bytes=224439 CR=0
+   report_m08_profitability         n= 17960 md5=58bcd4e808eef20bc08651b9033ac4e4
+   report_m09_aging                 n= 35236 md5=9acdd392990505eea72bbc650299f094
+   report_m14_hostess_overview      n= 29792 md5=6df160ee8b0da5cd34b35491d4e412fc
+   report_m15_reliability           n= 29713 md5=611dec1a80077c66559674fb90ee0150
+   report_m16_quality_cost          n= 15439 md5=98448331baba42cb58c2eb5abd8f701f
+   report_m20_satisfaction          n= 25660 md5=f301d22fa7b6d6f9ef865a3b235ba1de
+   report_m21_drifting              n= 27097 md5=1ba64fd167d429999c9da08513ac414e
+   report_m22_notes                 n= 30266 md5=cd0af7f747533a04cdb1a980157d7229
+== supabase/migrations\20260917021500_module11_j2_rpc_round5.sql  bytes=343204 CR=0
+   report_m02_exec_overview         n= 18449 md5=8e7fa713ced1cc0e69d0664f85f3e878
+   report_m04_discounts             n= 17568 md5=8807bba12d646a9e4c04059e278cd58a
+   report_m06_staffing              n= 19543 md5=818ac4d6fbd0044f3c0661d8eaff689d
+   report_m07_finance_overview      n= 24932 md5=a31218bb81461e7baddc7a781c7a2ad9
+   report_m08_profitability         n= 17757 md5=b085053262bdf121a53cd4e63b2ff3cf
+   report_m09_aging                 n= 35237 md5=e1f296d8b450fc16b663ae724479b587
+   report_m12_equipment             n= 17878 md5=3d91d4180b6daa7b5b3c3a6f122f38cf
+   report_m14_hostess_overview      n= 31089 md5=b18c4c2466b4ffa3ea197d26e5115034
+   report_m15_reliability           n= 29653 md5=eaff4bacfc2ab9e428a96f7b6e37c7a7
+   report_m17_fairness              n= 25806 md5=035c10c16c126fc400a1f601457e81a1
+   report_m19_customers_overview    n= 30744 md5=9cc575033cc5782afdf5f6d17585a410
+   report_m20_satisfaction          n= 25616 md5=9d9414572c71343c448213b5e24582cb
+   report_m22_notes                 n= 30744 md5=bea5231289d128d3bc80465033e7d80a

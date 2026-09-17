@@ -460,7 +460,8 @@ const m4Payload = (extra = {}) =>
       ],
     },
     columns: [
-      { key: 'quote_id', label: 'הצעה', format: 'int', align: 'start', sorted: null },
+      // ✏️ 17/09/2026 — החוזה (C8) מצהיר `format:'id'` על עמודת-מזהה; הפיקסטורה משקפת את מיגרציית J2.
+      { key: 'quote_id', label: 'הצעה', format: 'id', align: 'start', sorted: null },
       { key: 'discount', label: 'הנחה', format: 'percent', align: 'end', sorted: 'desc' },
     ],
     rows: [{ quote_id: 1907, discount: 22, tier: '10+', drill_key: { kind: 'quote', id: 1907 } }],

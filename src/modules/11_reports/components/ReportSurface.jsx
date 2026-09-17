@@ -22,6 +22,7 @@ import { DRILL_INTENT, ROW_DOOR_KINDS, callReport, normalizeCharts } from '../ap
 import ChartCard from './ChartCard'
 import DrillCrumbs from './DrillCrumbs'
 import Envelope from './Envelope'
+import { EMPTY_AFTER_CUSTOMER_FILTER, EMPTY_AFTER_FILTER } from './reportsCopy'
 import ExportBar from './ExportBar'
 import KpiTile from './KpiTile'
 import ReportTable from './ReportTable'
@@ -319,6 +320,7 @@ function SurfaceCharts({
   onToggle,
   renderChartAside,
   renderChartFooter,
+  emptyText,
 }) {
   return charts.map((chart, index) => {
     const key = chartFilterKey(chart, payload.columns, payload.rows, allowAutoFilter)
@@ -345,6 +347,7 @@ function SurfaceCharts({
         selected={isDrill ? activeDrillLabel(chart, drill) : selectedValue(selection, index)}
         aside={renderChartAside?.(payload, index)}
         footer={renderChartFooter?.(payload, index)}
+        emptyText={emptyText}
       />
     )
   })
@@ -387,7 +390,7 @@ const isEmptyAfterLoad = (payload, customerId) =>
  * מסכים. ‏`e2e/reports.spec.js` (*"משטח שהסינון רוקן"*) בודק בדיוק את הצירוף: כפתור מנוטרל
  * **ועליו** הנוסח הנעול.
  */
-function EmptyPage({ surface, isFiltered, clearFilters, exportSlot, exportBar }) {
+function EmptyPage({ surface, isFiltered, clearFilters, customerId, exportSlot, exportBar }) {
   return (
     <>
       {exportSlot ? createPortal(exportBar, exportSlot) : null}
@@ -395,6 +398,12 @@ function EmptyPage({ surface, isFiltered, clearFilters, exportSlot, exportBar })
         state={isFiltered ? 'empty' : 'blank'}
         testId={`report-${surface.slug}`}
         onClearFilters={isFiltered ? clearFilters : undefined}
+        // 🔤 **המשפט נוקב במסנן שבאמת רוקן** (כ17 · פריט [5], 17/09/2026): לקוח נבחר ⇒
+        // נוסח-הלקוח, אחרת נוסח-התקופה. ‏🔴 **הלקוח גובר גם כשגם התקופה מסוננת**, וזו
+        // הכרעה ולא סדר-מקרי: התקופה **תמיד** מסוננת (ברירת-המחדל אינה `all`), ולכן
+        // "שני מסננים פעילים" הוא המצב הרגיל ולא מקרה-קצה — המסנן שהמשתמשת בחרה
+        // עכשיו במו ידיה הוא הלקוח, והוא זה שהשתנה לפני שהטבלה התרוקנה.
+        title={customerId ? EMPTY_AFTER_CUSTOMER_FILTER : undefined}
       />
     </>
   )
@@ -600,6 +609,7 @@ export default function ReportSurface({
         surface={surface}
         isFiltered={isFiltered}
         clearFilters={clearFilters}
+        customerId={customerId}
         exportSlot={shell?.exportSlot}
         exportBar={exportBar}
       />
@@ -669,6 +679,8 @@ export default function ReportSurface({
         onToggle={toggleSelection}
         renderChartAside={renderChartAside}
         renderChartFooter={renderChartFooter}
+        // ✏️ 17/09/2026 — הגרף אומר את אותו משפט-ריקות שהמעטפת אומרת: לפי המסנן שרוקן (כ17).
+        emptyText={customerId ? EMPTY_AFTER_CUSTOMER_FILTER : EMPTY_AFTER_FILTER}
       />
 
       {/* 🔤 *"× נקי בחירה"* — ✏️ **הוכרע 16/09/2026:** ‏`spec.md §1.5` נועל **ציווי בנקבה**

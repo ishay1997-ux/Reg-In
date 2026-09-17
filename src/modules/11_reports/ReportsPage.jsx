@@ -310,10 +310,31 @@ export default function ReportsPage() {
   const scope = surfaceScope?.rpc === activeSurface?.rpc ? surfaceScope : null
   const periodIgnored = Boolean(scope?.periodIgnored)
   const customerIgnored = Boolean(scope?.customerIgnored)
+  /**
+   * ✏️ **הכלל חל גם לפני שיש מטען — פריט [6], 17/09/2026** (הנקודה-העיוורת של סבב א').
+   *
+   * 🔴 **הפגם:** ‏`readScope` נורה **רק מתשובה שהצליחה**, ולכן בזמן-הטעינה ובתקלה
+   * שלפני התשובה הראשונה `scope` הוא `null` ⇒ `customerIgnored=false` ⇒ הכותרת מהדהדת
+   * את שם-הלקוח שנבחר גם על אחד מארבעת משטחי-הדיילות, שה-RPC שלהם אינו מקבל לקוח כלל.
+   * **תרחיש בדיק:** ‏`/reports?tab=hostesses&report=hostess-overview&customer=414` עם
+   * ה-RPC מבוטל — עד היום נכתב שם *"בטא הפקות"*.
+   *
+   * 🔑 **מה נבחר, ולמה דווקא זה** (שלוש אפשרויות נשקלו, ר' הדיווח): **מוסתר שם-הלקוח
+   * בלבד, ולא סעיף-הלקוח כולו.** ‏*"כל הלקוחות"* אינה הצהרה על **המסנן** אלא על
+   * **האוכלוסייה**, והיא נכונה בכל שישה-עשר המשטחים — משטח שמתעלם מהמסנן אכן מציג את
+   * כל הלקוחות. ⇒ אין סיבה להוריד אותה, והורדתה הייתה מבטלת את תיקון [27] של סבב א'
+   * (*"12 חודשים · כל הלקוחות"* במסך-התקלה). ‏**שם מסוים** לעומת זאת הוא הצהרה על
+   * המסנן — וזו בדיוק ההצהרה שאיננו יכולים לאמת עד שהמטען חוזר.
+   * ⚠️ **והבורר נשאר פעיל** — לא ידוע עדיין שהוא לא-רלוונטי, ולנטרל פקד מתוך ספק זו
+   * יכולת שנשללת בלי סיבה. ‏`customerIgnored` הוא `false` כאן, ולכן אין מה לשנות.
+   * ⚠️ **תקלה אחרי טעינה מוצלחת אינה נוגעת בכל זה:** ‏`surfaceScope` שורד טעינה-מחדש
+   * שנכשלה (אותו `rpc`), ולכן שם ההתנהגות היא בדיוק זו של סבב א'.
+   */
+  const customerNameUnverified = scope == null && Boolean(customerId)
   const windowLabel = formatWindowLabel({
     from,
     to,
-    customerName: selectedCustomer?.company_name,
+    customerName: customerNameUnverified ? null : selectedCustomer?.company_name,
     // 🔑 **מי שמדד, מצהיר** — תווית-השרת גוברת רק כשהמשטח הצהיר שהתקופה אינה חלה עליו.
     surfaceLabel: periodIgnored ? scope.label : null,
     // ⚠️ **ורק כשנבחרה תקופה**: ב-"הכול" אין טווח מלכתחילה, והמילה *"הכול"* בכותרת הייתה

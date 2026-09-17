@@ -898,6 +898,10 @@ export default function ChartCard({
   selected,
   aside,
   footer,
+  // ✏️ 17/09/2026 — משפט-הריקות מגיע מהמעטפת, שיודעת **איזה מסנן** רוקן את הדף (תקופה או
+  // לקוח — `EMPTY_AFTER_CUSTOMER_FILTER`, כלל כ17); ברירת-המחדל נשארת משפט-התקופה הנעול,
+  // כך שכל צרכן אחר של הגרף אינו משתנה. בלי זה מסך אחד אמר שני משפטים על אותו מסנן.
+  emptyText = EMPTY_AFTER_FILTER,
 }) {
   const idPrefix = useId().replace(/:/g, '')
   if (!chart) return null
@@ -927,7 +931,7 @@ export default function ChartCard({
           🔤 הנוסח מגיע מ-`reportsCopy.js`, אותו משפט בדיוק שהמעטפת אומרת. */}
       {data.length === 0 ? (
         <p className="py-6 text-center text-[12.5px] text-slate-500" data-testid="chart-empty">
-          {EMPTY_AFTER_FILTER}
+          {emptyText}
         </p>
       ) : (
         <>

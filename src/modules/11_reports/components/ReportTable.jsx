@@ -33,27 +33,18 @@ function alignFor(column) {
   return NUMERIC_FORMATS.has(column.format) ? ALIGN_CLASS.end : ALIGN_CLASS.start
 }
 
-/**
- * ✏️ **עמודה שהיא מזהה מקבלת `format:'id'` גם כשה-RPC הכריז `int`** (17/09/2026, פריט [2]).
- *
- * 🔴 **הפגם שנמדד על המסך:** מ4 מצהירה `('key','quote_id', …,'format','int')`
- * (`20260916083000_module11_d2_rpcs_executive_fixes.sql:1280`) ⇒ מספר-ההצעה ⁦1907⁩ הופיע
- * כ-**`1,907`**, ומ8 הציגה מספרי-פרויקט כ-`1,416`. מזהה עם מפריד-אלפים נקרא ככמות.
- * 🔑 **שתי הדרכים, ובכוונה:** הצהרת-שרת `format:'id'` היא החוזה מכאן והלאה (C8), **וכלל
- * סיומת-ה-`_id` הוא הרשת** לכל ה-RPC-ים שכבר כתובים ולא ייגעו בסבב הזה.
- * ⚠️ **הכלל הוא סיומת ולא הכלה** — עמודה בשם `paid_days` אינה מזהה, ו-`_id` בסוף היא
- * המוסכמה היחידה שכל שישה-עשר המטענים מקיימים (`quote_id` · `project_id` · `customer_id` ·
- * `hostess_id`). **הנחה מוצהרת** — ר' הדיווח.
- */
-const ID_KEY_SUFFIX = /_id$/
-const formatOf = (column) => (ID_KEY_SUFFIX.test(column.key ?? '') ? 'id' : column.format)
-
 function Cell({ column, row }) {
   // 🔤 **כל עיצוב-התא עובר דרך `formatByType` — כולל `textLtr`** (נוסף 16/09/2026): תא
   // שערכו טווח-ספרות (`1–30` · `90+`) מרונדר **הפוך** ב-`<td>` של דף RTL, כי המקף הוא תו
   // נייטרלי בין שני רצפי-ספרות. ⇒ ה-RPC מצהיר `format: 'textLtr'` והבידוד נעשה במקור
   // אחד — **ולא** בעטיפה ידנית בטרנספורם של לשונית, שדלפה משם אל קובץ-האקסל.
-  const text = formatByType(row[column.key], formatOf(column))
+  //
+  // ✏️ **מזהה מזוהה מהצהרת-השרת בלבד — `format:'id'`** (17/09/2026, סבב ב'). ‏17/09 בבוקר
+  // היה כאן גם כלל-סיומת (`/_id$/` על שם-העמודה) שהפך כל `quote_id`/`project_id` למזהה גם
+  // כשה-RPC הכריז `int`. **הכלל נמחק:** מיגרציית J2 מצהירה `'format','id'` על כל עמודת-מזהה
+  // בשישה-עשר המשטחים (החוזה C8), ושני מנגנונים לאותה התנהגות הם בדיוק מחלקת-הפגם D-30 —
+  // ביום שבו הם ייפרדו, אף אחד לא ידע איזה מהם קבע.
+  const text = formatByType(row[column.key], column.format)
   return (
     <td className={cn('border-b border-slate-100 p-2.5 align-middle', alignFor(column))}>
       {text === NO_VALUE ? <span className="text-slate-400">{NO_VALUE}</span> : text}
