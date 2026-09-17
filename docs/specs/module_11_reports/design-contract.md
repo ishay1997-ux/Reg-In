@@ -657,11 +657,15 @@ recharts, e2e/accessibility.spec.js, wiki) יש לקרוא את הקובץ המ�
    היתה מולידה את אותה בעיה מחדש. התוכנית §8: "זה חלק מהעבודה, לא אחריה".
    מה זז: 10 · 10.5 · 11 · 11.5 ⇒ 13  |  12 · 12.5 · 13 · 13.5 ⇒ 14  |  14 · 15 ⇒ 16  |  17 ⇒ 20
    מה לא זז: 20px של h1 — הוא כבר text-xl בדיוק.
-   ⚠️ ושתי שורות שהן שיפוט ולא החלפה מכנית, ומוצהרות כאן כדי שישי יוכל להפוך אותן:
-     ‏(א) body עבר 14px ⇒ 16px. באפליקציה האמיתית body אינו נושא font-size כלל
-         (Tailwind preflight משאיר 16px), כלומר השלד היה נמוך מהמערכת — ועכשיו הוא תואם לה.
-     ‏(ב) .tab ו-.btn עברו 14px ⇒ 16px באותה החלפה. בקוד החי הם text-sm (14px),
-         כלומר כאן נוצר פער בין השלד למערכת. 🔴 צריך הכרעה — רשום במסירה.
+   ✏️ **תוקן 17/09 22:5X — ארבע שורות הוחזרו ל-14px, והטעות שלי שווה יותר מהתיקון:**
+   החלתי את מיפוי-התוכנית (`text-[14px]` ⇒ `text-base`) על ערכי-CSS במוקאפ — אבל
+   🔴 **המיפוי חל על `text-[...]` קשיח בלבד.** מחלקה שהיא כבר טוקן (`text-sm`)
+   אינה במיפוי — היא זזה רק דרך הגדרת-הטוקן ב-`index.css`. ‏🔑 **וערך במוקאפ אמור לשקף
+   את מה שהקוד מרנדר, לא לעבור את מיפוי-המחלקות.**
+   נמדד בקוד והוחזר ל-14px: ‏`.btn` (`ui/button.jsx:8` = `text-sm`) · `.tab` (`FinancePage.jsx:779`) ·
+   `.nav-i` (`Sidebar.jsx:84`) · `.tile .masked` (`KpiStrip.jsx:14`). **אף אחד מהם לא היה מעולם ערך קשיח.**
+   ✅ **`body` נשאר 16px, וזה תיקון אמיתי:** ב-`src/index.css` ל-`body` אין `font-size` כלל,
+   ו-Tailwind preflight משאיר אותו על 16px — כלומר השלד היה נמוך מהמערכת, ועכשיו הוא תואם.
    ═══ */
 /* ═══ טוקנים — אל תשנה ערך. מקור: §① למעלה. ═══ */
 :root{
@@ -694,7 +698,7 @@ body{
       border-bottom:1px solid var(--s100); font-weight:700; color:var(--teal700); letter-spacing:.5px}
 .side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
 .nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
-      font-size:16px; font-weight:500; color:var(--s600); text-decoration:none}
+      font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
 .nav-i .ic{width:20px; text-align:center; font-size:16px; flex:none}
 .nav-i.on{background:var(--teal50); color:var(--teal700)}
 .top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
@@ -752,7 +756,7 @@ body.hide-markers .im{display:none}
 /* ── לשוניות-דוחות עם מיסוך (§2.4): 4 לפי-תפקיד, אחת יכולה להיות ממוסכת ── */
 .tabs{display:flex; gap:4px; border-bottom:1px solid var(--s200); margin:0 0 16px}
 .tab{border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-1px;
-     padding:10px 16px; font-size:16px; font-weight:500; color:var(--s500); cursor:pointer;
+     padding:10px 16px; font-size:14px; font-weight:500; color:var(--s500); cursor:pointer;
      display:flex; flex-direction:column; align-items:center; gap:2px}
 .tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
 /* ✏️ 17:5X לשונית-ממוסכת (הכרעה 15-ה): שם באפור + 🔒, וטקסט-גלוי "לא זמין בתפקידך" מתחתיו — לא רק title */
@@ -788,7 +792,7 @@ body.hide-markers .im{display:none}
 .tile .lb{font-size:14px; color:var(--s500)}
 .tile .vl{font-size:20px; font-weight:700; color:var(--s800)}
 .tile .sub{font-size:13px; color:var(--s500)}
-.tile .masked{font-size:16px; font-weight:400; color:var(--s400)}
+.tile .masked{font-size:14px; font-weight:400; color:var(--s400)}
 /* ✏️ 17:5X שורת-השוואה (הכרעה 15-ב): ▲/▼ לא-צבוע + הערך הקודם, באותה שורה */
 /* 🔴 ✏️ 10/09/2026 — `display:flex` הוסר, ו**זה היה שורש רב-קבצי**.
    פלקס הופך כל ילד ישיר לפריט-פלקס: (א) `.ltr` מאבד את `inline-block` ומחושב `block`,
@@ -830,7 +834,7 @@ tr.amber td{background:var(--amber50)}
      border-top:1px solid var(--s100); padding:8px 12px; font-size:14px; color:var(--s500)}
 
 /* ── כפתורים ── */
-.btn{border-radius:var(--r-lg); font:inherit; font-size:16px; font-weight:600;
+.btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
      padding:8px 16px; border:1px solid transparent; cursor:pointer; white-space:nowrap}
 .btn-primary{background:var(--teal600); color:#fff}
 .btn-outline{background:#fff; border-color:var(--s300); color:var(--s700); font-weight:500}
