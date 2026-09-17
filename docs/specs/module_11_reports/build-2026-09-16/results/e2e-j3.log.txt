@@ -1,0 +1,89 @@
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+
+Running 27 tests using 1 worker
+
+[1/27] [chromium] › e2e\accessibility.spec.js:120:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על מסכי מודולים 1–4
+[chromium] › e2e\accessibility.spec.js:120:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על מסכי מודולים 1–4
+⚠️ מסך הבית: 1 advisory finding(s) — color-contrast
+
+⚠️ לקוחות (מודול 2): 1 advisory finding(s) — color-contrast
+
+⚠️ הצעות (מודול 3): 1 advisory finding(s) — color-contrast
+
+⚠️ בניית הצעה (מודול 3): 1 advisory finding(s) — color-contrast
+
+⚠️ מחירים (מודול 1/system): 1 advisory finding(s) — empty-table-header
+
+⚠️ דיילות · מעקב פניות ושיבוצים (מודול 4): 1 advisory finding(s) — color-contrast
+
+[2/27] [chromium] › e2e\accessibility.spec.js:240:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על שני משטחי מודול 5, כולל הווריאנט המבוטל
+[chromium] › e2e\accessibility.spec.js:240:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על שני משטחי מודול 5, כולל הווריאנט המבוטל
+⚠️ לוגיסטיקה · תור-העבודה (מודול 5, משטח 1): 2 advisory finding(s) — color-contrast, empty-table-header
+
+⚠️ לוגיסטיקה · דיאלוג-הצ׳קליסט (מודול 5, משטח 2): 1 advisory finding(s) — color-contrast
+
+⚠️ לוגיסטיקה · דיאלוג-הצ׳קליסט — וריאנט מבוטל (מודול 5, משטח 2): 1 advisory finding(s) — color-contrast
+
+[3/27] [chromium] › e2e\accessibility.spec.js:306:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על מודול 8 — מבט-העל (S1) ודיאלוג-סגירת-תיק (S2)
+[chromium] › e2e\accessibility.spec.js:306:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על מודול 8 — מבט-העל (S1) ודיאלוג-סגירת-תיק (S2)
+⚠️ כספים · מבט-העל (מודול 8, משטח S1): 1 advisory finding(s) — color-contrast
+
+⚠️ כספים · דיאלוג-סגירת-תיק (מודול 8, משטח S2): 1 advisory finding(s) — color-contrast
+
+[4/27] [chromium] › e2e\accessibility.spec.js:342:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על לשונית הפרמטרים (מודול 9) — טבלה גנרית, עורך-תבניות ופאנל Smart Match
+[5/27] [chromium] › e2e\accessibility.spec.js:373:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על ארבע לשוניות-הדוחות (מודול 11)
+[chromium] › e2e\accessibility.spec.js:373:3 › נגישות (axe-core) — מסכים ראשיים על פני כל המודולים › סריקה על ארבע לשוניות-הדוחות (מודול 11)
+⚠️ דוחות · הנהלה (מודול 11): 1 advisory finding(s) — heading-order
+
+⚠️ דוחות · כספים (מודול 11): 1 advisory finding(s) — heading-order
+
+⚠️ דוחות · דיילות (מודול 11): 1 advisory finding(s) — heading-order
+
+⚠️ דוחות · לקוחות (מודול 11): 1 advisory finding(s) — heading-order
+
+[6/27] [chromium] › e2e\accessibility.spec.js:409:3 › נגישות (axe-core) — מודול 9, "ההגדרות שלי" (מנהלת הכספים) › סריקה על "ההגדרות שלי" עם שורות אמיתיות
+[7/27] [chromium] › e2e\accessibility.spec.js:464:3 › נגישות (axe-core) — מודול 8, משטח S4 (ציבורי, בלי session) › סריקה על מסך-התוצאה (dead)
+[chromium] › e2e\accessibility.spec.js:464:3 › נגישות (axe-core) — מודול 8, משטח S4 (ציבורי, בלי session) › סריקה על מסך-התוצאה (dead)
+⚠️ משוב-לקוח · מסך-תוצאה (מודול 8, משטח S4): 3 advisory finding(s) — landmark-one-main, page-has-heading-one, region
+
+[8/27] [chromium] › e2e\accessibility.spec.js:479:3 › נגישות (axe-core) — מודול 8, משטח S4 (ציבורי, בלי session) › סריקה על הטופס הפתוח (form, עם כוכב נבחר)
+[chromium] › e2e\accessibility.spec.js:479:3 › נגישות (axe-core) — מודול 8, משטח S4 (ציבורי, בלי session) › סריקה על הטופס הפתוח (form, עם כוכב נבחר)
+⚠️ משוב-לקוח · טופס פתוח (מודול 8, משטח S4): 4 advisory finding(s) — color-contrast, landmark-one-main, page-has-heading-one, region
+
+[9/27] [chromium] › e2e\reports.spec.js:175:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: ארבע לשוניות פתוחות, ודף-ברירת-המחדל נושא אוכלוסייה · "אז מה" · אריחים · טבלה
+[10/27] [chromium] › e2e\reports.spec.js:213:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: ארבע לשוניות-ברירת-המחדל עולות, אפס שגיאות-קונסול
+[11/27] [chromium] › e2e\reports.spec.js:234:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: גלולת-תקופה משנה את הכתובת, את תווית-החלון ואת שורת-האוכלוסייה
+[12/27] [chromium] › e2e\reports.spec.js:261:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: מסנן-הלקוח מצמצם את "לקוחות מתרחקים"
+[13/27] [chromium] › e2e\reports.spec.js:293:3 › מודול 11 · מיסוך לפי תפקיד (התוצאה הנכונה, לא תקלה) › מנהלת לוגיסטיקה: ארבע לשוניות ממוסכות והודעה אחת — ולא טבלה ריקה
+[14/27] [chromium] › e2e\reports.spec.js:315:3 › מודול 11 · מיסוך לפי תפקיד (התוצאה הנכונה, לא תקלה) › מנהלת כספים ולקוחות: דיילות ממוסכת, שלוש האחרות פתוחות
+[15/27] [chromium] › e2e\reports.spec.js:334:3 › מודול 11 · מיסוך לפי תפקיד (התוצאה הנכונה, לא תקלה) › מנהלת גיוס ושיבוץ: רק דיילות פתוחה, והיא גם לשונית-ברירת-המחדל
+[16/27] [chromium] › e2e\reports.spec.js:357:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ3: שורה פותחת רמה, הרענון שומר עליה, והפירור חוזר לשורש
+[17/27] [chromium] › e2e\reports.spec.js:393:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ9: אריח-דלת פותח מדרג, הפירורים והייצוא נוקבים בו, והשורות הן דלת לפרויקט
+[18/27] [chromium] › e2e\reports.spec.js:427:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט (הכרעה 19)
+[19/27] [chromium] › e2e\reports.spec.js:441:3 › מודול 11 · ייצוא (ת4) › משטח עם שורות: הכפתור מוריד קובץ, ושמו הוא זה שהובטח על המסך
+[20/27] [chromium] › e2e\reports.spec.js:457:3 › מודול 11 · ייצוא (ת4) › משטח שהסינון רוקן: הכפתור מנוטרל עם "אין שורות לייצא"
+[21/27] [chromium] › e2e\reports.spec.js:492:3 › מודול 11 · סינון-צולב גרף⇐טבלה (📐9 · הכרעה 15-ד) › מ12: בחירה בגרף מצמצמת את הטבלה, מכריזה באזור-החי, נכנסת לשם-הקובץ ומתנקה
+[22/27] [chromium] › e2e\reports.spec.js:539:3 › מודול 11 · מצב-הטמעה 0 מול 2 (C3 · מבחן-המחיקה) › רמה 2: לכל אחת מארבע הלשוניות יש לפחות משפט-הסבר אחד
+[23/27] [chromium] › e2e\reports.spec.js:553:3 › מודול 11 · מצב-הטמעה 0 מול 2 (C3 · מבחן-המחיקה) › רמה 0: אפס משפטי-הסבר — והבסיס כולו נשאר על המסך
+[24/27] [chromium] › e2e\reports.spec.js:571:3 › מודול 11 · שער מ22 "טרם אושרה ריצת-ניתוח" (פיקסטורה, לא ריצה אמיתית) › מנכ"ל (edit): הבלוק המסביר, ייצוא חסום בנימוקו, וכפתור "הרץ ניתוח" קיים — ואינו נלחץ
+[25/27] [chromium] › e2e\reports.spec.js:588:3 › מודול 11 · שער מ22 "טרם אושרה ריצת-ניתוח" (פיקסטורה, לא ריצה אמיתית) › מנהלת פרויקטים (view): אותו שער — בלי כפתור-הרצה כלל
+[26/27] [chromium] › e2e\reports.spec.js:604:3 › מודול 11 · כשל-רשת ⇒ "נסי שוב", ולעולם לא "אין נתונים" › קריאת-הדוח נופלת ⇒ מעטפת-תקלה; ביטול-היירוט + "נסי שוב" ⇒ המשטח מצויר
+[27/27] [chromium] › e2e\reports.spec.js:675:3 › מודול 11 · סדר-תווים בתא (מ9 · אינווריאנט 5 · 📐18) › מ9: תא-המדרג ותא-איש-הקשר תו-בתו מול המטען, וכל מספר בעמוד מבודד
+  27 passed (3.2m)

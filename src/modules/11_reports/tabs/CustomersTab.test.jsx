@@ -739,6 +739,48 @@ describe('מ21 · לקוחות מתרחקים', () => {
     expect(row).toHaveTextContent('15/09/2026')
   })
 
+  // 🔒 **§7.100 · הכרעת ישי 17/09/2026 — המיסוך עבר אל תוך המסד** (מיגרציה J3): מ19 ומ21
+  // מחזירות `null` בשדות-הכסף ו-`meta.money_masked = true` למי שאינה `view`/`edit` על
+  // 'כספים'. 🔑 **והשאלה שהבדיקה הזו סוגרת אינה "האם השרת ממסך"** — אותה מודדת בדיקה
+  // חתומה מול המסד — **אלא האם המסך עדיין אומר את המשפט הנכון כשהערך כבר חסר.**
+  // ‏`KpiTile` מבדיל בין *"לא זמין בתפקידך"* (חסימת-הרשאה) לבין `—` (אין נתון), וההבדל
+  // נגזר מ-`format` ומעמודת-הכסף — **לא מהערך**. אילו הוא נגזר מהערך, הדף היה מתחלף
+  // ל-`—` ברגע שהשרת התחיל להחזיר `null`, כלומר *"אין נתון"* במקום *"חסום לך"*.
+  it('🔒 §7.100 · השרת כבר החזיר null — המסך עדיין אומר "לא זמין בתפקידך" ולא "—"', async () => {
+    permissions = PROJECTS
+    const masked = driftingPayload()
+    masked.meta = { ...masked.meta, money_masked: true }
+    masked.tiles = masked.tiles.map((tile) =>
+      tile.format === 'money' ? { ...tile, value: null, sub: null, detail: null } : tile,
+    )
+    masked.rows = masked.rows.map((row) => ({ ...row, revenue_12m: null }))
+    masked.so_what = 'להתקשר השבוע לענבר אשכנזי — יחד (לא זמין בתפקידך) בשנה האחרונה.'
+    callReport.mockResolvedValue(masked)
+    renderTab(SURFACES.מ21)
+
+    const tile = await screen.findByTestId('report-tile-marked_revenue_12m')
+    expect(tile).toHaveTextContent(MASKED_TEXT)
+    expect(tile.textContent).not.toContain('—')
+    const rows = screen.getAllByTestId('report-row-drillable')
+    expect(rows[0]).toHaveTextContent(MASKED_TEXT)
+    expect(screen.getByTestId('report-drifting').textContent).not.toContain('₪')
+  })
+
+  it('🔒 §7.100 · מ19 · עמודת-הכסף שחזרה null נקראת "לא זמין בתפקידך", לא תא ריק', async () => {
+    permissions = PROJECTS
+    const masked = overviewPayload()
+    masked.meta = { ...masked.meta, money_masked: true }
+    masked.rows = masked.rows.map((row) => ({ ...row, revenue_12m: null }))
+    callReport.mockResolvedValue(masked)
+    renderTab(SURFACES.מ19)
+
+    const row = await screen.findByTestId('report-row-drillable')
+    expect(row).toHaveTextContent(MASKED_TEXT)
+    expect(row.textContent).not.toContain('635,764')
+    // ומה שאינו כסף נשאר גלוי — כדי שהבדיקה לא תעבור על מסך ריק.
+    expect(row).toHaveTextContent('חברה פרטית')
+  })
+
   it('עם הרשאת כספים — הסכום מוצג, והמיון נשאר לפי הכנסת 12 החודשים', async () => {
     callReport.mockResolvedValue(driftingPayload())
     renderTab(SURFACES.מ21)
