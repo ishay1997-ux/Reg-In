@@ -174,7 +174,7 @@ export default function SmartMatchPane({
   return (
     <div className="flex flex-col gap-4" data-testid="settings-smartmatch-pane">
       <div
-        className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[13px] leading-relaxed text-amber-800"
+        className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-relaxed text-amber-800"
         data-testid={
           variant === 'owner' ? 'settings-smartmatch-warning-owner' : 'settings-smartmatch-warning'
         }
@@ -245,9 +245,7 @@ export default function SmartMatchPane({
           data-testid="settings-smartmatch-reliability-row"
         >
           <div>
-            <div className="text-[13.5px] font-semibold text-slate-800">
-              {reliabilityEntry.label}
-            </div>
+            <div className="text-sm font-semibold text-slate-800">{reliabilityEntry.label}</div>
             <div
               className="mt-0.5 text-xs text-amber-800"
               data-testid="settings-smartmatch-attendance-note"

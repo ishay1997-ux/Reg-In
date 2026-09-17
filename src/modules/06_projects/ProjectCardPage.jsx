@@ -415,7 +415,7 @@ function Val({ children, empty, className }) {
 
 function Sub({ children, className, testId }) {
   return (
-    <span className={cn('text-[11px] text-slate-500', className)} data-testid={testId}>
+    <span className={cn('text-xs text-slate-500', className)} data-testid={testId}>
       {children}
     </span>
   )
@@ -453,7 +453,7 @@ function IdentityCard({
           <button
             type="button"
             onClick={onEdit}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-[12.5px] font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
             data-testid="project-card-edit-details"
           >
             ✎ עריכת פרטים
@@ -562,9 +562,7 @@ function IdentityCard({
             <Val>{project.owner_name}</Val>
           ) : (
             // ענבר ולא אדום — "אזהרת-היגיינה, חסר-מידע" (④); וזה חוסם בפועל את מייל-האישור.
-            <span className="text-[11.5px] font-semibold text-amber-700">
-              לא הוגדר/ה מנהל/ת פרויקט
-            </span>
+            <span className="text-xs font-semibold text-amber-700">לא הוגדר/ה מנהל/ת פרויקט</span>
           )}
           {/* 🔴 טלפון ואימייל בשתי שורות נפרדות (S-23) — לרצף בן שני ערכי-LTR בתוך משפט
               עברי אין סדר נכון בכלל; התיקון הוא לפרק את הרצף. */}
@@ -613,7 +611,7 @@ function IdentityCard({
                       {negReasons.map((r, i) => (
                         <span
                           key={i}
-                          className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-200"
+                          className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-800 border border-amber-200"
                         >
                           {r}
                         </span>
@@ -626,7 +624,7 @@ function IdentityCard({
                       {posReasons.map((r, i) => (
                         <span
                           key={i}
-                          className="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 border border-emerald-200"
+                          className="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-800 border border-emerald-200"
                         >
                           {r}
                         </span>
@@ -635,7 +633,7 @@ function IdentityCard({
                   )}
 
                   {feedback.notes && (
-                    <div className="mt-0.5 rounded border-r-2 border-slate-300 bg-slate-50 px-2 py-1 text-[11.5px] italic text-slate-700">
+                    <div className="mt-0.5 rounded border-r-2 border-slate-300 bg-slate-50 px-2 py-1 text-xs italic text-slate-700">
                       "{feedback.notes}"
                     </div>
                   )}
@@ -720,7 +718,7 @@ function TabsBar({ tab, onSelect, closing }) {
         סגירת אירוע{' '}
         {closingDisabled && (
           <span
-            className="text-[11px] font-normal text-slate-400"
+            className="text-xs font-normal text-slate-400"
             data-testid="project-tab-closing-reason"
           >
             {closing.reason}

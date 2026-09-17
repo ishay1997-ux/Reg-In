@@ -310,7 +310,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
             setSearch(e.target.value)
           }}
           placeholder="חיפוש לפי שם או טלפון"
-          className="min-w-[200px] max-w-[240px] h-auto py-1.5 text-[13px]"
+          className="min-w-[200px] max-w-[240px] h-auto py-1.5 text-sm"
           data-testid="repository-search"
         />
 
@@ -322,7 +322,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
           }}
         >
           <SelectTrigger
-            className="h-auto w-auto py-1.5 text-[12.5px]"
+            className="h-auto w-auto py-1.5 text-sm"
             aria-label="סינון לפי עיר"
             data-testid="repository-city"
           >
@@ -371,7 +371,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
           <Button
             type="button"
             onClick={onAdd}
-            className="h-auto rounded-lg bg-teal-700 px-4 py-1.5 text-[13px] font-semibold text-white"
+            className="h-auto rounded-lg bg-teal-700 px-4 py-1.5 text-sm font-semibold text-white"
             data-testid="repository-add"
           >
             + דיילת חדשה
@@ -405,7 +405,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                 <Th>סטטוס</Th>
                 <Th>
                   אירועים
-                  <span className="block text-[10px] font-normal text-slate-400">רבעון אחרון</span>
+                  <span className="block text-xs font-normal text-slate-400">רבעון אחרון</span>
                 </Th>
                 {canEdit && <Th>פעולה</Th>}
               </tr>
@@ -437,9 +437,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     >
                       {hostess.full_name}
                     </span>
-                    {streak && (
-                      <span className="block text-[10.5px] text-amber-700">{streak.label}</span>
-                    )}
+                    {streak && <span className="block text-xs text-amber-700">{streak.label}</span>}
                   </Td>
                   <Td>{hostess.city}</Td>
                   <Td>
@@ -464,7 +462,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                       testId={`repository-state-${hostess.hostess_id}`}
                     />
                     {state.note && (
-                      <span className="block text-[10px] text-slate-500">הערה: {state.note}</span>
+                      <span className="block text-xs text-slate-500">הערה: {state.note}</span>
                     )}
                   </Td>
                   <Td>
@@ -613,10 +611,10 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
   if (filtered) {
     return (
       <div
-        className="py-4 text-center text-[12.5px] text-slate-500"
+        className="py-4 text-center text-sm text-slate-500"
         data-testid="repository-empty-filtered"
       >
-        <span className="mb-1 block text-[22px]">🔍</span>
+        <span className="mb-1 block text-2xl">🔍</span>
         אין דיילות התואמות לסינון
         <div>
           <Button
@@ -634,18 +632,15 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
   }
 
   return (
-    <div
-      className="py-4 text-center text-[12.5px] text-slate-500"
-      data-testid="repository-empty-true"
-    >
-      <span className="mb-1 block text-[22px]">🗂️</span>
+    <div className="py-4 text-center text-sm text-slate-500" data-testid="repository-empty-true">
+      <span className="mb-1 block text-2xl">🗂️</span>
       עדיין אין דיילות במאגר
       {canEdit && (
         <div>
           <Button
             type="button"
             onClick={onAdd}
-            className="mt-2 h-auto rounded-lg bg-teal-700 px-3 py-1.5 text-[12.5px] font-semibold text-white"
+            className="mt-2 h-auto rounded-lg bg-teal-700 px-3 py-1.5 text-sm font-semibold text-white"
           >
             + דיילת חדשה
           </Button>

@@ -233,7 +233,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
           </FilterPill>
         ))}
 
-        <span className="mr-auto text-[12px] text-slate-400">
+        <span className="mr-auto text-sm text-slate-400">
           ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע
         </span>
 
@@ -245,7 +245,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
             variant="outline"
             disabled={resendableCount === 0 || sending}
             onClick={() => resend(resendableRows, '')}
-            className="h-auto rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-[12px] font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            className="h-auto rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             data-testid="overview-resend-all"
           >
             {`שלחי שוב למי שפג תוקפן (${resendableCount})`}
@@ -340,13 +340,13 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
           )}
           {project.event_name}
         </div>
-        <div className="mt-0.5 text-[11.5px] text-slate-500">{project.customer_name}</div>
+        <div className="mt-0.5 text-xs text-slate-500">{project.customer_name}</div>
       </Td>
 
       <Td>
-        <div className="text-[13px]">{formatDate(project.final_event_date, '—')}</div>
+        <div className="text-sm">{formatDate(project.final_event_date, '—')}</div>
         <div
-          className={`mt-0.5 text-[11.5px] ${isFinalDay ? 'font-semibold text-red-600' : 'text-slate-400'}`}
+          className={`mt-0.5 text-xs ${isFinalDay ? 'font-semibold text-red-600' : 'text-slate-400'}`}
         >
           {eventProximityLabel(project.final_event_date, today)}
           {isFinalDay ? ` · בתוך ${cutoffHours} שעות` : ''}
@@ -365,12 +365,12 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
           </span>
           {/* בידוד-כיווניות: `3/4` בתוך תא עברי מתהפך ל-`4/3` בלי זה — אותה משפחה
               בדיוק כמו ה-₪ ב-`Money` (המופע השביעי והשמיני, `src/CLAUDE.md`). */}
-          <b className="text-[13px]" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+          <b className="text-sm" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
             {staffed}/{required}
           </b>
         </div>
         {gap > 0 && (
-          <span className="text-[11.5px] font-semibold text-red-600">
+          <span className="text-xs font-semibold text-red-600">
             {gap === 1 ? 'חסרה 1' : `חסרות ${gap}`}
           </span>
         )}
@@ -383,13 +383,13 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
             {/* 🔴 טקסט ולא כפתור — אישור דורש לבחור *מי*, וזו החלטה ששייכת למסך שיש בו
                 המידע להחליט. הצבתו ככפתור כאן הייתה מזמינה אישור עיוור. */}
             {counts.confirmedAvailable > 0 && isMissing && (
-              <span className="block text-[10px] font-semibold text-teal-700">מחכות לאישורך</span>
+              <span className="block text-xs font-semibold text-teal-700">מחכות לאישורך</span>
             )}
           </Counter>
           <Counter n={counts.declined} label="סירבו" tone="text-slate-400" />
           <Counter n={counts.pending} label="ממתינות" tone="text-amber-700">
             {counts.expired > 0 && (
-              <span className="block text-[10px] font-semibold text-red-600 underline">
+              <span className="block text-xs font-semibold text-red-600 underline">
                 {counts.expired === 1 ? '1 פג תוקף' : `${counts.expired} פג תוקפן`}
               </span>
             )}
@@ -403,9 +403,7 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
               שנשארה היא טלפון, שחי במסך השיבוץ (`אושרה סופית — סוכם בטלפון`).
               כך גם מצויר במוקאפ: השורה הקריטית נושאת `לשיבוץ →` ולא כפתור-שליחה. */}
           {isFinalDay ? (
-            <span className="whitespace-nowrap text-[12.5px] font-semibold text-teal-700">
-              לשיבוץ →
-            </span>
+            <span className="whitespace-nowrap text-sm font-semibold text-teal-700">לשיבוץ →</span>
           ) : (
             <Button
               type="button"
@@ -415,7 +413,7 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
                 e.stopPropagation() // שורה לחיצה — בלי זה כל לחיצה על הכפתור גם מנווטת
                 onResend()
               }}
-              className="h-auto whitespace-nowrap rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-[12px] font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              className="h-auto whitespace-nowrap rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
               data-testid={`overview-resend-${project.project_id}`}
             >
               {`שלחי שוב (${counts.expired})`}
@@ -430,8 +428,8 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
 function Counter({ n, label, tone, children }) {
   return (
     <span className="min-w-[46px] text-center">
-      <span className={`block text-[15px] font-bold leading-tight ${tone}`}>{n}</span>
-      <span className="block text-[10.5px] text-slate-500">{label}</span>
+      <span className={`block text-base font-bold leading-tight ${tone}`}>{n}</span>
+      <span className="block text-xs text-slate-500">{label}</span>
       {children}
     </span>
   )
@@ -458,10 +456,10 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
   if (!canReadProjects) {
     return (
       <div
-        className="py-6 text-center text-[12.5px] text-red-700"
+        className="py-6 text-center text-sm text-red-700"
         data-testid="overview-empty-no-permission"
       >
-        <span className="mb-1 block text-[22px]">⚠️</span>
+        <span className="mb-1 block text-2xl">⚠️</span>
         לא ניתן להציג את האירועים — אין לך הרשאת צפייה במודול <b>פרויקטים</b>.
         <div className="mt-1 text-slate-500">
           זו אינה רשימה ריקה — המסך לא הצליח לקרוא את האירועים, ויש לפנות למנכ"ל להרשאה.
@@ -473,10 +471,10 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
   if (filtered) {
     return (
       <div
-        className="py-6 text-center text-[12.5px] text-slate-500"
+        className="py-6 text-center text-sm text-slate-500"
         data-testid="overview-empty-filtered"
       >
-        <span className="mb-1 block text-[22px]">🔍</span>
+        <span className="mb-1 block text-2xl">🔍</span>
         אין אירועים התואמים לסינון
         <div>
           <Button
@@ -494,11 +492,8 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
   }
 
   return (
-    <div
-      className="py-6 text-center text-[12.5px] text-slate-500"
-      data-testid="overview-empty-true"
-    >
-      <span className="mb-1 block text-[22px]">✅</span>
+    <div className="py-6 text-center text-sm text-slate-500" data-testid="overview-empty-true">
+      <span className="mb-1 block text-2xl">✅</span>
       אין כרגע אירועים הממתינים לאיוש
     </div>
   )

@@ -69,10 +69,10 @@ const TABS = [
 // טוני שורת-המשנה — תרגום 1:1 של מחלקות המוקאפ (miss/hint/done/calm): המילה נושאת את
 // המשמעות, הצבע רק מדגיש — כל שורה נקראת במלואה גם בשחור-לבן (מבחן המוקאפ).
 const SUB_TONES = {
-  miss: 'text-red-600 text-[11.5px] font-semibold',
-  hint: 'text-amber-700 text-[11px] font-semibold',
-  done: 'text-slate-500 text-[11.5px]',
-  calm: 'text-slate-400 text-[11.5px]',
+  miss: 'text-red-600 text-xs font-semibold',
+  hint: 'text-amber-700 text-xs font-semibold',
+  done: 'text-slate-500 text-xs',
+  calm: 'text-slate-400 text-xs',
 }
 
 // שורת-המיון — טקסט בלבד (⑧): קיימת כי סדר לא-מוסבר הוא חידה, וכותרות-העמודות אינן
@@ -315,7 +315,7 @@ export default function ProjectsPage() {
               {/* חלון-הזמן יושב באותה שורת-המסננים, אחרי הגלולות — אותו מיקום בדיוק בשני
                   המסכים (חוזה §4). */}
               <WindowChips value={windowKey} onChange={setWindowKey} hiddenCount={hiddenCount} />
-              <span className="mr-auto text-[12px] text-slate-400">{SORT_LINE}</span>
+              <span className="mr-auto text-sm text-slate-400">{SORT_LINE}</span>
             </div>
             {visible.length > 0 && <Hint id="projects.sort" />}
             {visible.length === 0 ? (
@@ -555,12 +555,12 @@ function ProjectRow({ project, closing, today, onOpen }) {
           )}
           {project.event_name}
         </div>
-        <div className="mt-0.5 text-[11.5px] text-slate-500">{project.customer_name}</div>
+        <div className="mt-0.5 text-xs text-slate-500">{project.customer_name}</div>
       </Td>
       <Td>
-        <Ltr className="text-[13px]">{formatDate(project.final_event_date, '—')}</Ltr>
+        <Ltr className="text-sm">{formatDate(project.final_event_date, '—')}</Ltr>
         {/* קרבת-האירוע לעולם אינה נצבעת (F20 · ⑯) — טקסט אפור, משפיעה על סדר-המיון בלבד. */}
-        <div className="mt-0.5 text-[11.5px] text-slate-400">{proximitySentence(days)}</div>
+        <div className="mt-0.5 text-xs text-slate-400">{proximitySentence(days)}</div>
       </Td>
       <Td>
         <MetricCell cell={staffing} />
@@ -584,7 +584,7 @@ function ProjectRow({ project, closing, today, onOpen }) {
         <Link
           to={`/projects/${project.project_id}`}
           onClick={(e) => e.stopPropagation()}
-          className="whitespace-nowrap text-[12.5px] font-semibold text-teal-700"
+          className="whitespace-nowrap text-sm font-semibold text-teal-700"
         >
           {linkText}
         </Link>
@@ -599,7 +599,7 @@ function MetricCell({ cell }) {
   if (cell.hidden) return <span className="text-slate-400">—</span>
   return (
     <>
-      {cell.ratio != null && <Ltr className="text-[13px]">{cell.ratio}</Ltr>}
+      {cell.ratio != null && <Ltr className="text-sm">{cell.ratio}</Ltr>}
       {cell.sub && <span className={cn('block', SUB_TONES[cell.tone])}>{cell.sub}</span>}
     </>
   )

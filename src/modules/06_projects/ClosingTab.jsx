@@ -543,7 +543,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               />
               <span className="whitespace-nowrap text-xs text-slate-500">שעות</span>
             </div>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               מתוכנן: {plannedRange ? <Ltr>{plannedRange}</Ltr> : '—'} ·{' '}
               <Ltr>{String(plannedHours)}</Ltr> שעות
             </span>
@@ -551,7 +551,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 עצמה מדגימה זאת (הערך ממולא-מראש), וה"למה" עבר למועמד לשכבה (מונח ⑤). */}
             {hoursTouched && hoursInvalid && (
               <span
-                className="text-[11px] font-semibold text-red-600"
+                className="text-xs font-semibold text-red-600"
                 data-testid="closing-hours-error"
               >
                 {EVENT_HOURS_ERROR}
@@ -579,7 +579,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               />
               <span className="whitespace-nowrap text-xs text-slate-500">אורחים</span>
             </div>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               מתוכנן:{' '}
               {quoteMeta?.estimated_guests != null ? (
                 <Ltr>{String(quoteMeta.estimated_guests)}</Ltr>
@@ -588,12 +588,12 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               )}{' '}
               אורחים
             </span>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               לתיעוד ולדו"חות בלבד — אינו משנה את החיוב ללקוח
             </span>
             {guestsTouched && guestsInvalid && (
               <span
-                className="text-[11px] font-semibold text-red-600"
+                className="text-xs font-semibold text-red-600"
                 data-testid="closing-guests-error"
               >
                 {EVENT_GUESTS_ERROR}
@@ -612,16 +612,16 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               {reportFile ? (
                 <>
                   {/* 🔴 שם-קובץ עברי אינו נעטף ב-Ltr — העטיפה תולשת את הסיומת לקצה הלא-נכון. */}
-                  <span className="truncate text-[12.5px] font-semibold text-slate-700">
+                  <span className="truncate text-sm font-semibold text-slate-700">
                     {reportFile.name}
                   </span>
-                  <span className="whitespace-nowrap text-[11px] text-slate-500">
+                  <span className="whitespace-nowrap text-xs text-slate-500">
                     <Ltr>{fileSizeText(reportFile.size)}</Ltr>
                   </span>
                   <span className="mr-auto flex gap-2.5 whitespace-nowrap">
                     <button
                       type="button"
-                      className="text-[12.5px] font-semibold text-teal-700"
+                      className="text-sm font-semibold text-teal-700"
                       onClick={() => {
                         const url = URL.createObjectURL(reportFile)
                         window.open(url, '_blank')
@@ -633,7 +633,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                     {canAct && (
                       <button
                         type="button"
-                        className="text-[12.5px] font-semibold text-teal-700"
+                        className="text-sm font-semibold text-teal-700"
                         onClick={() => fileInputRef.current?.click()}
                         data-testid="closing-file-replace"
                       >
@@ -644,11 +644,11 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 </>
               ) : (
                 <>
-                  <span className="text-[12.5px] text-slate-400">טרם צורף קובץ</span>
+                  <span className="text-sm text-slate-400">טרם צורף קובץ</span>
                   {canAct && (
                     <button
                       type="button"
-                      className="mr-auto whitespace-nowrap text-[12.5px] font-semibold text-teal-700"
+                      className="mr-auto whitespace-nowrap text-sm font-semibold text-teal-700"
                       onClick={() => fileInputRef.current?.click()}
                       data-testid="closing-file-pick"
                     >
@@ -659,13 +659,13 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               )}
             </div>
             {/* שלוש הסיומות = רצף אטומי אחד; המספר מרונדר מ-REPORT_MAX_BYTES, לעולם לא מוקלד. */}
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               ‏<Ltr>PDF · JPG · PNG</Ltr> · עד <Ltr>{`${REPORT_MAX_BYTES / 1024 / 1024}MB`}</Ltr>.
               הקובץ נשלח ללקוח כקובץ מצורף
             </span>
             {reportError && (
               <span
-                className="text-[11px] font-semibold text-red-600"
+                className="text-xs font-semibold text-red-600"
                 data-testid="closing-report-error"
               >
                 {reportError}
@@ -688,7 +688,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold text-slate-700">מה קרה עם כל דיילת</h2>
-            <p className="mb-2.5 mt-0.5 max-w-2xl text-[11.5px] text-slate-500">
+            <p className="mb-2.5 mt-0.5 max-w-2xl text-xs text-slate-500">
               <b>נוכחות</b> היא עובדה — היא מזינה את מרכיב-האמינות בשיבוץ החכם. <b>סימון-איכות</b>{' '}
               הוא שיפוט — הוא קובע את מי נציע ל{project?.customer_name ?? 'לקוח'} בפעם הבאה. שתי
               שאלות שונות, ושתיהן חובה בכל שורה.
@@ -696,7 +696,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
             <Hint id="closing.attendanceReliability" />
           </div>
           {counter && (
-            <span className="pb-2.5 text-[11.5px] text-slate-400" data-testid="closing-counter">
+            <span className="pb-2.5 text-xs text-slate-400" data-testid="closing-counter">
               {counter}
             </span>
           )}
@@ -860,14 +860,11 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               {sending ? 'שומרת ושולחת…' : 'שמרי ושלחי'}
             </button>
             {validationSummary ? (
-              <span
-                className="text-[11.5px] font-semibold text-amber-700"
-                data-testid="closing-summary"
-              >
+              <span className="text-xs font-semibold text-amber-700" data-testid="closing-summary">
                 ⚠ {validationSummary}
               </span>
             ) : (
-              <span className="text-[11.5px] text-slate-500">
+              <span className="text-xs text-slate-500">
                 מרגע זה הפרויקט עובר לטיפול מנהלת הכספים.
               </span>
             )}
@@ -933,7 +930,7 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
             {/* תג-האחראית בצורת TeamTab (ζ) — תג אחד, מראה אחד, בשתי הלשוניות. */}
             {row.isShiftLead && <StatusTag label={SHIFT_LEAD_LABEL} tone="outline" />}
           </div>
-          <div className="mt-0.5 text-[11.5px] text-slate-500">
+          <div className="mt-0.5 text-xs text-slate-500">
             {row.city && `${row.city} · `}
             <Ltr>{`${Number(row.rateSnapshot ?? 0)} ₪`}</Ltr> לשעה
           </div>
@@ -943,7 +940,7 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
           <select
             aria-label={`נוכחות — ${row.name}`}
             className={cn(
-              'h-[34px] w-full max-w-[190px] rounded-lg border border-slate-200 bg-white px-2.5 text-[13px]',
+              'h-[34px] w-full max-w-[190px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm',
               'disabled:bg-slate-50 disabled:text-slate-500',
             )}
             disabled={!canAct}
@@ -959,7 +956,7 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
             ))}
           </select>
           {partiallyFilled && !row.attendanceLabel && (
-            <div className="mt-1 text-[11px] font-semibold text-red-600">
+            <div className="mt-1 text-xs font-semibold text-red-600">
               {attendanceMissingError(row.name)}
             </div>
           )}
@@ -977,7 +974,7 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
                   aria-pressed={active}
                   onClick={() => onQuality(active ? null : label)}
                   className={cn(
-                    'whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[11.5px]',
+                    'whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs',
                     active &&
                       !isNegative &&
                       'border-teal-200 bg-teal-50 font-semibold text-teal-700',
@@ -996,14 +993,14 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
           </div>
           {noShow && (
             <div
-              className="mt-1 text-[11px] text-slate-500"
+              className="mt-1 text-xs text-slate-500"
               data-testid={`closing-noshow-note-${row.hostessId}`}
             >
               לא ניתן לסמן איכות — לא הגיעה, ואי-אפשר לשפוט מי שלא ראית.
             </div>
           )}
           {!noShow && row.attendanceLabel && !row.qualityLabel && (
-            <div className="mt-1 text-[11px] font-semibold text-red-600">
+            <div className="mt-1 text-xs font-semibold text-red-600">
               {qualityMissingError(row.name)}
             </div>
           )}
@@ -1012,14 +1009,14 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
               <input
                 aria-label={`סיבת "לא לשלוח שוב" — ${row.name}`}
                 placeholder="מה קרה — הסיבה תופיע בכרטיס הדיילת"
-                className="h-8 w-full rounded-lg border border-amber-200 bg-white px-2.5 text-[12px]"
+                className="h-8 w-full rounded-lg border border-amber-200 bg-white px-2.5 text-sm"
                 disabled={!canAct}
                 value={row.qualityReason}
                 onChange={(e) => onReason(e.target.value)}
                 data-testid={`closing-reason-${row.hostessId}`}
               />
               {!row.qualityReason && (
-                <div className="mt-1 text-[11px] font-semibold text-red-600">
+                <div className="mt-1 text-xs font-semibold text-red-600">
                   {NEGATIVE_REASON_ERROR}
                 </div>
               )}
@@ -1032,23 +1029,23 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
             dir="ltr"
             inputMode="decimal"
             disabled={!canAct || noShow}
-            className="h-[34px] w-[74px] rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] disabled:bg-slate-50 disabled:text-slate-500"
+            className="h-[34px] w-[74px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm disabled:bg-slate-50 disabled:text-slate-500"
             value={String(hoursValue)}
             onChange={(e) => onHours(e.target.value)}
             onFocus={(e) => e.target.select()}
             data-testid={`closing-hours-${row.hostessId}`}
           />
-          {noShow && <div className="mt-1 text-[11px] text-slate-500">אין שעות</div>}
+          {noShow && <div className="mt-1 text-xs text-slate-500">אין שעות</div>}
           {!noShow &&
             row.hoursOverridden &&
             eventHours != null &&
             Number(row.manualHours) !== eventHours && (
-              <div className="mt-1 text-[11px] text-slate-500">
+              <div className="mt-1 text-xs text-slate-500">
                 נדרס ידנית · ברירת-מחדל <Ltr>{String(eventHours)}</Ltr>
               </div>
             )}
           {hoursOut && (
-            <div className="mt-1 text-[11px] font-semibold text-red-600">
+            <div className="mt-1 text-xs font-semibold text-red-600">
               {rowHoursError(row.name, eventHours)}
             </div>
           )}
@@ -1084,12 +1081,12 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
   return (
     <section className="mt-4" data-testid="closing-changes-section">
       <h2 className="text-sm font-bold text-slate-700">שינויי תכולה שהתגלו באירוע</h2>
-      <p className="mb-2.5 mt-0.5 text-[11.5px] text-slate-500">
+      <p className="mb-2.5 mt-0.5 text-xs text-slate-500">
         תוספת או הפחתה שסוכמה בשטח ולא נרשמה מראש — נרשמת כאן, ונכנסת לחיוב.
       </p>
       {groups.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 p-6 text-center text-[12.5px] text-slate-500">
-          <span aria-hidden="true" className="mb-1.5 block text-[22px]">
+        <div className="rounded-lg border border-slate-200 p-6 text-center text-sm text-slate-500">
+          <span aria-hidden="true" className="mb-1.5 block text-2xl">
             🗂️
           </span>
           לא נרשמו שינויי תכולה באירוע הזה
@@ -1097,7 +1094,7 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
             <div className="mt-2">
               <button
                 type="button"
-                className="text-[12.5px] font-semibold text-teal-700"
+                className="text-sm font-semibold text-teal-700"
                 onClick={onOpen}
                 data-testid="closing-change-link"
               >
@@ -1111,10 +1108,10 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
           {groups.map((group, i) => (
             <div
               key={i}
-              className="border-b border-slate-100 px-3 py-2.5 text-[12.5px] text-slate-700 last:border-b-0"
+              className="border-b border-slate-100 px-3 py-2.5 text-sm text-slate-700 last:border-b-0"
             >
               <div className="font-semibold">{group.reason}</div>
-              <div className="mt-0.5 text-[11.5px] text-slate-500">
+              <div className="mt-0.5 text-xs text-slate-500">
                 {/* נוסח-השורה חי ב-changeLineText (כלל 14) — לא מנוסח כאן מחדש. */}
                 {group.lines.map(changeLineText).join(' · ')}
                 {' · '}
@@ -1126,7 +1123,7 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
             <div className="px-3 py-2.5">
               <button
                 type="button"
-                className="text-[12.5px] font-semibold text-teal-700"
+                className="text-sm font-semibold text-teal-700"
                 onClick={onOpen}
                 data-testid="closing-change-link"
               >
@@ -1137,7 +1134,7 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
         </div>
       )}
       {canAct && (
-        <p className="mt-1.5 text-[11px] text-slate-500" data-testid="closing-change-note">
+        <p className="mt-1.5 text-xs text-slate-500" data-testid="closing-change-note">
           {SCOPE_COMMITS_NOW_NOTE}
         </p>
       )}
@@ -1255,7 +1252,7 @@ function ClosedView({
               </span>{' '}
               <button
                 type="button"
-                className="text-[12.5px] font-semibold text-teal-700"
+                className="text-sm font-semibold text-teal-700"
                 onClick={handleDownload}
                 data-testid="closing-closed-download"
               >
@@ -1349,7 +1346,7 @@ function ClosedRow({ row }) {
       <td className="border-b border-slate-100 px-2.5 py-3 text-sm text-slate-700">
         {row.qualityLabel ?? '—'}
         {row.qualityReason && (
-          <div className="mt-0.5 text-[11px] text-slate-500">{row.qualityReason}</div>
+          <div className="mt-0.5 text-xs text-slate-500">{row.qualityReason}</div>
         )}
       </td>
       <td className="border-b border-slate-100 px-2.5 py-3 text-sm text-slate-700">

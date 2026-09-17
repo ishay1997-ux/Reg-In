@@ -805,7 +805,7 @@ export default function CustomerDetailsPage() {
                   במקומם. בלי השורה הזו היעלמותם הייתה נקראת כ"אין מידע כזה בכלל". */}
               {sentIds === null && (
                 <p
-                  className="rounded-lg border border-amber-300 bg-amber-50 p-2.5 mb-3 text-[13px] text-amber-800"
+                  className="rounded-lg border border-amber-300 bg-amber-50 p-2.5 mb-3 text-sm text-amber-800"
                   role="alert"
                   data-testid="customer-sent-history-error"
                 >
@@ -914,7 +914,7 @@ export default function CustomerDetailsPage() {
                                   {quote.event_name}
                                 </div>
                                 {discountPercent > 0 && (
-                                  <div className="text-[11.5px] text-slate-500">
+                                  <div className="text-xs text-slate-500">
                                     אחרי {discountPercent}% הנחה
                                   </div>
                                 )}
@@ -925,19 +925,17 @@ export default function CustomerDetailsPage() {
                                 {quote.quote_status === 'rejected' &&
                                   quote.rejection_reason &&
                                   quote.rejection_reason !== EXPIRED_REASON && (
-                                    <div className="text-[11.5px] text-slate-500">
+                                    <div className="text-xs text-slate-500">
                                       סיבת דחייה: {quote.rejection_reason}
                                     </div>
                                   )}
                                 {/* כן/לא בלי תאריך (LOCAL-16) — ורק על הצעה פתוחה, שבה זו עדיין
                                   פעולה שאפשר לעשות. על הצעה סגורה זו כבר לא שאלה פתוחה. */}
                                 {sentIds && isOpen && !sentIds.has(quote.quote_id) && (
-                                  <div className="text-[11.5px] text-amber-600">
-                                    טרם נשלחה ללקוח
-                                  </div>
+                                  <div className="text-xs text-amber-600">טרם נשלחה ללקוח</div>
                                 )}
                                 {sentIds?.has(quote.quote_id) && (
-                                  <div className="text-[11.5px] text-teal-700">נשלחה ללקוח</div>
+                                  <div className="text-xs text-teal-700">נשלחה ללקוח</div>
                                 )}
                               </td>
                               <td className="py-2.5 px-3 text-sm text-slate-700">
@@ -946,7 +944,7 @@ export default function CustomerDetailsPage() {
                               <td className="py-2.5 px-3">
                                 <span
                                   className={cn(
-                                    'inline-block rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold',
+                                    'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold',
                                     pill.className,
                                   )}
                                 >
@@ -1226,7 +1224,7 @@ function ProjectsSection({ title, definition, rows, today, vatRate }) {
         <h3 className="text-sm font-bold text-slate-700">{title}</h3>
         {/* דרך <Ltr> ולא dir="ltr" גולמי — אותה מוסכמת-בידוד כמו בכל מונה-מספר במערכת. */}
         <Ltr className="text-xs font-semibold text-slate-500">{rows.length}</Ltr>
-        <span className="text-[11.5px] text-slate-400">· {definition}</span>
+        <span className="text-xs text-slate-400">· {definition}</span>
       </div>
       <div className="rounded-xl border border-slate-100 overflow-hidden">
         <table className="w-full">
@@ -1290,7 +1288,7 @@ function ProjectRow({ project, today, vatRate }) {
         <div className="text-right">
           <Ltr>{formatDate(project.final_event_date)}</Ltr>
         </div>
-        <div className="text-[11.5px] text-slate-400">
+        <div className="text-xs text-slate-400">
           {/* 🔴 ㊲: מבוטל תמיד מציג "היה אמור להתקיים" — לא ספירת-ימים, גם אם תאריכו עתידי. */}
           {isCancelled ? 'היה אמור להתקיים' : projectDaySentence(days)}
         </div>
@@ -1298,7 +1296,7 @@ function ProjectRow({ project, today, vatRate }) {
       <td className="py-2.5 px-3">
         <div className="text-sm font-medium text-slate-700">{project.event_name}</div>
         {isCancelled && (
-          <div className="text-[11.5px] text-slate-500">{cancellationSubLabel(project)}</div>
+          <div className="text-xs text-slate-500">{cancellationSubLabel(project)}</div>
         )}
       </td>
       <td className="py-2.5 px-3 text-sm text-slate-700">
@@ -1326,7 +1324,7 @@ function ProjectRow({ project, today, vatRate }) {
             e.stopPropagation()
             goToCard()
           }}
-          className="text-teal-700 hover:text-teal-800 text-[12.5px] font-semibold whitespace-nowrap"
+          className="text-teal-700 hover:text-teal-800 text-sm font-semibold whitespace-nowrap"
           data-testid={`customer-project-link-${project.project_id}`}
         >
           לכרטיס →

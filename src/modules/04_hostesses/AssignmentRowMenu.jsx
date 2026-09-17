@@ -81,18 +81,18 @@ export default function AssignmentRowMenu({ row, context, canEdit, busy, onActio
                       (§⑤/§⑧③). פריט שנעלם מלמד שהמערכת לא-עקבית; פריט מכובה עם סיבה
                       מלמד **למה**, והמנהלת עוברת לטלפון. */}
                   {menuItem.disabledReason && (
-                    <span className="text-[10.5px] text-slate-400"> — כבוי</span>
+                    <span className="text-xs text-slate-400"> — כבוי</span>
                   )}
                 </span>
                 {menuItem.disabledReason && (
-                  <span className="text-[10.5px] leading-tight text-slate-400">
+                  <span className="text-xs leading-tight text-slate-400">
                     {menuItem.disabledReason}
                   </span>
                 )}
               </span>
               {/* ✉ מסמן **מה מגיע לדיילת** — ההבחנה שהמשטח הזה חייב לעשות (§🔴 במקרא
                   המוקאפ): "מבצע ושולח" מול "רושם בלבד". */}
-              {menuItem.sendsEmail && <span className="text-[11px] text-slate-400">✉</span>}
+              {menuItem.sendsEmail && <span className="text-xs text-slate-400">✉</span>}
             </DropdownMenuItem>
           </div>
         ))}
