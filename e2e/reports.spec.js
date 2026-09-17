@@ -41,8 +41,13 @@ const PROJECTS_PASSWORD = process.env.E2E_PROJECTS_PASSWORD
 // כותרת-הכשל ו-"נסי שוב" (`src/components/PermissionAwareEmpty.jsx`).
 const MASKED_TEXT = 'לא זמין בתפקידך'
 const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פני למנכ"ל'
-const EXPORT_NO_ROWS = 'אין שורות לייצא'
 const EXPORT_NO_APPROVED_RUN = 'אין שורות לייצא — טרם אושרה ריצת-ניתוח'
+// 🔤 **נוסח של החלון עצמו** (`NO_ROWS_AFTER_FILTER` ב-`src/components/ExportDialog.jsx`).
+// 🔴 **ואינו אותו דבר כמו `EXPORT_NO_ROWS`, ולכן אינו מחליף אותו:** ‏`EXPORT_NO_ROWS` נזרק
+// מ-`exportReportRows` כשאין **טבלה** כלל, וזה הנוסח כשהסינון **של החלון** לא הותיר שורות.
+// ‏`EXPORT_NO_ROWS` ירד מכאן משום שמסע-המסך שנשען עליו בוטל בת4ב — **המחרוזת עצמה נשארת
+// נעולה זהות-בייט ב-`src/lib/reportsExport.test.js`**, ולכן אינה מאבדת שמירה.
+const NO_ROWS_AFTER_FILTER = 'הסינון לא הותיר שורות'
 const LOAD_ERROR_TITLE = 'לא ניתן לטעון את הנתונים.'
 const RETRY_LABEL = 'נסי שוב'
 const CLEAR_SELECTION_LABEL = '× נקי בחירה'
@@ -114,6 +119,35 @@ function fileNameSegment(raw) {
     .replace(/\s+/g, '-')
     .replace(/-{2,}/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+// 🔑 **הבטחת-השם עברה לתוך חלון-הייצוא — עם אותו `testid` בדיוק** (ת4ב · הכרעת-ישי
+// 17/09/2026: *"מאשר לפי המלצך"*). ⇒ **לקרוא אותה פירושו לפתוח את החלון.** ‏testid חדש
+// היה הופך את ההעברה למחיקה, ולכן החוזה נשמר והמסע הוא שהשתנה.
+//
+// 📊 **נמדד לפני התיקון, ולא הוסק מהקוד** (ריצה 17/09/2026, 7 מ-8 נכשלו): הטענות הישנות
+// נפלו ב-`TimeoutError: waiting for getByTestId('reports-export-file')` — הכיתוב פשוט
+// **אינו על המסך** — ובשלוש אחרות ב-`Expected: disabled · Received: enabled`.
+//
+// ⚠️ **ההמתנה כאן היא לשליפה של החלון, שאינה השליפה של המסך:** ‏`exportFetch` קורא ל-RPC
+// מחדש עם `drill: null` (החלון עצמאי), ולכן `networkidle` של המסך אינו מעיד עליו.
+async function openExportDialog(page) {
+  await page.getByTestId('reports-export-button').click()
+  await expect(page.getByTestId('export-dialog')).toBeVisible()
+  await expect(page.getByTestId('export-preview-loading')).toHaveCount(0, { timeout: 30_000 })
+}
+
+async function closeExportDialog(page) {
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('export-dialog')).toHaveCount(0)
+}
+
+// שם-הקובץ המובטח, נקרא מתוך החלון וסוגר אותו אחריו — כדי שהמסע יוכל להמשיך במסך.
+async function promisedFileName(page) {
+  await openExportDialog(page)
+  const text = (await page.getByTestId('reports-export-file').textContent()).trim()
+  await closeExportDialog(page)
+  return text
 }
 
 function mainTableRows(page) {
@@ -363,7 +397,7 @@ test.describe('מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד', () 
     // ⚠️ `textContent` ולא `innerText` בכל מקום שהערך חוזר אל `toHaveText` — ‏`toHaveText`
     // משווה מול `textContent`, ו-`innerText` מוסיף שורות-חדשות מהפריסה (נמדד על הפירורים:
     // `"כל השנים\n|\n2024"` מול `"כל השנים|2024"`). השוואה בין השניים נכשלת תמיד.
-    const exportAtRoot = await page.getByTestId('reports-export-file').textContent()
+    const exportAtRoot = await promisedFileName(page)
 
     await clickCentered(page.getByTestId('report-row-drillable').first())
     await page.waitForLoadState('networkidle')
@@ -372,11 +406,17 @@ test.describe('מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד', () 
     await expect(page).toHaveURL(/drill=/)
     await expect(page.getByTestId('report-crumbs')).toBeVisible()
     await expect(page.getByTestId('report-crumb-0')).toBeVisible()
-    // 📐13② — האריחים והטבלה מדברים על הרמה הפתוחה, ו-📐13③ — הייצוא נושא אותה.
+    // 📐13② — האריחים והטבלה מדברים על הרמה הפתוחה.
     await expect(page.getByTestId('report-tiles')).toBeVisible()
     expect(await page.getByTestId('report-tiles').locator('> *').count()).toBeGreaterThan(0)
-    const exportAtLevel = await page.getByTestId('reports-export-file').textContent()
-    expect(exportAtLevel).not.toBe(exportAtRoot)
+
+    // 🔁 **📐13③ הפוך מאז ת4ב, והטענה כאן היא ההיפוך — לא מחיקה.** קודם נעול היה
+    // *"שם-הקובץ משתנה עם הדריל"*; מרגע שהחלון שולף בעצמו `drill: null`, **שם שנושא רמה
+    // היה משקר.** ⇒ נועלים את ההתנהגות שהוכרעה: **השם אינו זז.**
+    // 🔑 והשוויון הוא הטענה החזקה מבין השתיים — הוא כולל את *"אינו מכיל את התווית"* ואינו
+    // תלוי בשאלה אם התווית מופיעה ממילא בחלון-הזמן (למשל `2024`).
+    const exportAtLevel = await promisedFileName(page)
+    expect(exportAtLevel, 'שם-הקובץ זז עם הדריל — ת4ב קובע שהחלון עצמאי ממנו').toBe(exportAtRoot)
 
     const crumbsAtLevel = await page.getByTestId('report-crumbs').textContent()
     await page.reload()
@@ -387,17 +427,15 @@ test.describe('מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד', () 
     await page.waitForLoadState('networkidle')
     await expect(page).not.toHaveURL(/drill=/)
     await expect(page.getByTestId('report-crumbs')).toHaveCount(0)
-    await expect(page.getByTestId('reports-export-file')).toHaveText(exportAtRoot)
+    expect(await promisedFileName(page)).toBe(exportAtRoot)
   })
 
-  test('מ9: אריח-דלת פותח מדרג, הפירורים והייצוא נוקבים בו, והשורות הן דלת לפרויקט', async ({
-    page,
-  }) => {
+  test('מ9: אריח-דלת פותח מדרג, הפירורים נוקבים בו — והייצוא דווקא לא', async ({ page }) => {
     test.setTimeout(120_000)
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await openReport(page, 'finance', 'aging')
     await expect(page.getByTestId('report-crumbs')).toHaveCount(0)
-    const exportAtRoot = await page.getByTestId('reports-export-file').textContent()
+    const exportAtRoot = await promisedFileName(page)
 
     // הכרעה 33 — אריח-מבט-על הוא דלת. הראשון שנמצא, לא אחד נעוץ בשמו.
     const tileDoor = page.locator('[data-testid^="report-tile-link-"]').first()
@@ -410,9 +448,13 @@ test.describe('מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד', () 
     await expect(crumbs).toBeVisible()
     const levelLabel = (await crumbs.textContent()).split('|').pop().trim()
     expect(levelLabel.length, 'לפירור-הרמה אין תווית').toBeGreaterThan(0)
-    // 📐13③ — שם-הקובץ נושא את **הרמה הנוכחית**.
-    await expect(page.getByTestId('reports-export-file')).toContainText(fileNameSegment(levelLabel))
-    await expect(page.getByTestId('reports-export-file')).not.toHaveText(exportAtRoot)
+    // 🔁 **ההיפוך של 📐13③ (ת4ב):** הפירור נוקב ברמה — **והייצוא לא.** החלון שולף `drill: null`,
+    // ולכן שם שנושא את תווית-הרמה היה מבטיח קובץ מסונן שאינו הקובץ שיירד.
+    // 🔑 **שתי טענות ולא אחת, והן אינן כפילות:** השוויון אומר *"השם לא זז"*, ו-`not.toContain`
+    // אומר *"וגם לא בלע את התווית בדרך אחרת"* — נוקבת במה שנשבר, לא רק בכך שמשהו נשבר.
+    const exportAtLevel = await promisedFileName(page)
+    expect(exportAtLevel, 'שם-הקובץ זז עם הדריל — ת4ב קובע שהחלון עצמאי ממנו').toBe(exportAtRoot)
+    expect(exportAtLevel).not.toContain(fileNameSegment(levelLabel))
     await expect(page.getByTestId('report-tiles')).toBeVisible()
     expect(await page.getByTestId('report-tiles').locator('> *').count()).toBeGreaterThan(0)
   })
@@ -438,58 +480,74 @@ test.describe('מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד', () 
 test.describe('מודול 11 · ייצוא (ת4)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_* לא הוגדרו ב-.env.local')
 
-  test('משטח עם שורות: הכפתור מוריד קובץ, ושמו הוא זה שהובטח על המסך', async ({ page }) => {
+  test('משטח עם שורות: החלון מוריד קובץ, ושמו הוא זה שהובטח בתוכו', async ({ page }) => {
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await openReport(page, 'exec', 'exec-overview')
+
+    // 🔁 **הכפתור פותח, ואינו מוריד** (ת4ב). ההבטחה נקראת מתוך החלון, ובאותו `testid`.
+    await openExportDialog(page)
     const caption = (await page.getByTestId('reports-export-file').textContent()).trim()
     expect(caption.startsWith('יירד:'), `הכיתוב אינו הבטחת-הורדה: ${caption}`).toBe(true)
     const promised = caption.replace('יירד:', '').trim()
 
     const [download] = await Promise.all([
       page.waitForEvent('download'),
-      page.getByTestId('reports-export-button').click(),
+      page.getByTestId('export-dialog-run').click(),
     ])
-    // ההבטחה שלפני הלחיצה היא בדיוק הקובץ שנחת (ת4) — לא רק "ירד משהו".
+    // ההבטחה שלפני הלחיצה היא בדיוק הקובץ שנחת (ת4ב) — לא רק "ירד משהו".
     expect(download.suggestedFilename()).toBe(promised)
     expect(download.suggestedFilename().endsWith('.xlsx')).toBe(true)
+    // ⚠️ ייצוא מוצלח סוגר את החלון — וזו התנהגות, לא ניקוי: מסך שנשאר פתוח אחרי הורדה
+    // מזמין לחיצה שנייה על אותו קובץ.
+    await expect(page.getByTestId('export-dialog')).toHaveCount(0)
   })
 
-  test('משטח שהסינון רוקן: הכפתור מנוטרל עם "אין שורות לייצא"', async ({ page }) => {
+  // 🔁 **המסע הזה עבר מהמסך אל תוך החלון, וזו אינה החלפת-סלקטור אלא תיקון של מה שהוא מודד.**
+  // ‏ת4ב: *"לא מעניין מה היה במסך מקודם בכלל"* ⇒ **החלון אינו יורש את מסנן-הלקוח של המסך.**
+  // ⇒ ריקון המסך כבר אינו מרוקן את הקובץ, והטענה הישנה הייתה נשארת ירוקה בלי לבדוק דבר.
+  // **הסינון שמרוקן חייב להיות הסינון של החלון.**
+  test('בתוך החלון: סינון שמרוקן ⇒ הייצוא מנוטרל, והכפתור שבמסך נשאר פעיל', async ({ page }) => {
     test.setTimeout(120_000)
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await openReport(page, 'customers', 'drifting')
-    const values = await page
-      .locator('[data-testid="reports-customer-filter"] option')
-      .evaluateAll((els) => els.slice(1).map((el) => el.value))
+    await openExportDialog(page)
 
-    // הלקוח נבחר בזמן-ריצה: הראשון שמותיר את הטבלה ריקה בעוד המשטח עצמו עדיין מצויר.
+    const customerSelect = page.getByTestId('export-customer')
+    await expect(customerSelect).toBeVisible()
+    const values = await customerSelect
+      .locator('option')
+      .evaluateAll((els) => els.slice(1).map((el) => el.value))
+    expect(values.length, 'בורר-הלקוחות בחלון ריק — אין ממה לבחור').toBeGreaterThan(0)
+
+    // הלקוח נבחר בזמן-ריצה (‏`e2e/CLAUDE.md §2.2`): הראשון שמרוקן את **הקובץ**.
     let emptied = null
     for (const value of values.slice(0, 12)) {
-      await openReportAnyState(
-        page,
-        `/reports?tab=customers&report=drifting&customer=${value}`,
-        'drifting',
-      )
-      const hasExportBar = await page.getByTestId('reports-export-button').count()
-      if (hasExportBar && (await mainTableRows(page).count()) === 0) {
+      await customerSelect.selectOption(value)
+      await expect(page.getByTestId('export-preview-loading')).toHaveCount(0, { timeout: 30_000 })
+      if ((await page.getByTestId('export-count').textContent()) === NO_ROWS_AFTER_FILTER) {
         emptied = value
         break
       }
     }
     expect(
       emptied,
-      'לא נמצא לקוח שמרוקן את הטבלה — יש לעדכן את המסע, לא להחליש את הטענה',
+      'לא נמצא לקוח שמרוקן את הקובץ — יש לעדכן את המסע, לא להחליש את הטענה',
     ).not.toBeNull()
 
-    await expect(page.getByTestId('reports-export-button')).toBeDisabled()
-    await expect(page.getByTestId('reports-export-file')).toHaveText(EXPORT_NO_ROWS)
+    await expect(page.getByTestId('export-count')).toHaveText(NO_ROWS_AFTER_FILTER)
+    await expect(page.getByTestId('export-dialog-run')).toBeDisabled()
+
+    // 🔴 **והכפתור שבמסך נשאר פעיל — זו ההכרעה, לא תופעת-לוואי.** מרגע שאפשר לבחור בחלון כל
+    // אחד מדוחות הלשונית, נטרול בגלל הדוח שבמקרה פתוח הוא מחסום שרירותי (‏`ExportBar`).
+    await closeExportDialog(page)
+    await expect(page.getByTestId('reports-export-button')).toBeEnabled()
   })
 })
 
 test.describe('מודול 11 · סינון-צולב גרף⇐טבלה (📐9 · הכרעה 15-ד)', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_* לא הוגדרו ב-.env.local')
 
-  test('מ12: בחירה בגרף מצמצמת את הטבלה, מכריזה באזור-החי, נכנסת לשם-הקובץ ומתנקה', async ({
+  test('מ12: בחירה בגרף מצמצמת את הטבלה, מכריזה באזור-החי, ומתנקה — בלי לגעת בקובץ', async ({
     page,
   }) => {
     test.setTimeout(120_000)
@@ -501,7 +559,7 @@ test.describe('מודול 11 · סינון-צולב גרף⇐טבלה (📐9 · 
       0,
     )
     const rowsBefore = await mainTableRows(page).count()
-    const exportBefore = await page.getByTestId('reports-export-file').textContent()
+    const exportBefore = await promisedFileName(page)
     await expect(page.getByTestId('report-clear-crossfilter')).toHaveCount(0)
 
     const first = selectButtons.first()
@@ -518,8 +576,13 @@ test.describe('מודול 11 · סינון-צולב גרף⇐טבלה (📐9 · 
     const rowsAfter = await mainTableRows(page).count()
     expect(rowsAfter).toBeLessThan(rowsBefore)
     expect(rowsAfter).toBeGreaterThan(0)
-    // ת4 — הייצוא מוריד את **מצב-המסך**, ולכן שם-הקובץ נושא את הבחירה.
-    await expect(page.getByTestId('reports-export-file')).toContainText(fileNameSegment(label))
+    // 🔁 **ת4 קבע שהייצוא מוריד את מצב-המסך; ת4ב הפך זאת** — *"לא מעניין מה היה במסך
+    // מקודם בכלל"*. ⇒ **הסינון-הצולב נשאר סינון-מסך בלבד ואינו נוגע בקובץ**, ושם-הקובץ
+    // אינו נושא את הבחירה. 🔑 הטענה נשמרת ומתהפכת — הקשר בין השניים הוא בדיוק מה
+    // שהוכרע, ולכן הוא ראוי לנעילה גם בכיוון ההפוך.
+    const exportWithSelection = await promisedFileName(page)
+    expect(exportWithSelection, 'הסינון-הצולב נכנס לשם-הקובץ — ת4ב מנתק ביניהם').toBe(exportBefore)
+    expect(exportWithSelection).not.toContain(fileNameSegment(label))
 
     // 🪤 **הצ'יפ מנוקה במקלדת ולא בעכבר, וזה לא נוחות — נמדד 16/09/2026:** הפוקוס יושב
     // על כפתור טבלת-קורא-המסך, והיא `focus-within:not-sr-only`. ‏`mousedown` על הצ'יפ
@@ -529,7 +592,8 @@ test.describe('מודול 11 · סינון-צולב גרף⇐טבלה (📐9 · 
     await activateWithKeyboard(page, page.getByTestId('report-clear-crossfilter'))
     await expect(page.getByTestId('report-clear-crossfilter')).toHaveCount(0)
     expect(await mainTableRows(page).count()).toBe(rowsBefore)
-    await expect(page.getByTestId('reports-export-file')).toHaveText(exportBefore)
+    // סוגר את המעגל: לא הבחירה ולא הניקוי הזיזו את שם-הקובץ.
+    expect(await promisedFileName(page)).toBe(exportBefore)
   })
 })
 
@@ -577,9 +641,16 @@ test.describe('מודול 11 · שער מ22 "טרם אושרה ריצת-ניתו
     await openReport(page, 'customers', 'notes')
 
     await expect(page.getByTestId('m22-no-run')).toContainText('טרם אושרה ריצת-ניתוח')
-    // 🔴 הייצוא חסום **בנימוק שהשרת מסר**, ולא בנוסח הכללי.
-    await expect(page.getByTestId('reports-export-button')).toBeDisabled()
-    await expect(page.getByTestId('reports-export-file')).toHaveText(EXPORT_NO_APPROVED_RUN)
+    // 🔁 **הכפתור פעיל תמיד (ת4ב), והחסימה עברה לתוך החלון.** ‏`meta.export_blocked_reason`
+    // נוסע מה-RPC ל-`blockedReason`, מוצג במקום שורת-הכמות, ומנטרל את הייצוא **שם**.
+    // 🔴 הנימוק הוא **זה שהשרת מסר**, ולא נוסח כללי — וזה מה שנשמר מהטענה המקורית.
+    // ⚠️ **ושים לב ל-testid:** ההבטחה נשארה `reports-export-file`, אבל **הנימוק החסום יושב
+    // ב-`export-count`.** טענה שתמשיך לקרוא את הראשון תקבל שם-קובץ ותשווה אותו לנוסח.
+    await expect(page.getByTestId('reports-export-button')).toBeEnabled()
+    await openExportDialog(page)
+    await expect(page.getByTestId('export-count')).toHaveText(EXPORT_NO_APPROVED_RUN)
+    await expect(page.getByTestId('export-dialog-run')).toBeDisabled()
+    await closeExportDialog(page)
     // ⑤/⑦ — הכפתור קיים למי שיש לה `edit` על 'דו"חות'. 🚫 **לא נלחץ**: מודל בתשלום.
     await expect(page.getByTestId('m25-run-button')).toBeVisible()
     await expect(page.getByTestId('m25-run-button')).toHaveText('הרץ ניתוח')
@@ -594,7 +665,13 @@ test.describe('מודול 11 · שער מ22 "טרם אושרה ריצת-ניתו
     await expect(page.getByTestId('m22-no-run')).toContainText('טרם אושרה ריצת-ניתוח')
     // ⑤ — בלי `edit` הכפתור **אינו מוצג כלל** (ולא מוצג-מנוטרל).
     await expect(page.getByTestId('m25-run-button')).toHaveCount(0)
-    await expect(page.getByTestId('reports-export-button')).toBeDisabled()
+    // 🔁 אותו היפוך, **ובתפקיד `view`** — הבדיקה היחידה בקובץ שאינה רצה כמנכ"ל, ולכן זו
+    // הנקודה היחידה שמוכיחה שהחסימה בתוך החלון אינה תלויה בהרשאת-עריכה.
+    // ‼️ **והיא נפקדה מספירת §6 במסמך-המסירה** (*"581 · 582"*), ובלעדיה החבילה נשארת אדומה.
+    await expect(page.getByTestId('reports-export-button')).toBeEnabled()
+    await openExportDialog(page)
+    await expect(page.getByTestId('export-count')).toHaveText(EXPORT_NO_APPROVED_RUN)
+    await expect(page.getByTestId('export-dialog-run')).toBeDisabled()
   })
 })
 
