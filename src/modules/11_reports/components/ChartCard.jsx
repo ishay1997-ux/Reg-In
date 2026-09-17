@@ -188,7 +188,10 @@ function HebrewTooltip({ active, payload, label, unit }) {
 
 function axisProps(extra = {}) {
   return {
-    tick: { fontSize: 11, fill: AXIS_TEXT },
+    // 🔤 13 ולא 11: רצפת-הסקאלה (`--text-xs`, src/index.css). Recharts מצייר SVG ולכן
+    // אינו יורש מחלקת-Tailwind — הגודל נמסר כאן במספר, וזה בדיוק למה הריפקטור המכני
+    // של 422 המחלקות פסח עליו. התוכנית §2 נוקבת בשורה הזו במפורש.
+    tick: { fontSize: 13, fill: AXIS_TEXT },
     stroke: AXIS_COLOR,
     ...extra,
   }
@@ -225,7 +228,8 @@ function renderRefLines(refLines, yAxisId) {
     // בלי השם שלו. ‏📐6 דורש תווית נקובה (*"חלוקה שווה"* על קו-השוויון), ולכן זה פגם
     // ולא קישוט. **הצורה שעובדת היא רכיב-ילד.**
     const labelNode = ref.label ? (
-      <Label value={ref.label} position="insideTopRight" fill={AXIS_TEXT} fontSize={11} />
+      // 🔤 13 — אותה רצפה כמו צירי-הגרף למעלה; תווית בתוך SVG, לא מחלקת-Tailwind.
+      <Label value={ref.label} position="insideTopRight" fill={AXIS_TEXT} fontSize={13} />
     ) : null
     const common = {
       stroke: AXIS_COLOR,

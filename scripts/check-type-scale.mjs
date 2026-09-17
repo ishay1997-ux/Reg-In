@@ -11,10 +11,20 @@
 // and a NEW arbitrary size is what fails. As phase A lands, the baseline is rewritten lower
 // (`--write`) until it reaches zero and the grandfathering disappears on its own.
 //
-// Known blind spot, stated rather than hidden: this is a text scan of class strings. A size
-// injected through a variable, a `cn()` branch, or an inline `style={{fontSize}}` is NOT
-// caught. Those are rarer here (measured: 0 inline fontSize in src/ outside chart internals),
-// but the check does not prove their absence.
+// ✏️ 17/09/2026 — the blind spot this comment used to merely declare turned out to be real, so
+// the check was widened instead of left as a caveat. It had said "0 inline fontSize outside
+// chart internals"; the measurement was 8, and two of them were `ChartCard.jsx` axis ticks that
+// the plan's section 2 names by line number. Recharts draws SVG and does not inherit a Tailwind
+// class, so the size is passed as a number — which is exactly why a class-only scan walked past
+// it. The scan now counts `fontSize: N` / `fontSize={N}` as well.
+//
+// Known blind spot that REMAINS, stated rather than hidden: a size injected through a variable
+// or a `cn()` branch is still not caught. This is a text scan, not a proof.
+//
+// 📄 quotePdf.jsx keeps five of them on purpose and they are grandfathered in the baseline
+// (it has six inline sizes; one of them is 20, which is on the scale, so it is not counted):
+// it renders through @react-pdf/renderer, where the unit is a PDF point on a print page, not a
+// CSS pixel in a browser. The screen scale does not govern that medium. Do not "fix" them.
 //
 // Usage: node scripts/check-type-scale.mjs          (exits 1 with findings, 0 clean)
 //        node scripts/check-type-scale.mjs --write  (re-records the baseline from reality)
@@ -28,6 +38,12 @@ const BASELINE_FILE = path.resolve(process.cwd(), 'scripts/type-scale-baseline.j
 // Arbitrary Tailwind font-size utilities: text-[13px] · text-[0.8rem] · text-[11.5px].
 // Deliberately NOT matching text-[#hex] or text-[var(--x)] — those are colours, not sizes.
 const ARBITRARY_SIZE = /text-\[[0-9]+(?:\.[0-9]+)?(?:px|rem|em|pt)\]/g
+
+// Inline sizes, the half a class scan cannot see: `fontSize: 11` and `fontSize={11}`.
+// Only an OFF-SCALE value counts — a number is the only way to size SVG text, so flagging
+// `fontSize: 13` would punish the correct form and teach people to silence the gate.
+const INLINE_SIZE = /fontSize\s*[:=]\s*\{?\s*([0-9]+(?:\.[0-9]+)?)/g
+const ON_SCALE = new Set([13, 14, 16, 20, 24])
 
 const collectFiles = (start) => {
   const found = []
@@ -48,10 +64,13 @@ const relative = (file) => path.relative(process.cwd(), file).split(path.sep).jo
 
 const counts = {}
 for (const file of collectFiles(SRC)) {
-  const hits = readFileSync(file, 'utf8').match(ARBITRARY_SIZE)
-  if (hits && hits.length > 0) counts[relative(file)] = hits.length
+  const text = readFileSync(file, 'utf8')
+  const cls = (text.match(ARBITRARY_SIZE) ?? []).length
+  const inline = [...text.matchAll(INLINE_SIZE)].filter((m) => !ON_SCALE.has(Number(m[1]))).length
+  if (cls + inline > 0) counts[relative(file)] = { cls, inline }
 }
-const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
+const sumOf = (map) => Object.values(map).reduce((sum, e) => sum + e.cls + e.inline, 0)
+const total = sumOf(counts)
 
 if (process.argv.includes('--write')) {
   writeFileSync(BASELINE_FILE, `${JSON.stringify(counts, null, 2)}\n`, 'utf8')
@@ -71,14 +90,19 @@ try {
 }
 
 const regressions = []
-for (const [file, count] of Object.entries(counts)) {
-  const allowed = baseline[file] ?? 0
-  if (count > allowed) regressions.push({ file, count, allowed })
+for (const [file, entry] of Object.entries(counts)) {
+  const allowed = baseline[file] ?? { cls: 0, inline: 0 }
+  for (const kind of ['cls', 'inline']) {
+    const now = entry[kind]
+    const was = allowed[kind] ?? 0
+    if (now > was) regressions.push({ file, kind, now, was })
+  }
 }
 
 if (regressions.length > 0) {
-  for (const { file, count, allowed } of regressions) {
-    console.log(`${file}  ${allowed} ⇒ ${count}  (+${count - allowed})`)
+  for (const { file, kind, now, was } of regressions) {
+    const label = kind === 'cls' ? 'text-[Npx]' : 'fontSize'
+    console.log(`${file}  ${label}: ${was} ⇒ ${now}  (+${now - was})`)
   }
   console.log(
     `\n❌ ${regressions.length} קובץ/ים עם גודל-כתב ידני חדש.\n` +
@@ -89,6 +113,6 @@ if (regressions.length > 0) {
   process.exit(1)
 }
 
-const baselineTotal = Object.values(baseline).reduce((sum, n) => sum + n, 0)
+const baselineTotal = sumOf(baseline)
 const left = baselineTotal === 0 ? '' : `  ·  נותרו ${total} מתוך ${baselineTotal} בקו-הבסיס`
 console.log(`✓ אין גודל-כתב ידני חדש.${left}`)
