@@ -530,43 +530,7 @@ protection is false until it does.
 
 ## 10ב. Applied migrations — running log (newest first)
 
-> ⏳ **`20260917150000_module11_k1_pagination_params.sql` — DRAFTED 17/09/2026, NOT YET APPLIED.**
-> Written and anchor-verified this session (`snug-mapping-dragon.md` §7 שלב 0.5); waiting on Ishay's
-> explicit approval in chat before `apply_migration` runs. **Not a row here yet — a placeholder so
-> the Stop hook's "migrations changed ⇒ this file changed" check reflects the true state instead of
-> a false "applied".** Move this line to a real ✅ APPLIED row (with the md5/proof evidence the other
-> rows carry) once it actually runs; delete this note if the migration is abandoned instead.
-> **Scope:** `p_page`/`p_page_size` (defaults preserve today's row counts: 8/8/4/50/50) on 5 of 16
-> report RPCs — `report_m02_exec_overview` · `report_m04_discounts` · `report_m06_staffing` ·
-> `report_m07_finance_overview` · `report_m19_customers_overview` — plus a real `meta.row_total` on
-> `report_m19_customers_overview` (52, not the 61 that is all customers). No table/column/policy
-> touched. Verified safe against the repo's own signature-change precedent (`e2` / `p_asof`,
-> row 549 below): the only call site (`src/modules/11_reports/api.js:153`) uses named parameters,
-> confirmed via `grep -rn` across `src/` and `e2e/` for all five function names — no positional
-> caller exists.
->
-> 🔴 **✏️ Two defects caught and fixed before any apply, both confirmed independently:**
-> **(1)** A parallel advisory session flagged that `CREATE OR REPLACE FUNCTION` with a changed
-> argument list does not replace — it creates an **overload**, and a 4-argument named call becomes
-> ambiguous between the old and new signature (`42725 function ... is not unique`). **Reproduced
-> myself** in an isolated `pg_temp` scenario before accepting the claim (matches exactly: same
-> error, same code). Fix: every block now does `drop function if exists public.<name>(<exact old
-> types>)` before the `create` — `report_m07_finance_overview` needs 5 types (`date,date,integer,
-> jsonb,date`, it carries `p_asof`), the other four need 4. **(2)** Found independently while
-> implementing the fix: `drop`+`create` also resets the function's ACL and `comment`. This schema's
-> `pg_default_acl` grants `anon=EXECUTE` to new functions by default, while all five currently
-> **revoke** it explicitly — an unmitigated drop+create would have opened these five reports to
-> unauthenticated access. Fix: each block re-applies `revoke all ... from public, anon,
-> authenticated` + `grant execute ... to authenticated` on the **new** signature, and restores the
-> original `comment on function` (captured via `obj_description` before the drop, not retyped).
-> **Dry-run proof:** the corrected 5-block sequence ran inside `begin;...rollback;` against the live
-> DB — drop+create+grant+comment succeeded cleanly for all five, and a post-rollback check confirmed
-> zero duplicate `report_m*` signatures (`pg_proc` count=1 for all 16, original 4/5-arg signatures
-> intact — nothing leaked past the rollback). **What could not be tested this way:** the "same row
-> counts" acceptance check requires a real authenticated call (`assert_module_permission` depends on
-> `auth.email()`, which a raw service connection doesn't have) — deferred to a live browser check
-> (as CEO) immediately after the real `apply_migration`, matching this project's own precedent for
-> RPC verification (`E2E_CEO`/`E2E_PROJECTS` probes elsewhere in this log).
+- ✅ **`20260917150000_module11_k1_pagination_params.sql` — APPLIED 17/09/2026 (1 registry row, `module11_k1_pagination_params`).** Adds `p_page`/`p_page_size` (defaults preserve today's row counts: 8/8/4/50/50) to 5 of 16 report RPCs — `report_m02_exec_overview` · `report_m04_discounts` · `report_m06_staffing` · `report_m07_finance_overview` · `report_m19_customers_overview` — plus a real `meta.row_total` on `report_m19_customers_overview` (**52**, not the 61 that is all customers). No table/column/policy touched. **Two defects caught and independently verified before any apply:** ① a parallel advisory session flagged that `CREATE OR REPLACE FUNCTION` with a changed argument list creates an **overload** rather than replacing (`42725 function ... is not unique` on the very next named call) — reproduced myself in an isolated `pg_temp` scenario, same error, before accepting it; fixed with `drop function if exists public.<name>(<exact old types>)` before every `create` (`report_m07_finance_overview` needs 5 types, it carries `p_asof`; the other four need 4) · ② found independently while implementing that fix: `drop`+`create` also resets ACL and `comment` — this schema's `pg_default_acl` grants `anon=EXECUTE` to new functions by default, while all five currently revoke it explicitly, so an unmitigated drop+create would have opened five internal reports to unauthenticated access; fixed with `revoke all ... from public, anon, authenticated` + `grant execute ... to authenticated` on the new signature, plus the original `comment on function` restored from `obj_description` (captured pre-drop, not retyped). 🔑 **Proof, all measured after the real apply, with a real authenticated identity** (JWT-claim injection via `set_config('request.jwt.claims', ...)` + `set local role authenticated`, since `assert_module_permission` needs `auth.email()` which a raw service connection doesn't have — the same technique a parallel advisory session supplied and I verified independently first): zero duplicate `report_m*` signatures (`pg_proc`, all 16 at count=1) · `proacl` on all five still `{postgres=X,service_role=X,authenticated=X}` — `anon` absent, unchanged · row counts identical before/after (m02=8 · m19=8 · m07=4 · m04=50 · m06=50) · `row_total` correct (m19=52, m07=35). `docs/schema.sql` §~2560–2646: signatures updated on all five, live-body pointer moved to this file. Verified safe against the repo's own signature-change precedent (`e2`/`p_asof`, row 549 below) before writing: the only call site (`src/modules/11_reports/api.js:153`) uses named parameters — confirmed via `grep -rn` across `src/` and `e2e/` for all five names, no positional caller exists.
 
 > 🆕 **מודול 11 — 18 קובצי-מיגרציה ביום אחד, 16/09/2026. קראו את שלוש השורות האלה לפני הרשימה:**
 > **(1) שורה אחת לכל קובץ, וזה במכוון.** קובץ אחד יכול להחזיק **כמה שורות `schema_migrations`** — ‏`apply_migration` דרך MCP נקטע סביב ~90 KB, ולכן קובץ גדול מוחל פר-פונקציה (< 60 KB לכל קריאה), ותיקון שהמאמת של אותה מיגרציה מצא נכתב קדימה באותה טיוטה שטרם קומטה. **רשומות-לקובץ הן ספירה פנימית של הרשם, לא של הציר** *(`micro_guides/module-11.md` §9 D-20, הכרעת-מתזמר 16/09 08:1X)*. **מספר הרשומות של כל קובץ מופיע בשורה שלו, ושמותיהן בכותרת הקובץ עצמו.**
