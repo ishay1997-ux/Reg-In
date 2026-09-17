@@ -263,32 +263,39 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
           canReadProjects={canReadProjects}
         />
       ) : (
-        <table className="w-full border-collapse" data-testid="overview-table">
-          <thead>
-            <tr>
-              <Th>אירוע</Th>
-              <Th>מתי</Th>
-              <Th>מיקום</Th>
-              <Th>איוש</Th>
-              <Th>מצב הזימונים</Th>
-              {canEdit && <Th>פעולה</Th>}
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((row) => (
-              <OverviewRow
-                key={row.project.project_id}
-                row={row}
-                today={today}
-                cutoffHours={cutoffHours}
-                canEdit={canEdit}
-                sending={sending}
-                onOpen={() => onOpenSmartMatch?.(row.project.project_id)}
-                onResend={() => resend([row], ` — ${row.project.event_name}`)}
-              />
-            ))}
-          </tbody>
-        </table>
+        // 🔴 גלילה-צידה בתוך מסגרת הטבלה — הכרעת-ישי 17/09/2026, אחרי שנמדד שהמסך גולש
+        // ‏84px ב-1024px *(והוא גלש 65px גם לפני הגדלת הכתב — באג שקדם לפזה א')*.
+        // ‏📏 המדידה: `overview-table` רוחב-תוכן 804px בתוך מסגרת של 656px.
+        // 🚫 מה שנפסל במפורש: להקטין את הכתב בחזרה *(מבטל את מה שישי ביקש)* · להסתיר עמודות
+        // *(מסתיר נתונים)*. ⇒ **גלילה בתוך המסגרת, לא גלילת-דף, והעמודה הראשונה נשארת.**
+        <div className="overflow-x-auto" data-testid="overview-table-scroll">
+          <table className="w-full border-collapse" data-testid="overview-table">
+            <thead>
+              <tr>
+                <Th sticky>אירוע</Th>
+                <Th>מתי</Th>
+                <Th>מיקום</Th>
+                <Th>איוש</Th>
+                <Th>מצב הזימונים</Th>
+                {canEdit && <Th>פעולה</Th>}
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((row) => (
+                <OverviewRow
+                  key={row.project.project_id}
+                  row={row}
+                  today={today}
+                  cutoffHours={cutoffHours}
+                  canEdit={canEdit}
+                  sending={sending}
+                  onOpen={() => onOpenSmartMatch?.(row.project.project_id)}
+                  onResend={() => resend([row], ` — ${row.project.event_name}`)}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
@@ -323,10 +330,12 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
         }
       }}
       aria-label={`${project.event_name} — לשיבוץ חכם`}
-      className={`cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${showsFinalDayAlert ? 'bg-red-50' : isMissing ? '' : 'bg-slate-50 text-slate-500'}`}
+      // ‏`bg-white` במצב-ברירת-המחדל *(היה `''`)* — נדרש כדי שהעמודה הדביקה תירש רקע אטום
+      // ולא תיראה שקופה כשהטבלה נגללת מתחתיה. ויזואלית זהה: הכרטיס שמתחת לבן.
+      className={`cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${showsFinalDayAlert ? 'bg-red-50' : isMissing ? 'bg-white' : 'bg-slate-50 text-slate-500'}`}
       data-testid={`overview-row-${project.project_id}`}
     >
-      <Td>
+      <Td sticky>
         <div className="font-semibold text-slate-800">
           {/* ⚠ נדלק על **חוסר** בתוך T-24, לא על קרבה (כרטיס §④): אירוע מלא שמתקיים מחר
               אינו דורש ממנה דבר, וסימון עליו מלמד להתעלם מהסימן. */}
@@ -499,14 +508,27 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
   )
 }
 
-function Th({ children }) {
+// ‏`sticky` — העמודה הראשונה נשארת במקומה בזמן גלילה-צידה (הכרעת-ישי 17/09/2026).
+// 🔴 ו-`right-0` ולא `left-0`: הדף הוא `dir="rtl"`, והעמודה הראשונה יושבת פיזית בימין
+// (‏`src/CLAUDE.md §2.4` — יוטיליטיז פיזיים בלבד).
+function Th({ children, sticky = false }) {
   return (
-    <th className="whitespace-nowrap border-b border-slate-200 px-2.5 py-1.5 text-right text-xs font-semibold text-slate-500">
+    <th
+      className={`whitespace-nowrap border-b border-slate-200 px-2.5 py-1.5 text-right text-xs font-semibold text-slate-500 ${sticky ? 'sticky right-0 z-20 bg-white' : ''}`}
+    >
       {children}
     </th>
   )
 }
 
-function Td({ children }) {
-  return <td className="border-b border-slate-100 px-2.5 py-2.5 align-middle">{children}</td>
+// ‏`bg-inherit` על התא הדביק הוא מה שמונע מהתוכן הנגלל לעבור *מתחתיו* — ולכן כל `<tr>`
+// חייב רקע מוצהר, כולל מצב-ברירת-המחדל (`bg-white`); בלעדיו התא שקוף והעמודה מתערבבת.
+function Td({ children, sticky = false }) {
+  return (
+    <td
+      className={`border-b border-slate-100 px-2.5 py-2.5 align-middle ${sticky ? 'sticky right-0 z-10 bg-inherit' : ''}`}
+    >
+      {children}
+    </td>
+  )
 }
