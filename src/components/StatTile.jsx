@@ -33,15 +33,17 @@ export default function StatTile({ label, value, sub, emptyText = 'אין נתו
       className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col items-start gap-0.5"
       data-testid={testId}
     >
-      <span className="text-xs text-slate-500">{label}</span>
+      {/* 🔤 תווית 14px וערך 24px — התוכנית §2 ("StatTile — הלב"), ולא ברירת-המחדל שהייתה כאן.
+          תווית 12px מתחת לסטנדרט של כרטיס-מדד; המקורות שנבדקו נוקבים ב-14–16px לתווית. */}
+      <span className="text-sm text-slate-600">{label}</span>
       {value == null ? (
         <span className="text-sm text-slate-400">{emptyText}</span>
       ) : (
-        <span className="text-xl font-bold text-slate-800">
+        <span className="text-2xl font-bold text-slate-800">
           {typeof value === 'number' ? <Money amount={value} /> : value}
         </span>
       )}
-      {sub && <span className="text-xs text-slate-500">{sub}</span>}
+      {sub && <span className="text-xs text-slate-600">{sub}</span>}
     </div>
   )
 }
