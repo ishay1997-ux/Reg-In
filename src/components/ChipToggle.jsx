@@ -52,7 +52,7 @@ export default function ChipToggle({ options, selected, onToggle, emptyText = 'â
             type="button"
             onClick={() => onToggle(option)}
             aria-pressed={isSelected}
-            className={`h-auto rounded-full border px-3 py-1 text-[12.5px] ${tone}`}
+            className={`h-auto rounded-full border px-3 py-1 text-sm ${tone}`}
           >
             {option}
           </button>

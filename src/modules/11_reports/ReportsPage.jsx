@@ -179,7 +179,7 @@ function TabButton({ tab, active, masked, onSelect }) {
       </span>
       {/* 🔤 המשפט **גלוי** בשורה שנייה ולא רק ב-`title` (הכרעה 15-ה) — ‏`title` לבדו אינו
           נגיש למקלדת, ועל כפתור מנוטרל הוא לא מוצג כלל. */}
-      {masked && <span className="text-[10.5px] font-normal text-slate-400">{MASKED_TEXT}</span>}
+      {masked && <span className="text-xs font-normal text-slate-400">{MASKED_TEXT}</span>}
     </button>
   )
 }
@@ -526,7 +526,7 @@ export default function ReportsPage() {
 function TodayStamp({ today }) {
   if (!today) return null
   return (
-    <p className="mb-1 text-left text-[11px] text-slate-500" data-testid="reports-stamp">
+    <p className="mb-1 text-left text-xs text-slate-500" data-testid="reports-stamp">
       היום: {formatIsraelDate(today)}
     </p>
   )

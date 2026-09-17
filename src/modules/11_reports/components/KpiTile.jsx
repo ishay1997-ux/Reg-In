@@ -41,7 +41,7 @@ function SubLine({ sub }) {
     // מ2 תפחה לשלוש שורות ולאריחים ברוחב ⁦248⁩–⁦535⁩px, בעוד ⑩ של הכרטיס מודד *"ארבעת
     // האריחים על שורה אחת"*. הערך מועתק מהעותק המקומי של לשונית-ההנהלה, שם הוא נמדד.
     <span
-      className="mt-1 block max-w-[210px] text-[12px] leading-[1.4] text-slate-600"
+      className="mt-1 block max-w-[210px] text-sm leading-[1.4] text-slate-600"
       data-testid="kpi-sub"
     >
       {sub}
@@ -76,12 +76,12 @@ function CompareLine({ compare, fallbackFormat }) {
           את האריח (פלקס שאינו נמתח) ומפרק את שורת-האריחים. נמדד במ19 שארבעת האריחים
           נשברו ל-2+2 ב-1280px בעוד המוקאפ מצייר שורה אחת. */}
       <span
-        className="block max-w-[210px] text-[11px] leading-[1.4] text-slate-500"
+        className="block max-w-[210px] text-xs leading-[1.4] text-slate-500"
         data-testid="kpi-compare"
       >
         {glyph && (
           // 🚫 `color:inherit` — החץ **אינו צבוע** (📐1). הוא סימן-כיוון, לא שיפוט.
-          <span aria-hidden="true" className="ml-1 text-[10px] text-inherit">
+          <span aria-hidden="true" className="ml-1 text-xs text-inherit">
             {glyph}
           </span>
         )}
@@ -104,7 +104,7 @@ function CompareLine({ compare, fallbackFormat }) {
           בלי אוכלוסייה. ⚠️ **ונעלמת עם האריח הממוסך**, כמו `sub`: `compare` כולו הוא `null`
           שם, ולכן אין כאן ענף נוסף לשכוח. */}
       {compare.note && (
-        <span className="block text-[10.5px] text-slate-500" data-testid="kpi-compare-note">
+        <span className="block text-xs text-slate-500" data-testid="kpi-compare-note">
           {compare.note}
         </span>
       )}
@@ -143,7 +143,7 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
           <CompareLine compare={masked ? null : tile.compare} fallbackFormat={tile.format} />
           {/* 📐3: חלון-הזמן בכל אריח — ואריח שאינו מגיב למסנן נושא זאת במפורש. */}
           {tile.window && (
-            <span className="block text-[10.5px] text-slate-500" data-testid="kpi-window">
+            <span className="block text-xs text-slate-500" data-testid="kpi-window">
               {tile.window}
             </span>
           )}

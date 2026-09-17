@@ -41,7 +41,7 @@ export default function StatTile({ label, value, sub, emptyText = 'אין נתו
           {typeof value === 'number' ? <Money amount={value} /> : value}
         </span>
       )}
-      {sub && <span className="text-[11px] text-slate-500">{sub}</span>}
+      {sub && <span className="text-xs text-slate-500">{sub}</span>}
     </div>
   )
 }

@@ -45,7 +45,7 @@ export default function ExecOverviewSurface(props) {
         <button
           type="button"
           onClick={() => onDrill(TRENDS_TARGET)}
-          className="mt-2 text-[12.5px] font-semibold text-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+          className="mt-2 text-sm font-semibold text-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
           data-testid="exec-overview-trends-link"
         >
           {TRENDS_LINK}

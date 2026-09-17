@@ -301,12 +301,12 @@ export default function AnalysisRunBar({ payload, canEdit, onChanged }) {
       data-testid="m25-run-bar"
     >
       <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-slate-700" data-testid="m25-run-text">
+        <p className="text-sm font-semibold text-slate-700" data-testid="m25-run-text">
           {state.text}
         </p>
-        {state.sub && <p className="mt-0.5 text-[11.5px] text-slate-600">{state.sub}</p>}
+        {state.sub && <p className="mt-0.5 text-xs text-slate-600">{state.sub}</p>}
         {error && (
-          <p className="mt-1 text-[11.5px] font-semibold text-red-600" role="alert">
+          <p className="mt-1 text-xs font-semibold text-red-600" role="alert">
             {error}
           </p>
         )}

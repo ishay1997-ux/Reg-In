@@ -1,11 +1,4 @@
 {
-  "src/components/ChipToggle.jsx": 1,
-  "src/components/FilterPill.jsx": 1,
-  "src/components/ListWindow.jsx": 5,
-  "src/components/RatingStars.jsx": 3,
-  "src/components/StatTile.jsx": 1,
-  "src/components/StatusTag.jsx": 1,
-  "src/components/ui/button.jsx": 1,
   "src/modules/02_customers/CustomerDetailsPage.jsx": 10,
   "src/modules/02_customers/CustomersPage.jsx": 2,
   "src/modules/03_quotes/QuoteLineEditor.jsx": 1,
@@ -37,18 +30,5 @@
   "src/modules/09_settings/BelowMinWageList.jsx": 1,
   "src/modules/09_settings/SmartMatchPane.jsx": 2,
   "src/modules/09_settings/TemplateEditor.jsx": 8,
-  "src/modules/11_reports/ReportsPage.jsx": 2,
-  "src/modules/11_reports/components/ChartCard.jsx": 7,
-  "src/modules/11_reports/components/ExportBar.jsx": 3,
-  "src/modules/11_reports/components/FiltersBar.jsx": 1,
-  "src/modules/11_reports/components/KpiTile.jsx": 5,
-  "src/modules/11_reports/components/ReportChips.jsx": 1,
-  "src/modules/11_reports/components/ReportSurface.jsx": 7,
-  "src/modules/11_reports/tabs/HostessesTab.jsx": 1,
-  "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx": 3,
-  "src/modules/11_reports/tabs/customers/CustomerSurface.jsx": 7,
-  "src/modules/11_reports/tabs/executive/ExecOverviewSurface.jsx": 1,
-  "src/modules/11_reports/tabs/executive/surfaceKit.jsx": 1,
-  "src/modules/11_reports/tabs/finance/FinanceSurface.jsx": 1,
-  "src/modules/11_reports/tabs/hostesses/ChipRow.jsx": 2
+  "src/modules/11_reports/components/ExportBar.jsx": 3
 }

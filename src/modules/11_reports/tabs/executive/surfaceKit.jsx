@@ -40,7 +40,7 @@ export function ExecutiveSurface({ surface, filters, drill, onDrill, onWindow, .
 export function SurfaceNote({ children, testId }) {
   if (!children) return null
   return (
-    <p className="mb-2 text-[11.5px] leading-relaxed text-slate-500" data-testid={testId}>
+    <p className="mb-2 text-xs leading-relaxed text-slate-500" data-testid={testId}>
       {children}
     </p>
   )
