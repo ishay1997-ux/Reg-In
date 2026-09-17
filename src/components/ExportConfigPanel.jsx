@@ -328,7 +328,16 @@ export default function ExportConfigPanel({
             איפוס
           </Button>
         </div>
-        <ul className="max-h-56 space-y-1 overflow-auto" data-testid="export-column-list">
+        {/*
+          🔴 **גובה נגזר-מסך ולא 224px קבוע.** ‏`max-h-56` הראה **6 שורות**, כלומר בגיול-חובות
+          (8 עמודות) כבר היום גוללים — ובגרירה זה אומר לגרור בתוך חלון של 6.
+          📊 **ולמה זה יחמיר ולא ישתפר:** מצבת-השדות לייצוא-פרויקטים היא **40 עמודות בטבלה +
+          10 בכספים = 50** (נמדד מ-`docs/schema.sql`), ודיילות 41, הצעות 35. ‏`40vh` נותן
+          ~8 שורות ב-768px ו-~11 ב-1080 — שיפור אמיתי שמתאים את עצמו למסך.
+          ⚠️ **ואינו הפתרון ל-50** — חיפוש בתוך הרשימה, סימון-הכול ודרך לסדר 50 פריטים הם
+          הכרעת-מוצר של ישי, ומוצגים לו במוקאפ. **זה מרחיב את מה שקיים, לא מחליף אותו.**
+        */}
+        <ul className="max-h-[40vh] space-y-1 overflow-auto" data-testid="export-column-list">
           {ordered.map((column, index) => (
             <ColumnRow
               key={column.key}
