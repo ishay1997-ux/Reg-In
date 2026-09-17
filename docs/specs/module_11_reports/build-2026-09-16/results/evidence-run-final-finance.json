@@ -1,0 +1,654 @@
+{
+  "tab": "finance",
+  "base_url": "http://localhost:5189",
+  "started_at": "2026-09-17T00:08:29.095Z",
+  "identities": [
+    "CEO"
+  ],
+  "modes": [
+    2,
+    0
+  ],
+  "surfaces": {
+    "finance-overview": {
+      "id": "מ7",
+      "rpc": "report_m07_finance_overview",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-finance-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על כספים",
+              "state_testid": "report-finance-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 4,
+              "hint_ids": [
+                "reports.overview.whyAndFirst",
+                "reports.overview.tileBasis",
+                "reports.overview.debtSeriesBasis",
+                "reports.overview.oldestSort"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 2,
+              "rows_page1": 4,
+              "pager_total": 4,
+              "pager_range": "1–4 מתוך 4",
+              "table_headers": [
+                "פרויקט",
+                "לקוח",
+                "נשלחה",
+                "סכום",
+                "ימי איחור▼"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · הוצאו: חובות אבודים (⁦2⁩) ופרויקטים שטרם חויבו · ⁦n=35⁩ חשבוניות, נכון להיום — צילום-רגע שאינו מושפע ממסנן התקופה. שני האריחים התחתונים נשענים על אוכלוסיית דוחות-הכסף: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום.",
+              "so_what": "לגבות ⁦50,662 ₪⁩ שממתינים מעל ⁦60⁩ יום ב-⁦8⁩ חשבוניות — הוותיקה כבר ⁦581⁩ ימים, אצל מועצה מקומית שוהם; יתרת-החוב כולה עומדת על ⁦236,382 ₪⁩.",
+              "definitions": "יתרת-חוב פתוחה = חשבונית שנשלחה, טרם שולמה ולא נמחקה כחוב-אבוד · \"צפוי\" = מועד חוזי (שליחה + ⁦30⁩ ימי תנאי-תשלום) ועוד חציון-האיחור של אותו לקוח — הערכה, לא התחייבות · יתרת-חוב בסוף חודש = אותה הגדרה, נכון לערב האחרון של אותו חודש; העמודה האחרונה היא נכון להיום.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-כספים_01-01–17-09-2026.xlsx",
+              "export_columns": "עמודות: פרויקט · לקוח · נשלחה · סכום · ימי איחור",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-finance-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על כספים",
+              "state_testid": "report-finance-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 2,
+              "rows_page1": 4,
+              "pager_total": 4,
+              "pager_range": "1–4 מתוך 4",
+              "table_headers": [
+                "פרויקט",
+                "לקוח",
+                "נשלחה",
+                "סכום",
+                "ימי איחור▼"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · הוצאו: חובות אבודים (⁦2⁩) ופרויקטים שטרם חויבו · ⁦n=35⁩ חשבוניות, נכון להיום — צילום-רגע שאינו מושפע ממסנן התקופה. שני האריחים התחתונים נשענים על אוכלוסיית דוחות-הכסף: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום.",
+              "so_what": "לגבות ⁦50,662 ₪⁩ שממתינים מעל ⁦60⁩ יום ב-⁦8⁩ חשבוניות — הוותיקה כבר ⁦581⁩ ימים, אצל מועצה מקומית שוהם; יתרת-החוב כולה עומדת על ⁦236,382 ₪⁩.",
+              "definitions": "יתרת-חוב פתוחה = חשבונית שנשלחה, טרם שולמה ולא נמחקה כחוב-אבוד · \"צפוי\" = מועד חוזי (שליחה + ⁦30⁩ ימי תנאי-תשלום) ועוד חציון-האיחור של אותו לקוח — הערכה, לא התחייבות · יתרת-חוב בסוף חודש = אותה הגדרה, נכון לערב האחרון של אותו חודש; העמודה האחרונה היא נכון להיום.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-כספים_01-01–17-09-2026.xlsx",
+              "export_columns": "עמודות: פרויקט · לקוח · נשלחה · סכום · ימי איחור",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "profitability": {
+      "id": "מ8",
+      "rpc": "report_m08_profitability",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-profitability.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "רווחיות פרויקטים",
+              "state_testid": "report-profitability",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 3,
+              "hint_ids": [
+                "reports.profitability.whyAndFirst",
+                "reports.profitability.tileBasis",
+                "reports.profitability.sortWhy"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 0,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "פרויקט",
+                "לקוח",
+                "הכנסה",
+                "רווח",
+                "שעות-צוות מתוכננות",
+                "שעות-צוות בפועל",
+                "סטייה ₪▼",
+                "סטייה %",
+                "ציון-משוב"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום, אירוע ב-⁦01/01/2026–17/09/2026⁩ · הוצאו: פרויקטים פעילים ומבוטלים (⁦14⁩) · ⁦n=241⁩. הדף אינו מציג פרויקטים פעילים — לפני שהאירוע התקיים השעות-בפועל תמיד קטנות מהמתוכננות, ולכן אין בו חריגה למדוד. ⁦125⁩ מהם מתחת לרצפת-המהותיות — בתוך האוכלוסייה, מחוץ לדירוג.",
+              "so_what": "לפתוח את פרויקט ⁦1416⁩ — טכנולוגיות ענן ישראל, החריגה הגדולה ביותר בתקופה: ⁦361 ₪⁩ (⁦21.1%⁩ מעל התכנון); בסך-הכול חרגו ⁦30⁩ פרויקטים ב-⁦5,280 ₪⁩, מול ⁦17⁩ ו-⁦2,937 ₪⁩ אשתקד.",
+              "definitions": "סטיית-תקציב = צד-העבודה בלבד, ב-₪ · עלות-עבודה מתוכננת = שעות-האירוע × Σ תעריפי המשובצות-סופית · \"דלף\" = חריגה כלפי-מעלה בלבד · שעות-צוות מתוכננות = משך-האירוע × מספר המשובצות-סופית, ולכן הן באותו קנה-מידה של שעות-הצוות בפועל · רווח = הרווח הסופי היכן שקפא, אחרת רווח גולמי מחושב.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: רווחיות-פרויקטים_2026-(01-01–17-09).xlsx",
+              "export_columns": "עמודות: פרויקט · לקוח · הכנסה · רווח · שעות-צוות מתוכננות · שעות-צוות בפועל · סטייה ₪ · סטייה % · ציון-משוב",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-profitability.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "רווחיות פרויקטים",
+              "state_testid": "report-profitability",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 0,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "פרויקט",
+                "לקוח",
+                "הכנסה",
+                "רווח",
+                "שעות-צוות מתוכננות",
+                "שעות-צוות בפועל",
+                "סטייה ₪▼",
+                "סטייה %",
+                "ציון-משוב"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום, אירוע ב-⁦01/01/2026–17/09/2026⁩ · הוצאו: פרויקטים פעילים ומבוטלים (⁦14⁩) · ⁦n=241⁩. הדף אינו מציג פרויקטים פעילים — לפני שהאירוע התקיים השעות-בפועל תמיד קטנות מהמתוכננות, ולכן אין בו חריגה למדוד. ⁦125⁩ מהם מתחת לרצפת-המהותיות — בתוך האוכלוסייה, מחוץ לדירוג.",
+              "so_what": "לפתוח את פרויקט ⁦1416⁩ — טכנולוגיות ענן ישראל, החריגה הגדולה ביותר בתקופה: ⁦361 ₪⁩ (⁦21.1%⁩ מעל התכנון); בסך-הכול חרגו ⁦30⁩ פרויקטים ב-⁦5,280 ₪⁩, מול ⁦17⁩ ו-⁦2,937 ₪⁩ אשתקד.",
+              "definitions": "סטיית-תקציב = צד-העבודה בלבד, ב-₪ · עלות-עבודה מתוכננת = שעות-האירוע × Σ תעריפי המשובצות-סופית · \"דלף\" = חריגה כלפי-מעלה בלבד · שעות-צוות מתוכננות = משך-האירוע × מספר המשובצות-סופית, ולכן הן באותו קנה-מידה של שעות-הצוות בפועל · רווח = הרווח הסופי היכן שקפא, אחרת רווח גולמי מחושב.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: רווחיות-פרויקטים_2026-(01-01–17-09).xlsx",
+              "export_columns": "עמודות: פרויקט · לקוח · הכנסה · רווח · שעות-צוות מתוכננות · שעות-צוות בפועל · סטייה ₪ · סטייה % · ציון-משוב",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "aging": {
+      "id": "מ9",
+      "rpc": "report_m09_aging",
+      "drill": true,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-aging.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "גיול חובות",
+              "state_testid": "report-aging",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 4,
+              "hint_ids": [
+                "reports.aging.whyAndFirst",
+                "reports.aging.overdueBasis",
+                "reports.aging.bucketOrder",
+                "reports.aging.currentTile"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-stackedBar"
+              ],
+              "tiles": 4,
+              "tile_doors": 2,
+              "rows_page1": 35,
+              "pager_total": 35,
+              "pager_range": "1–35 מתוך 35",
+              "table_headers": [
+                "פרויקט",
+                "לקוח",
+                "איש קשר",
+                "נשלחה",
+                "מועד-פירעון חוזי",
+                "סכום",
+                "ימי איחור▼",
+                "מדרג"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: חשבוניות שנשלחו, טרם שולמו ולא נמחקו כחוב-אבוד · הוצאו: חוב אבוד (⁦2⁩) ופרויקטים שטרם חויבו · ⁦n=35⁩ · נכון להיום — זהו צילום-רגע ולא סיכום-תקופה, ואינו מושפע ממסנן התקופה. ולגרף שלמטה אוכלוסייה צרה יותר: הוא מציג חוב באיחור בלבד — ארבעת מדרגי-האיחור, ⁦28⁩ חשבוניות. \"שוטף\" (⁦7⁩ חשבוניות · ⁦42,231 ₪⁩) הוצא מהגרף לאריח שלצידו, כי טרם הגיע מועד תשלומן — הן אינן חוב באיחור. האריחים והטבלה ממשיכים לכסות את כל ⁦35⁩.",
+              "so_what": "לגבות ⁦50,662 ₪⁩ מ-⁦5⁩ לקוחות — הכסף שממתין מעל ⁦60⁩ יום; הגדול שבהם אלפא סיסטמס בע\"מ, ⁦10,163 ₪⁩.",
+              "definitions": "מדרג-גיול נמדד מול מועד-הפירעון (יום השליחה + ⁦30⁩ ימי תנאי-תשלום), לא מול יום השליחה, ונכון להיום · \"שוטף\" = טרם הגיע מועד-הפירעון, לא \"שולם\" · \"ימים לתשלום (חציון)\" = חציון (תאריך-תשלום − תאריך-חשבונית) על חשבוניות ששולמו, כל הזמנים, ואינו DSO · \"חוב אבוד\" מוחרג לגמרי מהיתרה ומכל המדרגים.",
+              "window_label": "נכון להיום · כל הלקוחות",
+              "export_file": "יירד: גיול-חובות_נכון-להיום.xlsx",
+              "export_columns": "עמודות: פרויקט · לקוח · איש קשר · נשלחה · מועד-פירעון חוזי · סכום · ימי איחור · מדרג",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-aging.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "גיול חובות",
+              "state_testid": "report-aging",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-stackedBar"
+              ],
+              "tiles": 4,
+              "tile_doors": 2,
+              "rows_page1": 35,
+              "pager_total": 35,
+              "pager_range": "1–35 מתוך 35",
+              "table_headers": [
+                "פרויקט",
+                "לקוח",
+                "איש קשר",
+                "נשלחה",
+                "מועד-פירעון חוזי",
+                "סכום",
+                "ימי איחור▼",
+                "מדרג"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: חשבוניות שנשלחו, טרם שולמו ולא נמחקו כחוב-אבוד · הוצאו: חוב אבוד (⁦2⁩) ופרויקטים שטרם חויבו · ⁦n=35⁩ · נכון להיום — זהו צילום-רגע ולא סיכום-תקופה, ואינו מושפע ממסנן התקופה. ולגרף שלמטה אוכלוסייה צרה יותר: הוא מציג חוב באיחור בלבד — ארבעת מדרגי-האיחור, ⁦28⁩ חשבוניות. \"שוטף\" (⁦7⁩ חשבוניות · ⁦42,231 ₪⁩) הוצא מהגרף לאריח שלצידו, כי טרם הגיע מועד תשלומן — הן אינן חוב באיחור. האריחים והטבלה ממשיכים לכסות את כל ⁦35⁩.",
+              "so_what": "לגבות ⁦50,662 ₪⁩ מ-⁦5⁩ לקוחות — הכסף שממתין מעל ⁦60⁩ יום; הגדול שבהם אלפא סיסטמס בע\"מ, ⁦10,163 ₪⁩.",
+              "definitions": "מדרג-גיול נמדד מול מועד-הפירעון (יום השליחה + ⁦30⁩ ימי תנאי-תשלום), לא מול יום השליחה, ונכון להיום · \"שוטף\" = טרם הגיע מועד-הפירעון, לא \"שולם\" · \"ימים לתשלום (חציון)\" = חציון (תאריך-תשלום − תאריך-חשבונית) על חשבוניות ששולמו, כל הזמנים, ואינו DSO · \"חוב אבוד\" מוחרג לגמרי מהיתרה ומכל המדרגים.",
+              "window_label": "נכון להיום · כל הלקוחות",
+              "export_file": "יירד: גיול-חובות_נכון-להיום.xlsx",
+              "export_columns": "עמודות: פרויקט · לקוח · איש קשר · נשלחה · מועד-פירעון חוזי · סכום · ימי איחור · מדרג",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "equipment": {
+      "id": "מ12",
+      "rpc": "report_m12_equipment",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-equipment.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "צריכת ציוד",
+              "state_testid": "report-equipment",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 4,
+              "hint_ids": [
+                "reports.equipment.whyAndFirst",
+                "reports.equipment.tileBasis",
+                "reports.equipment.sortWhy",
+                "reports.equipment.orderCeiling"
+              ],
+              "charts": 2,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 9,
+              "pager_total": 9,
+              "pager_range": "1–9 מתוך 9",
+              "table_headers": [
+                "מוצר (מק\"ט)",
+                "הוזמן",
+                "הגיע",
+                "פער יחידות",
+                "פער %",
+                "עלות מוזמנת (₪)▼"
+              ],
+              "extra_tables": 2,
+              "population": "אוכלוסייה: כל ⁦1,771⁩ שורות הלוגיסטיקה, כלל-הזמנים, כולל פרויקטים מבוטלים · הוצאו: אין · ⁦n=1,771⁩, מתוכן ⁦105⁩ שייכות לאירועים שטרם התקיימו. בלוק ההזמנה למטה חותך לאירועים שטרם התקיימו (⁦17/09–17/10⁩).",
+              "so_what": "להזמין ⁦2,810⁩ יחידות של \"שרוך סאטן (חלק)\" ל-⁦8⁩ האירועים שבחודש הקרוב — הכמות הגדולה ביותר בטבלת-ההזמנה.",
+              "definitions": "\"הוזמן\" = הכמות המתוכננת, והיא בסיס-החיוב והעלות · \"הגיע\" = הכמות בפועל, והיא שאלת-רכש בלבד · \"עלות מוזמנת\" = הוזמן × מחיר-העלות הקפוא בסגירת ההצעה · \"פער\" = הפרש יחידות, לא ₪ · \"כמות להזמנה\" = מה שהוזמן לאירועים שטרם התקיימו בחודש הקרוב, והיא תקרה עליונה — המערכת אינה יודעת מה כבר הוזמן מהספק · \"מחיר מוערך\" = שורה בלי קישור להצעה ובלי קישור לשינוי-תכולה, שמחירה חושב לפי ממוצע-המוצר.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: צריכת-ציוד_2026-(01-01–17-09).xlsx",
+              "export_columns": "עמודות: מוצר (מק\"ט) · הוזמן · הגיע · פער יחידות · פער % · עלות מוזמנת (₪)",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-equipment.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "צריכת ציוד",
+              "state_testid": "report-equipment",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 2,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 9,
+              "pager_total": 9,
+              "pager_range": "1–9 מתוך 9",
+              "table_headers": [
+                "מוצר (מק\"ט)",
+                "הוזמן",
+                "הגיע",
+                "פער יחידות",
+                "פער %",
+                "עלות מוזמנת (₪)▼"
+              ],
+              "extra_tables": 2,
+              "population": "אוכלוסייה: כל ⁦1,771⁩ שורות הלוגיסטיקה, כלל-הזמנים, כולל פרויקטים מבוטלים · הוצאו: אין · ⁦n=1,771⁩, מתוכן ⁦105⁩ שייכות לאירועים שטרם התקיימו. בלוק ההזמנה למטה חותך לאירועים שטרם התקיימו (⁦17/09–17/10⁩).",
+              "so_what": "להזמין ⁦2,810⁩ יחידות של \"שרוך סאטן (חלק)\" ל-⁦8⁩ האירועים שבחודש הקרוב — הכמות הגדולה ביותר בטבלת-ההזמנה.",
+              "definitions": "\"הוזמן\" = הכמות המתוכננת, והיא בסיס-החיוב והעלות · \"הגיע\" = הכמות בפועל, והיא שאלת-רכש בלבד · \"עלות מוזמנת\" = הוזמן × מחיר-העלות הקפוא בסגירת ההצעה · \"פער\" = הפרש יחידות, לא ₪ · \"כמות להזמנה\" = מה שהוזמן לאירועים שטרם התקיימו בחודש הקרוב, והיא תקרה עליונה — המערכת אינה יודעת מה כבר הוזמן מהספק · \"מחיר מוערך\" = שורה בלי קישור להצעה ובלי קישור לשינוי-תכולה, שמחירה חושב לפי ממוצע-המוצר.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: צריכת-ציוד_2026-(01-01–17-09).xlsx",
+              "export_columns": "עמודות: מוצר (מק\"ט) · הוזמן · הגיע · פער יחידות · פער % · עלות מוזמנת (₪)",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "extras": {
+    "drill": {
+      "surface": "aging",
+      "levels": [
+        {
+          "level": 0,
+          "state": "rendered",
+          "url": "http://localhost:5189/reports?tab=finance&report=aging",
+          "crumbs": null,
+          "export_file": "יירד: גיול-חובות_נכון-להיום.xlsx",
+          "tiles": 4,
+          "rows": 35
+        },
+        {
+          "level": 1,
+          "url": "http://localhost:5189/reports?tab=finance&report=aging&drill=%7B%22bucket%22%3A%22d90p%22%7D",
+          "crumbs": "גיול חובות|מדרג ⁦90+⁩ יום",
+          "export_file": "יירד: גיול-חובות_נכון-להיום_מדרג-90+-יום.xlsx",
+          "tiles": 4,
+          "rows": 3,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-aging-drill1.png",
+          "console_errors": 0
+        },
+        {
+          "level": 2,
+          "url": "http://localhost:5189/reports?tab=finance&report=aging&drill=%7B%22kind%22%3A%22customer%22%2C%22bucket%22%3A%22d90p%22%2C%22customer_id%22%3A401%7D",
+          "navigated_away": false,
+          "crumbs": "גיול חובות|מדרג ⁦90+⁩ יום|אלפא סיסטמס בע\"מ",
+          "export_file": "יירד: גיול-חובות_נכון-להיום_אלפא-סיסטמס-בע-מ.xlsx",
+          "tiles": 4,
+          "rows": 1,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-aging-drill2.png",
+          "console_errors": 0
+        }
+      ],
+      "note": null
+    }
+  },
+  "login": {
+    "CEO": {
+      "ok": true,
+      "attempts": 0,
+      "reused": true
+    }
+  },
+  "failures": [],
+  "finished_at": "2026-09-17T00:09:03.266Z"
+}

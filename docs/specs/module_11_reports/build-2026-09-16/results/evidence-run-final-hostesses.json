@@ -1,0 +1,645 @@
+{
+  "tab": "hostesses",
+  "base_url": "http://localhost:5189",
+  "started_at": "2026-09-17T00:09:21.991Z",
+  "identities": [
+    "CEO"
+  ],
+  "modes": [
+    2,
+    0
+  ],
+  "surfaces": {
+    "hostess-overview": {
+      "id": "מ14",
+      "rpc": "report_m14_hostess_overview",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-hostess-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": "report-hostess-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 10,
+              "hint_ids": [
+                "reports.hostessOverview.purpose",
+                "reports.hostessOverview.redCount",
+                "reports.hostessOverview.gini",
+                "reports.hostessOverview.redTableSort",
+                "reports.hostessOverview.term.onTime",
+                "reports.hostessOverview.term.redHostess",
+                "reports.hostessOverview.term.gini",
+                "reports.hostessOverview.term.activeHostess",
+                "reports.hostessOverview.term.gapEvent",
+                "reports.hostessOverview.term.missingMonth"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 5,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 177 זימונים שלא נענו · 116 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.9584) — כלומר מתחת ל-0.8338; דיילת ענבר = מתחת ל-95% ממנו (0.9104) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(17-09-2025–17-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-hostess-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": "report-hostess-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 5,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 177 זימונים שלא נענו · 116 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.9584) — כלומר מתחת ל-0.8338; דיילת ענבר = מתחת ל-95% ממנו (0.9104) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(17-09-2025–17-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "reliability": {
+      "id": "מ15",
+      "rpc": "report_m15_reliability",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-reliability.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "אמינות והתייצבות",
+              "state_testid": "report-reliability",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 10,
+              "hint_ids": [
+                "reports.reliability.purpose",
+                "reports.reliability.absenceColumns",
+                "reports.reliability.scoreBasis",
+                "reports.reliability.queuePopulation",
+                "reports.reliability.term.score",
+                "reports.reliability.term.noShow",
+                "reports.reliability.term.latenessLevels",
+                "reports.reliability.term.withdrew",
+                "reports.reliability.term.frozenWindow",
+                "reports.reliability.term.scoreVisibility"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 87,
+              "pager_range": "1–50 מתוך 87",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הגיעה בזמן",
+                "איחור",
+                "הבריזה · ב-12 חודשים",
+                "אי-הגעה · אי-פעם",
+                "ציון אמינות▲"
+              ],
+              "extra_tables": 1,
+              "population": "אוכלוסייה: דיילות עם 3 משמרות מסומנות ומעלה בחלון · n=87 דיילות, 1,683 שיבוצים · הוצאו: 11 דיילות עם פחות מ-3 משמרות מסומנות (מוצגות \"—\" ולא אחוז) · היעדרויות באישור מראש ומחלה — לא במונה ולא במכנה, כדי שדיילת שהודיעה מראש לא תיענש כמי שהבריזה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות — 6 מהן פעילות ומוצעות היום בשיבוץ; 5 דיילות ענבר לאזהרה.",
+              "definitions": "הגדרות: ציון אמינות = (סכום ערכי-הנוכחות + 3 × 0.9584) ÷ (מספר המשמרות + 3) — ממוצע ממותן אל ממוצע החברה · איחור נספר לפי דרגה: קל אינו מוריד מהציון, בינוני מוריד רבע, רב מוריד חצי · שתי עמודות אי-ההגעה, ואף אחת מהן אינה \"הנכונה\": \"הבריזה · ב-12 חודשים\" היא ההגדרה שהציון עצמו עובד לפיה — רק אי-הגעה בלי הודעה, ורק בחלון הקבוע · \"אי-הגעה · אי-פעם\" היא כל סיבות אי-ההגעה — כולל מחלה והיעדרות באישור — ועל כל ההיסטוריה. שתיהן נכונות בהגדרתן, והדוח אינו בוחר ביניהן · הבריזה = לא הגיעה ולא הודיעה — רק היא מאפסת את הציון של אותה משמרת · ביטלה אחרי אישור = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת · החלון = 12 חודשים אחורה מהיום, קבוע ואינו נגרר אחרי מסנן-התקופה · דיילת אדומה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת ענבר = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104 · הציון הוא בדיוק אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: אמינות-והתייצבות_חלון-קבוע-·-12-החודשים-האחרונים.xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הגיעה בזמן · איחור · הבריזה · ב-12 חודשים · אי-הגעה · אי-פעם · ציון אמינות",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-reliability.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "אמינות והתייצבות",
+              "state_testid": "report-reliability",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 87,
+              "pager_range": "1–50 מתוך 87",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הגיעה בזמן",
+                "איחור",
+                "הבריזה · ב-12 חודשים",
+                "אי-הגעה · אי-פעם",
+                "ציון אמינות▲"
+              ],
+              "extra_tables": 1,
+              "population": "אוכלוסייה: דיילות עם 3 משמרות מסומנות ומעלה בחלון · n=87 דיילות, 1,683 שיבוצים · הוצאו: 11 דיילות עם פחות מ-3 משמרות מסומנות (מוצגות \"—\" ולא אחוז) · היעדרויות באישור מראש ומחלה — לא במונה ולא במכנה, כדי שדיילת שהודיעה מראש לא תיענש כמי שהבריזה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות — 6 מהן פעילות ומוצעות היום בשיבוץ; 5 דיילות ענבר לאזהרה.",
+              "definitions": "הגדרות: ציון אמינות = (סכום ערכי-הנוכחות + 3 × 0.9584) ÷ (מספר המשמרות + 3) — ממוצע ממותן אל ממוצע החברה · איחור נספר לפי דרגה: קל אינו מוריד מהציון, בינוני מוריד רבע, רב מוריד חצי · שתי עמודות אי-ההגעה, ואף אחת מהן אינה \"הנכונה\": \"הבריזה · ב-12 חודשים\" היא ההגדרה שהציון עצמו עובד לפיה — רק אי-הגעה בלי הודעה, ורק בחלון הקבוע · \"אי-הגעה · אי-פעם\" היא כל סיבות אי-ההגעה — כולל מחלה והיעדרות באישור — ועל כל ההיסטוריה. שתיהן נכונות בהגדרתן, והדוח אינו בוחר ביניהן · הבריזה = לא הגיעה ולא הודיעה — רק היא מאפסת את הציון של אותה משמרת · ביטלה אחרי אישור = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת · החלון = 12 חודשים אחורה מהיום, קבוע ואינו נגרר אחרי מסנן-התקופה · דיילת אדומה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת ענבר = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104 · הציון הוא בדיוק אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: אמינות-והתייצבות_חלון-קבוע-·-12-החודשים-האחרונים.xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הגיעה בזמן · איחור · הבריזה · ב-12 חודשים · אי-הגעה · אי-פעם · ציון אמינות",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "quality-cost": {
+      "id": "מ16",
+      "rpc": "report_m16_quality_cost",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-quality-cost.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "איכות מול עלות",
+              "state_testid": "report-quality-cost",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 9,
+              "hint_ids": [
+                "reports.qualityCost.purpose",
+                "reports.qualityCost.scatterBasis",
+                "reports.qualityCost.tableSort",
+                "reports.qualityCost.term.hourlyRate",
+                "reports.qualityCost.term.rating",
+                "reports.qualityCost.term.median",
+                "reports.qualityCost.term.clientMarks",
+                "reports.qualityCost.term.quadrants",
+                "reports.qualityCost.term.noRatingBand"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-scatter"
+              ],
+              "tiles": 4,
+              "tile_doors": 1,
+              "rows_page1": 17,
+              "pager_total": 17,
+              "pager_range": "1–17 מתוך 17",
+              "table_headers": [
+                "דיילת",
+                "עיר",
+                "תעריף שעתי",
+                "דירוג",
+                "משמרות▼",
+                "מצוינת אצל",
+                "לא לשלוח אצל"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: דיילות פעילות בלבד — n=50 מתוך 186 רשומות · הוצאו: 136 דיילות שסטטוסן \"לא פעילה\", כי אין החלטת-תעריף לקבל עליהן · התעריף והדירוג הם ערכי-היום בכרטיס הדיילת, לא ממוצע היסטורי.",
+              "so_what": "להוריד את התעריף של 2 הדיילות שמעל חציון-המאגר בדירוג 3 ומטה, או להפסיק לשלוח אותן; ובמקביל לדרג את 17 הפעילות שאין להן דירוג.",
+              "definitions": "הגדרות: תעריף שעתי = הערך הנוכחי בכרטיס הדיילת, ולא התעריף שנשמר בשיבוץ שכבר בוצע — ולכן הוא מתאר כמה היא עולה מהיום והלאה, וזו השאלה שהדף שואל · דירוג = הערכת 1 עד 5 שהוזנה ידנית בכרטיס הדיילת; אין לה היסטוריה · חציון ולא ממוצע — דיילת אחת יקרה במיוחד אינה מזיזה אותו · \"מצוינת\" / \"לא לשלוח\" = סימון שלקוח נתן לדיילת מסוימת; לאותה דיילת יכולים להיות שני הסימונים אצל לקוחות שונים · משמרת = שיבוץ שאושר סופית ושתאריך האירוע שלו כבר עבר, ב-12 החודשים האחרונים.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: איכות-מול-עלות_נכון-ל-17-09-2026-·-ספירת-המשמרות-ב-12-החודשים-האחרונים.xlsx",
+              "export_columns": "עמודות: דיילת · עיר · תעריף שעתי · דירוג · משמרות · מצוינת אצל · לא לשלוח אצל",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-quality-cost.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "איכות מול עלות",
+              "state_testid": "report-quality-cost",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-scatter"
+              ],
+              "tiles": 4,
+              "tile_doors": 1,
+              "rows_page1": 17,
+              "pager_total": 17,
+              "pager_range": "1–17 מתוך 17",
+              "table_headers": [
+                "דיילת",
+                "עיר",
+                "תעריף שעתי",
+                "דירוג",
+                "משמרות▼",
+                "מצוינת אצל",
+                "לא לשלוח אצל"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: דיילות פעילות בלבד — n=50 מתוך 186 רשומות · הוצאו: 136 דיילות שסטטוסן \"לא פעילה\", כי אין החלטת-תעריף לקבל עליהן · התעריף והדירוג הם ערכי-היום בכרטיס הדיילת, לא ממוצע היסטורי.",
+              "so_what": "להוריד את התעריף של 2 הדיילות שמעל חציון-המאגר בדירוג 3 ומטה, או להפסיק לשלוח אותן; ובמקביל לדרג את 17 הפעילות שאין להן דירוג.",
+              "definitions": "הגדרות: תעריף שעתי = הערך הנוכחי בכרטיס הדיילת, ולא התעריף שנשמר בשיבוץ שכבר בוצע — ולכן הוא מתאר כמה היא עולה מהיום והלאה, וזו השאלה שהדף שואל · דירוג = הערכת 1 עד 5 שהוזנה ידנית בכרטיס הדיילת; אין לה היסטוריה · חציון ולא ממוצע — דיילת אחת יקרה במיוחד אינה מזיזה אותו · \"מצוינת\" / \"לא לשלוח\" = סימון שלקוח נתן לדיילת מסוימת; לאותה דיילת יכולים להיות שני הסימונים אצל לקוחות שונים · משמרת = שיבוץ שאושר סופית ושתאריך האירוע שלו כבר עבר, ב-12 החודשים האחרונים.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: איכות-מול-עלות_נכון-ל-17-09-2026-·-ספירת-המשמרות-ב-12-החודשים-האחרונים.xlsx",
+              "export_columns": "עמודות: דיילת · עיר · תעריף שעתי · דירוג · משמרות · מצוינת אצל · לא לשלוח אצל",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "fairness": {
+      "id": "מ17",
+      "rpc": "report_m17_fairness",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-fairness.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "הוגנות השיבוץ",
+              "state_testid": "report-fairness",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 9,
+              "hint_ids": [
+                "reports.fairness.purpose",
+                "reports.fairness.giniBasis",
+                "reports.fairness.responseTime",
+                "reports.fairness.term.gini",
+                "reports.fairness.term.lorenz",
+                "reports.fairness.term.shift",
+                "reports.fairness.term.responseTime",
+                "reports.fairness.term.p90",
+                "reports.fairness.term.rank1"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-lorenz"
+              ],
+              "tiles": 6,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 106,
+              "pager_range": "1–50 מתוך 106",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות▼",
+                "חלק מהמשמרות",
+                "אחוז מצטבר"
+              ],
+              "extra_tables": 1,
+              "population": "אוכלוסייה: כל דיילת עם משמרת מאושרת אחת לפחות בחלון — ⁦n=106⁩ דיילות, ⁦1,877⁩ משמרות · הוצאו: ⁦80⁩ דיילות רשומות שלא עבדה אף משמרת בחלון (מי שאינה במשחק אינה יכולה להיות מקופחת בו) · אזור המהירות נמדד על אוכלוסייה אחרת: ⁦2,476⁩ זימונים שנשלחו בחלון, ולא על דיילות — שני n נפרדים, מוצהרים בכל אזור.",
+              "so_what": "לפתוח את מסך השיבוץ עם רבע הדיילות התחתון — ⁦27⁩ דיילות מקבלות ⁦55.9%⁩ מהמשמרות בעוד מחצית המאגר מקבלת ⁦16.2%⁩.",
+              "definitions": "הגדרות: מדד ג'יני = מדד ריכוזיות בין ⁦0⁩ ל-⁦1⁩, כאן על מספר המשמרות לכל דיילת · עקומת לורנץ = אותו נתון כגרף: לכל אחוז דיילות (מהפחות-עמוסה), כמה אחוז מהמשמרות הצטברו · משמרת = שיבוץ שאושר סופית ושתאריך האירוע שלו כבר עבר · זמן-תגובה = מרגע שליחת הזימון האחרון ועד שהדיילת ענתה, בשעות — לא מרגע פתיחת האירוע · אחוזון ⁦90⁩ = הערך שתשע מכל עשר תשובות מהירות ממנו · אחוז היענות = ענו ÷ זומנו; מי שלא ענתה כלל נספרת במכנה.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: הוגנות-השיבוץ_12-החודשים-האחרונים-(17-09-2025–17-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · חלק מהמשמרות · אחוז מצטבר",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-fairness.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "הוגנות השיבוץ",
+              "state_testid": "report-fairness",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-lorenz"
+              ],
+              "tiles": 6,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 106,
+              "pager_range": "1–50 מתוך 106",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות▼",
+                "חלק מהמשמרות",
+                "אחוז מצטבר"
+              ],
+              "extra_tables": 1,
+              "population": "אוכלוסייה: כל דיילת עם משמרת מאושרת אחת לפחות בחלון — ⁦n=106⁩ דיילות, ⁦1,877⁩ משמרות · הוצאו: ⁦80⁩ דיילות רשומות שלא עבדה אף משמרת בחלון (מי שאינה במשחק אינה יכולה להיות מקופחת בו) · אזור המהירות נמדד על אוכלוסייה אחרת: ⁦2,476⁩ זימונים שנשלחו בחלון, ולא על דיילות — שני n נפרדים, מוצהרים בכל אזור.",
+              "so_what": "לפתוח את מסך השיבוץ עם רבע הדיילות התחתון — ⁦27⁩ דיילות מקבלות ⁦55.9%⁩ מהמשמרות בעוד מחצית המאגר מקבלת ⁦16.2%⁩.",
+              "definitions": "הגדרות: מדד ג'יני = מדד ריכוזיות בין ⁦0⁩ ל-⁦1⁩, כאן על מספר המשמרות לכל דיילת · עקומת לורנץ = אותו נתון כגרף: לכל אחוז דיילות (מהפחות-עמוסה), כמה אחוז מהמשמרות הצטברו · משמרת = שיבוץ שאושר סופית ושתאריך האירוע שלו כבר עבר · זמן-תגובה = מרגע שליחת הזימון האחרון ועד שהדיילת ענתה, בשעות — לא מרגע פתיחת האירוע · אחוזון ⁦90⁩ = הערך שתשע מכל עשר תשובות מהירות ממנו · אחוז היענות = ענו ÷ זומנו; מי שלא ענתה כלל נספרת במכנה.",
+              "window_label": "⁦17/09/2025–17/09/2026⁩",
+              "export_file": "יירד: הוגנות-השיבוץ_12-החודשים-האחרונים-(17-09-2025–17-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · חלק מהמשמרות · אחוז מצטבר",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "extras": {
+    "error": {
+      "surface": "hostess-overview",
+      "rpc": "report_m14_hostess_overview",
+      "state_with_abort": "error",
+      "envelope_text": "לא ניתן לטעון את הנתונים.נסי שוב",
+      "says_no_data": false,
+      "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-hostess-overview-error.png",
+      "state_after_retry": "rendered",
+      "png_recovered": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-hostess-overview-error-recovered.png"
+    }
+  },
+  "login": {
+    "CEO": {
+      "ok": true,
+      "attempts": 0,
+      "reused": true
+    }
+  },
+  "failures": [],
+  "finished_at": "2026-09-17T00:09:54.034Z"
+}
