@@ -185,15 +185,62 @@ export function buildExportSheet({ columns, rows }) {
  * ההורדה עצמה. **זורק** כשאין מה לייצא — ולא מוריד קובץ ריק בשקט: קובץ בן שורת-כותרת
  * בלבד נראה כמו ייצוא שהצליח, וזו בדיוק ההטעיה ש-`EXPORT_NO_ROWS` נועד למנוע על המסך.
  */
-export function exportReportRows({ fileName, sheetName, columns, rows }) {
+export const META_SHEET_NAME = 'פרטי הדוח'
+
+/**
+ * הגיליון השני — **ההקשר שהקובץ נושא איתו לכל מקום** (הכרעת-ישי 17/09/2026: *"לפי המלצתך"*).
+ *
+ * 🔑 **למה הוא קיים:** הקובץ מגיע למי שאין לו את המערכת, ובעוד חודשיים מישהו יצטט ממנו מספרים
+ * בישיבה בלי לדעת על איזו תקופה הם. שם-הקובץ לבדו אינו נקרא אחרי ששולחים אותו הלאה.
+ *
+ * 🔴 **גיליון שני ולא שורות בראש הטבלה — ולא מטעמי יופי:** שורות-מטא מעל הנתונים שוברות כל
+ * `VLOOKUP`, כל מיון וכל טבלת-ציר שהרו"ח יבנה. **הגיליון הראשון נשאר טבלה טהורה**, שורת-הכותרת
+ * בשורה 1.
+ *
+ * ⚠️ **`scope` ו-`count` מגיעים מבחוץ ואינם מחושבים כאן** — הם **אותן מחרוזות בדיוק** שהמשתמשת
+ * ראתה בחלון לפני הלחיצה. גזירה שנייה כאן הייתה נפרדת מהראשונה ביום שאחת מהן תשתנה.
+ * ⚠️ **`generatedAt` מוזרק** ואינו `new Date()` פנימי — אחרת הבדיקה מודדת את השעון.
+ */
+export function buildMetaSheet({ reportName, scope, count, generatedAt } = {}) {
+  const at = generatedAt instanceof Date ? generatedAt : new Date(generatedAt ?? Date.now())
+  const stamp = Number.isNaN(at.getTime())
+    ? '—'
+    : `${formatIsraelDate(at.toISOString())} ${at.toLocaleTimeString('he-IL', {
+        timeZone: 'Asia/Jerusalem',
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+
+  const pairs = [
+    ['דוח', reportName ?? '—'],
+    ['חל על הקובץ', scope ?? '—'],
+    ['שורות בקובץ', count ?? '—'],
+    ['הופק', stamp],
+  ]
+  return pairs.map(([label, value]) => [
+    { value: label, type: String, fontWeight: 'bold' },
+    { value: stripBidiControls(String(value)), type: String },
+  ])
+}
+
+/**
+ * ההורדה עצמה. **זורק** כשאין מה לייצא — ולא מוריד קובץ ריק בשקט: קובץ בן שורת-כותרת
+ * בלבד נראה כמו ייצוא שהצליח, וזו בדיוק ההטעיה ש-`EXPORT_NO_ROWS` נועד למנוע על המסך.
+ */
+export function exportReportRows({ fileName, sheetName, columns, rows, meta }) {
   if (!columns || columns.length === 0) throw new Error(EXPORT_NO_TABLE)
   if (!rows || rows.length === 0) throw new Error(EXPORT_NO_ROWS)
 
-  return writeXlsxFile(buildExportSheet({ columns, rows }), {
-    fileName,
-    sheet: sanitizeSheetName(sheetName),
-    // 🔴 האופציה שכל הייצוא העברי תלוי בה — ר' הערת-הכותרת.
-    rightToLeft: true,
-    columns: columns.map((c) => ({ width: c.label && c.label.length > 14 ? 26 : 16 })),
-  })
+  const dataWidths = columns.map((c) => ({ width: c.label && c.label.length > 14 ? 26 : 16 }))
+
+  return writeXlsxFile(
+    [buildExportSheet({ columns, rows }), buildMetaSheet({ reportName: sheetName, ...meta })],
+    {
+      fileName,
+      sheets: [sanitizeSheetName(sheetName), META_SHEET_NAME],
+      // 🔴 האופציה שכל הייצוא העברי תלוי בה — ר' הערת-הכותרת. **חלה על שני הגיליונות.**
+      rightToLeft: true,
+      columns: [dataWidths, [{ width: 22 }, { width: 60 }]],
+    },
+  )
 }

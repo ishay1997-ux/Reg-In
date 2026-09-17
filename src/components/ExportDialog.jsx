@@ -159,7 +159,15 @@ export default function ExportDialog({
     setExportError(null)
     setBusy(true)
     try {
-      await onExport?.({ columns: visibleColumns, rows: filteredRows, fileName })
+      // 🔑 **`scope` ו-`count` נמסרים ולא מחושבים שוב** — הם המחרוזות שהמשתמשת בדיוק
+      // ראתה. גזירה שנייה בצד הכותב הייתה נפרדת מזו שעל המסך ביום שאחת מהן תשתנה.
+      await onExport?.({
+        columns: visibleColumns,
+        rows: filteredRows,
+        fileName,
+        scope: scopeLine,
+        count: countLine,
+      })
       onOpenChange?.(false)
     } catch (err) {
       // ⚠️ ה-`await` הוא התיקון עצמו ולא סגנון (ממצא B-1): בלי המתנה הדחייה חומקת מה-`try`,

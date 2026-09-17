@@ -149,12 +149,13 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
           buildSheet={buildExportSheet}
           knownMessages={EXPORT_LOCKED_MESSAGES}
           fileName={fileName}
-          onExport={({ columns: picked, rows: picked_rows }) =>
+          onExport={({ columns: picked, rows: pickedRows, scope, count }) =>
             exportReportRows({
               fileName,
               sheetName: selected?.name ?? reportName,
               columns: picked,
-              rows: picked_rows,
+              rows: pickedRows,
+              meta: { scope, count, generatedAt: new Date() },
             })
           }
         />

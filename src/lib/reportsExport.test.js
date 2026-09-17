@@ -11,11 +11,13 @@ vi.mock('write-excel-file', () => ({ default: vi.fn(() => Promise.resolve()) }))
 import writeXlsxFile from 'write-excel-file'
 import {
   EXPORT_LOCKED_MESSAGES,
+  META_SHEET_NAME,
   EXPORT_NO_APPROVED_RUN,
   EXPORT_NO_ROWS,
   EXPORT_NO_TABLE,
   buildExportFileName,
   buildExportSheet,
+  buildMetaSheet,
   exportReportRows,
   sanitizeSheetName,
 } from '@/lib/reportsExport'
@@ -34,6 +36,60 @@ const ROWS = [
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe('buildMetaSheet · הגיליון השני — ההקשר שהקובץ נושא איתו', () => {
+  const AT = new Date('2026-09-17T15:45:00Z')
+
+  it('ארבע שורות: דוח · חל על הקובץ · שורות · הופק', () => {
+    const sheet = buildMetaSheet({
+      reportName: 'גיול חובות',
+      scope: 'תקופה 01/01/2026–17/09/2026 · כל הלקוחות',
+      count: 'הקובץ יכלול 35 שורות',
+      generatedAt: AT,
+    })
+    expect(sheet.map((row) => row[0].value)).toEqual(['דוח', 'חל על הקובץ', 'שורות בקובץ', 'הופק'])
+    expect(sheet[1][1].value).toBe('תקופה 01/01/2026–17/09/2026 · כל הלקוחות')
+    expect(sheet[2][1].value).toBe('הקובץ יכלול 35 שורות')
+  })
+
+  it('🔴 תווי-כיווניות בלתי-נראים נמחקים גם כאן', () => {
+    const sheet = buildMetaSheet({ scope: '⁦תקופה 2026⁩', generatedAt: AT })
+    expect(sheet[1][1].value).toBe('תקופה 2026')
+  })
+
+  it('שדה חסר אינו מרנדר "undefined"', () => {
+    const sheet = buildMetaSheet({ generatedAt: AT })
+    expect(sheet[0][1].value).toBe('—')
+    expect(sheet[1][1].value).toBe('—')
+  })
+
+  it('חותמת-זמן פסולה אינה מפילה ואינה ממציאה תאריך', () => {
+    const sheet = buildMetaSheet({ generatedAt: 'not-a-date' })
+    expect(sheet[3][1].value).toBe('—')
+  })
+})
+
+describe('exportReportRows · שני גיליונות', () => {
+  it('🔴 הגיליון הראשון נשאר טבלה טהורה, והשני נושא את הפרטים', async () => {
+    writeXlsxFile.mockClear()
+    await exportReportRows({
+      fileName: 'x.xlsx',
+      sheetName: 'גיול חובות',
+      columns: COLUMNS,
+      rows: ROWS,
+      meta: { scope: 'כל התקופות · כל הלקוחות', count: 'הקובץ יכלול 2 שורות' },
+    })
+    const [data, options] = writeXlsxFile.mock.calls[0]
+    expect(data).toHaveLength(2)
+    // שורה 1 של גיליון-הנתונים היא הכותרות — בלי שום שורת-מטא מעליה, אחרת VLOOKUP נשבר.
+    expect(data[0][0].map((cell) => cell.value)).toEqual(COLUMNS.map((c) => c.label))
+    expect(data[1][0][0].value).toBe('דוח')
+    expect(options.sheets).toEqual(['גיול חובות', META_SHEET_NAME])
+    // 🔴 האופציה שכל הייצוא העברי תלוי בה — חלה על שני הגיליונות.
+    expect(options.rightToLeft).toBe(true)
+    expect(options.columns).toHaveLength(2)
+  })
 })
 
 describe('שלוש המחרוזות הנעולות — החוזה שהחלון והבדיקות נשענים עליו', () => {
@@ -132,11 +188,15 @@ describe('exportReportRows — הקריאה לספרייה', () => {
       rows: ROWS,
     })
     expect(writeXlsxFile).toHaveBeenCalledTimes(1)
-    const [sheet, options] = writeXlsxFile.mock.calls[0]
+    const [sheets, options] = writeXlsxFile.mock.calls[0]
     expect(options.rightToLeft).toBe(true)
     expect(options.fileName).toBe('גיול-חובות_2026.xlsx')
-    expect(options.sheet).toBe('גיול חובות')
-    expect(sheet).toHaveLength(3)
+    // ✏️ **17/09/2026 — היו `options.sheet` ו-`sheet` יחיד.** נוסף גיליון "פרטי הדוח"
+    // (הכרעת-ישי), ולכן החתימה היא הרב-גיליונית של הספרייה: מערך-גיליונות + `sheets`.
+    // 🔑 **מה שהבדיקה שמרה עליו לא השתנה:** `rightToLeft` ושם-הקובץ, וגיליון-הנתונים
+    // שעדיין נושא שורת-כותרת ועוד שתי שורות — **בלי שום שורת-מטא מעליו.**
+    expect(options.sheets[0]).toBe('גיול חובות')
+    expect(sheets[0]).toHaveLength(3)
   })
 
   // 🔴 קובץ בן שורת-כותרת בלבד נראה כמו ייצוא שהצליח. זריקה, לא הורדה שקטה.
