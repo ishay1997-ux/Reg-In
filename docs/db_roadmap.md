@@ -530,6 +530,44 @@ protection is false until it does.
 
 ## 10ב. Applied migrations — running log (newest first)
 
+> ⏳ **`20260917150000_module11_k1_pagination_params.sql` — DRAFTED 17/09/2026, NOT YET APPLIED.**
+> Written and anchor-verified this session (`snug-mapping-dragon.md` §7 שלב 0.5); waiting on Ishay's
+> explicit approval in chat before `apply_migration` runs. **Not a row here yet — a placeholder so
+> the Stop hook's "migrations changed ⇒ this file changed" check reflects the true state instead of
+> a false "applied".** Move this line to a real ✅ APPLIED row (with the md5/proof evidence the other
+> rows carry) once it actually runs; delete this note if the migration is abandoned instead.
+> **Scope:** `p_page`/`p_page_size` (defaults preserve today's row counts: 8/8/4/50/50) on 5 of 16
+> report RPCs — `report_m02_exec_overview` · `report_m04_discounts` · `report_m06_staffing` ·
+> `report_m07_finance_overview` · `report_m19_customers_overview` — plus a real `meta.row_total` on
+> `report_m19_customers_overview` (52, not the 61 that is all customers). No table/column/policy
+> touched. Verified safe against the repo's own signature-change precedent (`e2` / `p_asof`,
+> row 549 below): the only call site (`src/modules/11_reports/api.js:153`) uses named parameters,
+> confirmed via `grep -rn` across `src/` and `e2e/` for all five function names — no positional
+> caller exists.
+>
+> 🔴 **✏️ Two defects caught and fixed before any apply, both confirmed independently:**
+> **(1)** A parallel advisory session flagged that `CREATE OR REPLACE FUNCTION` with a changed
+> argument list does not replace — it creates an **overload**, and a 4-argument named call becomes
+> ambiguous between the old and new signature (`42725 function ... is not unique`). **Reproduced
+> myself** in an isolated `pg_temp` scenario before accepting the claim (matches exactly: same
+> error, same code). Fix: every block now does `drop function if exists public.<name>(<exact old
+> types>)` before the `create` — `report_m07_finance_overview` needs 5 types (`date,date,integer,
+> jsonb,date`, it carries `p_asof`), the other four need 4. **(2)** Found independently while
+> implementing the fix: `drop`+`create` also resets the function's ACL and `comment`. This schema's
+> `pg_default_acl` grants `anon=EXECUTE` to new functions by default, while all five currently
+> **revoke** it explicitly — an unmitigated drop+create would have opened these five reports to
+> unauthenticated access. Fix: each block re-applies `revoke all ... from public, anon,
+> authenticated` + `grant execute ... to authenticated` on the **new** signature, and restores the
+> original `comment on function` (captured via `obj_description` before the drop, not retyped).
+> **Dry-run proof:** the corrected 5-block sequence ran inside `begin;...rollback;` against the live
+> DB — drop+create+grant+comment succeeded cleanly for all five, and a post-rollback check confirmed
+> zero duplicate `report_m*` signatures (`pg_proc` count=1 for all 16, original 4/5-arg signatures
+> intact — nothing leaked past the rollback). **What could not be tested this way:** the "same row
+> counts" acceptance check requires a real authenticated call (`assert_module_permission` depends on
+> `auth.email()`, which a raw service connection doesn't have) — deferred to a live browser check
+> (as CEO) immediately after the real `apply_migration`, matching this project's own precedent for
+> RPC verification (`E2E_CEO`/`E2E_PROJECTS` probes elsewhere in this log).
+
 > 🆕 **מודול 11 — 18 קובצי-מיגרציה ביום אחד, 16/09/2026. קראו את שלוש השורות האלה לפני הרשימה:**
 > **(1) שורה אחת לכל קובץ, וזה במכוון.** קובץ אחד יכול להחזיק **כמה שורות `schema_migrations`** — ‏`apply_migration` דרך MCP נקטע סביב ~90 KB, ולכן קובץ גדול מוחל פר-פונקציה (< 60 KB לכל קריאה), ותיקון שהמאמת של אותה מיגרציה מצא נכתב קדימה באותה טיוטה שטרם קומטה. **רשומות-לקובץ הן ספירה פנימית של הרשם, לא של הציר** *(`micro_guides/module-11.md` §9 D-20, הכרעת-מתזמר 16/09 08:1X)*. **מספר הרשומות של כל קובץ מופיע בשורה שלו, ושמותיהן בכותרת הקובץ עצמו.**
 > **(2) מה מוכיח שהקובץ הוא באמת מה שרץ:** כל גוף-פונקציה שהוחל גובה ב-`md5(prosrc)` והושווה ל-md5 של גוף ה-`$function$` שבקובץ — **16 מתוך 16 זהים ב-08:0X** *(הכלי: `<scratchpad>/fn_md5.py`; החזרה על הבדיקה שייכת לאודיט-הסגירה, והיא צריכה לרוץ שוב אחרי I1/I2)*. **בלי הבדיקה הזאת "הקובץ הוא מקור-האמת" הוא סיסמה** — קובץ מוחל-בחלקים יכול להתפצל מהמסד בלי שום סימפטום.
