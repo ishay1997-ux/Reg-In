@@ -1,88 +1,163 @@
-// כפתור-הייצוא ושתי שורות-הכיתוב שמתחתיו (ת4 · `cards-*.md §⑤` שורה 5).
+// כפתור-הייצוא של הלשונית, והחיווט שלו לחלון-הייצוא הגנרי.
 //
-// 🔑 **שתי השורות אינן קישוט — הן ההבטחה שלפני הלחיצה:** שם-הקובץ הצפוי ושמות-העמודות
-// שיירדו. הייצוא מוריד את **מצב-המסך** (מסננים ורמת-דריל כלולים), ובלי הכיתוב המשתמשת
-// לוחצת בלי לדעת אם תקבל 12 שורות או 700.
+// ✏️ **17/09/2026 — הכרעת-ישי הפכה את ת4:** הכפתור אינו מוריד עוד מיד, אלא פותח חלון שבו
+// בוחרים דוח · תקופה · לקוח · מסננים · עמודות וסדר. *"רוצים ליצא דוח חייב אפשרויות סינון
+// מקיפות לא מעניין מה היה במסך מקודם בכלל"*. *(ת4ב ב-`processes-approved.md` · §7.103.)*
 //
-// 🚫 **אין הרשאת-ייצוא נפרדת** — *"מי שרואה, מייצא"* (ת4, ⚙️ בהאצלה). הרכיב אינו בודק הרשאה.
+// 🚫 **שתי שורות-הכיתוב שהיו כאן הוסרו** (*"מאשר לפי המלצך"*): הן קיימו הבטחה-לפני-לחיצה
+// כשהלחיצה הורידה **מיד**. עכשיו התצוגה-המקדימה עושה את זה טוב מהן, ושורה שמבטיחה דוח שאולי
+// כלל לא ייבחר היא הבטחה שקרית. **הבטחת-השם עצמה לא נעלמה — היא זזה לתוך החלון, עם אותו
+// `data-testid` בדיוק, כדי שחוזה ה-E2E יישאר חוזה.**
 //
-// 🔤 שלושת המצבים הריקים נעולים ומגיעים מ-`reportsExport.js` — מועתקים, לא מנוסחים כאן.
+// 🔴 **הכפתור פעיל תמיד, וזו תוצאה ישירה של הבורר.** קודם הוא נוטרל כשלדוח הפתוח לא הייתה
+// טבלה; מרגע שאפשר לבחור בחלון כל אחד מארבעת הדוחות, חסימה בגלל הדוח שבמקרה פתוח היא מחסום
+// שרירותי. ⇒ **`blockedReason` עובר פנימה ונבדק פר-דוח נבחר.**
+//
+// 🚫 **`rows` שמגיע מהמסך אינו בשימוש** — החלון שולף בעצמו (`exportFetch.js`). הפרופ נשאר
+// בחתימה כי `ReportSurface.jsx` שולח אותו, והוא **שטח של הסשן המקביל** שאין לגעת בו.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import ExportDialog from '@/components/ExportDialog'
+import { listCustomers } from '@/modules/02_customers/api'
+import { fetchExportData, reportsOfTab } from '@/modules/11_reports/exportFetch'
 import {
-  EXPORT_LOCKED_MESSAGES,
   buildExportFileName,
-  exportCaption,
+  buildExportSheet,
+  EXPORT_LOCKED_MESSAGES,
   exportReportRows,
 } from '@/lib/reportsExport'
 
-export default function ExportBar({
-  reportName,
-  windowLabel,
-  drillLabel,
-  columns = [],
-  rows = [],
-  blockedReason,
-}) {
-  const [error, setError] = useState(null)
-  const fileName = buildExportFileName({ reportName, windowLabel, drillLabel })
-  const caption = exportCaption({ fileName, columns, rowCount: rows.length, blockedReason })
+export default function ExportBar({ reportName, windowLabel, columns = [], blockedReason }) {
+  // 🔴 **קריאה ישירה מה-URL ולא `useSearchParams` — וזה לא סגנון אלא מדידה.** ההוק דורש
+  // הקשר-ניתוב, ו-`ExportBar` מרונדר בתוך `ReportSurface` שארבעה קובצי-בדיקה של הסשן
+  // המקביל מרנדרים **בלי Router**. ‏📏 נמדד 17/09/2026: המעבר להוק הפיל **122 בדיקות**
+  // בארבעה קבצים שאינם שלי (`ReportSurface` · `HostessesTab` · `CustomersTab` ועוד).
+  // ⇒ הרכיב **קורא** את הלשונית ואינו מנהל אותה, ולכן אין לו סיבה לדרוש הקשר.
+  const params = new URLSearchParams(window.location.search)
+  const tabKey = params.get('tab')
+  const openReport = params.get('report')
 
-  // 🔴 **`async` + `await` — וזה התיקון עצמו, לא סגנון** (אודיט-הסגירה 17/09/2026, ‏B-1):
-  // ‏`exportReportRows` מסתיימת ב-`return writeXlsxFile(...)`, כלומר מחזירה **הבטחה**. בלי
-  // ‏`await` הדחייה שלה חומקת מה-`try` לגמרי — אין `setError`, אין שורת-קונסול, **אין דבר
-  // על המסך**: המשתמשת לוחצת, קובץ אינו יורד, והמוצר שותק (§4.3 — *"המסך משקר, הוא אינו
-  // נכשל"*). 🔑 **ושתי הזריקות הסינכרוניות נשארות סינכרוניות** — הן נתפסות באותו `try`
-  // בדיוק, ולכן חוזה-הזריקה של `reportsExport.js` לא השתנה.
-  async function handleExport() {
-    try {
-      setError(null)
-      await exportReportRows({ fileName, sheetName: reportName, columns, rows })
-    } catch (err) {
-      // ⚠️ הודעת-הזריקה היא **מחרוזת עברית שכתבנו** (שלושת המצבים הנעולים), ולכן ראויה
-      // להצגה. תקלת-ספרייה אמיתית נופלת לנוסח הכללי — לא מדליפים טקסט טכני למסך.
-      // 🔴 **והמבחן הוא מול הרשימה הסגורה** ולא מול השגיאה עצמה: המשמר הקודם השווה את
-      // ‏`err?.message` למערך שהכיל אותו, ולכן היה תמיד אמת (`EXPORT_LOCKED_MESSAGES`).
-      const known = EXPORT_LOCKED_MESSAGES.has(err?.message)
-      setError(known ? err.message : 'הייצוא לא הושלם.')
-    }
+  const [open, setOpen] = useState(false)
+  const [reportId, setReportId] = useState(openReport)
+  const [period, setPeriod] = useState({ from: '', to: '' })
+  const [customerId, setCustomerId] = useState('')
+  const [customers, setCustomers] = useState([])
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [tick, setTick] = useState(0)
+
+  const reports = reportsOfTab(tabKey)
+  const selected = reports.find((report) => report.id === reportId) ?? reports[0] ?? null
+
+  // ⚠️ הרשימה נטענת רק כשהחלון נפתח — מסך-הדוחות אינו משלם עליה.
+  // 🔤 **כישלון אינו מדובר:** בורר-הלקוחות פשוט לא יוצג, והייצוא רץ על כל הלקוחות. זו בדיוק
+  // ההתנהגות של מסנן-הלקוח במסך (`module-11 CLAUDE.md` §3) — `listCustomers` חסום ב-RLS
+  // לתפקידים שאינם 'לקוחות', ומחזיר `[]` בלי שגיאה.
+  useEffect(() => {
+    if (!open || customers.length > 0) return
+    listCustomers()
+      .then((rows) =>
+        setCustomers((rows ?? []).map((row) => ({ id: row.customer_id, name: row.company_name }))),
+      )
+      .catch(() => setCustomers([]))
+  }, [open, customers.length])
+
+  // 🔑 **"התחלנו לשלוף" נקבע בזמן הרינדור ולא בתוך האפקט.** ‏`setState` סינכרוני בגוף אפקט
+  // מרנדר פעם אחת עם המצב הישן ואז שוב — כלומר החלון היה מציג רגע את **נתוני הדוח הקודם**
+  // כאילו הם מוכנים, ורק אז נדלק חיווי-הטעינה. ‏ESLint חוסם זאת (`react-hooks/set-state-in-effect`).
+  // ⇒ מפתח-הבקשה מוגדר כאן, והאפקט מעדכן **רק בתוך ה-callbacks**.
+  const requestKey =
+    open && selected ? `${selected.rpc}|${period.from}|${period.to}|${customerId}|${tick}` : null
+  const [seenRequest, setSeenRequest] = useState(null)
+  if (requestKey && seenRequest !== requestKey) {
+    setSeenRequest(requestKey)
+    setLoading(true)
+    setError(null)
   }
 
+  useEffect(() => {
+    if (!open || !selected) return
+    let alive = true
+    fetchExportData({
+      rpc: selected.rpc,
+      from: period.from,
+      to: period.to,
+      customerId,
+    })
+      .then((next) => {
+        if (alive) setData(next)
+      })
+      .catch((err) => {
+        // 🔴 מצב תלת-ערכי: כישלון **אינו** נכתב כ-`[]`. הוא נאמר, והחלון מציע לנסות שוב.
+        if (alive) {
+          setData(null)
+          setError(err?.message || 'שליפת הנתונים לא הושלמה.')
+        }
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestKey])
+
+  // 🔑 **שם-הקובץ נגזר פעם אחת ומוזן גם להבטחה וגם להורדה** — שתי גזירות היו נפרדות ביום
+  // שאחת מהן תשתנה, וה-E2E משווה את השתיים בייט-בבייט (`reports.spec.js:442`).
+  // 🚫 **ואין בו עוד רמת-דריל:** החלון שולף `drill: null`, ולכן שם שנושא רמה היה משקר.
+  const fileName = buildExportFileName({
+    reportName: selected?.name ?? reportName,
+    windowLabel: data?.windowLabel ?? (period.from || period.to ? '' : windowLabel),
+  })
+
   return (
-    <div className="flex flex-col items-start gap-0.5" data-testid="reports-export">
+    <div data-testid="reports-export">
       <Button
         type="button"
         variant="outline"
-        disabled={caption.disabled}
-        onClick={handleExport}
-        title={caption.disabled ? caption.file : undefined}
+        onClick={() => setOpen(true)}
         className="h-auto rounded-lg border-slate-300 px-4 py-2 font-medium text-slate-700"
         data-testid="reports-export-button"
       >
         ייצוא לאקסל
       </Button>
-      {/* 🔤 **שם-הקובץ נשאר טקסט-פסקה ואינו מבודד ל-LTR — נמדד 17/09/2026, וזו מדידה
-          שסותרת את פריט [1] של סבב-הראיות.** הפריט תיאר את הכיתוב כגולש לשתי שורות עם
-          `.xlsx` בקצה השמאלי של השורה השנייה; **בצילום שהוא עצמו מצטט הכיתוב יושב על שורה
-          אחת**, ו-`.xlsx` נמצא בקצה השמאלי שלה — כלומר **בסוף הלוגי של השם** בקריאה מימין
-          לשמאל, וזה הסדר הנכון לקורא עברית.
-          🔴 **וניסיון-התיקון נמדד כהרעה:** עטיפה ב-`<bdi dir="ltr">` הפכה את הסדר החזותי
-          ל-*"יירד: ‎.xlsx‏מבט-על-הנהלה…"* — הסיומת קופצת מיד אחרי המילה *"יירד"*, לפני השם.
-          📎 ההשוואה: `results-fix/evidence/bar2-before.png` מול `bar2-after.png`.
-          ⇒ **הושאר כפי שהיה, והפער דווח עם המדידה** במקום לתקן לפי תיאור שלא שוחזר. */}
-      <span className="text-[11px] text-slate-500" data-testid="reports-export-file">
-        {caption.file}
-      </span>
-      {caption.columns && (
-        <span className="text-[11px] text-slate-500" data-testid="reports-export-columns">
-          {caption.columns}
-        </span>
-      )}
-      {error && (
-        <span className="text-[11px] font-semibold text-red-600" role="alert">
-          {error}
-        </span>
+
+      {open && (
+        <ExportDialog
+          open={open}
+          onOpenChange={setOpen}
+          reports={reports}
+          reportId={selected?.id ?? null}
+          onReportChange={setReportId}
+          customers={customers}
+          customerId={customerId}
+          onCustomerChange={setCustomerId}
+          from={period.from}
+          to={period.to}
+          onPeriodChange={setPeriod}
+          columns={data?.columns ?? columns}
+          rows={data?.rows ?? []}
+          rowTotal={data?.rowTotal ?? null}
+          topN={data?.topN ?? null}
+          loading={loading}
+          error={error}
+          onRetry={() => setTick((value) => value + 1)}
+          blockedReason={data ? data.blockedReason : blockedReason}
+          buildSheet={buildExportSheet}
+          knownMessages={EXPORT_LOCKED_MESSAGES}
+          fileName={fileName}
+          onExport={({ columns: picked, rows: picked_rows }) =>
+            exportReportRows({
+              fileName,
+              sheetName: selected?.name ?? reportName,
+              columns: picked,
+              rows: picked_rows,
+            })
+          }
+        />
       )}
     </div>
   )

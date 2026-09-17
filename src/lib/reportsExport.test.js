@@ -10,12 +10,12 @@ vi.mock('write-excel-file', () => ({ default: vi.fn(() => Promise.resolve()) }))
 
 import writeXlsxFile from 'write-excel-file'
 import {
+  EXPORT_LOCKED_MESSAGES,
   EXPORT_NO_APPROVED_RUN,
   EXPORT_NO_ROWS,
   EXPORT_NO_TABLE,
   buildExportFileName,
   buildExportSheet,
-  exportCaption,
   exportReportRows,
   sanitizeSheetName,
 } from '@/lib/reportsExport'
@@ -34,6 +34,23 @@ const ROWS = [
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe('שלוש המחרוזות הנעולות — החוזה שהחלון והבדיקות נשענים עליו', () => {
+  // 🔴 הן לא "טקסט" אלא **גבול**: `exportReportRows` זורקת אותן, `ExportBar` מזין את הסט
+  // ל-`ExportDialog`, ו-`e2e/reports.spec.js` טוען על שתיים מהן. שינוי-נוסח כאן הוא
+  // שינוי-מוצר, ולכן הוא חייב להפיל בדיקה ולא לעבור בשקט (`ui-copy-styleguide.md` §5).
+  it('הסט מחזיק בדיוק את שלושתן', () => {
+    expect([...EXPORT_LOCKED_MESSAGES].sort()).toEqual(
+      [EXPORT_NO_ROWS, EXPORT_NO_TABLE, EXPORT_NO_APPROVED_RUN].sort(),
+    )
+  })
+
+  it('הנוסחים זהים-בייט', () => {
+    expect(EXPORT_NO_ROWS).toBe('אין שורות לייצא')
+    expect(EXPORT_NO_TABLE).toBe('אין טבלה לייצוא בדף הזה')
+    expect(EXPORT_NO_APPROVED_RUN).toBe('אין שורות לייצא — טרם אושרה ריצת-ניתוח')
+  })
 })
 
 describe('buildExportFileName — 📐13③: שם-הקובץ נושא את הרמה הנוכחית', () => {
@@ -74,46 +91,6 @@ describe('sanitizeSheetName — מגבלת-הפורמט של אקסל', () => {
 
   it('ריק ⇒ ברירת-מחדל, כדי שהקובץ לא ייפתח פגום', () => {
     expect(sanitizeSheetName('')).toBe('דוח')
-  })
-})
-
-describe('exportCaption — שתי השורות שעל המסך לפני הלחיצה (ת4)', () => {
-  it('מצב רגיל: שם-הקובץ ושמות-העמודות, והכפתור פעיל', () => {
-    const caption = exportCaption({
-      fileName: 'גיול-חובות_2026.xlsx',
-      columns: COLUMNS,
-      rowCount: 2,
-    })
-    expect(caption.file).toBe('יירד: גיול-חובות_2026.xlsx')
-    expect(caption.columns).toBe('עמודות: לקוח · יתרת-חוב פתוחה · ימי איחור · מועד פירעון')
-    expect(caption.disabled).toBe(false)
-  })
-
-  // 🔤 שלושת המצבים הנעולים, מילה-במילה מת4 ומ-`cards-customers.md` G-ל8.
-  it('טבלה בלי שורות ⇒ הנוסח הנעול, והכפתור מנוטרל', () => {
-    const caption = exportCaption({ fileName: 'x.xlsx', columns: COLUMNS, rowCount: 0 })
-    expect(caption.file).toBe(EXPORT_NO_ROWS)
-    expect(caption.disabled).toBe(true)
-    // העמודות עדיין נאמרות — הדף **יש** בו טבלה, היא פשוט ריקה בתקופה הזו.
-    expect(caption.columns).toContain('לקוח')
-  })
-
-  it('דף בלי טבלה בכלל ⇒ הנוסח האחר, ובלי שורת-עמודות', () => {
-    const caption = exportCaption({ fileName: 'x.xlsx', columns: [], rowCount: 0 })
-    expect(caption.file).toBe(EXPORT_NO_TABLE)
-    expect(caption.columns).toBeNull()
-    expect(caption.disabled).toBe(true)
-  })
-
-  it('דוח 20 לפני ריצה מאושרת ⇒ הנוסח שלו גובר על כל השאר', () => {
-    const caption = exportCaption({
-      fileName: 'x.xlsx',
-      columns: COLUMNS,
-      rowCount: 5,
-      blockedReason: EXPORT_NO_APPROVED_RUN,
-    })
-    expect(caption.file).toBe(EXPORT_NO_APPROVED_RUN)
-    expect(caption.disabled).toBe(true)
   })
 })
 

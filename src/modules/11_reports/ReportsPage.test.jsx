@@ -701,9 +701,14 @@ describe('מ1 — הייצוא יושב בשורת-המסננים', () => {
     expect(screen.getByTestId('reports-filters').contains(button)).toBe(true)
   })
 
-  it('שתי שורות-הכיתוב נשארות איתו', async () => {
+  // ✏️ **נהפכה 17/09/2026 ע"י סשן-הייצוא (ת4ב · §7.103).** הבדיקה נעלה קודם את נוכחות
+  // שתי שורות-הכיתוב מתחת לכפתור. **הכרעת-ישי הסירה אותן** — הן היו הבטחה-לפני-לחיצה
+  // כשהלחיצה הורידה מיד, ומרגע שהכפתור פותח חלון עם תצוגה-מקדימה הן מבטיחות דוח שאולי
+  // כלל לא ייבחר. **ההבטחה עצמה לא נעלמה — היא בתוך החלון, עם אותו `testid`.**
+  it('אין עוד כיתוב מתחת לכפתור — ההבטחה עברה לתוך החלון', async () => {
     renderPage()
-    expect(await screen.findByTestId('reports-export-file')).toBeInTheDocument()
+    await screen.findByTestId('reports-export-button')
+    expect(screen.queryByTestId('reports-export-file')).toBeNull()
   })
 
   // 🚫 עותק אחד בלבד — לא אחד בשורת-המסננים ועוד אחד בתוך הדוח.

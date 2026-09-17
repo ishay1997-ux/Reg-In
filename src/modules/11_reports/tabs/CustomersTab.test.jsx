@@ -69,7 +69,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 import CustomersTab from './CustomersTab'
 import { M11_CUSTOMERS_COPY } from '@/lib/onboardingCopy.m11.customers'
 import { MASKED_TEXT } from '@/lib/dashboard'
-import { EXPORT_NO_APPROVED_RUN, EXPORT_NO_ROWS } from '@/lib/reportsExport'
+import { EXPORT_NO_APPROVED_RUN } from '@/lib/reportsExport'
 
 // הזהויות החיות של §2.7 — לא מומצאות.
 const CEO = { כספים: 'edit', דיילות: 'edit', לקוחות: 'edit', 'דו"חות': 'edit' }
@@ -925,8 +925,11 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true)
-    expect(screen.getByTestId('reports-export-file')).toHaveTextContent(EXPORT_NO_APPROVED_RUN)
-    expect(screen.getByTestId('reports-export-button')).toBeDisabled()
+    // ✏️ **17/09/2026 — ת4ב:** הכפתור פעיל תמיד והכיתוב עבר לתוך החלון; החסימה נבדקת
+    // פר-דוח נבחר. הנוסח הנעול עצמו נבדק ב-`reportsExport.test.js` (זהות-בייט) וב-
+    // `ExportDialog.test.jsx` (מוצג במקום שורת-הכמות, והייצוא מנוטרל).
+    expect(screen.queryByTestId('reports-export-file')).toBeNull()
+    expect(screen.getByTestId('reports-export-button')).toBeEnabled()
     // הרמז ⑩ג יושב **בענף המצב-הריק בלבד**.
     expect(screen.getByTestId('hint-reports.notes.tilesBasis')).toBeInTheDocument()
   })
@@ -1089,8 +1092,8 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     callReport.mockResolvedValue({ ...overviewPayload(), rows: [] })
     renderTab(SURFACES.מ19)
     await screen.findByTestId('reports-export-button')
-    expect(screen.getByTestId('reports-export-button')).toBeDisabled()
-    expect(screen.getByTestId('reports-export-file')).toHaveTextContent(EXPORT_NO_ROWS)
+    expect(screen.getByTestId('reports-export-button')).toBeEnabled()
+    expect(screen.queryByTestId('reports-export-file')).toBeNull()
 
     // 🔴 **וזה הגבול שהבדיקה נועלת, ולא הצלחה:** האריחים והגרף שורדים ⇒ `hasContent` נשאר
     // אמת ⇒ מעטפת-הריק אינה נכנסת, והטבלה מציירת **כותרות בלי גוף**. הכרטיס (שורה 173)

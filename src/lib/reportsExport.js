@@ -94,30 +94,11 @@ export function buildExportFileName({ reportName, windowLabel, drillLabel } = {}
   return `${parts.join('_')}.xlsx`
 }
 
-/**
- * שתי שורות-הכיתוב שיושבות מתחת לשורת-המסננים **לפני** הלחיצה (ת4 · `cards-*.md §⑤` שורה 5):
- * השורה הראשונה נוקבת בשם-הקובץ הצפוי, השנייה בשמות-העמודות שיירדו.
- *
- * 🔑 **למה זה חשוב ולא קישוט:** הייצוא מוריד את **מצב-המסך** — מסננים ורמת-דריל כלולים.
- * בלי הכיתוב, המשתמשת לוחצת בלי לדעת אם תקבל 12 שורות או 700, והפער מתגלה רק באקסל.
- * ⚠️ **ומצב בלי טבלה אינו "כיתוב ריק"** — הוא אומר זאת במפורש (📐10: לכל דף יש מצב מוגדר).
- */
-export function exportCaption({ fileName, columns, rowCount, blockedReason } = {}) {
-  if (blockedReason) return { file: blockedReason, columns: null, disabled: true }
-
-  const names = (columns ?? []).map((c) => c.label).filter(Boolean)
-  if (names.length === 0) {
-    return { file: EXPORT_NO_TABLE, columns: null, disabled: true }
-  }
-  if (rowCount === 0) {
-    return { file: EXPORT_NO_ROWS, columns: `עמודות: ${names.join(' · ')}`, disabled: true }
-  }
-  return {
-    file: `יירד: ${fileName}`,
-    columns: `עמודות: ${names.join(' · ')}`,
-    disabled: false,
-  }
-}
+// 🗑️ **`exportCaption` הוסרה 17/09/2026 (הכרעת-ישי: *"מאשר לפי המלצך"*).** היא בנתה את שתי
+// שורות-הכיתוב שמתחת לכפתור — הבטחה-לפני-לחיצה שהייתה נחוצה כשהלחיצה הורידה **מיד**.
+// מרגע שהכפתור פותח חלון עם תצוגה-מקדימה, ההבטחה יושבת שם ונגזרת מ-`buildExportFileName`,
+// ושורה שמבטיחה דוח שאולי כלל לא ייבחר היא הבטחה שקרית. ⇒ נמחקה ולא הושארה כקוד-מת.
+// 🔤 **שלוש המחרוזות הנעולות נשארו** — `exportReportRows` זורקת אותן, והחלון מציג אותן.
 
 // 🔴 **התא נבנה מהפורמט שה-RPC הכריז עליו (C8), ולא מ-`typeof` של הערך.** ההבדל אינו
 // אקדמי: סכום שמגיע כ-`"1250"` (מחרוזת) היה נוחת באקסל כטקסט, ות4 דורש במפורש *"סכומים

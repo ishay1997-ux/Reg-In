@@ -166,8 +166,24 @@ describe('ExportDialog — הבטחת השם וכשל הייצוא', () => {
 
   it('🔴 כשל-ייצוא נאמר על המסך — הרגרסיה של B-1', async () => {
     const onExport = vi.fn().mockRejectedValue(new Error('אין שורות לייצא'))
-    setup({ onExport })
+    setup({ onExport, knownMessages: new Set(['אין שורות לייצא']) })
     fireEvent.click(screen.getByTestId('export-dialog-run'))
     expect(await screen.findByRole('alert')).toHaveTextContent('אין שורות לייצא')
+  })
+
+  // 🔴 **הצד השני של אותו משמר, וזה החצי שנשכח פעם אחת:** נוסח שאינו ברשימה הסגורה הוא
+  // תקלת-ספרייה, ואסור שידלוף למסך. בלי הבדיקה הזו, ההבחנה נשארת הצהרה בהערה.
+  it('🔴 שגיאה שאינה ברשימה הסגורה אינה מדליפה טקסט טכני', async () => {
+    const onExport = vi.fn().mockRejectedValue(new Error('TypeError: cell.value is not a function'))
+    setup({ onExport, knownMessages: new Set(['אין שורות לייצא']) })
+    fireEvent.click(screen.getByTestId('export-dialog-run'))
+    expect(await screen.findByRole('alert')).toHaveTextContent('הייצוא לא הושלם.')
+  })
+
+  it('שגיאה בלי message אינה מרנדרת משבצת ריקה', async () => {
+    const onExport = vi.fn().mockRejectedValue({})
+    setup({ onExport, knownMessages: new Set(['אין שורות לייצא']) })
+    fireEvent.click(screen.getByTestId('export-dialog-run'))
+    expect(await screen.findByRole('alert')).toHaveTextContent('הייצוא לא הושלם.')
   })
 })

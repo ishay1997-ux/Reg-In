@@ -62,6 +62,7 @@ export default function ExportDialog({
   buildSheet,
   fileName = '',
   onExport,
+  knownMessages = null,
 }) {
   const [order, setOrder] = useState(() => defaultOrder(columns))
   const [selected, setSelected] = useState(() => new Set(defaultOrder(columns)))
@@ -163,7 +164,11 @@ export default function ExportDialog({
     } catch (err) {
       // ⚠️ ה-`await` הוא התיקון עצמו ולא סגנון (ממצא B-1): בלי המתנה הדחייה חומקת מה-`try`,
       // הקובץ אינו יורד, **ושום דבר אינו נאמר על המסך**.
-      setExportError(err?.message || 'הייצוא לא הושלם.')
+      // 🔴 **המבחן הוא מול רשימה סגורה, ולא מול השגיאה עצמה** (ממצא B-1): נוסח עברי
+      // שאנחנו זרקנו ראוי להצגה כמות-שהוא; תקלת-ספרייה **לא** — לא מדליפים טקסט טכני
+      // למסך. ⚠️ והרשימה מוזרקת ואינה מיובאת, כדי שהחלון יישאר גנרי.
+      const known = knownMessages instanceof Set && knownMessages.has(err?.message)
+      setExportError(known ? err.message : 'הייצוא לא הושלם.')
     } finally {
       setBusy(false)
     }
