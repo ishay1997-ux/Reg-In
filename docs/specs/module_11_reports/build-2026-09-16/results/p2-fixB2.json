@@ -1,0 +1,488 @@
+{
+ "task": "P2-FIX-B2 · migration I2 (round 3) over nine report RPCs",
+ "migration_file": "supabase/migrations/20260916194500_module11_i2_rpc_round3.sql",
+ "file_bytes": 327133,
+ "committed": false,
+ "functions": [
+  "report_m03_trends",
+  "report_m09_aging",
+  "report_m14_hostess_overview",
+  "report_m15_reliability",
+  "report_m17_fairness",
+  "report_m19_customers_overview",
+  "report_m20_satisfaction",
+  "report_m21_drifting",
+  "report_m22_notes"
+ ],
+ "schema_migrations_rows": [
+  {
+   "version": "20260916164038",
+   "name": "module11_i2_m17"
+  },
+  {
+   "version": "20260916164348",
+   "name": "module11_i2_m21"
+  },
+  {
+   "version": "20260916164850",
+   "name": "module11_i2_m20"
+  },
+  {
+   "version": "20260916165225",
+   "name": "module11_i2_m22"
+  },
+  {
+   "version": "20260916165554",
+   "name": "module11_i2_m14"
+  },
+  {
+   "version": "20260916165921",
+   "name": "module11_i2_m15"
+  },
+  {
+   "version": "20260916170303",
+   "name": "module11_i2_m19"
+  },
+  {
+   "version": "20260916170726",
+   "name": "module11_i2_m03"
+  },
+  {
+   "version": "20260916171421",
+   "name": "module11_i2_m09"
+  }
+ ],
+ "chunking": {
+  "rule": "D-20 - one whole function + its comment/revoke/grant per chunk, each < 60 KB",
+  "max_chunk_kb": 40.0,
+  "chunks": 9
+ },
+ "gates": {
+  "md5_before_edit": {
+   "what": "live md5(prosrc) == the I1 file body, per function, BEFORE a character was touched",
+   "result": "10/10 (the nine here + report_m16_quality_cost, which was checked and found already fixed)",
+   "per_function": {
+    "report_m03_trends": "8c31f8d0214fca6429d0b1668a11124c",
+    "report_m09_aging": "104a9943baafb363849fd68187f6d4a0",
+    "report_m14_hostess_overview": "32b06e97605b9109f2a46c7a710292b8",
+    "report_m15_reliability": "f091c55655bb6be6642c3d0c9d1030f6",
+    "report_m17_fairness": "e59ef2d2be2d5426cb590b355762b7d1",
+    "report_m19_customers_overview": "b3a5dfeb2f6d644b869de6eaa21010ce",
+    "report_m20_satisfaction": "2dc24cb1b9042b769d825221f0dd4d08",
+    "report_m21_drifting": "40f05c75d747b83fd1ec850a81be5616",
+    "report_m22_notes": "b9a31f816e97c6b925862fc919b3b37a"
+   }
+  },
+  "shell_byte_identical": {
+   "what": "signature + comment on function + revoke + grant byte-identical to the I1 file",
+   "script": "<scratchpad>/shell_check_i2.py",
+   "result": "9/9 head_identical=True tail_identical=True"
+  },
+  "lf_only": {
+   "cr_bytes_in_file": 0
+  },
+  "md5_after_apply": {
+   "what": "live md5(prosrc) == the md5 of the $function$ body in the I2 file",
+   "result": "9/9",
+   "per_function": {
+    "report_m03_trends": {
+     "file": "e27c9aeb1e8fc4d1a41b00b7a64d6c6c",
+     "live": "e27c9aeb1e8fc4d1a41b00b7a64d6c6c",
+     "match": true
+    },
+    "report_m09_aging": {
+     "file": "ae78d82d29510c1f7d4d66aa5568439f",
+     "live": "ae78d82d29510c1f7d4d66aa5568439f",
+     "match": true
+    },
+    "report_m14_hostess_overview": {
+     "file": "320b7b0da3f22b5838cf3ec3c9c6504c",
+     "live": "320b7b0da3f22b5838cf3ec3c9c6504c",
+     "match": true
+    },
+    "report_m15_reliability": {
+     "file": "77ad27ff84dc2ef572733522cea3b41a",
+     "live": "77ad27ff84dc2ef572733522cea3b41a",
+     "match": true
+    },
+    "report_m17_fairness": {
+     "file": "eac50e57b114424c9c42cbafd06a7a75",
+     "live": "eac50e57b114424c9c42cbafd06a7a75",
+     "match": true
+    },
+    "report_m19_customers_overview": {
+     "file": "65b71309a7edeb52d213162774239a41",
+     "live": "65b71309a7edeb52d213162774239a41",
+     "match": true
+    },
+    "report_m20_satisfaction": {
+     "file": "c1775a8731094569dca36221839d3ddd",
+     "live": "c1775a8731094569dca36221839d3ddd",
+     "match": true
+    },
+    "report_m21_drifting": {
+     "file": "517510cdf31d2000dd7922c24a88e157",
+     "live": "517510cdf31d2000dd7922c24a88e157",
+     "match": true
+    },
+    "report_m22_notes": {
+     "file": "25052fc8e4d430aada2bb6841faef599",
+     "live": "25052fc8e4d430aada2bb6841faef599",
+     "match": true
+    }
+   }
+  },
+  "signed_in_calls": {
+   "identity_source": "E2E_* from .env.local, never printed; probe scripts deleted after use",
+   "ceo_200": "13/13 (m03 L0/L1/L2 · m09 L0/L1/L2 · m14 · m15 · m17 · m19 · m20 · m21 · m22)",
+   "blocked_42501": "9/9 (STAFF on m03/m09/m19/m20/m21/m22 · FINANCE on m14/m15/m17)",
+   "extra": "m09 level 2 re-probed with a REAL customer_id (401) - the batch probe passed customer_id:null, which the RPC correctly reads as level 1"
+  },
+  "payload_diff": {
+   "what": "full leaf-level pre/post diff per call, NUMERIC moves classified separately",
+   "numeric_moves": 0,
+   "removed_leaf_keys": 10,
+   "removed_keys_explained": [
+    "m03 L0 x5 - chart[1].series[2].* : the third money series RELOCATED to the new chart[2] object (cost_per_hour). +49 keys added, nothing lost.",
+    "m09 L0 x3 - tiles[1].target.{tab,report,drill.bucket} : the over_60 door became null. THIS IS THE FIX (ruling 1).",
+    "m14 x2 - tiles[0].target / tiles[4].target : these were null SCALARS and are now objects, so the leaf walk reports the scalar gone and 6 sub-keys added."
+   ],
+   "per_call": {
+    "m03_L0": {
+     "added": 49,
+     "removed": 5,
+     "changed": 4
+    },
+    "m03_L1": {
+     "added": 0,
+     "removed": 0,
+     "changed": 3
+    },
+    "m03_L2": {
+     "added": 0,
+     "removed": 0,
+     "changed": 0
+    },
+    "m09_L0": {
+     "added": 40,
+     "removed": 3,
+     "changed": 52
+    },
+    "m09_L1": {
+     "added": 4,
+     "removed": 0,
+     "changed": 13
+    },
+    "m09_L2": {
+     "added": 4,
+     "removed": 0,
+     "changed": 13
+    },
+    "m14": {
+     "added": 6,
+     "removed": 2,
+     "changed": 0
+    },
+    "m15": {
+     "added": 0,
+     "removed": 0,
+     "changed": 1
+    },
+    "m17": {
+     "added": 0,
+     "removed": 0,
+     "changed": 1
+    },
+    "m19": {
+     "added": 0,
+     "removed": 0,
+     "changed": 3
+    },
+    "m20": {
+     "added": 0,
+     "removed": 0,
+     "changed": 1
+    },
+    "m21": {
+     "added": 0,
+     "removed": 0,
+     "changed": 1
+    },
+    "m22": {
+     "added": 0,
+     "removed": 0,
+     "changed": 1
+    }
+   },
+   "note": "m09 L0's 52 'changed values' are almost all index shifts in columns[] from inserting the owner column at position 2 - the leaf diff compares columns[i].key, not the column set.",
+   "payloads": "<scratchpad>/results/payloads/*_i2_{pre,post}.json + m09_L2real_i2_post.json"
+  }
+ },
+ "changes": [
+  {
+   "rpc": "report_m03_trends",
+   "key": "chart[1] (level 0)",
+   "before": "one line panel with price + cost + margin on one axis",
+   "after": "two zero-based panels: [price + margin] and [cost]; level 0 now returns 3 charts (CHART_CAP 4)",
+   "source": "round 3 . management verdict #4 - the cost curve was flattened to ~2px"
+  },
+  {
+   "rpc": "report_m03_trends",
+   "key": "so_what + tiles[price_vs_cost].value/compare.note - 15 printed rates",
+   "before": "one decimal ('305.1 ₪ / 47.4 ₪', '47.4 ₪')",
+   "after": "whole shekels ('305 ₪ / 47 ₪', '47 ₪')",
+   "source": "round 3 . ruling (4) - rule 4, the same call as m16's ref line"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "key": "tiles[over_60].target",
+   "before": "{tab:'כספים', report:'report_m09_aging', drill:{bucket:'d90p'}} - the 90+ level",
+   "after": "null",
+   "source": "round 3 . finance verdict #2 + orchestrator ruling (1)"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "key": "tiles[bucket_90p].label + drill.levels names (crumb, level-1 tile, export caption)",
+   "before": "'מדרג 90+' etc. - rendered 'מדרג +90' on screen",
+   "after": "the numeric run isolated with chr(8294)...chr(8297), one isolate per range",
+   "source": "round 3 . finance verdict #7 + ruling (1)"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "key": "columns[owner] at levels 0, 1 and 2",
+   "before": "not declared (the field was in rows, unrendered)",
+   "after": "declared 'איש קשר', format text",
+   "source": "round 3 . ruling (2) - rule 18; owner populated on 100% of rows"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "key": "rows[].bucket (level 0) + the new rows[].bucket_key",
+   "before": "the bucket CODE ('d90p') sitting in the cell a textLtr column renders",
+   "after": "the bucket LABEL ('90+'), the code kept in an additive bucket_key field",
+   "source": "round 3 . the 19:5X item - textLtr isolates, it does not translate"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "key": "columns[bucket].format",
+   "before": "text",
+   "after": "textLtr",
+   "source": "round 3 . the 19:5X item - digit-range/code column isolated as one LTR unit"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[on_time].target",
+   "before": "null",
+   "after": "report_m15_reliability",
+   "source": "round 3 . hostesses verdict #11 + ruling (6)"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[gap_events].target",
+   "before": "null",
+   "after": "report_m06_staffing (cross-tab, D-18 precedent)",
+   "source": "round 3 . hostesses verdict #11 + ruling (6)"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "definitions",
+   "before": "no band thresholds, no ruling-38 sentence",
+   "after": "red/amber thresholds in numbers (from the same values as meta.red_threshold/amber_threshold, m14's wording) + the ruling-38 sentence",
+   "source": "round 3 . hostesses verdict #2 - C3's deletion test failed where the bands drive the action"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "key": "tiles[rank1_adoption].sub (zero-rows branch)",
+   "before": "'נמדד מ-— · אין עדיין נתון: ...'",
+   "after": "'טרם נמדד · אין עדיין נתון: ...'",
+   "source": "round 3 . hostesses verdict #12 + ruling (7)"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[satisfaction_vs_return].compare.label + tiles[].sub",
+   "before": "label was a sentence carrying its own number",
+   "after": "label shortened to the comparison basis; the middle-bucket median moved into sub",
+   "source": "round 3 . customers verdict #10"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[concentration_vs_drifting].compare.label",
+   "before": "'..., מקום N ברשימת המניבים — ...' (N duplicated the value)",
+   "after": "'... · מקומו ברשימת המניבים' - the number appears once, in the value",
+   "source": "round 3 . customers verdict #10"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "tiles[with_negative_reason].compare.label",
+   "before": "'אשתקד באותו טווח: 27 מתוך N' (27 == the value)",
+   "after": "'אשתקד באותו טווח, מתוך N משובים'",
+   "source": "round 3 . customers verdict #10 (literal duplicate)"
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "key": "tiles[oldest_in_list].compare.label",
+   "before": "'ממוצע המשוב שלו 2.43 על 7 משובים' (2.43 == the value)",
+   "after": "'ממוצע המשוב שלו על 7 משובים'",
+   "source": "round 3 . customers verdict #10 (literal duplicate)"
+  },
+  {
+   "rpc": "report_m22_notes",
+   "key": "tiles[other_vs_categories].sub",
+   "before": "carried (N) - the same number the compare value prints",
+   "after": "the number appears once, in the compare value",
+   "source": "round 3 . customers verdict #10"
+  }
+ ],
+ "payload_changes": [
+  {
+   "rpc": "report_m03_trends",
+   "where": "chart (level 0)",
+   "before": "2 chart objects; chart[1] carried price+cost+margin on one axis",
+   "after": "3 chart objects; chart[1] = price + margin, chart[2] = cost, both domain:null (= [0,'auto'])",
+   "verified": "m03_L0_i2_post.json - 3 charts, series ['revenue','profit','margin'] / ['price_per_hour','margin_per_hour'] / ['cost_per_hour']"
+  },
+  {
+   "rpc": "report_m03_trends",
+   "where": "so_what (L0, L1) + tiles[price_vs_cost].value/compare.note (L1)",
+   "before": "259.8 ₪ / 45.9 ₪ · 'עלות לשעה 44.2 ₪'",
+   "after": "260 ₪ / 46 ₪ · 'עלות לשעה 44 ₪'",
+   "verified": "15 FM999,990.0 sites replaced; 0 left in the body"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "where": "tiles[over_60].target",
+   "before": "drill {bucket:'d90p'}",
+   "after": "null",
+   "verified": "m09_L0_i2_post.json tiles[1].target is None"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "where": "tiles[bucket_90p].label + the four level names",
+   "before": "'מדרג 90+' (rendered 'מדרג +90')",
+   "after": "'מדרג \\u2066 90+ \\u2069' - one isolate per range",
+   "verified": "post label 'מדרג ⁦90+⁩'; L1 crumb 'מדרג ⁦61–90⁩ יום'"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "where": "columns[owner] at levels 0/1/2",
+   "before": "not declared",
+   "after": "declared 'איש קשר', format text",
+   "verified": "L0 columns include owner:text; L1 ['customer_name','owner',...]; L2 (customer 401) ['project_id','owner',...], row0 owner='ניר נחום'"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "where": "rows[].bucket + new rows[].bucket_key (level 0)",
+   "before": "cell held the CODE 'd90p'",
+   "after": "cell holds the LABEL '90+'; code kept in bucket_key",
+   "verified": "post rows[0] bucket='90+' bucket_key='d90p'"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "where": "columns[bucket].format",
+   "before": "text",
+   "after": "textLtr",
+   "verified": "post columns[7] = bucket:textLtr"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "where": "tiles[on_time].target",
+   "before": "null",
+   "after": "report_m15_reliability",
+   "verified": "post tiles[0].target.report"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "where": "tiles[gap_events].target",
+   "before": "null",
+   "after": "report_m06_staffing (tab הנהלה)",
+   "verified": "post tiles[4].target.report"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "where": "definitions",
+   "before": "no band thresholds, no ruling-38 sentence",
+   "after": "'דיילת אדומה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת ענבר = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104' + the ruling-38 sentence",
+   "verified": "post definitions tail read back in full"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "where": "tiles[rank1_adoption].sub",
+   "before": "'נמדד מ-— · אין עדיין נתון: …'",
+   "after": "'טרם נמדד · אין עדיין נתון: …'",
+   "verified": "post tiles[2].sub"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "where": "tiles[0].compare.label + tiles[0].sub",
+   "before": "'לקוחות לא-מרוצים · הבינוניים באמצע: ⁦68⁩ ימים' (label carried its own number)",
+   "after": "label 'לקוחות לא-מרוצים'; the middle-bucket median moved into sub",
+   "verified": "post diff"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "where": "tiles[2].compare.label",
+   "before": "'…, מקום ⁦12⁩ ברשימת המניבים — …' (12 == the compare value)",
+   "after": "'… · מקומו ברשימת המניבים'",
+   "verified": "post diff"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "where": "tiles[3].compare.label",
+   "before": "'אשתקד באותו טווח: ⁦27⁩ מתוך ⁦136⁩' (27 == the value)",
+   "after": "'אשתקד באותו טווח, מתוך ⁦136⁩ משובים'",
+   "verified": "post diff"
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "where": "tiles[3].compare.label",
+   "before": "'ממוצע המשוב שלו ⁦2.43⁩ על ⁦7⁩ משובים' (2.43 == the value)",
+   "after": "'ממוצע המשוב שלו על ⁦7⁩ משובים'",
+   "verified": "post diff"
+  },
+  {
+   "rpc": "report_m22_notes",
+   "where": "tiles[2].sub",
+   "before": "'\"אחר\" מול ארבע הקטגוריות הקיימות יחד (⁦37⁩)' (37 == the compare value)",
+   "after": "'\"אחר\" מול ארבע הקטגוריות הקיימות יחד'",
+   "verified": "post diff"
+  }
+ ],
+ "already_done_in_i1_not_redone": [
+  {
+   "item": "m16 chart.note names the chip 'בלי דירוג בלבד'",
+   "checked": "live pg_proc LIKE '%בלי דירוג בלבד%' = true"
+  },
+  {
+   "item": "m16 chart.x_domain on the scatter",
+   "checked": "live pg_proc LIKE '%x_domain%' = true"
+  },
+  {
+   "item": "m19 payment-cadence compare format:'int'",
+   "checked": "grep on the I1 body, and the post payload carries compare.format='int'"
+  },
+  {
+   "item": "m22 tile-3 compare branched on v_run.run_id is null",
+   "checked": "grep on the I1 body x3"
+  }
+ ],
+ "not_done": [
+  {
+   "item": "customers verdict #10 as the finding literally prescribes (compare.value = null)",
+   "why": "BLOCKED by the shell on HEAD: KpiTile.CompareLine renders `{label}: <Ltr>{value}</Ltr>` unconditionally and formatByType(null) is an em dash, so the screen would read '<sentence>: —'. Implemented the finding's OWN alternative instead - shorten the label to the comparison basis - which has no shell dependency. Five tiles (m19 x2, m20, m21, m22)."
+  },
+  {
+   "item": "m09 rows[].bucket cross-filter key on levels 1 and 2",
+   "why": "Only the level-0 row build carries a bucket cell; levels 1 and 2 never had one. Nothing to change, and the shell reads drill_key there."
+  }
+ ],
+ "not_verified": [
+  "The screen itself was not opened. Every claim here is from the RPC payload and pg_proc, not from a browser.",
+  "chart.x_domain / unit_label / textLtr all depend on shell code that is being written in parallel (P3-FIX-A). textLtr was measured landed (reportsFormat.js:133, ReportTable.jsx:35); x_domain and unit_label were NOT re-measured this turn.",
+  "m03's three charts at level 0 fit under CHART_CAP=4 (api.js:132, measured) - but the third chart has never been rendered on screen.",
+  "The two m14 doors point at report_m06_staffing / report_m15_reliability; that the router accepts those RPC names was NOT re-measured this turn (D-30 (3) says target.report is the RPC name, and the I1 round aligned the other four)."
+ ],
+ "blind_spot": [
+  "m09 rows[].bucket now holds a Hebrew-or-digits LABEL and the code moved to bucket_key. If any shell code (export, cross-filter, a test fixture) still joins on rows[].bucket === 'd90p', it breaks SILENTLY - the table renders fine and the filter just matches nothing. Checkable: grep the shell for `.bucket` on m09 rows and for 'd90p' / 'd61_90' string comparisons outside the RPC.",
+  "The m03 chart split changes the ARRAY INDEX of the cost series. Anything that reads chart[1].series[2] positionally (a test, a snapshot, a tab transform) now reads undefined. Checkable: grep the executive tab and its tests for chart[1] / series[2].",
+  "m15's new definitions sentence prints round(v_c,4) and trim_scale(coef*100) un-isolated (m15 declares no v_lri/v_pdi, unlike the other eight). '87%' and '0.8338' are safe LTR runs by the bidi algorithm, but this was reasoned, NOT measured in a browser."
+ ]
+}

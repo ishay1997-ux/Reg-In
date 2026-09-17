@@ -1,0 +1,21 @@
+# P3-F · Copy evaluator — ADDENDUM (written 16/09/2026 23:4X by the resuming orchestrator)
+
+Read `docs/specs/module_11_reports/build-2026-09-16/tasks/p3-copy-eval.md` first, then THIS. Where they disagree, THIS wins. You are ONE of TWO evaluators (not four — pacing rule D-33 of the micro-guide §9): your dispatch names your STATE (mode 0 or mode 2) and you take the persona the brief gives for that state.
+
+## 1. Corrections to the brief
+- **Do not start a dev server and do not touch the onboarding mode in the database.** Both are superseded by `HANDOFF-build-2026-09-16.md §0א` row 5 and `e2e/CLAUDE.md §2.1`: the mode is forced by intercepting the single GET `AuthContext` sends (`notification_preferences?select=onboarding_mode`), never by module 9's setter, never by a write. **The orchestrator already ran the dump for your mode** against the frozen preview build of HEAD `300e80dc` on port 5189 (`npm run preview`), as CEO, with the mode forced.
+- **Your inputs are on disk, pre-made — read them, do not re-drive the browser:** `C:\Users\ishay\AppData\Local\Temp\claude\C--Users-ishay-Reg-In\ae84cb05-7ca4-4a75-80cd-6e6b13995904\scratchpad\results\copy-<MODE>\` holds, per surface, `<slug>.txt` (the `innerText` of the reports page, with a header: url · state · h1 · number of visible hints) and `<slug>.png` (full page, 1280 wide), for all 16 surfaces (`exec-overview trends discounts staffing finance-overview profitability aging equipment hostess-overview reliability quality-cost fairness customers-overview satisfaction drifting notes`), plus `trends-drill1` and `aging-drill1` (one drill level), `export-caption` (the export block), `hostess-overview-error` (the error envelope after an aborted RPC), `masked-STAFF` (the screen an identity with no open tab sees), and `index.json` (the manifest with any failures). If a file you need is missing, say so in `not_verified` — do not produce it yourself.
+- **Two evaluators, one per mode.** The verdict table is yours alone; the orchestrator merges.
+
+## 2. What you judge (unchanged from the brief — repeated so the floor is one file)
+Mode 0 persona: the partner-company engineer — does it read as a mature product? Mode 2 persona: the new office employee in her first week — from the hints alone, does she know what to do next and why? Every finding cites a rule number from `docs/specs/module_11_reports/stage2-review/m11-copy-rules.md` §1/§4 or is filed as *"taste, no rule"*. A finding on a label locked by `docs/specs/module_11_reports/spec.md §1.4` goes to `locked_label_findings` for Ishay's morning table — never proposed as a change. *"אין הערות"* on a surface is a legitimate verdict; an invented finding is worse than a blank row.
+
+Known and ruled — NOT findings (each has its source): aging (מ7 open-debt tile · מ9) ignores the period filter and says *"נכון להיום"* (card, `meta.period_filter_ignored`) · rates per hour are whole ₪ (📐4) · the clear chip reads *"× נקי בחירה"* (D-34 ③, spec §1.5 feminine imperative) · population sentences never print "(הכרעה 36)" on screen (D-34 ④) · מ22's run bar shows an approved run because runs 5 and 6 are approved (426 insights) · the hostesses tab opens on 12 rolling months (ruling ⑧H2) · report numbers are not shown in the UI (spec §1.2) · the tabs row of a masked identity is the correct result (`p3-common.md` matrix).
+
+## 3. Reading floor
+The brief · this file · `C:\Users\ishay\.claude\skills\ui-copy-and-onboarding-levels\SKILL.md` phase F only · `docs/plans/ui-copy-styleguide.md` · `stage2-review/m11-copy-rules.md` §1 + §4 · `onboarding-layer-contract.md` §3 · `spec.md §1.4` (the locked labels) · the dumps. Probably not needed: the cards, the mockups, the micro-guide — open only on a real doubt and say so.
+
+## 4. Output
+Write `…\scratchpad\results\p3-copy-<MODE>-1.json` in the brief's shape **incrementally — after every four surfaces, not at the end** (a killed agent loses its report, not its writes — D-24). `blind_spot` names a file, a mechanism or a scenario someone can check true-or-false. Return the same JSON as your structured output. Tools: Read only (plus a Bash `ls` of the folder). You write exactly one file.
+
+כל עובדה כאן ניתנת לערעור — אם קראת אחרת, תקן אותי עם הציטוט.

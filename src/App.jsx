@@ -47,7 +47,7 @@ import PublicFeedbackPage from '@/modules/08_finance/PublicFeedbackPage'
 import ParamsTab from '@/modules/09_settings/ParamsTab'
 import MySettingsPage from '@/modules/09_settings/MySettingsPage'
 import DashboardPage from '@/modules/07_dashboard/DashboardPage'
-import UnderConstruction from '@/components/UnderConstruction'
+import ReportsPage from '@/modules/11_reports/ReportsPage'
 import ProfileSettingsPage from '@/components/ProfileSettingsPage'
 import NotFound from '@/components/NotFound'
 
@@ -212,11 +212,16 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* מודול 11 (צעד 3.0) — הוחלף UnderConstruction במסך האמיתי. 🔴 **השומר
+                      עצמו לא נגע**: `allow='דו"חות'` זהה-בייט לשורת `modules` ולשורת
+                      `BUSINESS_MODULES` (`src/lib/constants.js`), ושימו לב למירכאות
+                      היחידות ב-JSX — המחרוזת נושאת גרש-כפול, וטעות בה **חוסמת את כולם
+                      בשקט** (deny-by-default, §4.1 של מדריך-המיקרו). */}
                   <Route
                     path="reports"
                     element={
                       <ProtectedRoute allow='דו"חות'>
-                        <UnderConstruction moduleName='דו"חות' />
+                        <ReportsPage />
                       </ProtectedRoute>
                     }
                   />

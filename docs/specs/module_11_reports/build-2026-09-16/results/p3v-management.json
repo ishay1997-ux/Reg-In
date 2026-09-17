@@ -1,0 +1,148 @@
+{
+ "tab": "הנהלה (management / exec) — מ2 · מ3 · מ4 · מ6 — all three lenses (A spec-fidelity, B RTL/a11y/states/visual, C tests+code). Measured against code HEAD b199fa22 with the tab files unchanged since 16/09 10:32; the P3-FIX-A shell fixer edited components/** DURING this run (ReportSurface.jsx md5 cdad149a→ff0e66fd, KpiTile.jsx ffcbf5ce→c3610f85 between 17:36 and 17:52) — every browser measurement below is against the 17:45–18:05 tree, ChartCard.jsx stable at bdd2f61a. Payloads refetched live as CEO (meta.measured_at 2026-09-16 14:38 UTC). Full report: <scratchpad>/results/p3v-management.json. Dev server on 5181 stopped.",
+ "findings": [
+  {
+   "lens": "B",
+   "surface": "מ6 · קהל מול צוות (staffing) — scatter",
+   "severity": "major",
+   "claim": "The 📐6 diagonal reference line «ההערכה התקיימה בדיוק» is NOT drawn on the live scatter, while the §⑩ hint, the shape legend and the card all speak about it. Refutes the builder's declared note «The diagonal reference line still separates above/below visually» and StaffingSurface.jsx:74-78.",
+   "evidence": "probe3.json m6charts[chart-card-scatter]: .recharts-reference-line = 0, .recharts-reference-line-line = 0, no dashed <line> in the SVG (the histogram card on the same page has 1, with its label text rendered). MECHANISM PROVEN by intercept: page.route rewrote refLines[0].to from {x:630,y:630} to {x:600,y:600} → .recharts-reference-line-line = 1 (results/lensB-management/m6-diagonal-clamped-proof.png). chart.domain [0,630] is applied to the Y axis only (ChartCard.jsx:461-468), so the X axis auto-fits max(estimated)=600 and Recharts discards a segment whose x=630 leaves the domain — ChartCard.jsx:217-229 passes no ifOverflow. Second half: even clamped, refTexts=[] — a <Label> on a `segment` ReferenceLine renders no text. Copy that references the missing line: onboardingCopy.m11.exec.js:104. SAME MECHANISM as the already-routed «מ17 Lorenz diagonal absent» — one fix in renderRefLines closes both.",
+   "owner": "shell"
+  },
+  {
+   "lens": "B",
+   "surface": "all four (מ2 · מ3 · מ4 · מ6) — envelope states",
+   "severity": "major",
+   "claim": "📐10 state 2 «ריק-אחרי-סינון» is unreachable on every executive surface: filtering to a customer with no events renders the full page — four tiles, a zeroed chart, a header-only table — with no empty sentence and no clear-filters door. Refutes \"states\": true in all four surface checklists of p3-management.json.",
+   "evidence": "ReportSurface.jsx:356 `hasContent = payload.tiles.length > 0 || charts.length > 0 || payload.rows.length > 0`; the four executive RPCs always return 4 tiles + a chart, so the Envelope state='empty' branch (358-366) can never fire. Measured live: /reports?tab=management&report=exec-overview&period=month&customer=213 (קמפוס טכנולוגי צפון בע\"מ; RPC returns population.n=0, rows=[]) renders report-tiles + chart-card-bar + report-table-card with no tbody rows, no report-row-cap, no envelope (probe5.json .empty; state-empty-filtered.png). Card cards-management.md מ2 ① row 6: «אין אירוע שהסתיים ⇒ הטבלה נעלמת ומוצג ריק-לגמרי». Lens C: no test can catch it — renderTab hard-codes filters.isFiltered=false (ExecutiveTab.test.jsx:79-90) and the empty test (line 727) uses a zero-tiles fixture the live RPC never returns.",
+   "owner": "shell"
+  },
+  {
+   "lens": "A",
+   "surface": "מ3 · מגמות רב-שנתיות, level 0 — chart 1",
+   "severity": "major",
+   "claim": "The partial current year is not declared anywhere inside the year chart: the 2026 bar is neither hollow-dashed nor labelled with its length, and there is no chart note — an 8.5-month bar stands beside two full years (📐20). Not listed under deviations_from_mockup.",
+   "evidence": "Measured ticks on report=trends chart-card-bar: [\"2024\",\"2025\",\"2026\"] with no qualifier; chartCards[0].note = null; 6 bars, none with fill-opacity/stroke-dasharray (probe2-mode2.json m3). TrendsSurface.jsx has NO transformPayload since the reconcile round (its own comment, lines 8-13), and the payload's 2026 row carries `partial: true` but no `is_today`. Mockup 02_tab_executive_approved.html:567 «עמודות 2026 מצוירות בדפוס-מילוי מקווקו כי השנה טרם נגמרה». The same tab implements all three 📐20 channels on מ2. Mitigated on the page but not in the chart: the population line and the tile windows do say «עד 16/09».",
+   "owner": "tab"
+  },
+  {
+   "lens": "A",
+   "surface": "מ3 · מגמות רב-שנתיות, level 0 — chart 2 «מחיר לשעה מול עלות לשעה»",
+   "severity": "major",
+   "claim": "The build draws the exact flat line the approved mockup's own note exists to prevent: three ₪ series of two magnitudes on ONE 0–320 axis, so the cost-per-hour curve is 2.2 px tall. The mockup splits them into separate zero-based panels. Not listed under deviations_from_mockup.",
+   "evidence": "Mockup :657-659 — «שני צירים נפרדים בכוונה, וכל אחד מתחיל באפס — … ואיור שלהם על ציר אחד היה מצייר את העלות כקו שטוח», drawn as .chart-row panels. Live payload declares all three series axis:'left'. Measured: one .recharts-wrapper, y ticks ⁦0⁩/⁦80⁩/⁦160⁩/⁦240⁩/⁦320⁩, plot height 218 px, curve bounding boxes 35.0 px (price) · 32.9 px (margin/hour) · 2.2 px (cost, stroke rgb(98,116,142)) — probe6.json m3lineChart. ComposedBody's right axis is locked 0–100, so the two-panel shape can only come from the payload returning two chart objects (CHART_CAP is 4 since D-28).",
+   "owner": "rpc"
+  },
+  {
+   "lens": "A",
+   "surface": "מ2 · מבט-על הנהלה — monthly chart",
+   "severity": "minor",
+   "claim": "September is hollow-and-dashed in ONE of the two years, while card ⑧2.3 is ✅ closed on «ספטמבר מסומן חלול-ומקווקו בשתי השנים» and card ① repeats «עמודות ספטמבר» in the plural; the mockup's fourth legend key «ספטמבר — 10 ימים בלבד» also has no counterpart.",
+   "evidence": "18 bar paths measured; exactly one carries fill-opacity 0.55 + stroke-dasharray '4 2' (2026 September); every bar of the 2025 series carries the hatch fill url(#…-hatch-1), September included (probe5.json bars). Mechanism: todayCellProps (ChartCard.jsx:278-281) is applied by barCells, documented in the file itself as «תאי-הסדרה-הראשונה» (283-300). Legend measured: 3 items vs 4 in the mockup (:490-495).",
+   "owner": "shell"
+  },
+  {
+   "lens": "A",
+   "surface": "all four — §⑩ hint anchors",
+   "severity": "minor",
+   "claim": "5 of the 15 §⑩ keys do not render where the card anchors them: the four `purpose` hints are the FIRST node of the surface, above the population line and above the so-what line they are anchored under, and reports.staffing.scatterSample (anchored to «.chart-note בכרטיס-הגרף הראשון») renders above the first chart card. REFUTED CLAIM: surfaceKit.jsx:50-54 states that after the so-what move the hint «שוב» sits below it.",
+   "evidence": "Measured DOM order at mode 2 (probe2-mode2.json m2.orderIds): report-exec-overview → hint-reports.execOverview.purpose → report-population → reports-export → report-so-what → report-tiles; same shape on מ3/מ4/מ6. Card anchors: cards-management.md:232 (מ2 א), :641 (מ6 א), :644 (מ6 ד). Mechanism: ReportSurface.jsx:403-404 calls renderTop BEFORE <PopulationLine/>, and no slot exists between so_what and the tiles. The מ4 chip row inherits the same position.",
+   "owner": "tab"
+  },
+  {
+   "lens": "A",
+   "surface": "all four — population line (📐2)",
+   "severity": "minor",
+   "claim": "The population sentence does not carry the explicit «(הכרעה 36)» citation that the card's closed item G2 requires of these four pages.",
+   "evidence": "cards-management.md:53 (⑧ G2, ✅ נסגר): «⇒ ארבעת הדפים מצהירים את האוכלוסייה בשורת-📐2 ומצטטים \"(הכרעה 36)\" במפורש». Measured report-population on all four surfaces in both onboarding modes, and population.label in all four live payloads: the four statuses and the exclusions are there; the string «הכרעה 36» appears nowhere on screen.",
+   "owner": "rpc",
+   "conflict_question": "card ⑧ G2 (closed) requires the ruling number on screen · vs C2 / the copy style guide, which keep internal identifiers (report numbers, ruling ids) off the screen. Ishay's call, not a patch."
+  },
+  {
+   "lens": "A",
+   "surface": "מ3 · trends — level 0 vs level 1",
+   "severity": "minor",
+   "claim": "The same rate is rendered three ways inside one report: the level-0 tile says «⁦47 ₪⁩», the so-what line on the same page says «⁦47.4 ₪⁩», and the level-1 tile says «⁦259.8 ₪ / 45.9 ₪⁩» (a composed text value). Same for מחיר לשעה (305 vs 305.1).",
+   "evidence": "probe2-mode2.json m3.tiles[0..1] + payload m03_L0.json: tile values 305.11874873707933 / 47.37250330302324 with format 'money' → reportsFormat whole-₪; the server sentence keeps one decimal («מ-⁦259.8 ₪⁩ ל-⁦305.1 ₪⁩ לשעה, מול עלייה מ-⁦45.9 ₪⁩ ל-⁦47.4 ₪⁩»). Level-1 tile price_vs_cost is the string «⁦259.8 ₪ / 45.9 ₪⁩» (format 'text').",
+   "owner": "ishay",
+   "conflict_question": "📐4 «₪ בלי אגורות» applied by reportsFormat to tile values · vs the RPC's prose and `text` tiles that keep one decimal for a per-hour rate. D-29 already sent the whole-₪-rate class to Ishay for the hostesses tab (43.27 ₪ reference line); the new half is the disagreement WITHIN one page."
+  },
+  {
+   "lens": "B",
+   "surface": "the tab's blank state (STAFF on /reports?tab=management)",
+   "severity": "minor",
+   "claim": "The blank-state sentence addresses the user in the masculine imperative — «אין דוחות זמינים בתפקידך — פנה למנכ\"ל» — while spec §1.5 locks the feminine imperative.",
+   "evidence": "ReportsPage.jsx:46 NO_TABS_SENTENCE; measured on screen signed in as E2E_STAFF (probe4.json staff.text; state-no-permission-staff.png). spec.md §1.5: «בחרי ×22 · פתחי ×16 · סמני ×11 · לחצי ×3 · הזיני ×3 בקוד החי ⇒ זו הצורה». The same string is duplicated in tabs/customers/AnalysisRunBar.jsx:39,57.",
+   "owner": "shell"
+  },
+  {
+   "lens": "A",
+   "surface": "מ2 · מ3 · מ4 — chart cards",
+   "severity": "minor",
+   "claim": "Neither half of the approved mockup's chart-card reading aid is on screen: no value labels above the bars, and the per-row data table under the chart is sr-only rather than the visible table the mockup draws.",
+   "evidence": "Measured: 0 `.recharts-label-list` nodes in chart-card-bar, and the chart table's wrapper class is `sr-only focus-within:not-sr-only focus-within:my-2 focus-within:block` with a 1×1 rect (probe6.json m2chart). Mockup :470-484 — `div.tbl-scroll > table.data` with only `<caption class=\"sr-only\">`, i.e. a visible 5-column month table; same shape on p3. The mockup's chart-note that explains it (:415) is replaced on screen by the partial-month sentence.",
+   "owner": "shell",
+   "conflict_question": "card ⑧2.2 is 🔵 פתוח — it names the chosen solution («תווית אחת פר-חודש + טבלה גלויה מתחת לגרף») but was never ruled. Reported as two sources side by side, not as a fix."
+  },
+  {
+   "lens": "A",
+   "surface": "all four — element order",
+   "severity": "minor",
+   "claim": "ExportBar renders inside every surface, between the population line and the «אז מה» line; the approved mockup puts «ייצוא לאקסל» in the shell's global-filters row, above the page sections.",
+   "evidence": "Measured order (probe2-mode2.json m2.orderIds): report-population → reports-export → reports-export-button → reports-export-file → reports-export-columns → report-so-what. Mockup :328-355 — the #xlsx button and its two caption lines sit in the «מסננים גלובליים (ת1)» block, outside section.page#p1..p4.",
+   "owner": "shell"
+  },
+  {
+   "lens": "B",
+   "surface": "מ2 · overview tiles (ruling 33 doors)",
+   "severity": "minor",
+   "claim": "A tile that IS a door shows no pointer affordance: the tile <button> computes cursor:default while a clickable table row on the same page computes cursor:pointer.",
+   "evidence": "probe2-mode2.json m2.tileLinks — all four report-tile-link-* are BUTTON, tabIndex 0, aria-label «… — פתחי את הדוח», cursor 'default'; m2.rows[0] cursor 'pointer'. Keyboard works (Enter on report-tile-link-finished_events navigated to ?tab=finance&report=profitability), so this is affordance only. KpiTile.jsx was mid-edit by the shell fixer (md5 ffcbf5ce→c3610f85); measured against c3610f85.",
+   "owner": "shell"
+  }
+ ],
+ "checked": [
+  "Lens A · labels: all 12 tile labels of the הנהלה row of spec.md §1.4 appear on screen byte-for-byte from the payload (live payloads refetched as CEO + rendered tiles at both onboarding modes); the four page titles from reportsCatalog match §1.4. The single difference — «נתח 5» in the spec vs «נתח 5 הלקוחות הגדולים» in payload/card/mockup — is the already-routed doc item and is not re-reported.",
+  "Lens A · onboarding copy: mechanical diff of all 15 keys against the cards' §⑩ table — 15/15 keys exist in the card, 8 byte-identical after LRI/PDI and <span class=\"ltr\"> normalisation, and the 7 divergences are exactly the 4 declared classes with their rules (תתחילי⇒התחילי ×4 per spec §1.5 · partialYear's dashed-column sentence dropped · tierSort's bar-click⇒chip-row and נקה⇒נקי · scatterSample's mockup-sampling sentence dropped). No data counts and no raw bidi controls in any of the 15; npm run check:bidi exit 0.",
+  "Lens A · hint keys three-way (tab sources ⇔ copy file ⇔ card §⑩): 15/15 both directions, no dead key — asserted mechanically by the tab's own fs-reading test (ExecutiveTab.test.jsx:758) and confirmed on screen (4 hints on מ2, 4 on מ3-L0, 2 on מ3-L1/L2, 3 on מ4, 4 on מ6 at mode 2; 0 at mode 0).",
+  "Lens A · per-surface checklist measured on screen across 7 states × 2 modes: population line · period in every tile window · the 📐1 compare half (and, since the shell fix, tiles[].sub and compare.note — «אז ⁦47⁩ לקוחות עם הכנסה» renders) · «אז מה» · definitions · meta.notes · export bar with both caption lines · ≤2 charts per surface (1/2/1/2) · table sorted by the displayed metric with aria-sort ONLY on that column (הכנסה▼ · שנה▲ · חודש▲ · הנחה▼ · פער▼).",
+  "Lens A · ruling 19: every table row carries role=\"button\" tabindex=\"0\" cursor:pointer on all four surfaces; Tab-focus + Enter on מ2's first row navigated to /projects/1395.",
+  "Lens A · ruling 33: all four מ2 tiles are buttons with aria-label «… — פתחי את הדוח»; Enter on «אירועים שהסתיימו» wrote ?tab=finance&report=profitability — the cross-tab door works through the shell's single door router and the tab writes no URL of its own.",
+  "Lens A · ruling 39: four chips with their n (305 · 270 · 110 · 51), each a real <button> with aria-pressed, selection in the URL, cut in the SERVER (meta.row_total 736⇒110 and the cap note follows), chart.filter_key=false verified (no report-clear-crossfilter chip, no pointer cursor on the bars) — exactly one filter over that table.",
+  "Lens A · ruling 6 / §7.83: מ6 carries «אינו יעד ואינו סף» in BASE (visible at mode 0) and again as the histogram reference-line label «פרמטר-תכנון 50 — לא יעד» (text actually rendered, measured), and the page has no red/threshold colour at all. §7.82's «הצעות שנסגרו בסיבה «נפתחה בטעות» אינן נספרות כדחייה» is on screen in מ4's population line.",
+  "Lens A · drill (📐13) on מ3: three levels from one gated RPC, state in the URL, crumbs from level 1 and 2, the row-action sentence changing per level, no chart at level 2, DrillCrumbs absent at level 0.",
+  "Lens B · RTL/format: document.documentElement.scrollWidth − clientWidth = 0 on all 7 surface states × both modes (14 measurements). Glyph-level Range.getBoundingClientRect: «⁦1,962,981 ₪⁩» and «⁦58.6%⁩» render digits LTR with ₪ / % to the right of the digits. Numeric columns compute text-align:left (= end in RTL), text columns right; charts sit inside dir=\"ltr\" with the Hebrew heading outside; the aria-live region (report-table-announce, and מ4's discount-tier-announce) exists and is empty BEFORE any click.",
+  "Lens B · states: loading (RPC delayed 5 s → report-staffing-loading + skeleton-page + «טוען…»); error (route abort → report-exec-overview-error with «לא ניתן לטעון את הנתונים.» + «נסי שוב», and the retry re-called the RPC — abort count 2→3); no-permission (E2E_STAFF: all four role=\"tab\" with aria-selected=\"false\", aria-disabled=\"true\", title «לא זמין בתפקידך»); blank. The two that failed are reported as findings.",
+  "Lens B · onboarding mode 2 SEEN IN A BROWSER on הנהלה for the first time (D-32 recorded it as unseen for this tab): forced per-user by intercepting the PostgREST GET on notification_preferences and rewriting onboarding_mode — the DB was never written. All 15 keys render, 0 console errors, 0 pageerrors, 0 horizontal overflow at 1280×800. Mode-0 deletion test passes on all 7 states (population · so-what · definitions · tiles · charts · table · row-action · export present, 0 hints).",
+  "Lens C · tests: npx vitest run ExecutiveTab.test.jsx → exit 0, 23/23. Mocks complete (@/supabaseClient, @/contexts/AuthContext, recharts, ../api) — nothing hits the network. The hint-key test is genuinely mechanical (node:fs over the six sources, regex of every 'reports.*' literal, set equality with M11_EXEC_COPY, asserts no `pointer`) and would fail on a typo'd key.",
+  "Lens C · gates re-run by me rather than quoted: npx eslint on all owned files exit 0 · npx prettier --check exit 0 · npm run check:bidi exit 0 · CR=0 on all 9 owned files via perl tr/\\r// · zero `supabase.` in any tab file (C6) · zero logical Tailwind utilities (ms-/me-/ps-/pe-/start-/end-) · no invented colour (teal-700/teal-500/slate-500 only).",
+  "Lens C · reconciliation of the builder's payload_changes_reconciled against the live payloads: all ten items re-measured true — m02 xKey 'label' (withLabelAxis a no-op there, still load-bearing for m04's 'tier') · m03 chart[0].domain null and ComposedBody drawing all three series (6 bars + 1 line, right axis 0–100%) · m06 shipping the 2-series pair, the diagonal from/to and the '50–55' category ref-line, so withScatterAxes / withDiagonalBounds / withCategoryRefLines are the documented no-op fallbacks they claim to be · meta.sort present on all four with aria-sort following it."
+ ],
+ "not_verified": [
+  "The signoff-baseline-2026-09-10.md numbers could not be reproduced THROUGH THE UI: the period pills are month / 90d / 12m / year / all, so the baseline's 01/01–10/09 window is not selectable — 'year' gives 01/01–16/09 and the data moved (card מ3 §③ says 2026 = 236 events / 1,922,441 ₪ / 58.3%; screen shows 241 / 1,962,981 ₪ / 58.6%). I treated this as the documented 10/09→16/09 drift and did NOT verify the baseline digit-for-digit.",
+  "The Recharts tooltip never opened under Playwright mouse.move (three attempts, two consecutive moves inside the plot; .recharts-tooltip-wrapper existed but stayed empty). dir=\"rtl\" on the tooltip box is verified in source only (ChartCard.jsx:151), not on a live hover.",
+  "No negative number appears anywhere in this tab's live data (edges_gap is +7.07; direction is carried by ruling 15's uncoloured ▲/▼), so the 'minus sits right of the digits' half of the RTL check has no live specimen on הנהלה.",
+  "The empty-after-filter screen's export button state (disabled + «אין שורות לייצא») was not measured — the unit test covers it on a fixture; I measured the surrounding page only.",
+  "FINANCE / RECRUIT / PROJECTS identities were not driven; masking was verified with E2E_STAFF only (all four tabs masked). RECRUIT is the identity that masks הנהלה specifically.",
+  "jscpd (npm run dup) and knip were not re-run by me — the tree is mid-edit by the shell fixer and a repo-wide gate would have measured their work, not the tab's. The builder's run is quoted, not re-derived.",
+  "The shell changed under me during the run (ReportSurface.jsx and KpiTile.jsx md5 both changed between 17:36 and 17:52; FiltersBar.jsx, reportsCatalog.js, reportsPeriod.js, reportsFormat.js and two e2e specs are also modified in the working tree). Every browser measurement is against the 17:45–18:05 state; a shell-owned finding may already be fixed or re-broken by the time this is read."
+ ],
+ "blind_spot": "I verified every chart through the DOM that Recharts produced, and Recharts is exactly where this tab's two worst defects hid — a ReferenceLine silently discarded for ending 30 units outside an auto domain, and a series flattened to 2.2 px. Both are invisible to the unit suite because ExecutiveTab.test.jsx mocks recharts wholesale (lines 24-63: every component becomes a <div data-props=JSON>), so the מ6 test at line 646 asserts `segment === [{x:0,y:0},{x:520,y:520}]` against a stub and is green while the live line does not exist. The concrete, checkable consequence: EVERY claim this tab makes about chart geometry — axis domains, is_today shading, the shape channel, ref-line placement, the composed bar+line split — is a claim about props, not about pixels, and nothing in the repo re-checks any of them in a browser. The one thing worth adding after this round is a Playwright assertion per chart of the form 'the element the card says is on this chart exists in the SVG' (count of .recharts-reference-line-line, count of stroke-dasharray bars, curve bounding-box height > N px) — and it should be pointed at מ9's aging chart and מ17's Lorenz diagonal too, because both are the same ReferenceLine-with-segment construct as מ6's and I did not open either.",
+ "screenshots": [
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m2-mode0.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m2-mode2.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m3-mode2.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m3-year-mode2.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m3-month-mode2.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m4-mode2.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m4-tier-mode2.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m6-mode2.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\m6-diagonal-clamped-proof.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\state-loading.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\state-error.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\state-empty-filtered.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\state-no-permission-staff.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\zoom-money-tile.png",
+  "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\719c2c51-1224-4dc9-87d1-19cd2ad34298\\scratchpad\\results\\lensB-management\\zoom-percent-tile.png"
+ ]
+}

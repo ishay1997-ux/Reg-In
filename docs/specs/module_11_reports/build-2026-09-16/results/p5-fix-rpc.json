@@ -1,0 +1,143 @@
+{
+  "file": "supabase/migrations/20260917005500_module11_j1_rpc_round4.sql",
+  "functions": [
+    {
+      "name": "report_m08_profitability",
+      "items": [
+        "[4]",
+        "[5]"
+      ],
+      "chunk_name": "module11_j1_m08",
+      "registry_row": true,
+      "md5_file": "58bcd4e808eef20bc08651b9033ac4e4",
+      "md5_live": "58bcd4e808eef20bc08651b9033ac4e4",
+      "equal": true,
+      "probe": "200 · so_what now names the FIRST displayed row and carries both figures: 'לפתוח את פרויקט 1416 — טכנולוגיות ענן ישראל, החריגה הגדולה ביותר בתקופה: 361 ₪ (21.1% מעל התכנון)' and rows[0] = {1416, 361 ₪, 21.1%} — they agree. rows dropped 30 ⇒ 8; any row with below_materiality=true: false; min(planned_hours) among ranked = 4.0. Footnote unchanged and still true: 125 projects · 700,697 ₪ below the floor (meta.below_materiality {count:125, amount:700697}); population.n = 241; tile 'פרויקטים שחרגו מהתקציב' = 30."
+    },
+    {
+      "name": "report_m09_aging",
+      "items": [
+        "[C8]"
+      ],
+      "chunk_name": "module11_j1_m09",
+      "registry_row": true,
+      "md5_file": "9acdd392990505eea72bbc650299f094",
+      "md5_live": "9acdd392990505eea72bbc650299f094",
+      "equal": true,
+      "probe": "200 · population.label now reads 'ארבעת מדרגי-האיחור' (0 occurrences of 'דלי' in the label). chart.note still carries 3 occurrences of 'דלי' — that paragraph is the one the brief told me not to touch; see not_done."
+    },
+    {
+      "name": "report_m14_hostess_overview",
+      "items": [
+        "[24]"
+      ],
+      "chunk_name": "module11_j1_m14",
+      "registry_row": true,
+      "md5_file": "6df160ee8b0da5cd34b35491d4e412fc",
+      "md5_live": "6df160ee8b0da5cd34b35491d4e412fc",
+      "equal": true,
+      "probe": "200 · definitions now: 'דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.9584) — כלומר מתחת ל-0.8338; דיילת ענבר = מתחת ל-95% ממנו (0.9104)'. Six-decimal strings on screen: none. meta.company_average/red_threshold/amber_threshold still 0.958358 / 0.833771 / 0.91044 (machine values, deliberately unchanged)."
+    },
+    {
+      "name": "report_m15_reliability",
+      "items": [
+        "[7]",
+        "[24] (the reference precision מ14 was aligned to)"
+      ],
+      "chunk_name": "module11_j1_m15",
+      "registry_row": true,
+      "md5_file": "611dec1a80077c66559674fb90ee0150",
+      "md5_live": "611dec1a80077c66559674fb90ee0150",
+      "equal": true,
+      "probe": "200 · definitions end: '… דיילת ענבר = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104 · הציון הוא בדיוק אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.' — 'reliabilityScore' present: false; '(הכרעה 38)' present: false. The identifier stays where it belongs: in the function's own comment on function and in schema.sql §24."
+    },
+    {
+      "name": "report_m16_quality_cost",
+      "items": [
+        "[6]"
+      ],
+      "chunk_name": "module11_j1_m16",
+      "registry_row": true,
+      "md5_file": "98448331baba42cb58c2eb5abd8f701f",
+      "md5_live": "98448331baba42cb58c2eb5abd8f701f",
+      "equal": true,
+      "probe": "200 · tile 'יקרות ומדורגות נמוך' sub = 'תעריף מעל החציון (43 ₪) וגם דירוג 3 ומטה' — same shape as the chart reference line on the same screen, 'חציון התעריף 43 ₪'. The raw tile value stays 43.27 (numeric, format 'money'); 📐4 whole-₪ rendering of raw numbers is the shell's job and did not change."
+    },
+    {
+      "name": "report_m20_satisfaction",
+      "items": [
+        "[C4]"
+      ],
+      "chunk_name": "module11_j1_m20",
+      "registry_row": true,
+      "md5_file": "f301d22fa7b6d6f9ef865a3b235ba1de",
+      "md5_live": "f301d22fa7b6d6f9ef865a3b235ba1de",
+      "equal": true,
+      "probe": "200 · meta.notes = ['הטופס מאפשר יותר מסיבה אחת; בפועל, בכל המשובים בתקופה נבחרה בדיוק אחת.', 'גרף המגמה השנתית מתעלם ממסנן התקופה במכוון ומציג את כל השנים.', 'הספירות מוצגות כ\"כמה מתוך כמה\" ולא באחוזים.'] — any '📐' token: false; any 'N מתוך M': false."
+    },
+    {
+      "name": "report_m21_drifting",
+      "items": [
+        "[C6]"
+      ],
+      "chunk_name": "module11_j1_m21",
+      "registry_row": true,
+      "md5_file": "1ba64fd167d429999c9da08513ac414e",
+      "md5_live": "1ba64fd167d429999c9da08513ac414e",
+      "equal": true,
+      "probe": "200 · the two values I measured on the tile's own query: only_personal = 3 (drift AND NOT dormant — the customers the 120-day rule misses) and dormant_all = 11 (what the 120-day rule alone finds). tile.value = 3 (unchanged), compare.value now = 3 (was 11), compare.label still 'כלל 120 הימים לבדו מוצא 11 לקוחות, ואת אלה הוא מפספס'. detail carries both: {only_personal: 3, dormant_rule_finds: 11}."
+    },
+    {
+      "name": "report_m22_notes",
+      "items": [
+        "[C5] (two of its three halves)"
+      ],
+      "chunk_name": "module11_j1_m22",
+      "registry_row": true,
+      "md5_file": "cd0af7f747533a04cdb1a980157d7229",
+      "md5_live": "cd0af7f747533a04cdb1a980157d7229",
+      "equal": true,
+      "probe": "200 · meta.run.approved_by = 'ישי אטיאס' (was 'ishay1997@gmail.com'); new meta.run.approved_by_email still holds the address; meta.run.runs[].approved_by = ['ישי אטיאס','ישי אטיאס']. notes no longer end in model ids (any note matching /gemini/i: false) while meta.models keeps the full breakdown [{gemini-3.5-flash-lite, 1 run, 386 rows}, {gemini-3.8-flash, 1 run, 40 rows}]. rows = 426 and run_count = 2, both unchanged."
+    }
+  ],
+  "schema_sql_updated": true,
+  "db_roadmap_row": true,
+  "gates": {
+    "npm run check:declared-counts": "exit=0 — 'check:declared-counts ✅ 6 מספרים מוצהרים נבדקו מול המקור, כולם תואמים' (scratchpad/j1/gate-counts.log)",
+    "npm run check:docs-structure": "exit=0 — 'check:docs-structure ✅ 160 קבצים נסרקו, אפס ממצאים' (scratchpad/j1/gate-docs.log)",
+    "npm run format:check": "exit=0 (scratchpad/j1/gate-format.log) — run because I edited two .md/.sql docs and Prettier gates .md",
+    "CR count": "0 on all three files I touched (perl -ne '$n+=tr/\\r//')",
+    "registry names": "8 rows, compared by NAME not count: module11_j1_m16 · _m08 · _m14 · _m15 · _m20 · _m21 · _m22 · _m09",
+    "grants": "proacl on all 8 = postgres=X | service_role=X | authenticated=X — no PUBLIC, no anon",
+    "blocked identity": "E2E_RECRUIT (role 'מנהלת גיוס ושיבוץ', permission_level='blocked' on 'כספים') ⇒ HTTP 403 / SQLSTATE 42501 on report_m08_profitability AND report_m09_aging"
+  },
+  "not_done": [
+    {
+      "item": "[C5] third half — the run bar says 'מציג את הריצה' (singular) while two approved runs are shown together",
+      "why": "The sentence is composed in JSX, not in SQL: src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx:165 — `text: \\`מציג את הריצה מ-${day}, אושרה ע\\\"י ${run.approved_by}\\`` (re-checked this turn). That file is outside my set AND outside the shell fixer's set (shell owns ReportsPage.jsx + components/** + api.js, not tabs/**). The server already hands it everything it needs — meta.run.run_count = 2 — so the fix is one template line."
+    },
+    {
+      "item": "[C8] remainder — 'דלי' still appears 3× on the מ9 screen, inside the mode-0 chart narrative paragraph",
+      "why": "Those three are in `v_chart_note` (the seven-line per-bucket paragraph). The brief says that paragraph is a question for Ishay and 'do not touch it'. I read that prohibition as narrower than the harmonisation instruction and obeyed the prohibition: I changed only the one occurrence outside it (population.label). ⇒ the screen still carries two terms until the paragraph is ruled on. If the ruling is 'keep the paragraph', the word swap is three `replace`s in the same function and can ride the next migration."
+    },
+    {
+      "item": "[C4] adjacent — the מ20 onboarding hint restates the base note's multi-reason caveat",
+      "why": "The hint text lives at src/lib/onboardingCopy.m11.customers.js:59 ('ספירות הסיבות נקראות מתוך שדה שמאפשר ללקוח לסמן יותר מסיבה אחת, ולכן הן מוצגות כ\"כמה מתוך כמה\" ולא באחוזים.'). The shell fixer's set names only onboardingCopy.m11.hostesses.js, so no fixer in this round owns the customers hint file. Now that the base note says the convention in the same words, the overlap is larger than it was — worth one line in the morning table."
+    },
+    {
+      "item": "[C7] year-ago comparison row — four wordings across nine surfaces",
+      "why": "Explicitly not mine per the brief; it touches nine functions and needs a wording ruling. Untouched, including on the eight functions I did edit."
+    },
+    {
+      "item": "[5] ripple — the on-screen hint `reports.profitability.sortWhy` now contradicts the table it describes",
+      "why": "src/lib/onboardingCopy.m11.finance.js:76 ends '… ושורה שמסומנת \"מתחת לרצפת-המהותיות\" יורדת לסוף הטבלה כי המכנה שלה זעיר מדי' (read this turn). After J1 no such row is in the table at all — the 22 below-floor over-threshold projects are excluded, and every returned row has below_materiality:false. The file is in no fixer's set this round (the shell fixer owns only onboardingCopy.m11.hostesses.js, for two hint keys), so it is unowned and stayed as it is. It is a mode-2 hint, i.e. text a first-week employee actually reads."
+    }
+  ],
+  "not_verified": [
+    "מ8's table went from 30 rows to 8 — I measured that independently (241 in population · 30 over threshold · 22 of them below the floor · 8 ranked · min(planned_hours) among the ranked = 4.0), but I did NOT get a product ruling on the consequence: the tile 'פרויקטים שחרגו מהתקציב' still reads 30 while the table now lists 8. The footnote explains the gap in words ('125 … בתוך האוכלוסייה ומחוץ לדירוג בלבד') but it counts the whole population, not the 22. Whether the tile should also carve them out is Ishay's, not mine — the spec (§📑ב#5) speaks only about the ranking.",
+    "The מ8 row key `below_materiality` is now false on every returned row. I kept the key (the export and any tab-side marker read it, and removing a contract key is not a text fix), but no reader was re-checked after the change — if a tab renders a 'below the floor' marker from it, that marker is now dead code rather than wrong output.",
+    "I verified every changed payload string through the RPC over PostgREST as a signed-in CEO, not in a browser. Nothing in this round was seen rendered on a screen — bidi behaviour of the two new parenthesised runs (מ8's '(21.1% מעל התכנון)' and מ16's '(43 ₪)') is inferred from the existing LRI/PDI pattern in the same functions, not observed.",
+    "The comparison between what מ14 and מ15 print is now textual only: both take the numbers from different variables (v_c_frozen vs v_c) that happen to be equal today (0.958358 in both metas). Nothing enforces that they stay equal; if the two windows ever diverge, the screens will disagree again at four decimals instead of six."
+  ],
+  "blind_spot": "Two places still describe מ8's table the way it behaved before J1, and both are checkable in one grep each. (1) ON SCREEN, and this is the one that matters: `src/lib/onboardingCopy.m11.finance.js:76` — the `reports.profitability.sortWhy` guided hint ends '… ושורה שמסומנת \"מתחת לרצפת-המהותיות\" יורדת לסוף הטבלה כי המכנה שלה זעיר מדי'. That row no longer exists: the live `rows` of report_m08_profitability now returns 8 rows, all with `below_materiality:false`. I read the line this turn; the file belongs to no fixer in this round, so nobody was going to catch it. (2) IN THE CARD: `docs/specs/module_11_reports/stage2-cards/cards-finance.md:297` carries the same sentence plus a second claim that the table sorts by %, which D-34 ⑧ already overturned. The mechanical check for both: `grep -n 'יורדת לסוף' src/lib/onboardingCopy.m11.finance.js docs/specs/module_11_reports/stage2-cards/cards-finance.md`, then call the RPC and count rows carrying `below_materiality:true` — it is 0."
+}

@@ -1,0 +1,171 @@
+{
+ "h2": {
+  "file": "supabase/migrations/20260916085900_module11_h2_sentence_isolation.sql",
+  "bytes": 179500,
+  "lines": 2921,
+  "cr_count": 0,
+  "applied_as": [
+   "module11_h2_m08",
+   "module11_h2_m07",
+   "module11_h2_m09",
+   "module11_h2_m12",
+   "module11_h2_m07_cols",
+   "module11_h2_m09_cols",
+   "module11_h2_m17",
+   "module11_h2_m14",
+   "module11_h2_m15"
+  ],
+  "applied_as_note": "9 schema_migrations rows for 7 functions (D-20). m07/m09 were applied before the coordinator's columns[].format item arrived and were re-applied from the same file; the two _cols rows are that fix-forward. Verified live: select name from supabase_migrations.schema_migrations where name like 'module11_h2%' -> exactly these 9.",
+  "md5_match": "7/7",
+  "md5_match_evidence": "md5(prosrc) == md5 of the file's $function$ body for all seven, checked after the last apply. Same query also proved signature, provolatile='s', prosecdef=true, proconfig=search_path='', authenticated=execute, anon=no-execute and comment-present are unchanged for all seven -- which closes the F2 re-verifier's 'assumed' item that only bodies had been compared."
+ },
+ "sites_fixed": [
+  {
+   "rpc": "report_m07_finance_overview",
+   "field": "population.label",
+   "finding": "D1",
+   "before": "אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · הוצאו: חובות אבודים (⁦2⁩) ופרויקטים שטרם חויבו · n=⁦35⁩ חשבוניות, נכון להיום — צילום-רגע שאינו מושפע ממסנן התקופה. שני האריחים התחתונים נשענים על אוכלוסיית דוחות-הכסף: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום.",
+   "after": "אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · הוצאו: חובות אבודים (⁦2⁩) ופרויקטים שטרם חויבו · ⁦n=35⁩ חשבוניות, נכון להיום — צילום-רגע שאינו מושפע ממסנן התקופה. שני האריחים התחתונים נשענים על אוכלוסיית דוחות-הכסף: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום."
+  },
+  {
+   "rpc": "report_m08_profitability",
+   "field": "population.label",
+   "finding": "D1",
+   "before": "אוכלוסייה: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום, אירוע ב-⁦01/01/2026–16/09/2026⁩ · הוצאו: פרויקטים פעילים ומבוטלים (⁦12⁩) · n=⁦241⁩. הדף אינו מציג פרויקטים פעילים — לפני שהאירוע התקיים השעות-בפועל תמיד קטנות מהמתוכננות, ולכן אין בו חריגה למדוד. ⁦125⁩ מהם מתחת לרצפת-המהותיות — בתוך האוכלוסייה, מחוץ לדירוג.",
+   "after": "אוכלוסייה: אירועים שהתקיימו ויצאה להם חשבונית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום, אירוע ב-⁦01/01/2026–16/09/2026⁩ · הוצאו: פרויקטים פעילים ומבוטלים (⁦12⁩) · ⁦n=241⁩. הדף אינו מציג פרויקטים פעילים — לפני שהאירוע התקיים השעות-בפועל תמיד קטנות מהמתוכננות, ולכן אין בו חריגה למדוד. ⁦125⁩ מהם מתחת לרצפת-המהותיות — בתוך האוכלוסייה, מחוץ לדירוג."
+  },
+  {
+   "rpc": "report_m09_aging",
+   "field": "population.label",
+   "finding": "D1",
+   "before": "אוכלוסייה: חשבוניות שנשלחו, טרם שולמו ולא נמחקו כחוב-אבוד · הוצאו: חוב אבוד (⁦2⁩) ופרויקטים שטרם חויבו · n=⁦35⁩ · נכון להיום — זהו צילום-רגע ולא סיכום-תקופה, ואינו מושפע ממסנן התקופה. ולגרף שלמטה אוכלוסייה צרה יותר: הוא מציג חוב באיחור בלבד — ארבעת דליי-האיחור, ⁦27⁩ חשבוניות. \"שוטף\" (⁦8⁩ חשבוניות · ⁦48,746 ₪⁩) הוצא מהגרף לאריח שלצידו, כי טרם הגיע מועד תשלומן — הן אינן חוב באיחור. האריחים והטבלה ממשיכים לכסות את כל ⁦35⁩.",
+   "after": "אוכלוסייה: חשבוניות שנשלחו, טרם שולמו ולא נמחקו כחוב-אבוד · הוצאו: חוב אבוד (⁦2⁩) ופרויקטים שטרם חויבו · ⁦n=35⁩ · נכון להיום — זהו צילום-רגע ולא סיכום-תקופה, ואינו מושפע ממסנן התקופה. ולגרף שלמטה אוכלוסייה צרה יותר: הוא מציג חוב באיחור בלבד — ארבעת דליי-האיחור, ⁦27⁩ חשבוניות. \"שוטף\" (⁦8⁩ חשבוניות · ⁦48,746 ₪⁩) הוצא מהגרף לאריח שלצידו, כי טרם הגיע מועד תשלומן — הן אינן חוב באיחור. האריחים והטבלה ממשיכים לכסות את כל ⁦35⁩."
+  },
+  {
+   "rpc": "report_m12_equipment",
+   "field": "population.label",
+   "finding": "D1",
+   "before": "אוכלוסייה: כל ⁦1,771⁩ שורות הלוגיסטיקה, כלל-הזמנים, כולל פרויקטים מבוטלים · הוצאו: אין · n=⁦1,771⁩, מתוכן ⁦109⁩ שייכות לאירועים שטרם התקיימו. בלוק ההזמנה למטה חותך לאירועים שטרם התקיימו (⁦16/09–16/10⁩).",
+   "after": "אוכלוסייה: כל ⁦1,771⁩ שורות הלוגיסטיקה, כלל-הזמנים, כולל פרויקטים מבוטלים · הוצאו: אין · ⁦n=1,771⁩, מתוכן ⁦109⁩ שייכות לאירועים שטרם התקיימו. בלוק ההזמנה למטה חותך לאירועים שטרם התקיימו (⁦16/09–16/10⁩)."
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "field": "population.label",
+   "finding": "D1",
+   "before": "אוכלוסייה: כל דיילת עם משמרת מאושרת אחת לפחות בחלון — n=⁦106⁩ דיילות, ⁦1,869⁩ משמרות · הוצאו: ⁦80⁩ דיילות רשומות שלא עבדה אף משמרת בחלון (מי שאינה במשחק אינה יכולה להיות מקופחת בו) · אזור המהירות נמדד על אוכלוסייה אחרת: ⁦2,479⁩ זימונים שנשלחו בחלון, ולא על דיילות — שני n נפרדים, מוצהרים בכל אזור.",
+   "after": "אוכלוסייה: כל דיילת עם משמרת מאושרת אחת לפחות בחלון — ⁦n=106⁩ דיילות, ⁦1,869⁩ משמרות · הוצאו: ⁦80⁩ דיילות רשומות שלא עבדה אף משמרת בחלון (מי שאינה במשחק אינה יכולה להיות מקופחת בו) · אזור המהירות נמדד על אוכלוסייה אחרת: ⁦2,479⁩ זימונים שנשלחו בחלון, ולא על דיילות — שני n נפרדים, מוצהרים בכל אזור."
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "field": "tiles[0].compare.label",
+   "finding": "D1 x2 (two n= in one label)",
+   "before": "התקופה המקבילה אשתקד · n=⁦97⁩ מול n=⁦106⁩ היום",
+   "after": "התקופה המקבילה אשתקד · ⁦n=97⁩ מול ⁦n=106⁩ היום"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "field": "population.label",
+   "finding": "D3",
+   "before": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+   "after": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה."
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "field": "tiles[0].sub",
+   "finding": "D3 x2",
+   "before": "1482 מתוך 1699 שיבוצים",
+   "after": "1,482 מתוך 1,699 שיבוצים"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "field": "population.label",
+   "finding": "D3",
+   "before": "אוכלוסייה: דיילות עם 3 משמרות מסומנות ומעלה בחלון · n=87 דיילות, 1683 שיבוצים · הוצאו: 11 דיילות עם פחות מ-3 משמרות מסומנות (מוצגות \"—\" ולא אחוז) · היעדרויות באישור מראש ומחלה — לא במונה ולא במכנה, כדי שדיילת שהודיעה מראש לא תיענש כמי שהבריזה.",
+   "after": "אוכלוסייה: דיילות עם 3 משמרות מסומנות ומעלה בחלון · n=87 דיילות, 1,683 שיבוצים · הוצאו: 11 דיילות עם פחות מ-3 משמרות מסומנות (מוצגות \"—\" ולא אחוז) · היעדרויות באישור מראש ומחלה — לא במונה ולא במכנה, כדי שדיילת שהודיעה מראש לא תיענש כמי שהבריזה."
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "field": "tiles[0].sub",
+   "finding": "D3 x2",
+   "before": "1482 מתוך 1699",
+   "after": "1,482 מתוך 1,699"
+  }
+ ],
+ "gini_parity": {
+  "m14_future": 0.4581,
+  "m17_future": 0.4581,
+  "clamp_added": false,
+  "how": "Called both as CEO with {p_from:'2025-09-16', p_to:'2027-09-16'}. Equal to each other AND equal to each function's own default-window value (0.4581), which is what a working clamp looks like. Confirmed in the code too: m14's gini CTE already carries 'and a.event_date <= least(v_to, v_today)' (live body line 288), the twin of m17's line 169.",
+  "call_was_not_vacuous": "On that same future call m14's excluded['refusals'] moves 343 -> 409 and m17's invites 2,479 -> 2,914, so p_to really did change behaviour; the Gini equality is a clamp, not an ignored parameter."
+ },
+ "values_unchanged": true,
+ "values_unchanged_evidence": "Full recursive before/after diff of all seven payloads plus the two future-window payloads: 0 numeric/boolean changes, 0 shape changes (no key added, removed or retyped, no array length moved), 22 string changes -- the 13 distinct sites, counted twice where a site appears in both the default and the future snapshot. meta.measured_at excluded (it is now()).",
+ "bidi_probe": "Chromium (Playwright), dir=\"rtl\" page, Arial, each string rendered BEFORE and AFTER and read per character through Range.getBoundingClientRect sorted by visual position -- the same method the hostesses re-verifier used. All 6 isolate sites flip from broken to correct: m07 '35=n'->'n=35' | m08 '241=n'->'n=241' | m09 '35=n'->'n=35' | m12 '1,771=n'->'n=1,771' | m17 population '106=n'->'n=106' | m17 compare '97=n mul 106=n'->'n=97 mul n=106'. 0 broken after. The bare (un-isolated) forms were re-measured and still read correctly with the new separators: m14 'n=1,699', m15 '1,683', and both tile subs '1,482 mitokh 1,699'. A full-page screenshot was also read by eye (scratchpad/h2/h2_bidi_eyecheck.png) and agrees.",
+ "payload_changes": [
+  {
+   "rpc": "report_m07_finance_overview",
+   "field": "columns[2].format",
+   "column": "sent_date",
+   "before": "text",
+   "after": "date"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "field": "columns[2].format",
+   "column": "sent_date (root level)",
+   "before": "text",
+   "after": "date"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "field": "columns[3].format",
+   "column": "due_date (root level)",
+   "before": "text",
+   "after": "date"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "field": "level-2 columns (not in the default payload)",
+   "column": "sent_date + due_date, drill level 2",
+   "before": "text",
+   "after": "date"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "field": "columns[4].format",
+   "column": "reliability",
+   "before": "ratio",
+   "after": "score"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "field": "columns[5].format",
+   "column": "last_shift_date",
+   "before": "text",
+   "after": "date"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "field": "columns[7].format",
+   "column": "reliability",
+   "before": "ratio",
+   "after": "score"
+  }
+ ],
+ "payload_changes_note": "Only columns[].format values moved. No key, no row value, no meta.extra_tables[].columns entry in these seven needed a change: m08 and m12 carry no date column and no score column; m15's and m17's extra tables carry none either (every columns[] declaration in all seven was listed against its live row value before deciding). m16 is named in the instruction but is not one of my seven -- another agent owns report_m16_quality_cost.",
+ "not_verified": [
+  "The app itself. The bidi proof is a bare dir=rtl page in Chromium with Arial, not ReportSurface inside the real typography, sidebar and CSS. The bidi algorithm is font-independent so the conclusion should hold, but no m11 screen was opened.",
+  "npm run gate / test:run were NOT run. My write scope is one .sql file: prettier --check on it exits 0 and its CR count is 0 (perl idiom, D-12), but nine src/ files are mid-edit by parallel agents right now, so a suite run would have measured their in-flight work, not mine.",
+  "The drill level-2 columns of report_m09_aging (sent_date + due_date, the second of the two format pairs) were changed in the body and are in the applied md5, but I never called m09 with a level-2 p_drill, so I did not see those two columns render as 'date' in a payload. The root-level pair I did see.",
+  "The client's 'score' and 'date' formatters exist in the WORKING TREE (src/lib/reportsFormat.js lines 113-124, uncommitted, another agent's edit) -- I read them but did not run them. formatByType falls back to 'text' for an unknown format without throwing, so even if that edit is reverted the screen degrades to the raw value rather than breaking.",
+  "Whether anything other than the seven RPCs reads these columns[].format values (an exporter, a print view). I checked the formatter map and ReportSurface's consumers only."
+ ],
+ "blind_spot": "m14's population sentence still mixes formatted and unformatted counts, and the migration I just wrote is the one owner of that sentence. After H2 it reads 'n=1,699 shibutzim etzel 98 dayalot ... 343 sirubim, 176 zimunim, 107 shibutzim' -- the 1,699 now carries a separator and the four exclusion counts do not, because I applied the rule the task states (4+ digits TODAY) rather than by quantity class. All four are assignment counts over a rolling 12 months, i.e. the same quantity as the 1,699; the day 'refusals' crosses 1000 the exact defect D3 names reappears inside the very sentence H2 edited, and nothing will flag it. THE CHECKABLE SCENARIO: call report_m14_hostess_overview as CEO with {p_from:'2015-09-16', p_to:'2027-09-16'} (a window wide enough to push an exclusion count over 999) and read population.label -- if any of the four exclusion numbers prints without a comma while the n= next to it prints with one, that is the same sentence carrying two conventions. The same holds for m15 tiles[1].sub / tiles[2].sub / meta.notes[0], which count shifts (167 / 43 / 16 today) and are unformatted. The one-line fix is mechanical and provably a no-op at today's values: wrap each in to_char(x, 'FM999,999,999'). I did not do it because the task defined the rule as '4+ digit' and a wider sweep is a scope call, not mine.",
+ "assumed": [
+  "That the seven repo bodies ARE the live bodies. Not assumed blindly -- measured: md5(prosrc) and length from pg_proc matched the $function$ body of E3 (m07) / E2 (m08,m09,m12) / F2 (m14,m15,m17) for all seven BEFORE any edit, so building from those files is building from the live bodies. The task said to pull pg_get_functiondef; I proved identity instead of re-downloading, and note it.",
+  "That the reliability column should become 'score' and the date columns 'date' as the coordinator instructed, even though C8 in docs/micro_guides/module-11.md lists the allowed format values as money|percent|gini|int|days|ratio|text -- neither 'score' nor 'date' is in that list. I followed the instruction (the client already implements both) and did NOT edit C8; the contract table is now behind the payload and needs a doc ripple.",
+  "That the parentheses around counts are fine. My Range readout reported ')12(' left-to-right, which looks broken but is not: it reports LOGICAL characters in visual order and cannot see glyph mirroring. The screenshot shows '(12)'. So no parenthesis was changed -- but the method's blind spot is worth knowing before anyone reuses it.",
+  "That FINANCE/RECRUIT/STAFF + CEO is the whole permission story for these seven. PROJECTS and LOGISTICS identities were not tested, and neither was a view-only holder."
+ ],
+ "regression_check": "Ran explicitly, not assumed. (1) Permission matrix re-run after the change: CEO 200 on all seven; FINANCE 200 on the finance four and 42501 on the hostesses three; RECRUIT the mirror image; STAFF 42501 on all seven -- byte-identical to the before-run. (2) Full payload diff: 0 numeric, 0 shape. (3) Live scan of every string field in all seven payloads (default + future windows): 0 occurrences of 'n=' followed by an LRI, and exactly 1 unseparated 4+ digit run -- m08's so_what project id 1427, which prints plain by rule. (4) One drift found and NOT touched, it is the tab builder's file: src/modules/11_reports/tabs/HostessesTab.test.jsx:188 still declares { key:'reliability', format:'ratio' } in its fixture; the fixture is self-consistent so no test fails, but it now disagrees with the server."
+}

@@ -1,0 +1,18 @@
+# Task P2ב-G · Finish the classification seeding run within the provider's free-tier quota
+
+**Repo:** `C:\Users\ishay\Reg-In`, branch `ishay/module-11-build`. You may edit ONLY `supabase/functions/classify-feedback/index.ts` and its `README.md`, deploy through MCP (`verify_jwt: true`), and run the function / the approve RPC as CEO (waiver `module-11.md §9 D-9`). Never commit. Never print a secret. Report in English.
+
+## State (read `<scratchpad>/results/p2b-classify.json` and the fixer's report summarised here)
+- Deployed v5 works: gates verified, retry on 5xx, provider error captured. Run 5 = `partial`, 40/426 classified by `gemini-3.8-flash`; 386 remain. Runs 1–4 = `failed`, 0 rows (leave them).
+- Blocked by the Gemini **free-tier request quota** for that model (`limit: 20` requests per window; 429 persists > 5.5 min). 426 / BATCH_SIZE 20 = 22 requests > 20.
+
+## Orchestrator rulings (technical, reversible)
+1. **BATCH_SIZE 20 ⇒ 30** (card ת2 says *"~20 הערות לקריאה"* — approximate; 386 / 30 = 13 requests). Record the deviation as `הנחתי` in the file header with the reason.
+2. **Model:** pick a Gemini model with a LARGER free-tier quota and structured-output support — verify on the current docs (`https://ai.google.dev/gemini-api/docs/models`, `https://ai.google.dev/gemini-api/docs/rate-limits`, and the `interactions`/structured-output pages; use WebFetch/context7) — prefer a current **flash-lite** class if one is listed as stable; set it as `DEFAULT_MODEL` in code (the `GEMINI_MODEL` env override stays). Set `thinking_level` to the lowest documented value if the interactions API accepts it for that model (classification needs no thinking); if the field is not documented for the chosen model, leave it out.
+3. Redeploy (v6). **Start a FRESH run** (`{ action: 'start' }` as CEO) — do not continue run 5 (its `model` column must stay true). The candidate filter excludes the 40 already-classified projects, so run 6 covers the 386. `continue` on 429 with the provider's retry-after honoured; give up after 3 quota refusals in a row and report.
+4. **If run 6 reaches `done`:** measure step 5 of `<scratchpad>/tasks/p2b-deploy-verify.md` over ALL insights (runs 5+6): rows = 426? · unclassifiable · topic distributions · `free_topic` non-null · red flags · quotes verbatim (`position(quote in feedback_notes) > 0` count) · human 'אחר' (33) vs model topics on those 33 projects · the card-20.7 population (16 by the keyword filter; the card says 20 — report both) and how many of them got a model negative topic · a 5-row sample. Then **approve run 5 and run 6** (`approve_feedback_ai_run`) as CEO; prove RECRUIT is refused (42501) and a second approval of run 6 is refused; `select run_id, status, ok_count, failed_count, approved_at from feedback_ai_runs order by 1`.
+5. **If quota blocks again:** stop, leave run 6 `partial`, report exactly what the provider said and how many rows exist; do NOT approve anything.
+6. `npx -y deno check --node-modules-dir=none supabase/functions/classify-feedback/index.ts` · `npx prettier --check` · CR = 0 (perl) · README updated (model, batch, quota facts with the date).
+
+## Output (final message = data, also `<scratchpad>/results/p2b-finish.json`)
+`{ "model": { "id", "why", "doc_url" }, "batch_size": 30, "deployed_version", "run6": { "run_id", "status", "sent", "ok", "failed", "continues", "quota_events" }, "totals": { "insights", "unclassifiable", "verbatim_quotes", "negative_topics": {...}, "positive_topics": {...}, "free_topic_non_null", "red_flags", "other_33_model_view": "...", "card_20_7": { "population", "topiced" } }, "approvals": [...], "story_4_true_now": bool, "not_verified", "blind_spot", "assumed" }`

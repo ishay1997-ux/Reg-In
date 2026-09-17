@@ -1,0 +1,679 @@
+{
+  "tab": "hostesses (דיילות · מ14 · מ15 · מ16 · מ17)",
+  "files": [
+    "src/modules/11_reports/tabs/HostessesTab.jsx",
+    "src/modules/11_reports/tabs/hostesses/ChipRow.jsx",
+    "src/modules/11_reports/tabs/hostesses/HintBlock.jsx",
+    "src/modules/11_reports/tabs/hostesses/payloadTransforms.jsx",
+    "src/modules/11_reports/tabs/HostessesTab.test.jsx",
+    "src/lib/onboardingCopy.m11.hostesses.js",
+    "src/lib/dates.js (one line only: `export` added to the existing WEEKDAY_NAMES_HE, with a why-comment; nothing else touched)"
+  ],
+  "surfaces": [
+    {
+      "id": "מ14 · מבט-על דיילות (hostess-overview)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": true,
+        "drill": null,
+        "hints": [
+          "reports.hostessOverview.purpose",
+          "reports.hostessOverview.redCount",
+          "reports.hostessOverview.gini",
+          "reports.hostessOverview.redTableSort",
+          "reports.hostessOverview.term.onTime",
+          "reports.hostessOverview.term.redHostess",
+          "reports.hostessOverview.term.gini",
+          "reports.hostessOverview.term.activeHostess",
+          "reports.hostessOverview.term.gapEvent",
+          "reports.hostessOverview.term.missingMonth"
+        ],
+        "deletion_test": true
+      },
+      "checklist_notes": {
+        "tiles_compare": "4 of 5 carry the 📐1 comparison half; `דיילות פעילות` has `compare: null` BY DESIGN — card ⑧H4: status is a current value with no history, and the absence is declared in words.",
+        "row_clickable": "FALSE, and it is not mine to fix — see defects[0]. All 6 rows carry `drill_key {kind:'hostess', id}` but `ReportSurface` wires `onDrill` into `ReportTable` only when `surface.drill === true`, and מ14 is not a 📐13 drill report (§9 D-14). Measured live: `report-row-drillable` count = 0.",
+        "doors": "FALSE — see defects[0]. Three tiles carry `target` and DO render as focusable buttons; the click reaches `ReportsPage.onDrill`, which writes the target object into the `drill` URL param instead of switching tab/report. Measured live URL after clicking `דיילות אדומות`: `/reports?tab=hostesses&report=hostess-overview&drill=%7B%22tab%22%3A%22דיילות%22...%7D`, page unchanged.",
+        "states": "loading · blank · empty-after-filter · error+נסי שוב · noPermission — all through `Envelope`; error+retry, blank and missing_params covered by unit tests; noPermission measured by the P2 re-verifier (FINANCE/STAFF get 42501).",
+        "deletion_test": "Verified twice: unit test at onboardingMode 0, AND live in Chromium — the CEO account is stored at mode 0, so every screenshot in scratchpad/visual/ IS the mode-0 page, and it is fully usable.",
+        "reconcile_16_09_11": "row_clickable and doors flipped to true after commit 11f347a9 - both measured live this round, not inferred (see reconcile_round.defects_closed_by_the_shared_layer)."
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "The chip row and the `purpose` hint sit ABOVE the population line; the mockup puts them below it and below the 'אז מה' line.",
+          "why": "`ReportSurface`'s slot order is fixed (renderTop → population → export → tiles → so_what → chart → table). The addendum §2 defines renderTop as 'above the population line'. Changing the order means editing ReportSurface, which is outside this step's write area.",
+          "rule": "addendum §2 (slot contract) · C6 (shared components are the only renderer)"
+        },
+        {
+          "what": "`tiles[].sub` (the mockup's sub-row under every tile value) does not reach the screen at all.",
+          "why": "`KpiTile.jsx` renders label · value · compare · window and nothing else — it reads neither `tiles[].sub` nor `compare.note`. Both are C8 fields the RPCs populate on every tile. Already recorded in the F2 migration header as 'measured and not fixed'. Cross-tab: it hits all four tabs.",
+          "rule": "C8 amendment ('tiles[].sub — the 📑ב visible-denominator sub-row … tab builders render them when present') vs. the actual component"
+        },
+        {
+          "what": "The mockup's 5-chip period row includes '12 חודשים'; the built shell offers החודש · 3 חודשים · השנה · הכול and defaults to 'השנה'.",
+          "why": "`reportsPeriod.js` / `FiltersBar` are the shell's. Consequence measured live: מ14 opens on 01/01/2026–16/09/2026, so the month chart shows 8 columns instead of 12 and n=1147 instead of 1699. The window LABEL follows the window correctly (the F2 `_m14_winlabel` fix works), so nothing lies — but the card's default window cannot be selected at all.",
+          "rule": "card ⑧H2 (open item, Ishay's ruling) · 📐17"
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ15 · אמינות והתייצבות (reliability)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": null,
+        "drill": null,
+        "hints": [
+          "reports.reliability.purpose",
+          "reports.reliability.absenceColumns",
+          "reports.reliability.scoreBasis",
+          "reports.reliability.queuePopulation",
+          "reports.reliability.term.score",
+          "reports.reliability.term.noShow",
+          "reports.reliability.term.latenessLevels",
+          "reports.reliability.term.withdrew",
+          "reports.reliability.term.frozenWindow",
+          "reports.reliability.term.scoreVisibility"
+        ],
+        "deletion_test": true
+      },
+      "checklist_notes": {
+        "doors": "null = not applicable. Ruling 33 is about overview tiles; no מ15 tile carries `target`, which is correct.",
+        "drill": "null — מ15 is not a 📐13 drill report (§9 D-14). It DOES use `p_drill` as the weekday cross-filter transport; that is ruling 4 (cross-filter), not 📐13.",
+        "ruling_37": "Both no-show columns present and named on screen: 'הבריזה · ב-12 חודשים' and 'אי-הגעה · אי-פעם'. The by-rating split is rendered ONCE, by the shell, from `meta.extra_tables[0]` ('אי-הגעה לפי דירוג'); I did NOT build a second table from `meta.no_show_by_rating`.",
+        "cross_filter": "Implemented as a weekday chip row wired to `onDrill({dow})`. Measured live: URL becomes `…&drill=%7B%22dow%22%3A4%7D`, pager 87 → 79 rows, `on_time_pct`/`reliability` become '—' for the day (⑧15.1), and the RPC adds the note 'הספירות בטבלה הן של אותו יום בלבד; עמודת \"אי-הגעה · אי-פעם\" אינה תלוית-יום ונשארת כפי שהיא.'",
+        "reconcile_16_09_11": "row_clickable and doors flipped to true after commit 11f347a9 - both measured live this round, not inferred (see reconcile_round.defects_closed_by_the_shared_layer)."
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "The weekday cross-filter is a chip row, not a click on a chart column.",
+          "why": "`ChartCard` accepts `onSelect` (mouse on <Bar>/<Cell> + a keyboard path through the sr-only table), but `ReportSurface` renders `<ChartCard chart={chart} />` without passing it — the tab has no way to reach it. The chip row gives the same capability with a real keyboard path and `aria-pressed`, and the selection lives in the URL. One-line fix for the shell: `ReportSurface` should accept and forward `onChartSelect`.",
+          "rule": "ruling 4 (cross-filter is mandatory) · card ①#8 · C6 (shared components are the only renderer)"
+        },
+        {
+          "what": "The two page filters ('אדומות וענבר בלבד' · 'פעילות בלבד') keep their state in component state, not in the URL.",
+          "why": "The tab props are `surface · filters · drill · onDrill · onWindow`; there is no `writeParams`. `onDrill` is the only URL channel and it triggers a full server refetch + a loading skeleton, which for a pure client-side filter is a worse screen. Consequence: F5 or 'back' resets both chips. Fix: the shell should pass a `setSurfaceParam(key, value)` that writes a namespaced URL param without changing `requestKey`.",
+          "rule": "root CLAUDE.md §4.2 (URL state) — knowingly deviated and reported, not silently"
+        },
+        {
+          "what": "Table shows 50 rows per page, not the mockup's 11.",
+          "why": "Card ⑧15.5 states it: 11 is a mockup convention, the live screen is 50 per page. The pager reads '1–50 מתוך 87'.",
+          "rule": "card ⑧15.5 · 📐8"
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ16 · איכות מול עלות (quality-cost)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": true,
+        "drill": null,
+        "hints": [
+          "reports.qualityCost.purpose",
+          "reports.qualityCost.scatterBasis",
+          "reports.qualityCost.tableSort",
+          "reports.qualityCost.term.hourlyRate",
+          "reports.qualityCost.term.rating",
+          "reports.qualityCost.term.median",
+          "reports.qualityCost.term.clientMarks",
+          "reports.qualityCost.term.quadrants",
+          "reports.qualityCost.term.noRatingBand"
+        ],
+        "deletion_test": true
+      },
+      "checklist_notes": {
+        "tiles_compare": "Only `תעריף שעתי חציוני` has a comparison half — and it is a POPULATION comparison ('חציון כלל המאגר (186)'), not a time comparison, exactly as card §③ declares. The other three are snapshot counters with no stored history (H4).",
+        "doors": "FALSE — `יקרות ומדורגות נמוך` carries `target: {report: 'אמינות והתייצבות'}` and is broken by the same shell issue as מ14. See defects[0].",
+        "default_chip": "'בלי דירוג בלבד' is ON at first render (card ①#7 · mockup `state.onlyNoRating = true` · `meta.default_filter: 'no_rating'`). Measured live: pager '1–17 מתוך 17' → toggle off → '1–50 מתוך 50'. The table heading changes with it, and the pager counts what is shown (📐8).",
+        "reconcile_16_09_11": "row_clickable and doors flipped to true after commit 11f347a9 - both measured live this round, not inferred (see reconcile_round.defects_closed_by_the_shared_layer)."
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "The 17 unrated hostesses are NOT drawn as a separate band below the axis — they are simply absent from the scatter (their `rating` is null and the Y domain is [1,5]).",
+          "why": "Card ⑧16.2 rules the band in, but `ChartCard`'s scatter has no off-domain band primitive and the component is outside this step's write area. Visible consequence, measured: the page opens filtered to exactly those 17, so the table below shows 17 rows whose points are not on the chart above. Fix options for the shell: an explicit `chart.offScaleBand` in ChartCard, or the RPC returning them at a sentinel Y with a labelled band.",
+          "rule": "card ⑧16.2 · 📐6 (domain 1–5 is locked) · C6"
+        },
+        {
+          "what": "The chip label is 'בלי דירוג בלבד', not the task file's 'רק בלי דירוג'.",
+          "why": "The approved mockup (line 889) and card ①#7 both say 'בלי דירוג בלבד'; the task file's wording is a paraphrase. C2 binds the mockup for appearance and the card for behaviour.",
+          "rule": "C2 · mockup 04_tab_hostesses_approved.html:889 · card §מ16 ①"
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ17 · הוגנות השיבוץ (fairness)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": null,
+        "drill": null,
+        "hints": [
+          "reports.fairness.purpose",
+          "reports.fairness.giniBasis",
+          "reports.fairness.responseTime",
+          "reports.fairness.term.gini",
+          "reports.fairness.term.lorenz",
+          "reports.fairness.term.shift",
+          "reports.fairness.term.responseTime",
+          "reports.fairness.term.p90",
+          "reports.fairness.term.rank1"
+        ],
+        "deletion_test": true
+      },
+      "checklist_notes": {
+        "rank1_adoption": "Verified live: the tile shows the label, the value '—', the window line 'טרם נמדד', and NO percent sign anywhere; the full declared-absence sentence reaches the screen through `meta.notes` (rendered by the shell's Footers). It never prints 0%.",
+        "two_n": "📑ב#14א's 'both n next to the arrow' is satisfied by the payload's own compare label, which renders live as 'התקופה המקבילה אשתקד · n=⁦91⁩ מול n=⁦92⁩ היום: 0.39' — base content at mode 0, not a hint.",
+        "R2": "The 'מאז הזימון האחרון' caveat reaches the screen through `meta.notes` and the definitions line; `term.responseTime` repeats the reason at mode 2.",
+        "doors": "null = not applicable; no מ17 tile carries `target`.",
+        "reconcile_16_09_11": "row_clickable and doors flipped to true after commit 11f347a9 - both measured live this round, not inferred (see reconcile_round.defects_closed_by_the_shared_layer)."
+      },
+      "deviations_from_mockup": [
+        {
+          "what": "Six tiles in ONE wrapping strip; the mockup draws two labelled zones (הוגנות · מהירות-איוש) with a tile group each.",
+          "why": "`ReportSurface` renders `payload.tiles` as a single `flex flex-wrap` strip. Splitting into zones needs either a `tiles[].zone` field honoured by the shell, or a second slot between tile groups. Mitigation in place: the population line declares both populations and both n explicitly, which is what ⑧17.1 says the zones exist to prevent confusing.",
+          "rule": "card ⑧17.1 · 📑ב#14א · C6"
+        },
+        {
+          "what": "The Lorenz equality diagonal ('חלוקה שווה') is not drawn.",
+          "why": "`ChartCard` supports it (`refLines[].axis === 'diagonal'`, a C8 amendment), but `report_m17_fairness` returns only the y-reference line ('מחצית הדיילות = 15.5% מהמשמרות'). Measured in the browser: the curve renders, the median line renders with its label, the 1:1 line is absent. RPC fix: add `{axis:'diagonal', from:{x:0,y:0}, to:{x:100,y:100}, label:'חלוקה שווה'}`.",
+          "rule": "📐6 (a named reference line) · card ⑩ב ('קו-השוויון המתויג \"חלוקה שווה\"')"
+        },
+        {
+          "what": "The 'הדיילות שעונות הכי לאט' table carries 94 rows with a pager, not the mockup's 8.",
+          "why": "Same convention as ⑧15.5 — the mockup's row count is a drawing convention, the live screen pages. It is `meta.extra_tables[0]`, rendered ONCE by the shell.",
+          "rule": "📐8 · card ⑧15.5 precedent"
+        }
+      ],
+      "labels_changed": []
+    }
+  ],
+  "labels_verified": {
+    "method": "Mechanical: parsed the דיילות row of `docs/specs/module_11_reports/spec.md §1.4` and compared its 17 tile labels and 4 page titles against the distinct tile labels in the four live payloads (results/payloads_h4).",
+    "result": "17/17 tile labels identical, 4/4 titles identical. Zero in spec but not in payload, zero in payload but not in spec. No label was re-derived or patched in the UI."
+  },
+  "strings_authored": [
+    {
+      "text": "מסנני-דף",
+      "rule": "mockup `.pagefilters .flabel` (04_tab_hostesses_approved.html:665) — copied, not invented"
+    },
+    {
+      "text": "אדומות וענבר בלבד · פעילות בלבד",
+      "rule": "mockup lines 666/669 + card §מ15 ①#6 — copied verbatim"
+    },
+    {
+      "text": "בלי דירוג בלבד",
+      "rule": "mockup line 889 + card §מ16 ①#7 — copied verbatim"
+    },
+    {
+      "text": "× נקי בחירה",
+      "rule": "mockup line 673 + `spec.md §1.5` (4/4 live call sites are feminine imperative `נקי <noun>`)"
+    },
+    {
+      "text": "יום בשבוע",
+      "rule": "NEW — the label of the weekday selector, which does not exist in the mockup (there the selection is a chart click). Two words, noun phrase, כ8/כ19 compliant."
+    },
+    {
+      "text": "⁦N⁩ הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך  /  אין דיילות מתחת לסף",
+      "rule": "mockup `h3` line 588 + card §מ14 ①#7 empty state. N is DERIVED from `rows.length` (📐8), never typed."
+    },
+    {
+      "text": "דיילות לפי ציון-אמינות · מהנמוך לגבוה",
+      "rule": "mockup `h3#relTitle` line 806 — copied verbatim"
+    },
+    {
+      "text": "הדיילות הפעילות שאין להן דירוג · מיון לפי משמרות, מהעמוסה  /  כל הדיילות הפעילות · מיון לפי משמרות, מהעמוסה",
+      "rule": "mockup `h3#qcTitle` line 1096 (chip ON). The chip-OFF variant is NEW, built on the same pattern, because the mockup's JS swaps the title with the chip."
+    },
+    {
+      "text": "הדיילות לפי מספר המשמרות בחלון · מהעמוסה",
+      "rule": "mockup `h3` line 1284 is '8 הדיילות העמוסות ביותר · מיון לפי משמרות בחלון'. The '8' was dropped because the live table pages 92 rows — a typed count next to a pager that says 92 is the exact defect 📐8 was written about."
+    },
+    {
+      "text": "מוצגות ⁦N⁩ שורות",
+      "rule": "NEW — `aria-live` announcement after a chip toggle. 📐9③ requires the announcement; `ReportSurface` does not pass `announcement` to `ReportTable`, so it lives next to the control that caused it. Pattern from the mockup's `say()`."
+    }
+  ],
+  "copy_deviations_from_card_section_10": [
+    {
+      "keys": [
+        "reports.hostessOverview.purpose",
+        "reports.hostessOverview.redTableSort",
+        "reports.qualityCost.scatterBasis",
+        "reports.fairness.giniBasis"
+      ],
+      "what": "Data counts removed: 'תור שש האדומות' · 'אלה כל שש האדומות' · 'על 50 הפעילות … לא של כל 186 הרשומות … 43.27 ₪ ולא 44.00 ₪' · '95 דיילות אז מול 106 היום … מ-0.43 ל-0.46'.",
+      "rule": "onboarding-layer-contract §5ג (Ishay 11/09/2026) — a live count inside onboardingCopy.js is a literal no query updates. The meaning is kept in words, and every one of those numbers is on screen at level 0 from the query."
+    },
+    {
+      "keys": [
+        "reports.hostessOverview.redCount",
+        "reports.reliability.purpose",
+        "reports.fairness.responseTime"
+      ],
+      "what": "State assertions that were true on the card's day removed: 'כולן מסומנות \"פעילה\"' · 'כולן פעילות ומוצעות היום בשיבוץ' · 'השורות האיטיות מרוכזות בדירוג אחד'. Replaced with a sentence that points the reader at the live column that answers it.",
+      "rule": "Same reasoning as §5ג, extended from counts to one-day facts. This is a JUDGEMENT CALL, not a written rule — flag it for Ishay if he wants the card's wording back."
+    },
+    {
+      "keys": [
+        "reports.fairness.giniBasis"
+      ],
+      "what": "§5ג's one declared exception — the Gini hint must carry both n, INJECTED from the query — cannot be honoured through `<Hint id>`, which takes a key and renders a fixed string (`src/components/Hint.jsx:33`). The text now points at the tile's comparison line, where the RPC does render 'n=⁦91⁩ מול n=⁦92⁩ היום' live.",
+      "rule": "onboarding-layer-contract §5ג (the exception) vs. `Hint.jsx` (the mechanism) — reported as a conflict, satisfied on screen rather than in a literal."
+    },
+    {
+      "keys": [
+        "reports.hostessOverview.gini",
+        "reports.fairness.purpose"
+      ],
+      "what": "Two hints stopped pointing at elements that do not exist in the built screen: 'התת-שורה מדברת ברבעים' (tiles[].sub is not rendered — see defects[1]) and 'שני ה-n מוצהרים בנפרד בכל אזור' (there are no zones — see מ17 deviations).",
+      "rule": "copy rule כ15 — do not point at something that is not visible."
+    }
+  ],
+  "defects_found": [
+    {
+      "id": "H-1",
+      "severity": "blocking for rulings 19 and 33",
+      "title": "Neither tile doors nor clickable rows navigate anywhere — the shell has no navigation for `tiles[].target` or `rows[].drill_key`.",
+      "evidence": "`ReportsPage.jsx` wires `onDrill={(nextDrill) => writeParams({ drill: JSON.stringify(nextDrill) })}`; `ReportSurface.jsx` calls `onDrill(target)` for tiles and passes `onDrill` to `ReportTable` only when `surface.drill === true`. Measured live in Chromium: clicking `דיילות אדומות` on מ14 left the page on מ14 and put the whole target object into `?drill=…`; `report-row-drillable` count on מ14 = 0 while all 6 rows carry `drill_key {kind:'hostess', id}`.",
+      "impact": "Ruling 33 ('every overview tile is a door') and ruling 19 ('the whole row is the link, to the hostess card מ4') are both invisible on this tab — and on the other three, since the mechanism is shared.",
+      "fix": "`ReportsPage` should branch: a `target` with `{tab, report}` ⇒ `writeParams({tab, report, drill})`; a `drill_key` with `{kind:'hostess', id}` ⇒ `navigate('/hostesses/' + id)` (cross-module door, not a report drill). And `ReportSurface` should pass `onDrill` to `ReportTable` whenever rows carry `drill_key`, not only on drill surfaces.",
+      "owner": "shell (ReportsPage.jsx + ReportSurface.jsx) — outside this step's write area, NOT patched"
+    },
+    {
+      "id": "H-2",
+      "severity": "high, cross-tab",
+      "title": "`KpiTile` renders neither `tiles[].sub` nor `compare.note`.",
+      "evidence": "`src/modules/11_reports/components/KpiTile.jsx` — `sub={<><CompareLine …/>{tile.window && …}</>}`; `CompareLine` reads `label`/`value`/`direction`/`delta` only. All four hostess RPCs populate `sub` on every tile (e.g. `active_hostesses.sub = 'מתוך 186 רשומות · 106 עבדו בחלון'`, `gini.sub` = the quarters sentence ⑧14.1 mandates), and מ17's `gini.compare.note` carries the population-shift caveat. Already recorded as a known gap in the F2 migration header.",
+      "impact": "Every visible-denominator sub-row of the mockup is missing on all four tabs; ⑧14.1 and ⑧14.4 are not satisfied on screen.",
+      "fix": "Two lines in `KpiTile`: render `tile.sub` as a block line above `CompareLine`, and render `compare.note` after the compare value.",
+      "owner": "components/KpiTile.jsx — outside this step's write area, NOT patched"
+    },
+    {
+      "id": "H-3",
+      "severity": "high — makes the sort column unreadable",
+      "title": "`ציון אמינות` renders as `0.8` for all six red hostesses (format `ratio` = one decimal).",
+      "evidence": "Screenshot `scratchpad/visual/hostess-overview.png`: the six scores 0.7589 / 0.7643 / 0.7752 / 0.7980 / 0.8130 / 0.8141 all render `0.8` — in the very column the table is sorted by, next to a definitions line that states the red threshold as `0.833771`. Same column exists on מ15.",
+      "impact": "The reader cannot see the order that 'סדר-הטיפול' rests on, and cannot tell whether a score crosses the threshold.",
+      "fix": "Add a `score` formatter (three decimals) to `src/lib/reportsFormat.js` and have the hostess RPCs declare `format: 'score'` on the `reliability` column. I deliberately did NOT re-map it to `gini` (two decimals) in `transformPayload`: that would still collapse two pairs and would be a local half-fix of a shared formatter.",
+      "owner": "src/lib/reportsFormat.js + the F-series migration — outside this step's write area, NOT patched"
+    },
+    {
+      "id": "H-4",
+      "severity": "medium — conflict question, not a bug",
+      "title": "📐4's 'שקלים שלמים בכל מקום' turns hourly rates into `43 ₪ / 42 ₪ / 41 ₪` on מ16.",
+      "evidence": "Screenshot `scratchpad/visual/quality-cost2.png`: the `תעריף שעתי` column and the median tile show whole shekels, while the chart's own reference line right above them reads `חציון התעריף 43.27 ₪` and the card's whole story rests on `44.60 ₪` vs `43.27 ₪`.",
+      "impact": "The report's headline question ('מי שווה את התעריף שלה') is unanswerable from the table, and two precisions for the same number appear on one screen.",
+      "fix": "This is Ishay's ruling, not mine: either 📐4 gains a carve-out for per-hour prices (agorot shown), or the card's numbers move to whole shekels. Reported per C7 as two sources side by side, NOT patched.",
+      "owner": "processes-approved.md §📐4 — a ruling, not code"
+    },
+    {
+      "id": "H-5",
+      "severity": "medium — fixed in my file, root cause is the RPC",
+      "title": "מ17's response times are hours but declared `format: 'days'`.",
+      "evidence": "`report_m17_fairness` returns `median_response = 9.9`, `p90_response = 20.7` with `format: 'days'` and `sub: 'שעות, …'`. `reportsFormat.FORMATTERS.days` rounds to an integer and appends 'ימים' ⇒ the screen said `⁦10⁩ ימים` for a 9.9-hour response.",
+      "fix_applied": "`payloadTransforms.fixResponseTimeUnit` maps those two tile keys from `days` to `ratio` — conditional and idempotent, so it stops firing the day the SQL returns `ratio`. Live after the fix: `9.8` and `20.8`, no unit word; the unit is in the definitions line ('זמן-תגובה = … בשעות'), which is base at level 0.",
+      "proper_fix": "The RPC should declare a correct format (and, ideally, `reportsFormat` should gain an `hours` formatter so the unit is on the value).",
+      "owner": "F-series migration (+ reportsFormat) — worked around in my tab and reported"
+    },
+    {
+      "id": "H-6",
+      "severity": "high, cross-tab — fixed in my file, root cause is shared",
+      "title": "The 📐1 comparison half lost its unit and its precision on every tile of every tab.",
+      "evidence": "C8 defines `compare: {value, label, direction}` with NO `format`; `KpiTile.CompareLine` calls `formatByType(compare.value, compare.format)` ⇒ `undefined` falls through to `text`. Measured live BEFORE the fix: 'התקופה המקבילה אשתקד: 89' (should be `88.7%`) and '(n=91): 0.3873' (should be `0.39`) — four decimals in the compare half next to `0.46` in the value of the same tile.",
+      "fix_applied": "`payloadTransforms.inheritCompareFormat`, applied to all four hostess surfaces: when `compare.format` is absent it inherits `tile.format`. Additive only, idempotent, stops firing once `compare.format` arrives. Measured live AFTER: `⁦89.0%⁩`, `0.39`, `⁦96.2%⁩`.",
+      "proper_fix": "One of: C8 adds `compare.format` and the RPCs emit it, OR `CompareLine` falls back to `tile.format`. The second is two characters and fixes all four tabs at once — recommended.",
+      "owner": "components/KpiTile.jsx or C8 — worked around in my tab and reported; the other three tabs are still showing raw numbers"
+    },
+    {
+      "id": "H-7",
+      "severity": "low",
+      "title": "`last_shift_date` on מ14 renders as `2026-08-20` (ISO) because the column declares `format: 'text'`.",
+      "evidence": "Screenshot `hostess-overview.png`, column 'משמרת אחרונה'. `formatByType(v,'date')` would give `20/08/2026` through the existing `formatDate`.",
+      "fix": "One word in the RPC: `'format', 'date'` on that column. NOT patched here — unlike H-5/H-6 this is a single cosmetic column and the cheapest correct fix is in the migration.",
+      "owner": "F-series migration"
+    },
+    {
+      "id": "H-8",
+      "severity": "medium",
+      "title": "The דיילות reports open on the calendar year, not on the 12-month window they are defined over.",
+      "evidence": "`DEFAULT_PERIOD = 'year'` and the period chips are החודש · 3 חודשים · השנה · הכול. Measured live: מ14 opens at 01/01/2026–16/09/2026, the month chart shows 8 columns instead of 12, n = 1147 instead of 1699, and the Gini reads 0.46 on a different population than the card's. Nothing LIES — the window labels follow the window correctly — but the window the cards specify cannot be selected at all.",
+      "fix": "Card ⑧H2 is exactly this, already open for Ishay: add a fifth '12 חודשים' chip (globally, per ת1) and decide whether it is the default for this tab.",
+      "owner": "reportsPeriod.js / FiltersBar + Ishay's ruling"
+    }
+  ],
+  "slots_used": {
+    "מ14 · hostess-overview": [
+      "transformPayload (inheritCompareFormat)",
+      "renderTop (purpose hint)",
+      "renderBeforeChart (redCount + gini hints, below the tile strip per §4ב)",
+      "renderBeforeTable (table heading + redTableSort hint)",
+      "renderExtras (6 term hints, below the definitions line)"
+    ],
+    "מ15 · reliability": [
+      "transformPayload (mapChartLabels · onlyFlag/onlyActive row filters · inheritCompareFormat)",
+      "renderTop (purpose hint + two chip rows: page filters and the weekday selector)",
+      "renderBeforeTable (table heading + absenceColumns hint)",
+      "renderExtras (scoreBasis + queuePopulation + 6 term hints)"
+    ],
+    "מ16 · quality-cost": [
+      "transformPayload (onlyNoRating row filter, default ON · inheritCompareFormat)",
+      "renderTop (purpose hint + the 'בלי דירוג בלבד' chip)",
+      "renderBeforeChart (scatterBasis hint)",
+      "renderBeforeTable (chip-dependent table heading + tableSort hint)",
+      "renderExtras (6 term hints)"
+    ],
+    "מ17 · fairness": [
+      "transformPayload (fixResponseTimeUnit · inheritCompareFormat)",
+      "renderTop (purpose hint)",
+      "renderBeforeChart (giniBasis hint)",
+      "renderBeforeTable (table heading)",
+      "renderExtras (responseTime hint + 6 term hints)"
+    ]
+  },
+  "payload_changes_reconciled": [
+    "`results/p2fix-hostesses.json` read in full: every F2 finding PASS, `payload_changes: []`, no F3 planned. Nothing to reconcile.",
+    "Its one stated digit drift (gini 0.4581 vs the 10/09 baseline 0.4559; shares 55.8/16.3/26.4 vs 55.3/16.2/26.0; max 49 vs 48) is six days of rolling window, not a defect. No number is hard-coded in my tab: every figure on screen comes from the payload, and the fixtures in my test file are labelled as a 16/09 live measurement.",
+    "Payloads re-fetched three times as CEO (08:2X, 09:0X, 09:2X) and diffed on `population.label`, `so_what`, `definitions`, every tile's `label`/`format`/`window`/`sub` and `compare.format`, `columns[].key` and `meta` keys: NO string or shape change between runs.",
+    "m15 verified to return BOTH `meta.no_show_by_rating` and `meta.extra_tables[0]` ('אי-הגעה לפי דירוג'). The by-rating data is rendered ONCE, by the shell, from `extra_tables`; I build no table of my own from `no_show_by_rating`.",
+    "m16 verified: 50 rows, 17 unrated, `meta.default_filter: 'no_rating'`, `meta.no_rating_count: 17`, `meta.row_total: 50`, `meta.sort` present — the client chip filters to 17 and the pager counts 17 (📐8)."
+  ],
+  "tests": "`src/modules/11_reports/tabs/HostessesTab.test.jsx` — 22 tests, all green, and `npx vitest run src/modules/11_reports` is 148/148 green (8 files), so no other tab regressed. Coverage: five §1.4 tile labels with 📐4 precision on מ14 · the three base lines (📐2 · 📐23 · 📐16) · the compare half inheriting the tile format (the H-6 regression test) · the derived table heading and its empty-state variant · `dow` 0–6 mapped to Hebrew weekday names · the weekday row not rendering at all when `label_source` is absent · the two מ15 chips intersecting with the pager counting what is shown · the weekday selection calling `onDrill({dow:4})` and clearing to `null` · both no-show columns present and `meta.extra_tables` rendered exactly once · מ16 opening filtered with the heading swapping on toggle · מ17's adoption tile declaring absence with no percent · מ17's response times not printing 'ימים' · network failure ⇒ error envelope + 'נסי שוב' + a second call on retry (and NOT an empty state) · `missing_params` in Hebrew with the parameter's name · export disabled with 'אין שורות לייצא' · a wholly empty payload ⇒ blank, not error · the deletion test at mode 0 · hints rendering at mode 2 · and four structural tests that scan the tab's own source files for `'reports.*'` keys and assert every one resolves in the copy file, that no copy key is unused, that the count is exactly 38, that no entry carries `pointer`, and that no sentence contains any of the eight stripped data counts.",
+  "gates": {
+    "vitest_tab": "npx vitest run src/modules/11_reports/tabs/HostessesTab.test.jsx — exit 0, 22/22",
+    "vitest_module": "npx vitest run src/modules/11_reports — exit 0, 148/148 (8 files)",
+    "eslint_mine": "exit 0 on HostessesTab.jsx, HostessesTab.test.jsx, tabs/hostesses/, onboardingCopy.m11.hostesses.js, dates.js (cognitive complexity ≤ 20, no warnings)",
+    "eslint_tabs_dir": "exit 1 — one error in `tabs/executive/surfaceDoors.js:101` ('tileSubLines' is not defined), a file being written by the executive builder in parallel. NOT mine.",
+    "prettier": "npx prettier --check on all seven owned files — exit 0",
+    "dup": "npm run dup — exit 0. Total 0.78 % (cap 3 %); zero clones anywhere under `modules/11_reports/tabs/`.",
+    "knip": "npm run deadcode — exit 0, zero unused exports (log at results/knip-hostesses.log). `WEEKDAY_NAMES_HE` has a consumer; all seven `payloadTransforms` exports are imported by the tab.",
+    "check_bidi": "npm run check:bidi — exit 1, ONE finding, and it is not mine: `src/lib/reportsCustomers.js:98` (a JSDoc line containing `1.5×0`). Zero findings in any file I own.",
+    "CR": "perl -ne '$n+=tr/\\r//' on all seven owned files — CR=0 on every one",
+    "browser": "Chromium 1280px, signed in as CEO through a throwaway Playwright config (credentials read from .env.local by the config, never printed; config and spec deleted afterwards). All four surfaces: `scrollWidth − clientWidth = 0`, ZERO console errors, zero page errors. Screenshots kept at scratchpad/visual/ (hostess-overview.png · reliability.png · quality-cost2.png · fairness.png · fairness-top.png · m15-top.png · reliability-dow4.png)."
+  },
+  "assumed": [
+    {
+      "what": "הנחתי that the weekday cross-filter should be a chip row rather than a chart click.",
+      "source_checked": "`ReportSurface.jsx` renders `<ChartCard chart={chart} />` with no `onSelect`; `ChartCard` accepts one. Card ①#8 wants the chart column; ruling 4 wants the capability. I chose capability + keyboard access over the mockup's mechanism, and reported it."
+    },
+    {
+      "what": "הנחתי that page-filter chip state may live in component state rather than the URL.",
+      "source_checked": "The tab prop contract (`tabs/ExecutiveTab.jsx` header, addendum §1) offers only `onDrill`, which forces a server round-trip and a full-surface loading skeleton. Root `CLAUDE.md §4.2` wants URL state; I deviated knowingly and named the fix."
+    },
+    {
+      "what": "הנחתי that a visible `<h3>` above each table is wanted, with the count derived from `rows.length`.",
+      "source_checked": "The mockup draws `h3` above every `.tbl-card`; `ReportTable` renders only an `sr-only` caption; `ExtraTable` inside `ReportSurface` already renders a visible `h3` in exactly this style, so the two now match."
+    },
+    {
+      "what": "הנחתי that hint anchors map to slots as: population ⇒ renderTop · tile-anchored and chart-anchored ⇒ renderBeforeChart · table-anchored ⇒ renderBeforeTable · definitions-anchored and term blocks ⇒ renderExtras.",
+      "source_checked": "`onboarding-layer-contract §4ב` ('a standalone line BENEATH the block it explains, never a child of a tile') + the slot order in `ReportSurface`. מ17's `responseTime` anchor is the SECOND table (an extra table), so its hint sits in `renderExtras` rather than above the main table."
+    },
+    {
+      "what": "הנחתי the two client-side corrections (H-5 unit, H-6 compare format) are mine to apply because they are display mechanics, while the precision choices (H-3 score, H-4 shekels) are not, because they are definitions someone ruled.",
+      "source_checked": "C7 — 'a MECHANISM measured broken is a real defect … what may not be fixed on your own authority is the recorded PRODUCT decision.' Both fixes are idempotent and self-disabling."
+    }
+  ],
+  "not_verified": [
+    "The page has NEVER been rendered at onboarding mode 2 in a real browser — only in jsdom. The CEO account is stored at mode 0, and raising it means writing to `notification_preferences`, which is a data change I did not make. ⇒ the 38 hints are proven to RESOLVE (unit test + the source-scan test) but their live layout, length and crowding on four dense pages are unmeasured.",
+    "`p2-h2-sentences.json` does not exist as of 09:2X and no H2 string change has landed: I re-fetched all eight payloads at 09:2X and diffed every string field against the 09:0X capture — identical. If the H2 fix lands later it changes only strings inside the payload, which my tab renders verbatim and never parses, so nothing in my files should need to change. Unverified claim: that the fix will not alter a tile `key`.",
+    "The five envelope states are proven for loading/blank/error/missing-params (unit) and noPermission (the P2 re-verifier's live 42501 for FINANCE/STAFF). I did NOT drive 'empty-after-filter' live — it needs a period/customer combination that returns zero rows, and I did not find one on this data.",
+    "Export was verified only for the disabled state and the two caption lines. I never clicked 'ייצוא לאקסל' and never opened the produced file, so 'the drilled/filtered export contains exactly the visible rows' and `rightToLeft: true` are UNVERIFIED for this tab (the mechanism has its own tests in `reportsExport.test.js`).",
+    "RECRUIT's view of this tab (the only non-CEO role with `דיילות` edit) was not opened in a browser by me; the permission matrix comes from `p2fix-hostesses.json`'s signed-in calls.",
+    "Accessibility beyond what is structural: `aria-pressed` on chips, `aria-sort` on the sorted column, `aria-live` next to the chips and a real `<h1>` are all present in the DOM, but no axe scan was run on these four pages."
+  ],
+  "blind_spot": [
+    "🔴 **The one I would check first: the mode-2 screen is a guess.** מ14 and מ15 each carry TEN hint paragraphs; `reports.reliability.scoreBasis` alone is ~90 words, and four of them land in `renderExtras` one after another at the bottom of the page. `onboarding-layer-contract §4ב` measured that a hint in the wrong place stretched a tile row from 192px to 373px — I avoided that (hints are standalone lines), but I never saw the stacked result. **Checkable in one step:** set `notification_preferences.onboarding_mode = 2` for the CEO user, open `/reports?tab=hostesses&report=reliability` at 1280px, and count how far the page grows and whether the term block reads as six separate explanations or as a wall.",
+    "🔴 **`transformPayload` runs on every render and is not memoised.** `ReportSurface` calls `transformPayload(rawPayload)` in the render body, so every chip toggle re-maps the chart data and re-filters the rows; on מ15 that is 6 chart rows + 87 table rows, trivial today. **The trap is the next person:** anyone who adds a text input to `renderTop` gets a full payload re-map per keystroke, silently. **Checkable:** put a `console.count()` inside `mapChartLabels`, toggle a chip five times, and read the counter — it should be 5, and it is; then add a controlled input and watch it become per-keystroke.",
+    "🔴 **My weekday selector and the shell's `drill` param share one namespace.** I write `{dow: N}` into the same URL key the drill surfaces use for `{kind, id}`. `ReportsPage.setReport` clears it on every report switch, so today they cannot collide — **but that is the only thing preventing it**, and it is a line in a file I do not own. **Checkable:** open `/reports?tab=hostesses&report=reliability&drill=%7B%22kind%22%3A%22customer%22%2C%22id%22%3A401%7D` by hand — `Number.isInteger(drill.dow)` is false so no day is selected, the RPC ignores the unknown object and echoes it, and the page renders normally. It degrades safely; it is not namespaced.",
+    "⚠️ **What I could not test at all:** that the four surfaces look right to someone who knows the business. Every assertion here is structural (a testid exists, a number formats, a URL changes). Whether 'הדיילות לפי מספר המשמרות בחלון · מהעמוסה' is the heading Ishay wants over a 92-row table, or whether six tiles in one strip reads as one report or two, is a product judgement that only he can return."
+  ],
+  "reconcile_round": {
+    "when": "16/09/2026 11:2X-11:5X, after commits 11f347a9 (shared layer) and 902bbc7f (H2 server sentences)",
+    "removed": [
+      "payloadTransforms.inheritCompareFormat - DELETED. KpiTile.CompareLine now formats through `compare.format ?? tile.format` (11f347a9, KpiTile.jsx:61), so the workaround is dead code. Verified live: the compare halves read 89.0% and 0.39, and the fix now applies to all four tabs instead of only mine.",
+      "The transformSurface + transformFor wrapper pair - collapsed back to one transformFor, since inheritCompareFormat was the only reason for the split.",
+      "The test 'חצי-ההשוואה יורש את פורמט-האריח' - it now belongs to KpiTile.test.jsx, which owns the behaviour. Keeping a copy here would have asserted the shared component twice.",
+      "Nothing else was a workaround: I never built a local sub line, a local row-cap note, or a local so_what - the shell owns all three and always did."
+    ],
+    "changed": [
+      "payloadTransforms.disableCrossFilter - NEW. Sets chart.filter_key = false on מ16's scatter. Measured with a script that runs ReportSurface's own autoFilterKey over the live payloads: מ16 is the ONLY hostess surface where the auto-detect fires (xKey='hourly_rate' is a row key and the values intersect), and the filter it would build - every hostess on that exact rate - is not a meaning the page has. The correct server fix (chart.filter_key: 'hostess_id' plus that key on the rows) is reported, not done here.",
+      "מ14 · מ15 · מ17 - NO auto-detected filter, measured not assumed: month, dow and x are none of them row keys, so autoFilterKey returns null and no chart-select-* button is rendered at all. Confirmed live on all four surfaces: crossfilterButtons = 0. This agrees with the shared agent's own crossfilter_off list.",
+      "fixResponseTimeUnit - KEPT. H2 (902bbc7f) changed only date and score column formats; report_m17_fairness still returns hours declared format:'days' (re-read from the live payload this round). Without it the screen says '10 ימים' for a 9.9-hour response.",
+      "transformPayload is now a useCallback, and chips a useMemo - required by the shell's new memoisation (useMemo on [rawPayload, transformPayload], 11f347a9). react-hooks/exhaustive-deps flagged the conditional chips expression as breaking it; fixed rather than suppressed.",
+      "Fixtures updated to the post-H2 payload: reliability column format 'score', new last_shift_date column format 'date', and the four population sentences rewritten to the H2 shape (n= inside the bidi isolate, thousands separators).",
+      "Two new tests for behaviour the shared layer opened: the whole row is a door (onDrill called with {kind:'hostess', id:449}) and the H2 formats reach the cell (20/08/2026, 0.759).",
+      "Two new tests for the cross-filter, deliberately TWO-SIDED: through the tab there are zero chart-select-* buttons on all four surfaces; the same מ16 fixture rendered through a bare ReportSurface (no transform) DOES produce them. Without the second half the test would have passed for the wrong reason - and it did at first, because the fixture's rows had no hourly_rate; the fixture was corrected to the live shape."
+    ],
+    "defects_closed_by_the_shared_layer": {
+      "H-1 tile doors": "CLOSED. Live: clicking דיילות אדומות lands on /reports?tab=hostesses&report=reliability with <h1>אמינות והתייצבות</h1>.",
+      "H-1 row doors": "CLOSED. Live: report-row-drillable = 6 · 50 · 17 · 100 on the four surfaces; clicking a row lands on /hostesses (<h1>דיילות</h1>) - the LIST, not the card, because the hostess card has no address. Recorded by the shared agent as a module-4 debt; I confirm the behaviour and that it is a door, not a dead row.",
+      "H-2 tiles[].sub": "CLOSED. Live kpi-sub count = 5 · 4 · 4 · 6, and the sentences 8-14.1/8-14.4 demand are on screen (מתוך 186 רשומות · 92 עבדו בחלון, the Gini quarters line).",
+      "H-3 reliability precision": "CLOSED by H2 + the new score format. Live: 0.759 · 0.764 · 0.775 · 0.798 · 0.809 · 0.813 - six distinct values in the column the table sorts by, where ratio had flattened all six to 0.8.",
+      "H-6 compare half": "CLOSED in the shared component; my workaround removed.",
+      "H-7 ISO date": "CLOSED by H2. Live: 20/08/2026."
+    },
+    "defects_still_open": {
+      "H-4 (pi-4 vs hourly rates)": "OPEN and unchanged - the table still reads 43 ₪ while the chart's own reference line reads חציון התעריף 43.27 ₪. Ishay's ruling, not a code change.",
+      "H-5 (m17 hours declared days)": "OPEN in the RPC; still worked around in my transform. H2 did not touch it.",
+      "H-8 (no 12-month period chip)": "OPEN - the tab still opens on 01/01/2026-16/09/2026, so the month chart shows 8 columns. Card 8-H2.",
+      "m16 scatter has no off-scale band for the 17 unrated": "OPEN - ChartCard has no such primitive; the page still opens filtered to exactly those 17 while their points are absent from the chart above.",
+      "m17 Lorenz equality diagonal": "OPEN - the RPC returns only the median y-line; ChartCard supports refLines[].axis='diagonal'.",
+      "m17 two zones": "OPEN - six tiles in one strip; needs a tiles[].zone the shell honours.",
+      "chip state not in the URL": "OPEN - still component state; the tab contract exposes no writeParams."
+    },
+    "screens": [
+      "results/visual/mode0-hostess-overview.png",
+      "results/visual/mode0-reliability.png",
+      "results/visual/mode0-quality-cost.png",
+      "results/visual/mode0-fairness.png",
+      "results/visual/mode2-hostess-overview.png",
+      "results/visual/mode2-reliability.png",
+      "results/visual/mode2-quality-cost.png",
+      "results/visual/mode2-fairness.png",
+      "results/visual/report.json (the measurements behind every claim above)"
+    ],
+    "mode2_seen": true,
+    "mode2_method": "NO database write. AuthContext reads onboarding_mode in one PostgREST GET; the Playwright run intercepts THAT response and rewrites the value to 2. The render path is the real one (AuthContext -> Hint), and nothing in notification_preferences was touched, so there is no restore that can fail. I chose this over calling module 9's saveOnboardingMode because the rule I work under stops at writes to existing data, and the intercept produces the same screen with none of the risk. What it therefore does NOT prove: that saveOnboardingMode persists the value - module 9's own tests cover that.",
+    "mode2_measured": {
+      "hints_rendered": "10 · 10 · 9 · 9 = 38, exactly the keys the four section-10 tables name; zero at mode 0 (the deletion test, live).",
+      "page_growth": "1703->2027 · 3877->4261 · 2004->2304 · 6010->6290 px - between +5% and +19%. No tile row was stretched (the hints are standalone lines, 4ב) and no hint covers data.",
+      "overflow": "0 on all eight screens (mode 0 and mode 2), 1280px",
+      "console_errors": "0 across the whole run"
+    },
+    "gates_after_reconcile": {
+      "vitest_tab": "npx vitest run .../HostessesTab.test.jsx - exit 0, 25/25",
+      "vitest_module": "npx vitest run src/modules/11_reports - exit 1, 22 failed / 184 passed. NOT green, and none of it is mine: every failure is in ExecutiveTab.test.jsx (9) and CustomersTab.test.jsx (13), both mid-reconcile in parallel. HostessesTab, FinanceTab, ReportsPage, ReportSurface, KpiTile, ChartCard and api all pass (7 files green).",
+      "eslint_mine": "exit 0, zero warnings (the exhaustive-deps warning on chips was fixed with useMemo, not suppressed)",
+      "prettier": "exit 0",
+      "dup": "npm run dup - exit 0",
+      "knip": "npm run deadcode - exit 0",
+      "check_bidi": "npm run check:bidi - exit 0 (the earlier reportsCustomers.js finding was fixed by its owner)",
+      "CR": "0 on all seven owned files"
+    },
+    "not_verified_after_reconcile": [
+      "That saveOnboardingMode actually persists mode 2 - the browser run intercepted the read instead of writing the row (see mode2_method). Module 9's unit tests cover the write.",
+      "npx vitest run src/modules/11_reports is NOT green as I finish: 22 failures in the executive and customers tabs, which are still being reconciled. I re-ran it and the failure set was theirs each time.",
+      "The row door lands on /hostesses (the list), not on the hostess card ruling 19 names. That is the shared agent's recorded module-4 debt; I verified the landing, not that the list then scrolls to or highlights the right hostess - it does not.",
+      "Export was still never clicked, and the produced .xlsx never opened - now with the shell filtering rows into ExportBar, 'a filtered export contains exactly the visible rows' is unverified FOR THIS TAB (the mechanism has its own tests).",
+      "'empty-after-filter' is still unexercised live: I found no period/customer combination on this data that returns zero rows for a hostess surface."
+    ]
+  },
+  "round3": {
+    "when": "16/09/2026 12:0X-19:0X, against HEAD 731969e7 + the working tree (shared layer and I1 both in flight)",
+    "input": "results/p3r-hostesses.json - 17 verdicts, 7 owned by this tab (6 · 7 · 9 · 10 · 15 · 16 · 17)",
+    "fixed": [
+      "#6 accessibility of the weekday selector - the row now gets an announcement AND the chip group is named. ChipRow renders role='group' + aria-labelledby on the label span (it had neither), and HostessesTab passes weekdayAnnouncement(). Wording copied from pi-9 / ReportSurface.announceSelection so both announcers in the module sound alike. MEASURED LIVE: role='group', aria-labelledby='reports-chips-dow-label', and the region reads 'מסונן ליום חמישי; 79 שורות' after a pick and 'בחירת היום בוטלה; 87 שורות' after clearing. Also corrected ChipRow's stale why-comment, which still claimed ReportSurface never passes announcement (it does, since 11f347a9 - but only under a cross-filter selection, which this tab declares off, so the tab-level announcer is still the only one that speaks).",
+      "#9 term.quadrants - the card's הימני-תחתון / השמאלי-עליון restored verbatim. The reviewer's reasoning holds and I had it backwards in round 1: the scatter sits inside ChartCard's dir='ltr' wrapper with rate ascending right and rating ascending up, so the card's directions are the ones actually drawn. Read back on screen in the mode-2 screenshot.",
+      "#10 hostessOverview.gini - reverted to the card's התת-שורה מדברת ברבעים. The rule I declared for the rewrite (tiles[].sub not rendered) died at 11f347a9; measured live this round: kpi-sub renders on 5 of 5 m14 tiles.",
+      "#15 the heading test could not fail - the m14 fixture now carries THREE rows, and the test renders two different payloads (3 rows, then 2) and asserts two different headings. Replacing the derivation with a literal now fails it, which is what the test was written to prove.",
+      "#16 the floor was measured on מ14 only - eight floor properties are now it.each over all four fixtures (labels · population · so-what · definitions · row door · error+retry · missing_params · export-disabled · blank · the deletion test). Parameterised, not copied, because jscpd fails at 3%. THIS IMMEDIATELY CAUGHT FOUR REAL FIXTURE LIES: מ15/מ16/מ17 rows had no drill_key (live they all do) and the מ17 fixture had 3 tiles where the live payload has 6 - so 'the row is a door' and three §1.4 labels had never been asserted off מ14.",
+      "#17 hints were asserted to EXIST, never to be placed - a new it.each over the four surfaces measures position with compareDocumentPosition: purpose precedes the population line; a beforeChart hint follows the tile strip and precedes the chart figure; a beforeTable hint follows the table title and precedes the table card; the first term hint follows the definitions line. Collapsing every key into renderExtras now fails the suite.",
+      "#7 scoreBasis placement - NO MOVE MADE, and the reason is measured: the fix is conditioned on the RPC adding the thresholds paragraph to מ15's definitions, and it has NOT landed (live m15 definitions re-fetched this round is byte-identical to round 2 and carries no threshold). renderExtras already renders immediately after the definitions line, so scoreBasis is already adjacent to where that paragraph will appear. queuePopulation stays put - the reviewer refuted that half himself (its anchor, the meta.notes line, is directly above it)."
+    ],
+    "changed": [
+      "Fixtures re-synced to the live payloads fetched this round (results/payloads_h5): m16 chart.note ('17 דיילות ללא דירוג אינן בגרף…') and its whole-shekel ref-line label 'חציון התעריף 43 ₪'; m17's Lorenz equality diagonal (refLines[].axis='diagonal', label 'חלוקה שווה') which I reported missing in round 2 and I1 has now added; m17 response-time tiles declared 'ratio' by the server.",
+      "fixResponseTimeUnit KEPT but re-documented as an inert regression guard. The coordinator's instruction to keep it rested on 'H2 touched date/score only' - true, but I1 DID change those two tiles: the live payload now declares format:'ratio' on both, so the transform's branch can no longer fire. Kept because I1 is still untracked and the guard is idempotent and free; the comment now says it is dead and recommends deleting it once I1 is committed. Reported rather than acted on unilaterally.",
+      "A rowCount() helper in the test file - every live row carries a routable drill_key, so ReportTable tags it report-row-drillable and the old getAllByTestId('report-row') counters were returning zero while looking like a filter that worked.",
+      "The absenceColumns direction swap is now LOGGED in the copy file's header with its rule (כ11), per the coordinator's ruling: the card writes 'השמאלי/הימני' about two TABLE columns, and the table sits in the page's RTL flow (unlike מ16's scatter), so a positional word there depends on column order and flips the moment a column is added; the copy names the columns instead."
+    ],
+    "not_changed_and_why": [
+      "chip wording - 'נקי בחירה' was already the feminine house form at HostessesTab.jsx; nothing to align on my side.",
+      "The new shell slots (renderAfterSoWhat / renderChartAside / renderChartFooter) DO NOT EXIST at HEAD 731969e7 or in the working tree - grepped ReportSurface.jsx this round, only renderTop / renderBeforeChart / renderBeforeTable / renderExtras. Current anchors kept.",
+      "The amber 4=>5 drift and the rank1 hint wording are Phase-4 doc ripples per the coordinator's ruling - untouched."
+    ],
+    "server_items_checked_this_round": {
+      "landed": "m16 chart.note + whole-shekel ref-line label; m17 Lorenz diagonal + chart.note; m17 response-time tiles as 'ratio'; m14/m15 score+date column formats (H2). All read from a live CEO fetch, saved at results/payloads_h5.",
+      "not_landed": "m15 thresholds paragraph in definitions (#2) - definitions byte-identical to round 2; m14's two extra tile targets (#11) - on_time and gap_events still target:null; m17 tiles[].zone. Each re-measured, not inherited.",
+      "new_finding": "The m16 chart.note tells the reader to look for a chip called 'רק בלי דירוג', but the chip on screen reads 'בלי דירוג בלבד' - the mockup's and the card's wording, which C2 makes the authority. The server string points at a control by a name that is not on the screen (כ15). One-word RPC fix; NOT patched in the tab."
+    },
+    "tests": "51 passed (was 25). New: 8 it.each floor properties across the four surfaces, 1 it.each placement property across the four surfaces, 2 heading-derivation payloads. The floor caught four fixture lies on its first run (missing drill_key on three fixtures, three missing §1.4 tile labels on מ17) - all corrected to the live payload shape.",
+    "gates_round3": {
+      "vitest_tab": "exit 0 - 51/51",
+      "vitest_module": "exit 1 - 3 failed / 276 passed. NOT mine: 2 in ReportsPage.test.jsx and 1 in FinanceTab.test.jsx, both being edited in parallel. My tab file and the components suite pass (134/134 together).",
+      "eslint_mine": "exit 0, zero warnings",
+      "prettier": "exit 0",
+      "dup": "exit 0",
+      "knip": "exit 1 - one unused export, DRILL_INTENT in src/modules/11_reports/api.js (shell, not mine). Zero in my files.",
+      "check_bidi": "exit 0",
+      "CR": "0 on all seven owned files",
+      "browser": "port 5183, 1280px, CEO, both modes. overflow 0 and ZERO console errors on all eight screens. hints 0/0/0/0 at mode 0 and 10/10/9/9 at mode 2; kpi-sub 5/4/4/6; chip groups named on מ15 (2) and מ16 (1)."
+    },
+    "screens_round3": [
+      "results/visual-r3/mode0-{hostess-overview,reliability,quality-cost,fairness}.png",
+      "results/visual-r3/mode2-{hostess-overview,reliability,quality-cost,fairness}.png",
+      "results/visual-r3/report.json"
+    ],
+    "new_observations": [
+      "H-8 is CLOSED by the shell: the period row now carries a '12 חודשים' chip and the דיילות tab defaults to it - the window on screen is 16/09/2025-16/09/2026 and the m14 month chart shows twelve columns' worth of window instead of the calendar year.",
+      "The m16 scatter is close to unreadable and was so in round 2 as well - I should have flagged it then. pi-5 starts the value axis at zero, so an hourly-rate axis running 41-49 is drawn across a 1-49 span and all 33 points plus both quadrants are squeezed into the right ~15% of the card. This is a pi-5-vs-readability question for Ishay (a rate is not a total), owned by ChartCard and the ruling, not by the tab.",
+      "The shell's working tree was transiently broken during this round: my first browser pass died on ReferenceError: chartDrill is not defined at ReportSurface.jsx:537, which crashed every report surface through the error boundary. It was fixed by its owner within minutes and the re-run was clean. Recorded because a screenshot taken in that window would have looked like a tab defect."
+    ],
+    "not_verified_round3": [
+      "The module suite is not green as I finish - 3 failures in ReportsPage and FinanceTab, both mid-edit by their owners.",
+      "The m15 thresholds paragraph (#2) and the m14 extra tile targets (#11) have not landed, so the placement of scoreBasis and the ruling-33 coverage of מ14 are both verified only against the CURRENT payload, not the intended one. Both need a re-check after the server fixer lands.",
+      "Mode 2 was again reached by intercepting the notification_preferences GET, not by writing the row - so 'saveOnboardingMode persists it' remains module 9's to prove.",
+      "The chart-note / chip wording mismatch on מ16 is reported, not fixed, and no one has ruled which string moves.",
+      "Export still never clicked; empty-after-filter still unexercised live; the row door still lands on the hostess LIST rather than the card."
+    ]
+  },
+  "mini_round": {
+    "when": "16/09/2026 19:0X-19:4X, against HEAD fb7bcd26",
+    "fixed": [
+      "The four §⑩ purpose hints moved from renderTop to renderAfterSoWhat. They had been sitting ABOVE the population line they explain - the inverse of onboarding-layer-contract §4ב - only because no slot existed between the so-what line and the tile strip. MEASURED LIVE in document order on all four surfaces: so-what 416/528/473/416 -> hint 463/575/521/463 -> tiles 507/619/565/507.",
+      "The two chart-reading hints moved into the chart card, under the figure, through renderChartFooter(payload, 0): qualityCost.scatterBasis and fairness.giniBasis. Their card anchors are the chart card (div.chart-card), and renderBeforeChart put them above the card's own title. MEASURED LIVE: chart-figure 814 -> footer hint 1078 on מ16, and 999 -> 1263 on מ17, both inside the chart-card element (asserted in the test with closest('[data-testid^=chart-card-]').contains).",
+      "m16 x_domain [38,51] is live - the scatter readability problem I raised at the end of round 3 is CLOSED. Seen in the screenshot: the x axis now runs 38-51 instead of 1-49, the 33 points spread across the full card width, and the 43.27 median line visibly separates the two quadrants instead of everything being crushed into the right 15%.",
+      "The chart-note / chip wording conflict I reported in round 3 is CLOSED by i2 in favour of the mockup: the note now reads \"…ראי את השבב 'בלי דירוג בלבד' בטבלה\", matching the chip on screen."
+    ],
+    "changed": [
+      "HINTS restructured from {top, beforeChart, beforeTable, extras} to {afterSoWhat, beforeChart, chartFooter, beforeTable, extras}; renderTop now carries the chip rows only. Per-surface: מ14 afterSoWhat=purpose · beforeChart=redCount+gini (TILE anchors, so they stay under the tile strip) · beforeTable=redTableSort · extras=6 terms. מ15 afterSoWhat=purpose · beforeTable=absenceColumns · extras=scoreBasis+queuePopulation+6 terms. מ16 afterSoWhat=purpose · chartFooter=scatterBasis · beforeTable=tableSort · extras=6 terms. מ17 afterSoWhat=purpose · chartFooter=giniBasis · extras=responseTime+6 terms.",
+      "renderChartAside is NOT used: this tab has no side-tile content on any chart (the slot was born for מ9's 'שוטף — עוד לא באיחור' tile). Stated rather than left ambiguous.",
+      "scoreBasis stays in renderExtras, and the reason is measured, not assumed: its card anchor is the div.datanote paragraph, and i2 puts the thresholds into מ15's DEFINITIONS line - which the shell renders immediately before renderExtras. Moving it to chartFooter would have put it under a weekday bar chart it says nothing about.",
+      "The placement it.each now measures the new contract on all four surfaces: purpose after so-what and before tiles; a tile hint after tiles and before the figure; a chart hint after the figure AND inside the chart card; a table hint after the table title and before the table card; the first term hint after the definitions line.",
+      "m16 fixture synced to i2: x_domain [38,51] and the corrected chart.note wording."
+    ],
+    "server_state_at_finish": {
+      "landed": "m16 chart.note naming 'בלי דירוג בלבד' + x_domain [38,51]; m17 note extended. Re-fetched three times (payloads_h6 · h7 · h8).",
+      "NOT_landed": "m15 thresholds + the ruling-38 sentence in definitions (definitions byte-identical across h5/h6/h7/h8); m14's on_time⇒m15 and gap_events⇒m06 targets (still target:null - only 3 of 5 m14 tiles are doors); m17 zero-rows wording (needs a zero case to see).",
+      "p2-fixB2.json": "DOES NOT EXIST at finish - only p2-fixB.json is in results/. The coordinator asked me to wait for it; I waited through three re-fetches and it did not appear, so this round is stamped to payloads_h8 and the three items above stay open."
+    },
+    "tests": "51 passed. The placement suite was rewritten to the new slot contract and it failed first on all four surfaces when the purpose hints moved - which is the proof the assertion measures position and not existence.",
+    "gates_mini_round": {
+      "vitest_tab": "exit 0 - 51/51",
+      "eslint_mine": "exit 0, zero warnings",
+      "prettier": "exit 0",
+      "dup": "exit 0",
+      "knip": "exit 0",
+      "check_bidi": "exit 0",
+      "CR": "0 on all seven owned files",
+      "browser": "port 5183, 1280px, CEO, both modes. overflow 0 and ZERO console errors on all eight screens; hints 0/0/0/0 at mode 0 and 10/10/9/9 at mode 2; slot order measured in pixels on every surface (see screens_mini_round/report.json)."
+    },
+    "screens_mini_round": [
+      "results/visual-r4/mode0-{hostess-overview,reliability,quality-cost,fairness}.png",
+      "results/visual-r4/mode2-{hostess-overview,reliability,quality-cost,fairness}.png",
+      "results/visual-r4/report.json - per-surface slot offsets in page pixels"
+    ],
+    "not_verified_mini_round": [
+      "p2-fixB2.json never appeared, so the three i2 items that have not landed (m15 thresholds + ruling-38, m14's two extra targets, m17 zero-rows wording) are unverified against the intended payload. When they land: scoreBasis's anchor becomes real and needs a re-look, and מ14 goes from 3 doors to 5.",
+      "The module suite was not re-run at the end of this round - only my tab file (51/51) and the gates. The last full run had 3 failures owned by ReportsPage and FinanceTab.",
+      "Mode 2 is still reached by intercepting the notification_preferences GET, not by writing the row.",
+      "Export still never clicked; empty-after-filter still unexercised live on a hostess surface; the row door still lands on the hostess LIST rather than the card."
+    ]
+  },
+  "i2_round": {
+    "when": "16/09/2026 20:3X-21:0X, payloads re-fetched live as CEO into results/payloads_i2",
+    "confirmed": {
+      "m15_definitions": "הגדרות: ציון אמינות = (סכום ערכי-הנוכחות + 3 × 0.9584) ÷ (מספר המשמרות + 3) — ממוצע ממותן אל ממוצע החברה · איחור נספר לפי דרגה: קל אינו מוריד מהציון, בינוני מוריד רבע, רב מוריד חצי · שתי עמודות אי-ההגעה, ואף אחת מהן אינה \"הנכונה\": \"הבריזה · ב-12 חודשים\" היא ההגדרה שהציון עצמו עובד לפיה — רק אי-הגעה בלי הודעה, ורק בחלון הקפוא · \"אי-הגעה · אי-פעם\" היא כל סיבות אי-ההגעה — כולל מחלה והיעדרות באישור — ועל כל ההיסטוריה. שתיהן נכונות בהגדרתן, והדוח אינו בוחר ביניהן · הבריזה = לא הגיעה ולא הודיעה — רק היא מאפסת את הציון של אותה משמרת · ביטלה אחרי אישור = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת · החלון = 12 חודשים אחורה מהיום, קפוא ואינו נגרר אחרי מסנן-התקופה · דיילת אדומה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת ענבר = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104 · הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.",
+      "m15_definitions_check": "Carries BOTH thresholds in numbers - 'דיילת אדומה = … מתחת ל-0.8338' and 'דיילת ענבר = … מתחת ל-0.9104' - and the ruling-38 sentence 'הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38)'. Read back on screen at onboarding mode 0, which is what makes it C3-compliant: the words אדומה/ענבר now have numbers at level 0, not only at level 2 or one surface back on מ14.",
+      "m14_doors": 5,
+      "m14_door_map": "on_time => report_m15_reliability · red_hostesses => report_m15_reliability · gini => report_m17_fairness · active_hostesses => report_m16_quality_cost · gap_events => report_m06_staffing (tab הנהלה, CROSS-TAB). Ruling 33 is now whole on this surface: 5 of 5.",
+      "m17_zero_rows": "tiles[].sub now reads 'דרג ⁦1⁩ = הדיילת שהמערכת דירגה ראשונה · טרם נמדד · אין עדיין נתון: …' - the 'נמדד מ-—' preposition-then-em-dash is gone; window stays 'טרם נמדד' and the value stays the dash."
+    },
+    "scoreBasis_anchor_decision": "STAYS in renderExtras, and the reason is now positive rather than an absence. The card's anchor ב is the div.datanote paragraph that carries the formula · C · BOTH thresholds · the attendance-value table. i2 put exactly that content into מ15's definitions line, which the shell renders immediately before renderExtras - so the hint is directly beneath its anchor. renderChartFooter would have hung it under the weekday bar chart, which the hint never mentions. Asserted with compareDocumentPosition rather than left as prose.",
+    "fixtures_resynced": [
+      "m15 definitions replaced with the live i2 string verbatim (thresholds + ruling 38).",
+      "m14: on_time and gap_events given their targets; the three existing targets switched to the RPC-name form i2 returns ('report_m15_reliability' rather than 'אמינות והתייצבות').",
+      "m17: rank1_adoption sub set to the i2 zero-rows wording."
+    ],
+    "tests_added": [
+      "מ14 · five tiles and five doors, the count DERIVED from the fixture's own targets, plus the cross-tab door asserted by the object onDrill receives ({tab:'הנהלה', report:'report_m06_staffing'}).",
+      "מ15 · both thresholds and the ruling-38 sentence present in the definitions line AT MODE 0, with zero hints rendered - the C3 deletion test for exactly the gap the review measured.",
+      "מ15 · scoreBasis follows the definitions line (compareDocumentPosition), pinning the anchor decision above.",
+      "The adoption-tile assertion was corrected, and this is worth stating: it asserted the tile contains no '%' at all, which i2 broke for the right reason - the sub now QUOTES 'המדד מציג \"—\" ולא ⁦0%⁩'. The claim belongs to the VALUE node, so it now asserts StatTile's value child is exactly '—'. The old assertion would have forced the RPC to drop a sentence that is correct."
+    ],
+    "tests": "Tab: 54 passed (was 51). Module suite: 10 files / 334 tests, ALL GREEN - the first fully green module run since the shared layer landed (the ReportsPage and FinanceTab failures of the previous rounds are gone).",
+    "gates_i2": {
+      "vitest_tab": "exit 0 - 54/54",
+      "vitest_module": "exit 0 - 334/334 (10 files)",
+      "eslint_mine": "exit 0, zero warnings",
+      "prettier": "exit 0",
+      "dup": "exit 0",
+      "knip": "exit 0",
+      "check_bidi": "exit 0",
+      "CR": "0 on all seven owned files"
+    },
+    "screens_i2": [
+      "results/visual-i2/mode2-hostess-overview.png",
+      "results/visual-i2/mode2-reliability.png",
+      "results/visual-i2/report.json"
+    ],
+    "browser_measured": "port 5183, 1280px, CEO, onboarding mode 2 (PostgREST read intercepted, no row written). מ14: overflow 0 · 10 hints · 5 tile doors on screen. מ15: overflow 0 · 10 hints · definitions carrying 0.8338 / 0.9104 / הכרעה 38. Cross-tab door driven for real: clicking אירועים עם חוסר navigated to /reports?tab=exec&report=staffing with <h1>קהל מול צוות</h1>. ZERO console errors.",
+    "not_verified_i2": [
+      "m16 was not re-screenshotted this round (i2 did not change it beyond what round 4 already measured), and m17's zero-rows wording was verified in the payload and the fixture but not on screen - the live tile has no zero-rows case to show.",
+      "The orchestrator's md5 equality claim (320b7b0d / 77ad27ff / eac50e57) is REPORTED, not checked by me: I verified the three payloads' CONTENT against the three claims instead, which is the half that matters to the screen.",
+      "Mode 2 is still reached by intercepting the notification_preferences GET rather than writing the row.",
+      "Export still never clicked; empty-after-filter still unexercised live on a hostess surface; the row door still lands on the hostess LIST rather than the card."
+    ]
+  }
+}

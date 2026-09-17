@@ -1,0 +1,233 @@
+{
+ "tab": "customers",
+ "lens": "A+B+C (one verifier, D-33 pacing)",
+ "measured_against": {
+  "head": "b199fa22 (git log 16/09 17:37)",
+  "working_tree": "uncommitted shell edits in flight (P3-FIX-A)",
+  "browser_pass_window": "16/09 17:50–18:05 · KpiTile.jsx md5 ffcbf5ce85c2ff0d1bd8c7a5fecd5f54 · ReportSurface.jsx md5 cdad149a0ff978b92106ae14c1a285c3 · ChartCard.jsx md5 bdd2f61a2c2936812199836f6e7eba7f · ReportsPage.jsx md5 f07e05f2c7aa3849b48a47604c1d4179",
+  "re_checked_at_18:08": "KpiTile.jsx md5 c3610f851c2955254068a59cff6c9592 · ReportSurface.jsx md5 78d05def415ba451d4a1b7751c595151 — the four shell-owned findings below were re-read in that newer tree and all four are still present",
+  "tab_files": "CustomersTab.jsx · tabs/customers/{CustomerSurface,payload,AnalysisRunBar}.jsx · CustomersTab.test.jsx · src/lib/onboardingCopy.m11.customers.js — unchanged since 16/09 10:31",
+  "server": "vite 5184 --strictPort (already running on that port when this agent started; stopped at the end)"
+ },
+ "findings": [
+  {
+   "lens": "B",
+   "surface": "מ21 · לקוחות מתרחקים",
+   "severity": "major",
+   "claim": "A user without 'כספים' sees a masked money tile and 'לא זמין בתפקידך' in every row of the revenue column — and the \"אז מה\" line right above them prints ⁦122,124 ₪⁩. The tab masks tiles, columns and rows; it never touches payload.so_what.",
+   "evidence": "results/lensBC-customers/projects-drifting.png (מנהלת פרויקטים: view לקוחות, blocked כספים) · probe.json runs.projects.surfaces.drifting.soWhat = 'להתקשר השבוע ל… יחד ⁦122,124 ₪⁩ בשנה האחרונה' while maskedCount=15 · src/modules/11_reports/tabs/customers/payload.js(x) maskMoney() touches tiles/columns/rows only · the RPC's own meta.notes says 'עמודות ואריחי ה-₪ בדף זה כפופים להרשאת מודול כספים; המיסוך מתבצע בלשונית'",
+   "owner": "tab"
+  },
+  {
+   "lens": "B",
+   "surface": "מ19 מול מ21",
+   "severity": "major",
+   "claim": "The same metric is masked on one surface of the tab and open on another for the same identity: מנהלת פרויקטים sees 'לא זמין בתפקידך' for הכנסת 12 החודשים on מ21, and ⁦635,764 ₪⁩ · ⁦196,617 ₪⁩ … per row for the identically-named column on מ19.",
+   "evidence": "results/lensBC-customers/projects-customers-overview.png first row 'אלפא סיסטמס בע\"מ · חברה פרטית · ⁦635,764 ₪⁩' · probe.json runs.projects.surfaces['customers-overview'].firstRowText · payload m19 declares no masking note while m21's meta.notes does",
+   "owner": "rpc"
+  },
+  {
+   "lens": "A",
+   "surface": "מ19 · אריח ④ קצב-התשלום תלוי בסוג הלקוח",
+   "severity": "major",
+   "claim": "The comparison half prints a COUNT with the tile's unit: 'על ⁦675⁩ חשבוניות ששולמו: ⁦675⁩ ימים'. 675 is the number of paid invoices, not days; compare carries no `format`, so KpiTile falls back to the tile's own format ('days').",
+   "evidence": "probe.json runs.ceo_mode0.surfaces.מ19.tiles[3].compare · payload tiles[3].compare = {label:'על ⁦675⁩ חשבוניות ששולמו', value:675, direction:'flat'} with no compare.format · src/modules/11_reports/components/KpiTile.jsx:64-67 (`const format = compare.format ?? fallbackFormat`) · screenshot ceo-customers-overview.png",
+   "owner": "rpc"
+  },
+  {
+   "lens": "A",
+   "surface": "מ22 · אריח ④ דגלים אדומים",
+   "severity": "major",
+   "claim": "The tile shows ⁦25⁩ red flags over two approved runs, and its own comparison line underneath reads 'יימדד אחרי הריצה הראשונה: —'. The sentence contradicts the number it sits under.",
+   "evidence": "probe.json runs.ceo_mode0.surfaces.מ22.tiles[3] (value 25, sub 'מתוך ⁦426⁩ הערות מסווגות · ⁦0⁩ לא ניתן לסווג · ⁦2⁩ ריצות מאושרות', compare 'יימדד אחרי הריצה הראשונה: —') · payload meta.run.run_count = 2, approved_at 2026-09-16",
+   "owner": "rpc"
+  },
+  {
+   "lens": "A",
+   "surface": "מ19 · אריח ② · מ22 · אריח ②",
+   "severity": "major",
+   "claim": "The comparison half was meant to be the year split and is now a repeat of the tile's own value: screen reads '▲פילוח לפי שנה: ⁦33⁩' (33 = the tile value) while the approved mockup draws '▲ 2024: 4 · 2025: 19 · 2026 עד היום: 10'. The three numbers exist in tiles[].detail.by_year and never reach the screen; the ▲ claims a direction the card says does not exist ('פילוח לפי שנה במקום השוואה').",
+   "evidence": "docs/mockups/management-report-screen/approved/05_tab_customers_approved.html:509-510 · cards-customers.md §③ row 'אריח ② 33 מתוך 70' · probe.json runs.ceo_mode0.surfaces.מ19.tiles[1].compare and .מ22.tiles[1].compare · payload tiles[1].detail.by_year = {2024:4, 2025:19, 2026:10}",
+   "owner": "rpc"
+  },
+  {
+   "lens": "A",
+   "surface": "all four (7 live charts)",
+   "severity": "major",
+   "claim": "Not one of the tab's seven charts carries `chart.note`, while the approved mockup gives every chart card an explanatory chart-note line (6 in the customers file). The one that matters most is מ20's 'הסולם כאן עצמאי ואינו משותף לגרף השלילי שלצידו' — without it the two reason charts sit side by side inviting exactly the bar-length comparison the note forbids (positive axis 0–20, negative axis 0–10).",
+   "evidence": "grep 'chart-note' 05_tab_customers_approved.html ⇒ lines 559, 844, 899, 918, 936, 955, 973, 1021, 1243 · live payload charts carry only {type,unit,xKey,title,domain,series,refLines,filter_key} (no `note`) on m19/m20×4/m21/m22 · ChartCard.jsx:800 renders chart.note when present · screenshot ceo-satisfaction.png",
+   "owner": "rpc"
+  },
+  {
+   "lens": "B",
+   "surface": "מ20 · מ21 (empty-after-filter)",
+   "severity": "major",
+   "claim": "With a customer selected the table goes to zero rows and says nothing: header row, no body, no 'אין משובים בתקופה שנבחרה', no [נקה מסננים]. The 'empty' envelope can never fire on these surfaces because tiles and charts are population-level (meta.customer_filter_ignored), so ReportSurface's hasContent is always true.",
+   "evidence": "results/lensBC-customers/ceo-cust401-satisfaction.png (bottom: bare header row) · probe.json runs.ceo_filtered.surfaces.מ20 {rowsRendered from chart sr-tables only, envelope:null, exportDisabled:true} and .מ21 same · ReportSurface.jsx hasContent = tiles||charts||rows · ReportTable.jsx has no empty-row branch · cards-customers.md מ19 ⑦ 'טבלה ריקה ⇒ ריק-אחרי-סינון, לא שורה ריקה' and מ20 ④",
+   "owner": "shell"
+  },
+  {
+   "lens": "B",
+   "surface": "all four (page subtitle, 📐17)",
+   "severity": "major",
+   "claim": "With a customer selected the page subtitle still reads '⁦01/01/2026–16/09/2026⁩ · כל הלקוחות' while the picker beside it shows 'אלפא סיסטמס בע\"מ' and the exported filename says 'לקוח-נבחר'. The payload's own window.label already says 'לקוח נבחר'; the shell builds its own label and never passes customerName.",
+   "evidence": "src/modules/11_reports/ReportsPage.jsx:243 `formatWindowLabel({ from, to })` vs src/lib/reportsFormat.js:213-222 which accepts customerName · probe.json runs.ceo_filtered.surfaces.*.windowLabel · payload report_m19_customers_overview_CEO_cust401.json window.label = '01/01/2026–10/09/2026 · לקוח נבחר' · screenshot ceo-cust401-satisfaction.png",
+   "owner": "shell"
+  },
+  {
+   "lens": "A",
+   "surface": "all four (⑩א anchor) + מ22 run bar",
+   "severity": "minor",
+   "claim": "The §⑩ 'why' hint of all four surfaces renders ABOVE the population line and above the 'אז מה' line; the card anchors it 'מתחת לשורת-אז מה, מעל האריחים' and the mockup draws it there. On מ22 the same applies to the מ25 analysis-run bar, which the mockup places between the why hint and the tiles. The shell offers no slot between so_what and tiles, so the tab has no other place to put them.",
+   "evidence": "probe.json runs.ceo_mode2.surfaces.*.order (hint-…why first, then report-population > reports-export > report-so-what > report-tiles) · ReportSurface.jsx:403-404 renderTop then PopulationLine · cards-customers.md ⑩א of מ19/מ20/מ21/מ22 · mockup order 470 so-what > 476 hint > 482 tiles (c1), 1485 so-what > 1491 hint > 1497 runbar > 1508 hint > 1535 tiles (c4)",
+   "owner": "shell"
+  },
+  {
+   "lens": "A",
+   "surface": "מ19 ① ③ · מ20 ④ · מ21 ④ · מ22 ③",
+   "severity": "minor",
+   "claim": "On five tiles the comparison VALUE repeats a number already spelled inside the comparison LABEL, so the line ends with a second colon and a duplicate: 'הגדול הראשון שכן: … מקום ⁦12⁩ … מול קצב של ⁦27⁩: ⁦12⁩' · 'לקוחות לא-מרוצים · הבינוניים באמצע: ⁦68⁩ ימים: ⁦212⁩ ימים' · '▼אשתקד באותו טווח: ⁦27⁩ מתוך ⁦136⁩: ⁦27⁩' · 'ממוצע המשוב שלו ⁦2.43⁩ על ⁦7⁩ משובים: 2.43' · '▼מתוך ⁦70⁩ … בסך הכול: ⁦37⁩'.",
+   "evidence": "probe.json runs.ceo_mode0.surfaces.*.tiles[].compare (rendered text) · KpiTile.jsx:81 renders `{compare.label}: <Ltr>{valueText}</Ltr>` unconditionally",
+   "owner": "rpc"
+  },
+  {
+   "lens": "B",
+   "surface": "מ21 ② · מ22 ① ④",
+   "severity": "minor",
+   "claim": "Three tiles use compare.label as a sentence with compare.value null, and the tile prints a dangling em-dash after it: 'זהו סכום שכבר הורווח — לא סכום שצפוי להיאבד: —'. KpiTile always appends ': value', and formatByType(null) is '—', which reads as a missing number.",
+   "evidence": "probe.json runs.ceo_mode0.surfaces.מ21.tiles[1].compare / .מ22.tiles[0].compare / .מ22.tiles[3].compare · KpiTile.jsx:60-81 (no null branch) · src/lib/reportsFormat.js:25 NO_VALUE='—' · screenshot ceo-drifting.png",
+   "owner": "shell"
+  },
+  {
+   "lens": "A",
+   "surface": "מ19 · טבלת ⁦8⁩ הגדולים",
+   "severity": "minor",
+   "claim": "'ממוצע המשוב שלו' shows 4.6 (one decimal, column format 'ratio') where the approved mockup shows '4.63 · n=129' — two decimals AND the sample size; the sample size is absent from the column altogether.",
+   "evidence": "docs/mockups/.../05_tab_customers_approved.html:671 · payload columns[3] = {key:'avg_feedback', format:'ratio'} · screenshot ceo-customers-overview.png (4.6 · 4.7 · 4.7 · 4.5 …) · a 'score' formatter exists in src/lib/reportsFormat.js:119 (toFixed(3)) — neither format reproduces '4.63', so this is a declaration question, not a formatter swap",
+   "owner": "rpc"
+  },
+  {
+   "lens": "B",
+   "surface": "מ19 · גרף ממוצע לפי חודש",
+   "severity": "minor",
+   "claim": "The x-axis (and the chart's screen-reader table) print raw ISO keys '2026-01' … '2026-08' instead of an Israeli month label; every other date on the tab is DD/MM/YYYY.",
+   "evidence": "screenshot ceo-customers-overview.png (axis) · probe.json runs.ceo_mode0.surfaces.מ19.headers (sr-table columns '2026-01' … '2026-08') · payload chart.data[0] = {month:'2026-01'} with no label and no label_source (the shell has label_source support, used by מ4's WEEKDAY_NAMES_HE)",
+   "owner": "rpc"
+  },
+  {
+   "lens": "B",
+   "surface": "מ22 · פס-הניתוח (מ25)",
+   "severity": "minor",
+   "claim": "The run bar is amber in every state, including state 5 ('מציג את הריצה מ-⁦16/09/2026⁩, אושרה ע\"י …') where there is nothing to act on. The approved mockup styles `.runbar` white with slate border and reserves amber for `.runbar.warn`.",
+   "evidence": "05_tab_customers_approved.html:311-316 (.runbar white · .runbar.warn amber) · AnalysisRunBar.jsx:217 fixed 'border-amber-200 bg-amber-50' · screenshot ceo-notes.png",
+   "owner": "tab"
+  },
+  {
+   "lens": "B",
+   "surface": "מ19 (and מ21 for a masked identity)",
+   "severity": "minor",
+   "claim": "The four overview tiles wrap 2+2 (3+1 for מנהלת פרויקטים) at 1280px with unequal widths, where the approved mockup draws four equal tiles on one row; the sub-line is what widens them (KpiTile caps the sub at 210px but the tile still grows).",
+   "evidence": "screenshots ceo-customers-overview.png · projects-drifting.png · KpiTile.jsx SubLine max-w-[210px] · mockup .tiles grid of four",
+   "owner": "shell"
+  },
+  {
+   "lens": "A",
+   "surface": "מ22 · מצב 'טרם אושרה ריצת-ניתוח'",
+   "severity": "minor",
+   "claim": "In the no-approved-run state the whole 'טרם אושרה ריצת-ניתוח' block renders at the very BOTTOM of the page — below the empty table, the definitions line and meta.notes (measured: block top 1380px, table top 1227px) — while the mockup places that basebanner directly above the table. A reader meets a header-only table first and the explanation last.",
+   "evidence": "results/lensBC-customers/probe5.json m22_no_run {order: […, report-table-card, report-definitions, report-notes, m22-no-run], noRunTop:1380, tablesTop:1227, tableRows:0, tableHasMessage:false} · screenshot m22-no-run.png (produced by rewriting the RPC RESPONSE in the browser — no DB write) · mockup c4: 1572 hint tilesBasis > 1593 basebanner > 1605 drill > 1608 table · CustomerSurface.jsx renders NoApprovedRun from renderExtras (bottom slot)",
+   "owner": "tab"
+  },
+  {
+   "lens": "C",
+   "surface": "reconciliation (p2vf-customers.json)",
+   "severity": "minor",
+   "claim": "The builder's report says 'p2vf-customers.json still does not exist' and reconciles against the migration file instead. The file existed at 09:14, ~80 minutes before the report was written (10:36), and carries a 12-item payload_changes list. I re-checked every item against the live payloads and the tab: all twelve ARE reflected, so the conclusion survives — the claim about the file does not.",
+   "evidence": "ls -la results/p2vf-customers.json ⇒ 30856 bytes, 16/09 09:14 · results/p3-customers.json not_verified[3] · the 12 changes re-verified on screen: export_blocked_reason (ExportBar caption), customer_filter_ignored (meta.notes footer), drill_key {kind,id} (Enter on a row ⇒ /customers/426), columns[].sorted (aria-sort, one column per surface), bidi isolates, m19 population '⁦42⁩ לקוחות (מתוך ⁦61⁩)', CUSTOMER_TYPE_LABELS ('חברה פרטית'), m22 426 rows / 25 red flags / '⁦2⁩ ריצות מאושרות', run_in_progress (failed ⇒ ignored)",
+   "owner": "tab"
+  },
+  {
+   "lens": "C",
+   "surface": "CustomersTab.test.jsx — hint-key test",
+   "severity": "minor",
+   "claim": "The 'every <Hint id> resolves' test reads ONE file (tabs/customers/CustomerSurface.jsx) and matches the literal pattern /'(reports\\.[A-Za-z.]+)'/. A hint placed in AnalysisRunBar.jsx or CustomersTab.jsx with a typo'd key renders null silently in production and the suite stays green — which is the exact failure the test was written to prevent.",
+   "evidence": "src/modules/11_reports/tabs/CustomersTab.test.jsx:788-797 (`readFileSync('src/modules/11_reports/tabs/customers/CustomerSurface.jsx')`)",
+   "owner": "tab"
+  },
+  {
+   "lens": "C",
+   "surface": "CustomersTab.test.jsx — coverage",
+   "severity": "minor",
+   "claim": "Three gaps, each matching a defect above: (1) no test asserts that the money masking covers anything outside tiles/columns/rows, so the so_what leak passes green; (2) no test renders a payload with tiles+charts and rows:[] (the empty-after-filter screen), only the fully empty payload; (3) the level-0 deletion test runs on מ21 only, and the level-2 test asserts hint PRESENCE, never its anchor — so the ⑩א placement above the population line is invisible to the suite.",
+   "evidence": "src/modules/11_reports/tabs/CustomersTab.test.jsx:580-607 (masking test asserts tile/sub/column only) · :780-787 (export test uses rows:[] but asserts only the export button) · :799-819",
+   "owner": "tab"
+  },
+  {
+   "lens": "A",
+   "surface": "מ19 · מ21 · מ22 (tile window lines)",
+   "severity": "minor",
+   "claim": "Eleven of the sixteen tiles ignore the customer filter, and their own window line says only 'אינו מושפע ממסנן התקופה'. The customer-filter exemption is stated once, in the meta.notes footer at the bottom of the page. With a customer selected, a tile reading '⁦33⁩ מהן שייכות למשוב שתויג \"אחר\"' sits above a table filtered to that customer with nothing beside it saying the tile is not.",
+   "evidence": "probe.json runs.ceo_filtered.surfaces.מ19.tiles[].window (all four 'אינו מושפע ממסנן התקופה') and .metaNotes (page-level 'ואינם מושפעים ממסנן הלקוח') · payload meta.customer_filter_ignored lists 4/0/4/3 tile keys and has no reader in the shell or the tab",
+   "owner": "rpc",
+   "conflict_question": "source_a: cards-customers.md ⑧22.5 (🔵 open) — 'המלצתי: האריחים נושאים \"אינו מושפע ממסנן הלקוח\" בדיוק כפי ש-📐3 מחייב לגבי מסנן-התקופה'; source_b: the built page states it once at page level in meta.notes, not per tile. Ishay's ruling decides which."
+  }
+ ],
+ "checked": [
+  "Labels byte-for-byte vs spec.md §1.4 (לקוחות row): 4 page titles and 16 tile labels — all 16 match the payload and the payload matches §1.4, with one known documented exception (מ21 tile ② payload 'הכנסת 12 החודשים של הלקוחות המסומנים' vs the truncated §1.4 entry — already routed as a doc item).",
+  "Baseline numbers (stage2-review/signoff-baseline-2026-09-10.md:43): 552 · 70 · 33 · 426/356 · 12 מתרחקים מתוך 52 — all five appear on screen, isolated and separated per reportsFormat. Today-anchored drift is the expected kind (43.7% vs 43.3%, 2,786,544 ₪ vs 2,790,032 ₪, 16/212 days vs 15/206).",
+  "📐2 population line on all four · 📐17 period in the subtitle · 📐23 'אז מה' on all four (above the tiles, 19/19 mockup order) · 📐16 definitions line on all four · 📐1 comparison half on 16/16 tiles (three of them degenerate — see findings) · 📐3 window line on 16/16 tiles.",
+  "Ruling 33: four door tiles on מ19 for CEO, each a real <button> with aria-label '… — פתחי את הדוח'; for מנהלת פרויקטים the fourth (target = כספים/גיול חובות) is no longer a button at all — the shell now implements ⑧19.2 option (א), so the builder's open 'a door that does nothing' item is closed in this tree.",
+  "Ruling 19 (whole row clickable): row carries tabindex=0 + role=button on all four surfaces; focus + Enter on מ21 row 1 navigated to /customers/426 in a real browser (probe2.json keyboard_row).",
+  "Cross-filter (D-30 ①): clicking the 'מה מכעיס' bar filters the table 19 ⇒ 3 rows, shows the chip '× נקה בחירה' + label 'איכות תגים', and announces 'מסונן לאיכות תגים; ⁦3⁩ שורות' in the live region — 📐9's wording exactly. The keyboard path (the chart's screen-reader table, chart-select-0 + Enter) does the same, and the button of a 0-count category is disabled. My first probe reported this dead; that was my click technique (mouse.down/up with a pause), not the product — re-measured and corrected.",
+  "Five envelope states: loading (3 skeleton blocks under a 5 s route delay) · error ('נסי שוב' shown, no 'אין נתונים', retry re-issued the RPC: 2 ⇒ 3 calls) · no permission (מנהלת גיוס ושיבוץ lands on דיילות with 'לקוחות 🔒 לא זמין בתפקידך'; מנהלת לוגיסטיקה gets all four masked + 'אין דוחות זמינים בתפקידך — פנה למנכ\"ל') · empty-after-filter (see findings) · blank (unit test).",
+  "Masked tabs: role=\"tab\" + aria-selected on every tab including the masked ones, with the visible sentence — verified for RECRUIT and STAFF.",
+  "RTL geometry measured with Range.getBoundingClientRect (D-26's method): ₪ sits right of the digits in a tile sub (signLeft 745 > digitsRight 740) and in a table cell (664 > 660); % sits right of the digits on מ20's headline tile (982 ≥ 983-2). documentElement and body horizontal overflow = 0 on all four surfaces, in both onboarding modes, at 1280×800.",
+  "Onboarding mode 2 seen in a real browser on this tab (the D-32 gap for לקוחות): the notification_preferences GET was rewritten in flight (never a DB write) — 3+3+3+2 = 11 hints render, the 12th (reports.notes.tilesBasis) only in the no-run branch per card ⑩ג, page height +5–7%, zero overflow, zero console errors.",
+  "Deletion test at mode 0 in the browser: population, 'אז מה', tiles, charts, table, definitions, meta.notes, export, the מ21 two-methods banner and the מ19 payment-cadence disclosure all render with zero hints present.",
+  "Onboarding copy: 12 keys, all `guided` only, no <span class=\"ltr\"> left over, no data counts; the three-way check (Hint ids in the tab ⇔ copy file ⇔ card §⑩) holds for all 12, including the two declared wording deviations (התחילי ×3 from the mockup; the dropped 'ארבעה מתוך שנים-עשר' count).",
+  "📐11 at level 0 on מ20: the multi-value declaration is in meta.notes ('הטופס מאפשר יותר מסיבה אחת…' + 'הספירות מוצגות כ\"N מתוך M\" ולא באחוזים (📐11)') — it is base, not layer, as ⑩ב demands.",
+  "§🔒: 'מתרחק בלבד' / 'מתרחק · גם רדום' on the row, 'לקוחות מתרחקים' only as the count tile.",
+  "Gates re-run in this tree: vitest CustomersTab.test.jsx 26/26 (exit 0) · vitest src/modules/11_reports 10 files / 248 tests (exit 0 — the shell fixer's tests raised it from the builder's 208) · eslint exit 0 · prettier --check exit 0 · npm run check:bidi exit 0 · npm run dup exit 0 (1.02% total, zero clones in this tab's files) · CR=0 on all six files (perl tr, per D-12).",
+  "Code: no supabase.from in the tab (the single supabase.functions.invoke in AnalysisRunBar is the orchestrator's declared exception) · no logical Tailwind utilities (ms-/me-/ps-/pe-/start-/end-) · colours are teal + slate + the amber the shell itself already uses for banners · transformPayload returns the C8 shape and deletes no key · transform identity memoised on primitives.",
+  "Tests: @/supabaseClient, recharts and ../api are all mocked — nothing reaches the network."
+ ],
+ "not_verified": [
+  "The RPC's real `meta.export_blocked_reason` for מ22 with no approved run. Live there are two approved runs, and in my no-run reproduction I injected that string myself, so the screen text proves nothing about the server. The unit test asserts EXPORT_NO_APPROVED_RUN from src/lib/reportsExport.js; the mockup's own wording is 'אין שורות לייצא — טרם אושרה ריצת-ניתוח'.",
+  "The מ22 no-run state at onboarding mode 2 — I measured it at mode 0, so the ⑩ג hint's position inside that branch was not seen in a browser (only asserted by unit test).",
+  "מ25 states 2–4 against the real server: no classification run was started (provider quota, and starting one is a write). running/partial/failed are fixture-only, as the builder said.",
+  "Export CONTENT: I never downloaded a file. The ExportBar receives the transformed rows, so a masked identity should get 'לא זמין בתפקידך' in the revenue column — checked in code, not in a downloaded xlsx.",
+  "A single 404 console error appeared in the first CEO pass ('Failed to load resource: 404') and did not reproduce in three later passes with a response listener attached (probe3 failedRequests = []). Unidentified; not a report RPC.",
+  "The shell is being edited in parallel. Every shell-owned finding was re-read at 18:08 in the newer tree and still stands, but a fix landing after 18:11 is not in my measurement.",
+  "מ21's sort fallback for a masked identity was verified on screen (aria-sort moved to 'פי כמה מהקצב'), but I did not verify the export filename/columns for that identity.",
+  "No negative number exists anywhere on this tab, so the 'minus sits right of the digits' half of the RTL check had nothing to measure."
+ ],
+ "blind_spot": "I measured the customer filter with exactly one customer (401 · אלפא סיסטמס) chosen because two of its payloads are empty. That customer has an approved-run row in every surface and no missing contact, so three tab-owned display bridges were never exercised on screen: `contactCell`'s 'אין איש קשר ראשי' branch (payload.jsx:99), `listText`'s empty-array ⇒ '—' branch (:50-54), and `NO_NOTE` ('— ללא הערה', :35). All three are unit-tested with fixtures, none was seen in a browser. Checkable in one query: select a customer whose customer_contacts has no primary row (or a מ20 feedback with reasons = '{}') and open מ21/מ20 with ?customer=<id> — the cell must read 'אין איש קשר ראשי' / '— ללא הערה', never an empty cell. Second, narrower: my no-run reproduction rewrote the RPC response in the browser, so everything I concluded about that state is conditional on the server's real no-run payload having the same shape (tiles present, rows empty, meta.run null) — if the RPC returns tiles with null values instead, ReportSurface's hasContent test could fall to the blank envelope and the 'טרם אושרה ריצת-ניתוח' block would never render at all.",
+ "screenshots": [
+  "results/lensBC-customers/ceo-customers-overview.png",
+  "results/lensBC-customers/ceo-satisfaction.png",
+  "results/lensBC-customers/ceo-drifting.png",
+  "results/lensBC-customers/ceo-notes.png",
+  "results/lensBC-customers/ceo-customers-overview-mode2.png",
+  "results/lensBC-customers/ceo-satisfaction-mode2.png",
+  "results/lensBC-customers/ceo-drifting-mode2.png",
+  "results/lensBC-customers/ceo-notes-mode2.png",
+  "results/lensBC-customers/ceo-cust401-satisfaction.png",
+  "results/lensBC-customers/ceo-cust401-drifting.png",
+  "results/lensBC-customers/projects-customers-overview.png",
+  "results/lensBC-customers/projects-drifting.png",
+  "results/lensBC-customers/projects-notes.png",
+  "results/lensBC-customers/recruit-customers.png",
+  "results/lensBC-customers/staff-customers.png",
+  "results/lensBC-customers/state-loading.png",
+  "results/lensBC-customers/state-error.png",
+  "results/lensBC-customers/m22-no-run.png",
+  "results/lensBC-customers/crossfilter-satisfaction.png",
+  "results/lensBC-customers/crossfilter-notes.png",
+  "results/lensBC-customers/zoom-m21-tiles.png",
+  "results/lensBC-customers/probe.json",
+  "results/lensBC-customers/probe2.json",
+  "results/lensBC-customers/probe3.json",
+  "results/lensBC-customers/probe4.json",
+  "results/lensBC-customers/probe5.json"
+ ]
+}

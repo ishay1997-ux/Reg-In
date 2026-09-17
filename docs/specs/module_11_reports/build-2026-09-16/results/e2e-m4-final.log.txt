@@ -1,0 +1,50 @@
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+
+Running 32 tests using 1 worker
+
+[1/32] [chromium] › e2e\hostesses.spec.js:63:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › נוחתים על לשונית מבט-העל, והיא מציגה אירועים אמיתיים
+[2/32] [chromium] › e2e\hostesses.spec.js:77:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › 🔴 הסדר הוא התשובה — האירוע הקרוב יותר יושב מעל הרחוק
+[3/32] [chromium] › e2e\hostesses.spec.js:91:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › שני ה-KPI מדברים על אותה רשימה שמתחתיהם
+[4/32] [chromium] › e2e\hostesses.spec.js:134:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › ריק-אחרי-סינון אומר "לא נמצאו" ומציע לנקות — ולא מתחזה למאגר ריק
+[5/32] [chromium] › e2e\hostesses.spec.js:198:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › "שלחי שוב למי שפג תוקפן" אינו נעלם, ומצב-הכיבוי שלו עקבי עם המספר שעליו
+[6/32] [chromium] › e2e\hostesses.spec.js:217:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › 🔴 כשל-טעינה מציג שגיאה + "נסה שוב", לעולם לא "אין כרגע אירועים"
+[7/32] [chromium] › e2e\hostesses.spec.js:235:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › 🔒 מנהלת פרויקטים רואה את הרשימה — ומ-19/08/2026 גם את פקדי-השליחה (edit)
+[8/32] [chromium] › e2e\hostesses.spec.js:258:3 › מודול 4 · משטח 1 — מבט-על השיבוצים › 🔴 מצב T-24: הקישור מת ⇒ כפתור-השליחה מוחלף בניתוב, וגם הכפתור המרוכז מפסיק לספור אותו
+[9/32] [chromium] › e2e\hostesses.spec.js:341:3 › מודול 4 · משטח 3 — מאגר הדיילות › לשונית המאגר מציגה דיילות אמיתיות ואת שלושת המסננים
+[10/32] [chromium] › e2e\hostesses.spec.js:351:3 › מודול 4 · משטח 3 — מאגר הדיילות › 🔴 סינון-עיר מצמצם באמת — כל שורה שנשארה היא מהעיר שנבחרה
+[11/32] [chromium] › e2e\hostesses.spec.js:370:3 › מודול 4 · משטח 3 — מאגר הדיילות › 🔴 ריק-אחרי-סינון ו"מאגר ריק" הן שתי הודעות שונות — וזו לא קוסמטיקה
+[12/32] [chromium] › e2e\hostesses.spec.js:383:3 › מודול 4 · משטח 3 — מאגר הדיילות › 🔴 מאגר ריק באמת אומר משהו אחר לגמרי — נכפה ברשת, לא בדאטה
+[13/32] [chromium] › e2e\hostesses.spec.js:398:3 › מודול 4 · משטח 3 — מאגר הדיילות › 🔴 כשל-טעינה מציג שגיאה + "נסה שוב", ולעולם לא "עדיין אין דיילות במאגר"
+[14/32] [chromium] › e2e\hostesses.spec.js:421:3 › מודול 4 · משטח 3 — מאגר הדיילות › 🖱️ לחיצה בכל מקום בשורה פותחת את הכרטיס — לא רק על השם, וגם מהמקלדת
+[15/32] [chromium] › e2e\hostesses.spec.js:439:3 › מודול 4 · משטח 3 — מאגר הדיילות › 🔒 מנהלת פרויקטים במאגר — מ-19/08/2026 בדרגת edit: שכר ופקדי-עריכה מוצגים
+[16/32] [chromium] › e2e\hostesses.spec.js:474:3 › מודול 4 · משטחים 3ב/3ג — טופס הדיילת › 🔴 ת"ז לא-תקינה חוסמת שמירה ואומרת למה — ותקינה משחררת את החסימה
+[17/32] [chromium] › e2e\hostesses.spec.js:489:3 › מודול 4 · משטחים 3ב/3ג — טופס הדיילת › 🔴 שכר מתחת למינימום חוסם — והרף מגיע מהמערכת, לא מהבדיקה
+[18/32] [chromium] › e2e\hostesses.spec.js:500:3 › מודול 4 · משטחים 3ב/3ג — טופס הדיילת › 🟡 מייל שכבר רשום מזהיר — ואינו חוסם (§7.65)
+[19/32] [chromium] › e2e\hostesses.spec.js:531:3 › מודול 4 · משטחים 3ב/3ג — טופס הדיילת › שדות-החובה נושאים דוגמה, ו-Enter מוגדר לשלוח את הטופס
+[20/32] [chromium] › e2e\hostesses.spec.js:562:3 › מודול 4 · משטח 3 — חלון ההשבתה › 🔴 דיילת עם שיבוץ עתידי — המתג שואל, ולא משבית בשקט
+[21/32] [chromium] › e2e\smart-match.spec.js:113:3 › מודול 4 · מסך 2 — שיבוץ חכם › לחיצה על שורה במבט-העל פותחת את השיבוץ החכם של אותו אירוע, וחוזרים ממנו
+[22/32] [chromium] › e2e\smart-match.spec.js:123:3 › מודול 4 · מסך 2 — שיבוץ חכם › 🐞 ארבעת אריחי-המונים אינם מציגים שקלים
+[23/32] [chromium] › e2e\smart-match.spec.js:134:3 › מודול 4 · מסך 2 — שיבוץ חכם › 🔴 החלפת זווית מסדרת מחדש את אותן מועמדות — לא מסננת אף אחת
+[24/32] [chromium] › e2e\smart-match.spec.js:163:3 › מודול 4 · מסך 2 — שיבוץ חכם › 🐞 שורת "נשלח" מציגה תאריך ושעה קריאים — לא חותמת-זמן גולמית
+[25/32] [chromium] › e2e\smart-match.spec.js:196:3 › מודול 4 · מסך 2 — שיבוץ חכם › 🔴 הזווית שאין לה דאטה מוצגת מכובה ומנומקת — לא נעלמת
+[26/32] [chromium] › e2e\smart-match.spec.js:214:3 › מודול 4 · מסך 2 — שיבוץ חכם › 🔴 המסך אומר בקול שמרכיב האמינות כבוי, ואינו מעמיד פנים שהציון מלא
+[27/32] [chromium] › e2e\smart-match.spec.js:261:3 › מודול 4 · מסך 2 — שיבוץ חכם › 🔴 שער אי-הזמינות בודק את תאריך האירוע — לא את תאריך היום
+[28/32] [chromium] › e2e\smart-match.spec.js:328:3 › מודול 4 · מסך 2 — שיבוץ חכם › 🔴 כשל-טעינה מציג שגיאה + "נסה שוב", ולעולם לא "אין מועמדות"
+[29/32] [chromium] › e2e\smart-match.spec.js:352:3 › מודול 4 · מסך 2 — שני כיווני ההרשאה › מנהלת גיוס רואה תיבות-סימון וכפתור-שליחה
+[30/32] [chromium] › e2e\smart-match.spec.js:358:3 › מודול 4 · מסך 2 — שני כיווני ההרשאה › 🔴 מנהלת פרויקטים ב-Smart Match — מ-19/08/2026 בדרגת edit: הפקדים מוצגים לה
+[31/32] [chromium] › e2e\smart-match.spec.js:427:3 › מודול 4 · משטח 4 — תפריט-הפעולות פר-שורה › 🔴 כל סטטוס מקבל רשימת-פעולות משלו — ו"ביטלה אחרי אישור" אינה מקבלת תפריט כלל
+[32/32] [chromium] › e2e\smart-match.spec.js:469:3 › מודול 4 · משטח 4 — תפריט-הפעולות פר-שורה › 🔴 שתי הפעולות שנראות זהות ואינן — לעולם לא באותו תפריט
+  32 passed (2.9m)

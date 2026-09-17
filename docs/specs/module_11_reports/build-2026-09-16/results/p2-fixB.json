@@ -1,0 +1,698 @@
+{
+ "i1": {
+  "file": "supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql",
+  "functions": 13,
+  "applied_as": [
+   "module11_i1_m03",
+   "module11_i1_m07",
+   "module11_i1_m08",
+   "module11_i1_m09",
+   "module11_i1_m12",
+   "module11_i1_m14",
+   "module11_i1_m15",
+   "module11_i1_m16",
+   "module11_i1_m17",
+   "module11_i1_m19",
+   "module11_i1_m20",
+   "module11_i1_m21",
+   "module11_i1_m22",
+   "module11_i1_m16_units",
+   "module11_i1_m19_units",
+   "module11_i1_m20_units",
+   "module11_i1_m21_units",
+   "module11_i1_m22_units",
+   "module11_i1_m16_axis"
+  ],
+  "md5_match": "13/13",
+  "md5_live_equals_file": {
+   "report_m03_trends": {
+    "len": 31367,
+    "md5": "8c31f8d0214fca6429d0b1668a11124c"
+   },
+   "report_m07_finance_overview": {
+    "len": 24346,
+    "md5": "7db4955cd505261d9812b290a95d6347"
+   },
+   "report_m08_profitability": {
+    "len": 16540,
+    "md5": "0f7c4f276a82ae7a65373c233044b7d6"
+   },
+   "report_m09_aging": {
+    "len": 32432,
+    "md5": "104a9943baafb363849fd68187f6d4a0"
+   },
+   "report_m12_equipment": {
+    "len": 17987,
+    "md5": "3ac71684bb962302c84c9ba120384a37"
+   },
+   "report_m14_hostess_overview": {
+    "len": 28957,
+    "md5": "32b06e97605b9109f2a46c7a710292b8"
+   },
+   "report_m15_reliability": {
+    "len": 28327,
+    "md5": "f091c55655bb6be6642c3d0c9d1030f6"
+   },
+   "report_m16_quality_cost": {
+    "len": 15030,
+    "md5": "d71339cce8cfadb9d06f5f8ffc5dc7ee"
+   },
+   "report_m17_fairness": {
+    "len": 25786,
+    "md5": "e59ef2d2be2d5426cb590b355762b7d1"
+   },
+   "report_m19_customers_overview": {
+    "len": 29954,
+    "md5": "b3a5dfeb2f6d644b869de6eaa21010ce"
+   },
+   "report_m20_satisfaction": {
+    "len": 25257,
+    "md5": "2dc24cb1b9042b769d825221f0dd4d08"
+   },
+   "report_m21_drifting": {
+    "len": 26695,
+    "md5": "40f05c75d747b83fd1ec850a81be5616"
+   },
+   "report_m22_notes": {
+    "len": 28967,
+    "md5": "b9a31f816e97c6b925862fc919b3b37a"
+   }
+  },
+  "chunks_under_60kb": true
+ },
+ "verification": {
+  "md5_before_edit": "13/13 live prosrc == latest source-file $function$ body, proved before a character was touched",
+  "ceo_calls": "16/16 surfaces returned 200 (13 functions; m03 x3 levels, m09 x2 levels)",
+  "blocked_identities": "13/13 returned 42501 (RECRUIT on m03/m19/m20/m21/m22 · FINANCE on m14/m15/m16/m17 · STAFF on m07/m08/m09/m12)",
+  "numeric_moves": 0,
+  "removed_keys": "4 - all intended: m17 refLines[0].value (array shifted, the median line moved to [1] with its value) and m22 tiles[3].compare.{value,label,direction} (replaced by compare:null, round-3 item)",
+  "shells_byte_identical": "13/13 signature + comment on function + revoke + grant byte-identical to the source file"
+ },
+ "changes": [
+  {
+   "rpc": "report_m03_trends",
+   "key": "columns[year].format (level 0)",
+   "before": "int",
+   "after": "text",
+   "source": "defect 1 . reportsFormat.js FORMATTERS.int"
+  },
+  {
+   "rpc": "report_m03_trends",
+   "key": "tiles[price_vs_cost].compare.format (level 1)",
+   "before": "(absent => fell back to tile.format='text')",
+   "after": "money",
+   "source": "defect 2 . KpiTile CompareLine fallback + C8 amendment"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "key": "chart.note",
+   "before": "(absent)",
+   "after": "the card-8.9 bar-legend paragraph; live bucket numbers, LRI...PDI + thousands separators",
+   "source": "defect 6 . cards-finance.md 8.9 + 03_tab_finance_approved.html .barkey"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "key": "tiles[median_response].format",
+   "before": "days",
+   "after": "ratio",
+   "source": "defect 4 . cards-hostesses.md m17 3 (9.9 hours)"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "key": "tiles[p90_response].format",
+   "before": "days",
+   "after": "ratio",
+   "source": "defect 4 . cards-hostesses.md m17 3 (20.7 hours)"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "key": "tiles[p90_response].sub",
+   "before": "אחת מכל עשר תשובות...",
+   "after": "שעות · אחת מכל עשר תשובות...",
+   "source": "defect 4 . unit carried in sub (spec 1.4 label has no unit)"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "columns[last_event].format",
+   "before": "text",
+   "after": "date",
+   "source": "defect 3 . ISO date on screen"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "columns[next_event].format",
+   "before": "text",
+   "after": "date",
+   "source": "defect 3 . ISO date on screen"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[].target.report => report_m20_satisfaction",
+   "before": "שביעות רצון",
+   "after": "report_m20_satisfaction",
+   "source": "defect 8 . micro-guide 9 D-30 (3): contract value is the RPC name"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[].target.report => report_m22_notes",
+   "before": "ניתוח הערות",
+   "after": "report_m22_notes",
+   "source": "defect 8 . micro-guide 9 D-30 (3): contract value is the RPC name"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[].target.report => report_m21_drifting",
+   "before": "לקוחות מתרחקים",
+   "after": "report_m21_drifting",
+   "source": "defect 8 . micro-guide 9 D-30 (3): contract value is the RPC name"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[].target.report => report_m09_aging",
+   "before": "גיול חובות",
+   "after": "report_m09_aging",
+   "source": "defect 8 . micro-guide 9 D-30 (3): contract value is the RPC name"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "columns[final_event_date].format",
+   "before": "text",
+   "after": "date",
+   "source": "defect 3 . ISO date on screen"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "chart[מה משמח].layout",
+   "before": "(absent)",
+   "after": "horizontal",
+   "source": "defect 7 . approved mockup draws both reason charts horizontal"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "chart[מה מכעיס].layout",
+   "before": "(absent)",
+   "after": "horizontal",
+   "source": "defect 7 . approved mockup draws both reason charts horizontal"
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "key": "rows[].score_pair",
+   "before": "(absent)",
+   "after": "one composed text cell: <last> . <avg 2dp> (n=<k>), each number LRI...PDI isolated",
+   "source": "defect 5 . card 3 + approved mockup #c3 (ONE cell); G-l5 locks 9 columns"
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "key": "columns[last_event].format",
+   "before": "text",
+   "after": "date",
+   "source": "defect 3 . ISO date on screen"
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "key": "columns[].key (score column)",
+   "before": "last_score",
+   "after": "score_pair",
+   "source": "defect 5 . the cell now carries both numbers"
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "key": "columns[].format (score column)",
+   "before": "ratio",
+   "after": "text",
+   "source": "defect 5 . composed cell"
+  },
+  {
+   "rpc": "report_m22_notes",
+   "key": "columns[final_event_date].format",
+   "before": "text",
+   "after": "date",
+   "source": "defect 3 . ISO date on screen"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "key": "chart.note",
+   "before": "(absent)",
+   "after": "the approved mockup's p.chart-note under the Lorenz title",
+   "source": "item 10 . 04_tab_hostesses_approved.html + card 10 delete-test"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "key": "chart.refLines[0] (diagonal)",
+   "before": "(absent - only the median y-line)",
+   "after": "{axis:'diagonal', from:{x:0,y:0}, to:{x:100,y:100}, label:'חלוקה שווה'} prepended; the median y-line kept",
+   "source": "item 10 . rule 6 + card 3 (domain 0-100) + mockup label"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "population.label - 5 counts",
+   "before": "bare (v_pop_hosts + the four exclusion counts)",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9 . no-op on today's values, provable by diff"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[red_hostesses].sub - 5 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[active_hostesses].sub - 2 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[gap_events].sub - 4 counts",
+   "before": "bare",
+   "after": "to_char(coalesce(...,0), 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "so_what - 2 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[].target.report => report_m15_reliability",
+   "before": "אמינות והתייצבות",
+   "after": "report_m15_reliability",
+   "source": "item 8 extended . D-30 (3) contract value is the RPC name"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[].target.report => report_m17_fairness",
+   "before": "הוגנות השיבוץ",
+   "after": "report_m17_fairness",
+   "source": "item 8 extended . D-30 (3) contract value is the RPC name"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "tiles[].target.report => report_m16_quality_cost",
+   "before": "איכות מול עלות",
+   "after": "report_m16_quality_cost",
+   "source": "item 8 extended . D-30 (3) contract value is the RPC name"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "population.label - 4 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "tiles[late].sub - 2 shift counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "tiles[no_show].sub - 2 shift counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "tiles[flagged].sub - 4 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "meta.notes[below-threshold] - 3 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "so_what - 4 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "population.label - 3 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "tiles[*].sub - 3 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "so_what - 3 counts",
+   "before": "bare",
+   "after": "to_char(..., 'FM999,999,999')",
+   "source": "item 9"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "chart.refLines[x].label",
+   "before": "חציון התעריף 43.27 ₪",
+   "after": "חציון התעריף 43 ₪ (value stays round(v_median,2) = 43.27)",
+   "source": "item 11 . rule 4 - whole shekels everywhere"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "chart.note",
+   "before": "(absent)",
+   "after": "'<n> דיילות ללא דירוג אינן בגרף — ראי את השבב ...' with the live count, LRI...PDI",
+   "source": "item 12 . measured: rating null points are not plotted"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "chart.note (chip name)",
+   "before": "רק בלי דירוג",
+   "after": "בלי דירוג בלבד (the name the mockup and card C2 use)",
+   "source": "round 3 . hostesses builder - the note pointed at a chip name that does not exist on screen"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "chart.x_domain",
+   "before": "(absent - the X axis fell back to zero-based)",
+   "after": "[floor(min hourly_rate) - 1, ceil(max hourly_rate) + 1], computed live; Y domain stays [1,5]",
+   "source": "round 3 . rule-5 ruling - a rate axis is not a totals axis"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "tiles[expensive_low_rated].target.report",
+   "before": "אמינות והתייצבות",
+   "after": "report_m15_reliability",
+   "source": "item 8 extended . D-30 (3)"
+  },
+  {
+   "rpc": "report_m07_finance_overview",
+   "key": "chart.unit + series[open_amount].format",
+   "before": "unit='₪', series format absent",
+   "after": "unit='money', series format='money'",
+   "source": "item 13 . ChartCard.valueFormat/formatAxisTick"
+  },
+  {
+   "rpc": "report_m08_profitability",
+   "key": "chart.unit + series[deviation].format",
+   "before": "unit='₪', series format absent",
+   "after": "unit='money', series format='money'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m09_aging",
+   "key": "chart.unit + series[*].format",
+   "before": "unit='₪', series format absent",
+   "after": "unit='money', every stack layer format='money'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m12_equipment",
+   "key": "chart[1].unit + series format",
+   "before": "unit='₪', series format absent",
+   "after": "unit='money', series format='money'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m12_equipment",
+   "key": "chart[2].unit + series formats",
+   "before": "unit='יחידות', series format absent",
+   "after": "unit='int' + unit_label='יחידות', both series format='int'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "key": "chart.series[*].format",
+   "before": "absent (unit='percent' already a format name)",
+   "after": "percent on both series",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "key": "chart.series[*].format",
+   "before": "absent (unit='percent' already a format name)",
+   "after": "percent on both series",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "key": "chart.series[*].format (scatter)",
+   "before": "absent => the rating axis rendered as money",
+   "after": "hourly_rate='money', rating='int'",
+   "source": "item 13 . ScatterBody reads series[0]/series[1].format"
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "key": "chart.series[y].format",
+   "before": "absent (unit='percent' already a format name)",
+   "after": "percent",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "chart.unit + series[avg_score].format",
+   "before": "unit='ציון', series format absent",
+   "after": "unit='ratio' + unit_label='ציון', series format='ratio'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "chart[score].unit + series[n].format",
+   "before": "unit='משובים', series format absent",
+   "after": "unit='int' + unit_label='משובים', series format='int'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "chart[pos].unit + series[n].format",
+   "before": "unit='משובים', series format absent",
+   "after": "unit='int' + unit_label='משובים', series format='int'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "chart[neg].unit + series[n].format",
+   "before": "unit='משובים', series format absent",
+   "after": "unit='int' + unit_label='משובים', series format='int'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "chart[share-by-year].unit + series.format",
+   "before": "unit='%', series format absent",
+   "after": "unit='percent', series format='percent'",
+   "source": "item 13 . the axis read 0/25/50/75/100 with no %"
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "key": "chart.unit + series[n].format",
+   "before": "unit='מרווחים', series format absent",
+   "after": "unit='int' + unit_label='מרווחים', series format='int'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m22_notes",
+   "key": "chart.unit + series[*].format",
+   "before": "unit='הערות', series format absent",
+   "after": "unit='int' + unit_label='הערות', all three series format='int'",
+   "source": "item 13"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[payment_cadence_by_type].compare.format",
+   "before": "(absent => fell back to tile.format='days')",
+   "after": "int",
+   "source": "round 3 . customers #3 - the screen printed '675 days' for 675 invoices"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "tiles[biggest_negative_is_other].compare",
+   "before": "{value: v_other (the tile's own value), label:'פילוח לפי שנה', direction:'up'}",
+   "after": "{value: '<year>: <n> . <year>: <n> . ...', label:'פילוח לפי שנה (השנה הנוכחית חלקית)', direction:'flat'}",
+   "source": "round 3 . customers #5 - the mockup draws the year split in that slot"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "rows[].avg_feedback_pair + the column's key/format",
+   "before": "column key 'avg_feedback', format 'ratio' (4.6, no n)",
+   "after": "column key 'avg_feedback_pair', format 'text' ('4.63 . n=129'); both raw numbers kept",
+   "source": "round 3 . customers #12 - the mockup draws '4.63 . n=129'"
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "key": "chart.data[].label + chart.xKey",
+   "before": "xKey='month' over raw ISO keys ('2026-01')",
+   "after": "xKey='label' over a Hebrew month label; 'month' kept in the data",
+   "source": "round 3 . customers #13 - the category axis has no formatter by design"
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "key": "chart[מה משמח].note + chart[מה מכעיס].note",
+   "before": "(absent)",
+   "after": "the mockup's independent-scale sentence on each",
+   "source": "round 3 . customers #6 (the major half)"
+  },
+  {
+   "rpc": "report_m22_notes",
+   "key": "tiles[other_tagged_notes].compare",
+   "before": "{value: v_other (the tile's own value), label:'פילוח לפי שנה', direction:'up'}",
+   "after": "{value:'<year>: <n> . ...', label:'פילוח לפי שנה (השנה הנוכחית חלקית)', direction:'flat'}",
+   "source": "round 3 . customers #5"
+  },
+  {
+   "rpc": "report_m22_notes",
+   "key": "tiles[red_flags].compare",
+   "before": "unconditional {value:null, label:'יימדד אחרי הריצה הראשונה'}",
+   "after": "that sentence only while no run is approved; null once a run exists",
+   "source": "round 3 . customers #4 - the line contradicted the tile's own 25"
+  }
+ ],
+ "values_unchanged": true,
+ "payload_changes": [
+  "m03_L0 :: ~value columns[0].format",
+  "m03_L1 :: ADDED   tiles[3].compare.format = 'money'",
+  "m09_L0 :: ~value chart.unit",
+  "m09_L0 :: ADDED   chart.note = 'השאלה שהעמודות עונות עליה: כמה כסף שכבר איחר יש לנו, וכמה זמן הוא כבר מחכה? כל עמודה היא דלי של איחור — כמה י",
+  "m09_L0 :: ADDED   chart.series[0].format = 'money'",
+  "m09_L0 :: ADDED   chart.series[1].format = 'money'",
+  "m09_L0 :: ADDED   chart.series[2].format = 'money'",
+  "m09_L0 :: ADDED   chart.series[3].format = 'money'",
+  "m09_L1 :: ~value chart.unit",
+  "m09_L1 :: ADDED   chart.note = 'השאלה שהעמודות עונות עליה: כמה כסף שכבר איחר יש לנו, וכמה זמן הוא כבר מחכה? כל עמודה היא דלי של איחור — כמה י",
+  "m09_L1 :: ADDED   chart.series[0].format = 'money'",
+  "m09_L1 :: ADDED   chart.series[1].format = 'money'",
+  "m09_L1 :: ADDED   chart.series[2].format = 'money'",
+  "m09_L1 :: ADDED   chart.series[3].format = 'money'",
+  "m17 :: REMOVED chart.refLines[0].value",
+  "m17 :: ~value chart.refLines[0].axis",
+  "m17 :: ~value chart.refLines[0].label",
+  "m17 :: ~value tiles[3].format",
+  "m17 :: ~value tiles[4].format",
+  "m17 :: ~value tiles[4].sub",
+  "m17 :: ADDED   chart.note = \"הקו הישר הוא חלוקה שווה לגמרי. ככל שהעקומה נופלת ממנו, החלוקה ריכוזית יותר, והשטח שביניהם הוא בדיוק מה שמדד ג",
+  "m17 :: ADDED   chart.refLines[0].from.x = 0",
+  "m17 :: ADDED   chart.refLines[0].from.y = 0",
+  "m17 :: ADDED   chart.refLines[0].to.x = 100",
+  "m17 :: ADDED   chart.refLines[0].to.y = 100",
+  "m17 :: ADDED   chart.refLines[1].axis = 'y'",
+  "m17 :: ADDED   chart.refLines[1].label = 'מחצית הדיילות = \\u206616.3%\\u2069 מהמשמרות'",
+  "m17 :: ADDED   chart.refLines[1].value = 16.3",
+  "m17 :: ADDED   chart.series[0].format = 'percent'",
+  "m19 :: ~value chart.unit",
+  "m19 :: ~value chart.xKey",
+  "m19 :: ~value columns[3].format",
+  "m19 :: ~value columns[3].key",
+  "m19 :: ~value columns[4].format",
+  "m19 :: ~value columns[5].format",
+  "m19 :: ~value tiles[0].target.report",
+  "m19 :: ~value tiles[1].compare.direction",
+  "m19 :: ~value tiles[1].compare.label",
+  "m19 :: ~value tiles[1].compare.value",
+  "m19 :: ~value tiles[1].target.report",
+  "m19 :: ~value tiles[2].target.report",
+  "m19 :: ~value tiles[3].target.report",
+  "m19 :: ADDED   chart.data[0].label = 'ינואר \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.data[1].label = 'פברואר \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.data[2].label = 'מרץ \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.data[3].label = 'אפריל \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.data[4].label = 'מאי \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.data[5].label = 'יוני \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.data[6].label = 'יולי \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.data[7].label = 'אוגוסט \\u20662026\\u2069'",
+  "m19 :: ADDED   chart.series[0].format = 'ratio'",
+  "m19 :: ADDED   chart.unit_label = 'ציון'",
+  "m19 :: ADDED   rows[0].avg_feedback_pair = '\\u20664.63\\u2069 · \\u2066n=129\\u2069'",
+  "m19 :: ADDED   rows[1].avg_feedback_pair = '\\u20664.65\\u2069 · \\u2066n=37\\u2069'",
+  "m19 :: ADDED   rows[2].avg_feedback_pair = '\\u20664.70\\u2069 · \\u2066n=30\\u2069'",
+  "m19 :: ADDED   rows[3].avg_feedback_pair = '\\u20664.50\\u2069 · \\u2066n=28\\u2069'",
+  "m19 :: ADDED   rows[4].avg_feedback_pair = '\\u20664.66\\u2069 · \\u2066n=29\\u2069'",
+  "m19 :: ADDED   rows[5].avg_feedback_pair = '\\u20664.33\\u2069 · \\u2066n=12\\u2069'",
+  "m19 :: ADDED   rows[6].avg_feedback_pair = '\\u20663.90\\u2069 · \\u2066n=10\\u2069'",
+  "m19 :: ADDED   rows[7].avg_feedback_pair = '\\u20664.43\\u2069 · \\u2066n=7\\u2069'",
+  "m19 :: ADDED   tiles[3].compare.format = 'int'",
+  "m20 :: ~value chart[0].unit",
+  "m20 :: ~value chart[1].unit",
+  "m20 :: ~value chart[2].unit",
+  "m20 :: ~value chart[3].unit",
+  "m20 :: ~value columns[2].format",
+  "m20 :: ADDED   chart[0].series[0].format = 'int'",
+  "m20 :: ADDED   chart[0].unit_label = 'משובים'",
+  "m20 :: ADDED   chart[1].layout = 'horizontal'",
+  "m20 :: ADDED   chart[1].note = 'הסולם כאן עצמאי ואינו משותף לגרף השלילי שלצידו — אורך עמודה בגרף אחד אינו מייצג את אותו מספר בגרף השני.'",
+  "m20 :: ADDED   chart[1].series[0].format = 'int'",
+  "m20 :: ADDED   chart[1].unit_label = 'משובים'",
+  "m20 :: ADDED   chart[2].layout = 'horizontal'",
+  "m20 :: ADDED   chart[2].note = 'הסולם כאן עצמאי ואינו משותף לגרף החיובי שלצידו — אורך עמודה בגרף אחד אינו מייצג את אותו מספר בגרף השני.'",
+  "m20 :: ADDED   chart[2].series[0].format = 'int'",
+  "m20 :: ADDED   chart[2].unit_label = 'משובים'",
+  "m20 :: ADDED   chart[3].series[0].format = 'percent'",
+  "m21 :: ~value chart.unit",
+  "m21 :: ~value columns[3].format",
+  "m21 :: ~value columns[7].format",
+  "m21 :: ~value columns[7].key",
+  "m21 :: ADDED   chart.series[0].format = 'int'",
+  "m21 :: ADDED   chart.unit_label = 'מרווחים'",
+  "m21 :: ADDED   rows[0].score_pair = '\\u20662\\u2069 · \\u20662.90\\u2069 (\\u2066n=10\\u2069)'",
+  "m21 :: ADDED   rows[10].score_pair = '\\u20662\\u2069 · \\u20662.50\\u2069 (\\u2066n=4\\u2069)'",
+  "m21 :: ADDED   rows[11].score_pair = '\\u20663\\u2069 · \\u20662.43\\u2069 (\\u2066n=7\\u2069)'",
+  "m21 :: ADDED   rows[1].score_pair = '\\u20663\\u2069 · \\u20663.09\\u2069 (\\u2066n=11\\u2069)'",
+  "m21 :: ADDED   rows[2].score_pair = '\\u20663\\u2069 · \\u20663.20\\u2069 (\\u2066n=5\\u2069)'",
+  "m21 :: ADDED   rows[3].score_pair = '\\u20663\\u2069 · \\u20663.09\\u2069 (\\u2066n=11\\u2069)'",
+  "m21 :: ADDED   rows[4].score_pair = '\\u20665\\u2069 · \\u20664.75\\u2069 (\\u2066n=8\\u2069)'",
+  "m21 :: ADDED   rows[5].score_pair = '\\u20665\\u2069 · \\u20665.00\\u2069 (\\u2066n=2\\u2069)'",
+  "m21 :: ADDED   rows[6].score_pair = '\\u20663\\u2069 · \\u20663.00\\u2069 (\\u2066n=5\\u2069)'",
+  "m21 :: ADDED   rows[7].score_pair = '\\u20664\\u2069 · \\u20663.50\\u2069 (\\u2066n=2\\u2069)'",
+  "m21 :: ADDED   rows[8].score_pair = '\\u20662\\u2069 · \\u20662.00\\u2069 (\\u2066n=4\\u2069)'",
+  "m21 :: ADDED   rows[9].score_pair = '\\u20662\\u2069 · \\u20662.50\\u2069 (\\u2066n=6\\u2069)'",
+  "m22 :: REMOVED tiles[3].compare.direction",
+  "m22 :: REMOVED tiles[3].compare.label",
+  "m22 :: REMOVED tiles[3].compare.value",
+  "m22 :: ~value chart.unit",
+  "m22 :: ~value columns[1].format",
+  "m22 :: ~value tiles[1].compare.direction",
+  "m22 :: ~value tiles[1].compare.label",
+  "m22 :: ~value tiles[1].compare.value",
+  "m22 :: ADDED   chart.series[0].format = 'int'",
+  "m22 :: ADDED   chart.series[1].format = 'int'",
+  "m22 :: ADDED   chart.series[2].format = 'int'",
+  "m22 :: ADDED   chart.unit_label = 'הערות'",
+  "m22 :: ADDED   tiles[3].compare = None"
+ ],
+ "not_verified": [
+  "No pre-payload snapshot exists for m07/m08/m12/m14/m15/m16 (the pre capture at 10:59 predated their inclusion). Their value-invariance rests on the SOURCE diff, which shows zero changes to any numeric expression - not on a payload comparison.",
+  "chart.unit_label, chart.layout(on m20), chart.x_domain and columns[].format:'textLtr' have NO reader in the shell as measured on HEAD this turn - the shell is adding them in parallel. Emitting them is additive and inert until it lands.",
+  "The m17 equality diagonal is declared for a 0-100 domain (the card and mockup lock domain 0-100 on both axes); it was NOT rendered in a browser by me.",
+  "m16's x_domain endpoints were computed but the resulting axis was not seen on screen.",
+  "No browser screenshot was taken for any change - all evidence is payload-level."
+ ],
+ "not_done": {
+  "i2_required_for": "m03, m09, m14, m15, m17 - their i1 bodies are already applied, so round-3 items for them need a NEW i2 file (per the coordinator's own rule).",
+  "items": [
+   "m03: split chart 2 into two zero-based panels (price / cost) - management verdict #4",
+   "m03: per-hour RATES as whole shekels (so_what + the level-1 text tile: '47 Sh' not 47.4, '305 / 47' not '305.1 / 47.4') - ruling (4)",
+   "m09: over_60 tile target -> null - finance verdict #2",
+   "m09: isolate the numeric run in 'mumbers' labels ('madreg 90+', level names) with chr(8294)..chr(8297) - finance verdict #7",
+   "m09: declare the rule-18 owner/contact column at all three levels - ruling (2)",
+   "m09: columns[bucket].format -> 'textLtr' (and any other digit-range text column) - the 19:5X item",
+   "m14: targets on_time -> report_m15_reliability, gap_events -> report_m06_staffing - hostesses verdict #11",
+   "m15: definitions must state the red/amber thresholds in numbers + the ruling-38 sentence - hostesses verdict #2",
+   "m17: zero-rows branch wording 'terem nimdad ...' without 'nimdad me-—' - hostesses verdict #12"
+  ],
+  "blocked_not_implemented": [
+   "customers verdict #10 (compare value repeats a sentence label, 5 tiles, MINOR): its prescribed fix is compare.value=null, but KpiTile.CompareLine on HEAD prints '{label}: {value}' unconditionally and formatByType(null) returns an em dash - so a null value renders '<sentence>: —', the same defect with a dash. It depends on the shell's own #11, which has NOT landed. Reported, deliberately not applied."
+  ]
+ },
+ "blind_spot": "The five functions I re-applied a second and third time (m16 x3, m19/m20/m21/m22 x2) were reconstructed from the chunk text I had already read plus the measured delta, not re-read whole from disk each time. md5(prosrc) == the file body caught that completely - 13/13 - so the reconstruction is proved, but the method itself is the one that would fail silently if the md5 gate were ever skipped. Concretely checkable: re-run <scratchpad>/fn_md5_i1_post.py against pg_proc; any future edit to that file that is applied without re-running it is unverified."
+}

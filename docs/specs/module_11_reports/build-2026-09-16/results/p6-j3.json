@@ -1,0 +1,113 @@
+{
+  "file": "supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql",
+  "registry_rows": [
+    "module11_j3_m02",
+    "module11_j3_m03",
+    "module11_j3_m07",
+    "module11_j3_m14",
+    "module11_j3_m19",
+    "module11_j3_m21",
+    "module11_j3_grants",
+    "module11_j3_rank_stamp",
+    "module11_j3_m19_detail_fix"
+  ],
+  "blocks": [
+    {
+      "item": "1 - §7.100 money masked IN THE DATABASE for m19 and m21 (Ishay 17/09/2026 06:5X, option (b), \"בצע\")",
+      "functions": [
+        {
+          "name": "report_m19_customers_overview",
+          "chunk": "module11_j3_m19 + module11_j3_m19_detail_fix",
+          "md5_equal": true,
+          "probe": "signed-in E2E_PROJECTS (לקוחות edit + כספים blocked): meta.money_masked=true; all 8 rows revenue_12m=null; tiles[concentration_vs_drifting].detail top5_revenue=null, total_revenue=null, first_drifting.revenue=null. E2E_CEO: money_masked=false, revenue_12m 643392.21 / 196617.15 present. Live PNG (port 5189, dist built by this session): the revenue column reads 'לא זמין בתפקידך' on every row for PROJECTS and '643,392 ₪' for CEO."
+        },
+        {
+          "name": "report_m21_drifting",
+          "chunk": "module11_j3_m21",
+          "md5_equal": true,
+          "probe": "E2E_PROJECTS: meta.money_masked=true; tile marked_revenue_12m value/sub/detail null; only_personal_cadence.sub money run replaced by '(לא זמין בתפקידך)' and detail.revenue null; rows[].revenue_12m all null; so_what '…יחד (לא זמין בתפקידך) בשנה האחרונה'. E2E_CEO: 320743.08, sub '2,794,171 ₪', so_what '122,124 ₪'. Live PNG: no ₪ digit anywhere on the PROJECTS page."
+        }
+      ],
+      "sql": "select exists (select 1 from public.permissions p where p.role_id = (select public.current_user_role_id()) and p.module_id = (select m.module_id from public.modules m where m.module_name = 'כספים') and p.permission_level = any (array['edit','view'])) into v_can_money;  -- the repo's existing NON-RAISING pattern, copied byte-for-byte from get_dashboard_summary (20260903182735_module7_dashboard_summary_rpc.sql:111-116). No new helper was invented: assert_module_permission is the only permission helper in the repo and it RAISES 42501.",
+      "before_after": "before: both RPCs gated on 'לקוחות' only, revenue crossed the network to every customers-tab user; after: money fields null + meta.money_masked=true for a caller without view/edit on 'כספים'. The 'לקוחות' gate is unchanged (blocked users still get 42501)."
+    },
+    {
+      "item": "2 - T2 revoke table grants on the four deny-all tables",
+      "sql": "revoke all on table public.login_attempts, public.feedback_rpc_calls, public.project_changes, public.seed_registry from anon, authenticated;",
+      "before_after": {
+        "relacl_before": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres} on all four (relrowsecurity=true, zero policies)",
+        "relacl_after": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres} on all four"
+      },
+      "pre_checks": [
+        "pg_proc: all 14 readers are SECURITY DEFINER with search_path='' — check_login_lock, register_failed_login, reset_login_attempts, feedback_rate_limit, apply_scope_change, finance_project_money, list_project_changes, list_projects_overview, report_m12_equipment, seed_register, seed_reset, seed_backdate_project, seed_backdate_quote, enforce_quote_in_progress_lock",
+        "grep -rn \"from('<table>'\" src/ e2e/ = 0 for all four; every textual hit is a comment or a doc that documents the deny-all",
+        "scripts/seed-lib/db.mjs:122 touches seed_registry only via rpc('seed_register')"
+      ],
+      "probe": "signed-in E2E_CEO after the revoke: check_login_lock 200, reset_login_attempts 200; a direct .from('login_attempts').select() now returns 42501 'permission denied for table login_attempts' instead of a silent empty array (an improvement, not a regression)."
+    },
+    {
+      "item": "3 - T9 assignments.recommended_rank_set_at + DB-clock trigger",
+      "sql": "alter table public.assignments add column if not exists recommended_rank_set_at timestamptz;  +  create or replace function public.stamp_recommended_rank_set_at() returns trigger ...  +  create trigger assignments_recommended_rank_stamp before insert or update of recommended_rank on public.assignments for each row execute function public.stamp_recommended_rank_set_at();",
+      "deviation_from_brief": "The brief proposed 'before update of recommended_rank'. MEASURED: the rank is written ONCE, on INSERT (src/modules/04_hostesses/api.js:677 insertWithRank; migration B and M11-4 both state 'ואינו נדרס בשליחה-חוזרת'). An update-only trigger would have been a column that stays NULL forever — a fix that looks done and is not. Implemented as 'before insert or update of'.",
+      "probe": "two rolled-back transactions (DO block ending in RAISE, nothing committed): insert with rank=3 -> set_at=2026-09-17 08:18:19+00 | insert without rank -> NULL | update rank->7 -> stamped | update to the SAME value -> stamp unchanged=t | update rank->null -> rank and set_at both null. No real row was modified.",
+      "client_change": "none — the clock trap in src/CLAUDE.md §3 is why (a browser clock must not stamp a DB row)."
+    },
+    {
+      "item": "4 - abbreviated Hebrew month labels on chart axes (Ishay \"תקן\")",
+      "functions": [
+        { "name": "report_m02_exec_overview", "chunk": "module11_j3_m02", "md5_equal": true },
+        { "name": "report_m03_trends", "chunk": "module11_j3_m03", "md5_equal": true },
+        { "name": "report_m07_finance_overview", "chunk": "module11_j3_m07", "md5_equal": true },
+        { "name": "report_m14_hostess_overview", "chunk": "module11_j3_m14", "md5_equal": true },
+        { "name": "report_m19_customers_overview", "chunk": "module11_j3_m19", "md5_equal": true }
+      ],
+      "sql": "v_months_he constant text[] := array['ינו׳','פבר׳','מרץ','אפר׳','מאי','יוני','יולי','אוג׳','ספט׳','אוק׳','נוב׳','דצמ׳'];  -- geresh U+05F3, not an ASCII apostrophe",
+      "before_after": "Five live bodies carry a v_months_he array: J2 holds four (m02 · m07 · m14 · m19), I2 holds m03. The year is untouched — m02 no year (single-year axis), m07 and m14 always with a year (a 12-month window always crosses two), m19 with a year only when the window crosses more than one calendar year. The sr-only table and the export read the same `label`, so all three agree.",
+      "probe": "live PNG of the m19 axis: ינו׳ · פבר׳ · מרץ · אפר׳ · מאי · יוני · יולי · אוג׳"
+    }
+  ],
+  "client_changes": [],
+  "tests_added": [
+    "src/modules/11_reports/tabs/CustomersTab.test.jsx — '🔒 §7.100 · השרת כבר החזיר null — המסך עדיין אומר \"לא זמין בתפקידך\" ולא \"—\"' (m21: money tile, row, no ₪ on the page)",
+    "src/modules/11_reports/tabs/CustomersTab.test.jsx — '🔒 §7.100 · מ19 · עמודת-הכסף שחזרה null נקראת \"לא זמין בתפקידך\", לא תא ריק'"
+  ],
+  "docs_updated": [
+    "docs/schema.sql — §24 header 67⇒68 functions and a NEW measured counts line (38 · 68 · 65 · 77 · 30, re-run not derived); J3 added as the live-body pointer for m02/m03/m07/m14/m19/m21; §7.100 gate described under m19 and m21; new function entry stamp_recommended_rank_set_at(); assignments gains recommended_rank_set_at + the trigger + the column comment; the intro deny-all block gains the T2 before/after relacl with the 14 DEFINER readers named",
+    "docs/db_roadmap.md §10ב — one new row for the J3 file (9 registry rows, the four items, every proof, the two reported side effects)"
+  ],
+  "gates": {
+    "vitest src/modules/11_reports src/lib src/modules/04_hostesses": "exit 0 — 58 files, 2,108 tests passed",
+    "eslint (touched file)": "exit 0",
+    "prettier --check (touched files)": "exit 0 — all matched files use Prettier code style",
+    "npm run check:declared-counts": "exit 0 — 6 declared numbers checked against source",
+    "npm run check:docs-structure": "exit 0 — 165 files, zero findings",
+    "npm run build": "exit 0",
+    "npm run check:bidi": "exit 0",
+    "npm run check:iron-rules": "exit 0",
+    "npm run check:context": "exit 0",
+    "CR count": "0 on every file written (perl tr/\\r//)",
+    "md5 file == live": "16/16 across all report_m* functions (the 6 touched plus the 10 untouched)",
+    "grants byte-identical": "the revoke/grant tails of all six functions were copied from the live files, not retyped — diff shows zero changes on those lines"
+  },
+  "not_done": [
+    "npm run gate in full (jscpd / knip / audit) was not run — the brief named the six gates above and they are all green; a full gate belongs to the closing run",
+    "e2e/reports.spec.js was not run — no month-name or money assertion in it depends on these payloads (grep: 0 hits for any full month name, and the money assertions are on MASKED_TEXT, which did not change)",
+    "docs/micro_guides/module-11.md §9 has no D-row for J3, and docs/PROJECT_MASTER.md §6 T2/T9 are still open — those two files were being edited by ANOTHER session while this one ran (git status shows PROJECT_MASTER.md, PROJECT_MASTER_sec7.md and seed-plan.md modified by work that is not mine), so writing into them would have collided",
+    "docs/specs/module_11_reports/stage2-cards/cards-customers.md ⑤ מ21 still quotes 'המיסוך מתבצע בלשונית' — the on-screen sentence dropped that half because it stopped being true; the card needs one line aligned. Reported, not edited (not in my set)"
+  ],
+  "not_verified": [
+    "The prose side effect of item 4 was NOT visually checked on m07 and m14: v_months_he also feeds sentences ('…אירועים שהתקיימו בספט׳' on m07's tile sub, 'החודש ספט׳ 2025 אינו בגרף' under m14's chart, and m02's so_what/compare labels). The ruling spoke about AXES; splitting into two arrays would have put two forms of the same word on one screen, which is exactly what J2 unified, so one form was kept. Only the customers tab was re-rendered live.",
+    "m07's declare comment still illustrates the behaviour with the full word ('…שהתקיימו בספטמבר'); it is an example inside a why-comment, left as-is rather than rewriting history comments.",
+    "The two E2E identities used are the ones .env.local holds; 'מנהלת פרויקטים' being the single live user with לקוחות edit + כספים blocked is inherited from close-findings F-12 and was NOT re-measured against the permissions table this session — what WAS measured is that E2E_PROJECTS gets money_masked=true, which is the behaviour that matters.",
+    "No browser check of m02/m03 (executive tab) after the month change — only the payload-level md5 and the customers tab's live render.",
+    "The sweep that closed my blind spot ran as ONE identity (E2E_PROJECTS). A role with 'דיילות' blocked but 'כספים' open was not swept; the question it would answer is the mirror one and nobody asked it."
+  ],
+  "blind_spot": "I declared this blind spot and then closed it instead of leaving it declared. The gap was: the money gate lives inside two function bodies, and nothing fails on its own if a THIRD surface returns a ₪ amount to a 'כספים'-blocked identity. The check (scratchpad/probe-sweep.mjs, result in scratchpad/results/probe-sweep.json): signed in as E2E_PROJECTS, call all 16 report RPCs, walk every string in every payload for /\\d[\\d,.]*\\s?₪/ and list every numeric field the payload's OWN contract declares format:'money'. RESULT — the eight 'כספים' surfaces all answer 42501 (the gate does its job); m14 · m15 · m17 · m20 · m22 return zero money; m19 and m21 return zero money with money_masked=true. ONE surface is not clean, and it is a CONFLICT QUESTION for Ishay and not a defect I may patch (§2ב C7): report_m16_quality_cost — see 'conflict_question' below. What is STILL uncovered: the sweep is a script in a scratchpad, not a gate; nothing in `npm run gate` re-runs it, so a 17th surface added tomorrow is unprotected again.",
+  "conflict_question": {
+    "surface": "report_m16_quality_cost (tab דיילות, gated on 'דיילות')",
+    "measured": "Signed in as E2E_PROJECTS (דיילות edit + כספים blocked) on 17/09/2026, the payload returns 50 hourly rates as numbers under a column the payload itself declares format:'money' (hourly_rate 39.87–49.39), tiles[median_rate].value = 43.27, and two strings carrying '43 ₪' (chart.refLines[0].label and tiles[2].sub). meta.money_masked is absent — the function has no money branch at all.",
+    "the_two_sources": "§7.100 as Ishay ruled it today names report_m19_customers_overview and report_m21_drifting ONLY — m16 is outside the ruling's words. And D-34 ⑤ is a RECORDED product decision that per-hour rates are shown in whole ₪ on m16 (tiles, server prose, the reference line), i.e. the rate is treated as a דיילות datum, not a כספים datum.",
+    "why_it_is_not_patched_here": "A finding that contradicts a recorded decision is a conflict question, never a fix on my own authority (§2ב C7). Extending the money gate to m16 would overwrite D-34 ⑤ silently.",
+    "for_ishay": "Is the hostess hourly rate a 'כספים' number (⇒ m16 gets the same gate as m19/m21) or a 'דיילות' number (⇒ it stays as built, and §7.100 is closed as written)?"
+  }
+}

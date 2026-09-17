@@ -1,0 +1,23 @@
+# P5 · ADDENDUM to `p5-close.md` (written 16/09 21:3X) — read `p5-close.md`, then THIS; where they disagree, THIS wins
+
+## State you audit (verify each line yourself — nothing here is a fact until you re-check it)
+- Branch `ishay/module-11-build`, HEAD `988adeb7` (pushed; `git log --oneline origin/dev..HEAD` ≈ 30 commits). The build ran 16/09/2026 03:56 → 21:2X in one orchestrated session (~60 agents; two usage-limit kills, D-24 · D-33).
+- Migrations on disk: `supabase/migrations/20260916*` — A B C H0 H1 D D2 E E2 E3 F F2 G G2 G3 H2 I1 I2 (18 files, ≈52 registry rows — §9 D-20: rows per file is bookkeeping, the ledger `docs/db_roadmap.md §10` tracks files). **The md5 sweep is yours:** for each of the 17 functions, md5(prosrc) must equal the md5 of the `$function$` body in its LATEST file (`docs/schema.sql §24` names the file per function; `<scratchpad>/fn_md5.py` hashes file bodies — extend its glob to all module11 files and compare against `select proname, md5(prosrc) from pg_proc`).
+- Live DB facts (re-check): `feedback_ai_runs` 6 rows, runs 5+6 approved (`approved_at`, NOT `status`), `feedback_ai_insights` 426; `assignments.recommended_rank` null on all pre-existing rows by design; four `params` rows; six `bak_*` tables hardened (H0), not dropped.
+- Suites at HEAD: unit 469/469 (modules 11+9), module 11 alone 335; E2E `e2e/reports.spec.js` 26 green + accessibility 8/8 + smoke green + m4 specs 32 green (a re-run on the settled tree is in `<scratchpad>/results/p3-e2e.json` / `e2e-final.log`); `npm run gate` result in `<scratchpad>/results/p3-gate.json` (run in parallel with you — read it, then re-run only what you must).
+- Evidence: `<scratchpad>/results/evidence/index.html` (16 surfaces × 4 identities × 2 onboarding modes) + `p3-evidence.json`; copy evaluations `p3-copy-0.json` / `p3-copy-2.json`; the lens round `p3v-*.json` + refuter verdicts `p3r-*.json` (63 findings, 62 confirmed, all routed — the fix reports are `p3-fixA2.json`, `p2-fixB.json`, `p2-fixB2.json`, and the four `p3-<tab>.json` with their round blocks).
+
+## Rulings you audit against, not re-open (all in `docs/micro_guides/module-11.md §9`)
+D-9 (Ishay's waivers: migrations, DoD typed-echo, seeding run; merge to dev AND main authorized verbatim) · D-14 (drill set מ3·מ9) · D-17 (window rule) · D-20 (rows per file) · D-21 (19,253) · D-22 (shell slots) · D-25 (row cap) · D-27 (rolling-30 open item — calendar month chosen) · D-28 (CHART_CAP 4) · D-29 (aging hint wording) · D-30 (cross-filter mechanism, נקי בחירה, target.report = RPC name, hostess door) · D-31 (מ20 cross-filters off by measurement) · D-34 (lens-round rulings: chart→drill, empty-after-filter, whole-₪ rates, owner column, מ19 money carve-out, ExportBar in the filters row). Ishay's 17:4X words: *"לפי המלצות… בלי פינות פתוחות"* — a deferred item is legitimate only if §9 or PROJECT_MASTER §6 carries it with a reason.
+
+## Four things the report to Ishay MUST contain (beyond the template)
+1. **The 62-findings breakdown by cause** (build-shell · build-tab · build-rpc · docs · product) — he asked *"האפיון… היה כזה גרוע?"*; the honest answer is ~80 % build-quality findings caught by adversarial lenses, ~8 % doc drift, ~12 % product items deliberately left open in the spec. Use the `p3r-*.json` owner counts; cite them.
+2. **The morning table** — every `הנחתי`/product ruling made under "לפי המלצות" with a one-line story each (D-27 · D-28 · D-29 · D-31 · D-34 items · H-4 hourly rates · ⑧19.2 masked doors · the 40 rows of run 5 · bak_* drop · five owner-less params), each reversible in one line.
+3. **The four conference stories, each with the screenshot that proves it** (from the evidence set).
+4. **Three comprehension questions** for him (the template's ⑥3) and the HTML artifact.
+
+## Whole-DB `rls_enabled_no_policy` triage
+Run the advisors (`get_advisors` security + performance) and `select` every table with RLS on and no policy: `project_changes`, `seed_registry`, the DEFINER-only tables, the six `bak_*` — each gets a written triage line (DEFINER-only? backup? needs a policy?) — never "not mine".
+
+## Output additions
+`docs/micro_guides/close-findings-module-11.md` (the working findings file, written incrementally — the D-24/D-33 lesson: a killed agent loses its report, not its writes) · the verdict in the micro-guide (DoD gate printed with *"ויתור על הד-ההקלדה — הכרעת-ישי 16/09/2026, D-9"*) · the Artifact · `<scratchpad>/results/p5-close.json` `{ "verdict", "blockers": [...], "majors": [...], "minors": [...], "triage": [...], "md5_sweep": "n/17", "docs_written": [...], "not_verified": [...], "blind_spot" }`. You never merge, push, or open a PR.

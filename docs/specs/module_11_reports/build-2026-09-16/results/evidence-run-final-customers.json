@@ -1,0 +1,632 @@
+{
+  "tab": "customers",
+  "base_url": "http://localhost:5189",
+  "started_at": "2026-09-17T00:09:54.475Z",
+  "identities": [
+    "CEO"
+  ],
+  "modes": [
+    2,
+    0
+  ],
+  "surfaces": {
+    "customers-overview": {
+      "id": "מ19",
+      "rpc": "report_m19_customers_overview",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-customers-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על לקוחות",
+              "state_testid": "report-customers-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 3,
+              "hint_ids": [
+                "reports.customersOverview.why",
+                "reports.customersOverview.tilesBasis",
+                "reports.customersOverview.tableSort"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-line"
+              ],
+              "tiles": 4,
+              "tile_doors": 4,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "לקוח",
+                "סוג הלקוח",
+                "הכנסת 12 החודשים▼",
+                "ממוצע המשוב שלו",
+                "אירוע אחרון",
+                "האירוע הבא"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: משובים שהלקוח מילא · הוצאו: משובים שנשלחו ולא נענו (⁦54⁩) ומשובים שלא נשלחו · ⁦n=163⁩ משובים מתוך ⁦217⁩ שנשלחו, אצל ⁦42⁩ לקוחות (מתוך ⁦61⁩ במערכת).",
+              "so_what": "לפתוח את \"שביעות רצון\" ולראות מה מכעיס את ⁦10⁩ הלקוחות הלא-מרוצים (ממוצע מתחת ל-⁦3.5⁩) — הם לא הזמינו כבר ⁦213⁩ ימים (חציון), מול ⁦17⁩ ימים אצל ⁦24⁩ הלקוחות המרוצים (ממוצע ⁦4.5+⁩).",
+              "definitions": "הגדרות: ממוצע שביעות-רצון = ממוצע ציון 1–5 על משובים שהלקוח מילא בלבד; משוב שנשלח ולא נענה אינו נספר · לקוח מרוצה / בינוני / לא-מרוצה = ממוצע הציונים של אותו לקוח, על 3 משובים לפחות: 4.5+ · 3.5–4.4 · מתחת ל-3.5. זהו חתך של לקוחות ואינו \"שיעור המרוצים\", שנמדד על משובים בציון 4–5 — שני מונים שונים, ולכן שני שמות · ימים מאז האירוע האחרון = היום פחות תאריך האירוע האחרון שהתקיים ולא בוטל · הכנסת 12 החודשים = סך ההכנסה מאירועים שהתקיימו ויצאה להם חשבונית, שתאריך האירוע שלהם ב-12 החודשים האחרונים · ימים לתשלום (חציון) = חציון (תאריך-תשלום פחות תאריך-חשבונית) על חשבוניות ששולמו, כל הזמנים · סכומים ב-₪ שלמים.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-לקוחות_01-01-2026–17-09-2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: לקוח · סוג הלקוח · הכנסת 12 החודשים · ממוצע המשוב שלו · אירוע אחרון · האירוע הבא",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-customers-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על לקוחות",
+              "state_testid": "report-customers-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-line"
+              ],
+              "tiles": 4,
+              "tile_doors": 4,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "לקוח",
+                "סוג הלקוח",
+                "הכנסת 12 החודשים▼",
+                "ממוצע המשוב שלו",
+                "אירוע אחרון",
+                "האירוע הבא"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: משובים שהלקוח מילא · הוצאו: משובים שנשלחו ולא נענו (⁦54⁩) ומשובים שלא נשלחו · ⁦n=163⁩ משובים מתוך ⁦217⁩ שנשלחו, אצל ⁦42⁩ לקוחות (מתוך ⁦61⁩ במערכת).",
+              "so_what": "לפתוח את \"שביעות רצון\" ולראות מה מכעיס את ⁦10⁩ הלקוחות הלא-מרוצים (ממוצע מתחת ל-⁦3.5⁩) — הם לא הזמינו כבר ⁦213⁩ ימים (חציון), מול ⁦17⁩ ימים אצל ⁦24⁩ הלקוחות המרוצים (ממוצע ⁦4.5+⁩).",
+              "definitions": "הגדרות: ממוצע שביעות-רצון = ממוצע ציון 1–5 על משובים שהלקוח מילא בלבד; משוב שנשלח ולא נענה אינו נספר · לקוח מרוצה / בינוני / לא-מרוצה = ממוצע הציונים של אותו לקוח, על 3 משובים לפחות: 4.5+ · 3.5–4.4 · מתחת ל-3.5. זהו חתך של לקוחות ואינו \"שיעור המרוצים\", שנמדד על משובים בציון 4–5 — שני מונים שונים, ולכן שני שמות · ימים מאז האירוע האחרון = היום פחות תאריך האירוע האחרון שהתקיים ולא בוטל · הכנסת 12 החודשים = סך ההכנסה מאירועים שהתקיימו ויצאה להם חשבונית, שתאריך האירוע שלהם ב-12 החודשים האחרונים · ימים לתשלום (חציון) = חציון (תאריך-תשלום פחות תאריך-חשבונית) על חשבוניות ששולמו, כל הזמנים · סכומים ב-₪ שלמים.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-לקוחות_01-01-2026–17-09-2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: לקוח · סוג הלקוח · הכנסת 12 החודשים · ממוצע המשוב שלו · אירוע אחרון · האירוע הבא",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "satisfaction": {
+      "id": "מ20",
+      "rpc": "report_m20_satisfaction",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-satisfaction.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "שביעות רצון",
+              "state_testid": "report-satisfaction",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 3,
+              "hint_ids": [
+                "reports.satisfaction.why",
+                "reports.satisfaction.reasonsBasis",
+                "reports.satisfaction.tableSort"
+              ],
+              "charts": 4,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-bar",
+                "chart-card-bar",
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 19,
+              "pager_total": 19,
+              "pager_range": "1–19 מתוך 19",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "ציון▲",
+                "הסיבה שסומנה",
+                "ההערה שנכתבה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: משובים שהלקוח מילא · הוצאו: ⁦54⁩ שנשלחו ולא נענו ו-⁦27⁩ שלא נשלחו כלל · ⁦n=163⁩, מתוך ⁦244⁩ האירועים שהתקיימו בתקופה. שיעור המענה מחושב על אוכלוסייה אחרת — מילאו ועוד לא-נענו, ⁦217⁩ משובים.",
+              "so_what": "לפתוח את ⁦10⁩ המשובים שתויגו \"אחר\" — הם הסיבה השלילית הגדולה בתקופה, גדולה מכל הקטגוריות הקיימות יחד (⁦9⁩), ואיש לא קרא את הטקסט שבהם.",
+              "definitions": "הגדרות: שיעור המרוצים = משובים בציון 4 או 5, חלקי כל המשובים שמולאו · שיעור המענה = משובים שמולאו חלקי (מולאו + נשלחו ולא נענו). משוב שלא נשלח כלל אינו במכנה · ממוצע הציון = ממוצע חשבוני על סולם 1–5; מוצג כמדד משני כי הסולם הוא סולם סדר ולא סולם רציף · סיבה = מה שהלקוח סימן בטופס מתוך רשימה סגורה של חמש קטגוריות לכל כיוון, כולל \"אחר\" · \"אחר\" = הלקוח לא מצא קטגוריה מתאימה וכתב בטקסט חופשי.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: שביעות-רצון_01-01-2026–17-09-2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · ציון · הסיבה שסומנה · ההערה שנכתבה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-satisfaction.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "שביעות רצון",
+              "state_testid": "report-satisfaction",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 4,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-bar",
+                "chart-card-bar",
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 19,
+              "pager_total": 19,
+              "pager_range": "1–19 מתוך 19",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "ציון▲",
+                "הסיבה שסומנה",
+                "ההערה שנכתבה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: משובים שהלקוח מילא · הוצאו: ⁦54⁩ שנשלחו ולא נענו ו-⁦27⁩ שלא נשלחו כלל · ⁦n=163⁩, מתוך ⁦244⁩ האירועים שהתקיימו בתקופה. שיעור המענה מחושב על אוכלוסייה אחרת — מילאו ועוד לא-נענו, ⁦217⁩ משובים.",
+              "so_what": "לפתוח את ⁦10⁩ המשובים שתויגו \"אחר\" — הם הסיבה השלילית הגדולה בתקופה, גדולה מכל הקטגוריות הקיימות יחד (⁦9⁩), ואיש לא קרא את הטקסט שבהם.",
+              "definitions": "הגדרות: שיעור המרוצים = משובים בציון 4 או 5, חלקי כל המשובים שמולאו · שיעור המענה = משובים שמולאו חלקי (מולאו + נשלחו ולא נענו). משוב שלא נשלח כלל אינו במכנה · ממוצע הציון = ממוצע חשבוני על סולם 1–5; מוצג כמדד משני כי הסולם הוא סולם סדר ולא סולם רציף · סיבה = מה שהלקוח סימן בטופס מתוך רשימה סגורה של חמש קטגוריות לכל כיוון, כולל \"אחר\" · \"אחר\" = הלקוח לא מצא קטגוריה מתאימה וכתב בטקסט חופשי.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: שביעות-רצון_01-01-2026–17-09-2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · ציון · הסיבה שסומנה · ההערה שנכתבה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "drifting": {
+      "id": "מ21",
+      "rpc": "report_m21_drifting",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-drifting.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "לקוחות מתרחקים",
+              "state_testid": "report-drifting",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 3,
+              "hint_ids": [
+                "reports.drifting.why",
+                "reports.drifting.revenueBasis",
+                "reports.drifting.tableSort"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-histogram"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 12,
+              "pager_total": 12,
+              "pager_range": "1–12 מתוך 12",
+              "table_headers": [
+                "לקוח",
+                "איש קשר",
+                "הכנסת 12 החודשים▼",
+                "אירוע אחרון",
+                "ימים מאז האירוע",
+                "הקצב שלו",
+                "פי כמה מהקצב",
+                "ציון אחרון · ממוצעו",
+                "דגל"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: ⁦52⁩ לקוחות שקיימו ⁦3⁩ אירועים לפחות שכבר התקיימו, מתוך ⁦61⁩ · הוצאו: ⁦6⁩ לקוחות בלי אף אירוע שהתקיים · ⁦3⁩ עם פחות משלושה · אירועים מבוטלים ואירועים עתידיים אינם נספרים בקצב.",
+              "so_what": "להתקשר השבוע לענבר אשכנזי מגלובל שיפינג בע\"מ ולמיכל תורג'מן מורד קוסמטיקה טבעית — שתיהן שקטו פי ⁦3.2⁩ ופי ⁦2.5⁩ מהקצב שלהן, יחד ⁦122,124 ₪⁩ בשנה האחרונה, ושתיהן עדיין לא נחשבות \"רדומות\".",
+              "definitions": "הגדרות: מתרחק = שני תנאים יחד: אין לו אף אירוע עתידי במערכת, וגם עברו מאז האירוע האחרון יותר מפי ⁦1.5⁩ מהמרווח הרגיל שלו. נדרשים ⁦3⁩ אירועים שהתקיימו לפחות · הקצב שלו = חציון המרווחים בימים בין אירועים עוקבים של אותו לקוח, כל הזמנים · פי כמה מהקצב = ימים מאז האירוע האחרון, חלקי הקצב שלו · רדום = הדגל הקיים במערכת: אין אירוע עתידי וגם עברו יותר מ-⁦120⁩ ימים. הוא חל על כל הלקוחות, גם על אלה עם פחות משלושה אירועים · אירוע = פרויקט שתאריך האירוע שלו כבר עבר ולא בוטל · הכנסת ⁦12⁩ החודשים = סך ההכנסה מאירועים שהתקיימו בשנה האחרונה ויצאה להם חשבונית — לא רק מאלה שכבר שולמו במלואם. זהו סכום שכבר הורווח, לא סכום שצפוי להיאבד.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: לקוחות-מתרחקים_נכון-ל-17-09-2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: לקוח · איש קשר · הכנסת 12 החודשים · אירוע אחרון · ימים מאז האירוע · הקצב שלו · פי כמה מהקצב · ציון אחרון · ממוצעו · דגל",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-drifting.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "לקוחות מתרחקים",
+              "state_testid": "report-drifting",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-histogram"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 12,
+              "pager_total": 12,
+              "pager_range": "1–12 מתוך 12",
+              "table_headers": [
+                "לקוח",
+                "איש קשר",
+                "הכנסת 12 החודשים▼",
+                "אירוע אחרון",
+                "ימים מאז האירוע",
+                "הקצב שלו",
+                "פי כמה מהקצב",
+                "ציון אחרון · ממוצעו",
+                "דגל"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: ⁦52⁩ לקוחות שקיימו ⁦3⁩ אירועים לפחות שכבר התקיימו, מתוך ⁦61⁩ · הוצאו: ⁦6⁩ לקוחות בלי אף אירוע שהתקיים · ⁦3⁩ עם פחות משלושה · אירועים מבוטלים ואירועים עתידיים אינם נספרים בקצב.",
+              "so_what": "להתקשר השבוע לענבר אשכנזי מגלובל שיפינג בע\"מ ולמיכל תורג'מן מורד קוסמטיקה טבעית — שתיהן שקטו פי ⁦3.2⁩ ופי ⁦2.5⁩ מהקצב שלהן, יחד ⁦122,124 ₪⁩ בשנה האחרונה, ושתיהן עדיין לא נחשבות \"רדומות\".",
+              "definitions": "הגדרות: מתרחק = שני תנאים יחד: אין לו אף אירוע עתידי במערכת, וגם עברו מאז האירוע האחרון יותר מפי ⁦1.5⁩ מהמרווח הרגיל שלו. נדרשים ⁦3⁩ אירועים שהתקיימו לפחות · הקצב שלו = חציון המרווחים בימים בין אירועים עוקבים של אותו לקוח, כל הזמנים · פי כמה מהקצב = ימים מאז האירוע האחרון, חלקי הקצב שלו · רדום = הדגל הקיים במערכת: אין אירוע עתידי וגם עברו יותר מ-⁦120⁩ ימים. הוא חל על כל הלקוחות, גם על אלה עם פחות משלושה אירועים · אירוע = פרויקט שתאריך האירוע שלו כבר עבר ולא בוטל · הכנסת ⁦12⁩ החודשים = סך ההכנסה מאירועים שהתקיימו בשנה האחרונה ויצאה להם חשבונית — לא רק מאלה שכבר שולמו במלואם. זהו סכום שכבר הורווח, לא סכום שצפוי להיאבד.",
+              "window_label": "⁦01/01/2026–17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: לקוחות-מתרחקים_נכון-ל-17-09-2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: לקוח · איש קשר · הכנסת 12 החודשים · אירוע אחרון · ימים מאז האירוע · הקצב שלו · פי כמה מהקצב · ציון אחרון · ממוצעו · דגל",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "id": "מ22",
+      "rpc": "report_m22_notes",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-notes.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "ניתוח הערות",
+              "state_testid": "report-notes",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 2,
+              "hint_ids": [
+                "reports.notes.why",
+                "reports.notes.runGate"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 426,
+              "pager_range": "1–50 מתוך 426",
+              "table_headers": [
+                "לקוח",
+                "תאריך",
+                "ציון (לקוח)",
+                "ההערה שנכתבה",
+                "נושא (מודל)",
+                "תג חופשי (מודל)",
+                "סנטימנט (מודל)",
+                "דגל אדום▼"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: הערות חופשיות שלקוחות כתבו בטופס המשוב · ⁦426⁩ הערות מתוך ⁦552⁩ משובים שהושלמו, כל הזמנים · הוצאו: משובים שנשלחו ולא נענו ומשובים בלי טקסט. הדף אינו מגיב למסנן התקופה — הוא מציג את תוצאת כל ריצות-הניתוח שאושרו.",
+              "so_what": "לשקול קטגוריה חדשה בטופס-המשוב — המודל מצא \"ניהול לקוי\" ב-⁦24⁩ הערות שהלקוח תייג \"אחר\".",
+              "definitions": "הגדרות: הערה חופשית = טקסט שהלקוח כתב בשדה הפתוח של טופס המשוב, בנוסף לציון ולסיבה · ריצת ניתוח = מעבר של מודל שפה על ההערות, באצווה ולא בזמן אמת. הוא מקבל טקסט וציון בלבד — לא שם לקוח ולא סכומים · ריצה מאושרת = ריצה שמישהו בדק בה 20 דוגמאות ואישר להצגה. הדוח מציג רק ריצות מאושרות · נושא (מודל) = הקטגוריה שהמודל בחר, מתוך אותה רשימה סגורה שהלקוח בוחר ממנה — כדי שאפשר יהיה להשוות · תג חופשי = מילה–שתיים שהמודל מוסיף כשהוא מסווג \"אחר\", כדי שנדע מה \"אחר\" מכיל · לא ניתן לסווג = המודל לא הצליח לשייך את ההערה לאף קטגוריה. זו תשובה תקינה, לא תקלה · דגל אדום = הערה שהמודל סימן כדורשת התייחסות מיידית.",
+              "window_label": "כל הזמנים · נכון ל-⁦17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: ניתוח-הערות_כל-הזמנים-·-נכון-ל-17-09-2026.xlsx",
+              "export_columns": "עמודות: לקוח · תאריך · ציון (לקוח) · ההערה שנכתבה · נושא (מודל) · תג חופשי (מודל) · סנטימנט (מודל) · דגל אדום",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          },
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m0-notes.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "ניתוח הערות",
+              "state_testid": "report-notes",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 426,
+              "pager_range": "1–50 מתוך 426",
+              "table_headers": [
+                "לקוח",
+                "תאריך",
+                "ציון (לקוח)",
+                "ההערה שנכתבה",
+                "נושא (מודל)",
+                "תג חופשי (מודל)",
+                "סנטימנט (מודל)",
+                "דגל אדום▼"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: הערות חופשיות שלקוחות כתבו בטופס המשוב · ⁦426⁩ הערות מתוך ⁦552⁩ משובים שהושלמו, כל הזמנים · הוצאו: משובים שנשלחו ולא נענו ומשובים בלי טקסט. הדף אינו מגיב למסנן התקופה — הוא מציג את תוצאת כל ריצות-הניתוח שאושרו.",
+              "so_what": "לשקול קטגוריה חדשה בטופס-המשוב — המודל מצא \"ניהול לקוי\" ב-⁦24⁩ הערות שהלקוח תייג \"אחר\".",
+              "definitions": "הגדרות: הערה חופשית = טקסט שהלקוח כתב בשדה הפתוח של טופס המשוב, בנוסף לציון ולסיבה · ריצת ניתוח = מעבר של מודל שפה על ההערות, באצווה ולא בזמן אמת. הוא מקבל טקסט וציון בלבד — לא שם לקוח ולא סכומים · ריצה מאושרת = ריצה שמישהו בדק בה 20 דוגמאות ואישר להצגה. הדוח מציג רק ריצות מאושרות · נושא (מודל) = הקטגוריה שהמודל בחר, מתוך אותה רשימה סגורה שהלקוח בוחר ממנה — כדי שאפשר יהיה להשוות · תג חופשי = מילה–שתיים שהמודל מוסיף כשהוא מסווג \"אחר\", כדי שנדע מה \"אחר\" מכיל · לא ניתן לסווג = המודל לא הצליח לשייך את ההערה לאף קטגוריה. זו תשובה תקינה, לא תקלה · דגל אדום = הערה שהמודל סימן כדורשת התייחסות מיידית.",
+              "window_label": "כל הזמנים · נכון ל-⁦17/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: ניתוח-הערות_כל-הזמנים-·-נכון-ל-17-09-2026.xlsx",
+              "export_columns": "עמודות: לקוח · תאריך · ציון (לקוח) · ההערה שנכתבה · נושא (מודל) · תג חופשי (מודל) · סנטימנט (מודל) · דגל אדום",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": true
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "extras": {
+    "empty": {
+      "surface": "drifting",
+      "customer_options": 61,
+      "found": {
+        "value": "411",
+        "state": "empty",
+        "export_file": "אין שורות לייצא",
+        "export_disabled": true,
+        "rows": 0
+      },
+      "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results-final\\evidence\\CEO-m2-drifting-empty-filter.png"
+    }
+  },
+  "login": {
+    "CEO": {
+      "ok": true,
+      "attempts": 0,
+      "reused": true
+    }
+  },
+  "failures": [],
+  "finished_at": "2026-09-17T00:10:28.723Z"
+}

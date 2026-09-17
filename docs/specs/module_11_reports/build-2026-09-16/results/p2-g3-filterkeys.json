@@ -1,0 +1,136 @@
+{
+  "task": "P2-G3 — cross-filter keys for report_m20_satisfaction and report_m22_notes",
+  "g3": {
+    "file": "supabase/migrations/20260916103000_module11_g3_customers_filter_keys.sql",
+    "bytes": 66081,
+    "cr": 0,
+    "applied_as": ["module11_g3_customers_m20", "module11_g3_customers_m22"],
+    "registry_rows": [
+      { "version": "20260916073204", "name": "module11_g3_customers_m20" },
+      { "version": "20260916073518", "name": "module11_g3_customers_m22" }
+    ],
+    "chunk_bytes": [32321, 33760],
+    "md5_match": "2/2",
+    "md5_live_after_apply": {
+      "report_m20_satisfaction": "be326d46a5e2e81ff5cbcc9494054525 (21568)",
+      "report_m22_notes": "2f059710a3fbe611a7c795b59fcd7b94 (27298)"
+    },
+    "g2_proven_live_before_editing": {
+      "report_m20_satisfaction": "84393f08eeb96f59ea9417faccec19f3 (18928) == G2 file body",
+      "report_m22_notes": "1386a8ee1e923b1295349332d6267f96 (26264) == G2 file body",
+      "result": "2/2 identical before a line was written"
+    },
+    "signature_comment_revoke_grant": "byte-identical to G2 (verified: prosecdef=true, provolatile=s, proconfig=search_path=\"\", acl postgres/service_role/authenticated only, comment head unchanged)",
+    "declared_technical_change": "14 U+200F (RLM) characters that sat inside G2's `--` comments (1 in m20, 13 in m22, none in any string literal) were stripped, and the strip is declared in the file header. An invisible character inside a body that must survive a byte-exact MCP apply is a silent trap; it changes nothing the function returns."
+  },
+  "filter_keys": [
+    {
+      "rpc": "report_m20_satisfaction",
+      "chart_title": "התפלגות הציונים · 163 משובים",
+      "xKey": "score",
+      "filter_key": false,
+      "row_field_added": false,
+      "datum_coverage": "off (explicitly disabled)",
+      "why": "The chart's population is not the table's. Chart = all 163 completed feedbacks; table = the 19 that marked a negative reason. Measured over the whole table: every feedback carrying a negative reason has score 2 or 3, never 4 or 5 (26+44 = 70 of 70). A click on the '4' bar (labelled 67) or '5' (77) would filter to zero rows with no error — the מ8/מ9 trap ReportSurface.autoFilterKey documents, and what card §⑦ forbids. CONFLICT QUESTION for Ishay, not a fix."
+    },
+    {
+      "rpc": "report_m20_satisfaction",
+      "chart_title": "מה משמח · 144 משובים סימנו סיבה חיובית",
+      "xKey": "reason",
+      "filter_key": false,
+      "row_field_added": false,
+      "datum_coverage": "off (explicitly disabled)",
+      "why": "Measured 16/09/2026: the number of feedbacks carrying BOTH a negative and a positive reason is 0 — in the window and all-time. All five datums would have filtered to zero rows. 0/5, the sharper version of the score-chart conflict. CONFLICT QUESTION for Ishay."
+    },
+    {
+      "rpc": "report_m20_satisfaction",
+      "chart_title": "מה מכעיס · 19 משובים סימנו סיבה שלילית",
+      "xKey": "reason",
+      "filter_key": "negative_reason",
+      "row_field_added": true,
+      "datum_coverage": "4/5",
+      "union_rows": "19/19",
+      "bar_equals_rows": true,
+      "per_datum": [
+        { "datum": "איכות תגים", "bar": 3, "rows": 3 },
+        { "datum": "ניהול לקוי", "bar": 3, "rows": 3 },
+        { "datum": "תפקוד דיילות", "bar": 3, "rows": 3 },
+        { "datum": "איחור דיילות", "bar": 0, "rows": 0 },
+        { "datum": "אחר", "bar": 10, "rows": 10 }
+      ],
+      "note": "The 5th datum is the 0-count 'איחור דיילות' — the card itself (§① and §⑦) says a 0-count column must not be clickable, so 0 rows is the intended result, not a miss. Union covers every row in the table."
+    },
+    {
+      "rpc": "report_m20_satisfaction",
+      "chart_title": "שיעור המרוצים לפי שנה — אינו מושפע ממסנן התקופה",
+      "xKey": "year",
+      "filter_key": false,
+      "row_field_added": false,
+      "datum_coverage": "off (explicitly disabled)",
+      "why": "The card says explicitly 'לא לחיצה' — the chart ignores the period filter on purpose (📑ב#17) and a click would contradict its own printed statement. Declared rather than left to auto-detection failure."
+    },
+    {
+      "rpc": "report_m22_notes",
+      "chart_title": "מטריצת ההסכמה · מה הלקוח תייג מול מה המודל מצא · מתוך 426 הערות מסווגות",
+      "xKey": "human_tag",
+      "filter_key": "human_tag",
+      "row_field_added": true,
+      "datum_coverage": "5/5",
+      "union_rows": "63/426",
+      "bar_equals_rows": true,
+      "per_datum": [
+        { "datum": "תפקוד דיילות", "bar": 12, "rows": 12 },
+        { "datum": "איכות תגים", "bar": 10, "rows": 10 },
+        { "datum": "ניהול לקוי", "bar": 6, "rows": 6 },
+        { "datum": "איחור דיילות", "bar": 2, "rows": 2 },
+        { "datum": "אחר", "bar": 33, "rows": 33 }
+      ],
+      "note": "Delivered at TAG level, not at CELL level. The card asks for tag×topic (a matrix cell); ReportSurface selects one value (datum[xKey]) and compares it to one row field — there is no two-dimensional selection in the shell. Clicking 'אחר' shrinks the table to the 33 notes the customer tagged 'אחר'; the model's topic is then read in the `model_topics` column of the shrunken table. 63 of 426 rows carry any customer tag; the remaining 363 are untagged notes no datum claims."
+    }
+  ],
+  "values_unchanged": true,
+  "value_diff_proof": {
+    "cases": 6,
+    "method": "full recursive pre/post payload diff, measured_at excluded",
+    "non_additive_diffs": 0,
+    "diff_counts": {
+      "report_m20_satisfaction/default": "23 (4 chart[].filter_key + 19 rows[].negative_reason)",
+      "report_m20_satisfaction/baseline": "23 (same shape)",
+      "report_m20_satisfaction/cust401": "4 (chart[].filter_key only — 0 rows)",
+      "report_m22_notes/default": "427 (1 chart.filter_key + 426 rows[].human_tag)",
+      "report_m22_notes/baseline": "427 (same shape)",
+      "report_m22_notes/cust401": "97 (1 + 96 rows)"
+    },
+    "every_diff": "a key that did not exist before. No key renamed, none removed, no tile/number/string/label changed."
+  },
+  "live_calls": {
+    "CEO": "200 on all six cases (m20 default/baseline/cust401 = 19/19/0 rows; m22 = 426/426/96 rows) — identical row counts pre and post",
+    "RECRUIT": "42501 on both RPCs, never an empty object"
+  },
+  "payload_changes": [
+    { "rpc": "report_m20_satisfaction", "key": "chart[0].filter_key", "change": "NEW — false (score distribution, disabled)" },
+    { "rpc": "report_m20_satisfaction", "key": "chart[1].filter_key", "change": "NEW — false (positive reasons, disabled)" },
+    { "rpc": "report_m20_satisfaction", "key": "chart[2].filter_key", "change": "NEW — 'negative_reason' (cross-filter ON)" },
+    { "rpc": "report_m20_satisfaction", "key": "chart[3].filter_key", "change": "NEW — false (yearly trend, disabled by the card)" },
+    { "rpc": "report_m20_satisfaction", "key": "rows[].negative_reason", "change": "NEW hidden scalar row field on all 19 rows — negative_feedback_reasons[1]. NOT declared in columns[]; ReportTable renders only declared columns (ReportTable.jsx:98/139 reads row[column.key]), so it does not reach the screen." },
+    { "rpc": "report_m22_notes", "key": "chart.filter_key", "change": "NEW — 'human_tag' (cross-filter ON)" },
+    { "rpc": "report_m22_notes", "key": "rows[].human_tag", "change": "NEW hidden scalar row field on all 426 rows — negative_feedback_reasons[1], null on the 363 notes with no customer tag. NOT declared in columns[]." }
+  ],
+  "tab_builder_notes": [
+    "Both customers transforms pass this through unchanged as of now: `satisfactionPayload` and `notesPayload` in src/modules/11_reports/tabs/customers/payload.jsx spread `...payload` (chart + filter_key survive) and `...row` (the join field survives). satisfactionPayload rewrites `reasons` to text and notesPayload rewrites `model_topics`/`red_flag` — neither touches the new scalar join field, which is why the join field is separate from the displayed one.",
+    "Do NOT set chart.filter_key in the transform for these two surfaces — the server now declares all five, and a server string overrides auto-detection (ReportSurface.jsx:200-203)."
+  ],
+  "not_verified": [
+    "The DOM click itself. I proved the join in the data (for each datum, the rows whose row[filter_key] === datum[xKey]); I did not click a Recharts bar in a browser. The card itself marks this `לא-אומת` (G7) and it belongs to the tab/E2E builder.",
+    "The aria-live announcement text and the '× נקה בחירה' chip on these two surfaces — shell behaviour, measured by the shared-shell agent on other surfaces, not re-measured here.",
+    "Behaviour if a feedback ever carries more than one reason. Measured 16/09/2026 across the whole projects table: max(array_length(negative_feedback_reasons,1)) = 1 and max(array_length(positive_feedback_reasons,1)) = 1, zero multi-reason rows — so the first-element join is exact today. The CHECK still permits arrays; if a multi-reason feedback appears, the bar will count it twice while the row joins to one reason only. Stated in the file header (⚠️③) and in both why-comments.",
+    "npm run gate / vitest were not run: this migration touches no source file (git status shows only the new untracked .sql from me), and the four tab files are mid-edit by the parallel builders, so a suite run now would report their state, not mine. check:declared-counts was run and is green (exit 0, 6 numbers)."
+  ],
+  "reported_not_fixed": [
+    "card מ20 §① also says the TILES update on a cross-filter ('והאריחים מתעדכנים'). ReportSurface filters the table only (selectedRows feeds ReportTable and ExportBar, never Tiles). Shell question, not SQL.",
+    "card מ22 §① wants a CELL (tag×topic) cross-filter; the shell selects one value. Delivered at tag level, gap recorded for phase 4.",
+    "ChartCard has no per-datum guard: with filter_key on, EVERY bar is clickable, including a 0-count one (מ20 'איחור דיילות', bar n=0, and every bar under p_customer_id=401 where the chart is all-zero). The card says a 0-count column must show cursor:not-allowed. Checkable at ChartCard.jsx:297/313 (onClick wired per chart, not per datum) and 84-87 (the accessible data table gets a button per row). Shell change, out of this task's write scope.",
+    "ReportSurface.jsx:473 RowCapNote is fed `payload.rows.length` while line 476 renders `selectedRows` — with a selection active AND meta.row_total set, the note counts unfiltered rows above a filtered table. Latent on my two surfaces (row_total is null on both, measured), live on מ4/מ12 which do set it."
+  ],
+  "blind_spot": "docs/schema.sql §24 declares '50 פונקציות בסכמה public' and states it was measured 16/09/2026 04:4X; the live count is now 67 (measured this turn, all 67 with search_path=\"\"). The ~17 module-11 report RPCs created by migrations D/E/F/G after that refresh are not in the file, and check:declared-counts does NOT cover that number (it ran green over 6 other numbers). My migration adds no function so it does not widen the gap, but the file is the level-1 source of truth in CLAUDE.md §2.9 and it is currently 17 short — a phase-4 docs item that a future session will otherwise cite as fact. Concrete check anyone can run: `select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prokind='f'` versus the number on schema.sql line 21."
+}

@@ -1,0 +1,10 @@
+
+> reg-in@0.0.0 smoke
+> node scripts/smoke.mjs
+
+
+Running 1 test using 1 worker
+
+[1/1] [chromium] › e2e\smoke.spec.js:76:3 › בדיקת-עשן › כל המסכים הראשיים עולים עם הנתונים האמיתיים
+  1 passed (59.7s)
+✅ עשן: כל המסכים הראשיים עלו עם הנתונים האמיתיים.

@@ -1,0 +1,2234 @@
+{
+  "tab": "exec",
+  "base_url": "http://localhost:5189",
+  "started_at": "2026-09-16T20:30:29.675Z",
+  "identities": [
+    "CEO",
+    "FINANCE",
+    "RECRUIT",
+    "STAFF"
+  ],
+  "modes": [
+    0,
+    2
+  ],
+  "surfaces": {
+    "exec-overview": {
+      "id": "מ2",
+      "rpc": "report_m02_exec_overview",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m0-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על הנהלה",
+              "state_testid": "report-exec-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 4,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הכנסה▼",
+                "רווח",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=241⁩ (מתוך ⁦837⁩ אירועים במערכת).",
+              "so_what": "לשים לב שהצמיחה השנה לא באה על חשבון הרווח — ⁦1,962,981 ₪⁩ עד ⁦16/09⁩, גידול של ⁦37.7%⁩ מול אותו טווח אשתקד, ושולי-הרווח דווקא עלו ל-⁦58.6%⁩. הפירוט בדוח «מגמות רב-שנתיות».",
+              "definitions": "שולי-רווח = סך הרווח הגולמי חלקי סך ההכנסה על כל האוכלוסייה יחד, לא ממוצע של אחוזים · רווח גולמי = הכנסה פחות עלויות ישירות (דיילות · ציוד · נסיעות); הוצאות המשרד אינן נכללות · נתח 5 הלקוחות הגדולים = הכנסת חמשת הגדולים חלקי הכנסת כל הלקוחות, על כל ההיסטוריה · \"אשתקד\" = אותם ימים בדיוק בשנה שעברה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-הנהלה_2026-(01-01–16-09)-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦8⁩ מתוך ⁦241⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על הנהלה",
+              "state_testid": "report-exec-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 4,
+              "hint_ids": [
+                "reports.execOverview.purpose",
+                "reports.execOverview.revenueBasis",
+                "reports.execOverview.top5Share",
+                "reports.execOverview.topEventsSort"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 4,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הכנסה▼",
+                "רווח",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=241⁩ (מתוך ⁦837⁩ אירועים במערכת).",
+              "so_what": "לשים לב שהצמיחה השנה לא באה על חשבון הרווח — ⁦1,962,981 ₪⁩ עד ⁦16/09⁩, גידול של ⁦37.7%⁩ מול אותו טווח אשתקד, ושולי-הרווח דווקא עלו ל-⁦58.6%⁩. הפירוט בדוח «מגמות רב-שנתיות».",
+              "definitions": "שולי-רווח = סך הרווח הגולמי חלקי סך ההכנסה על כל האוכלוסייה יחד, לא ממוצע של אחוזים · רווח גולמי = הכנסה פחות עלויות ישירות (דיילות · ציוד · נסיעות); הוצאות המשרד אינן נכללות · נתח 5 הלקוחות הגדולים = הכנסת חמשת הגדולים חלקי הכנסת כל הלקוחות, על כל ההיסטוריה · \"אשתקד\" = אותם ימים בדיוק בשנה שעברה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-הנהלה_2026-(01-01–16-09)-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦8⁩ מתוך ⁦241⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "FINANCE": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m0-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על הנהלה",
+              "state_testid": "report-exec-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 4,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הכנסה▼",
+                "רווח",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=241⁩ (מתוך ⁦837⁩ אירועים במערכת).",
+              "so_what": "לשים לב שהצמיחה השנה לא באה על חשבון הרווח — ⁦1,962,981 ₪⁩ עד ⁦16/09⁩, גידול של ⁦37.7%⁩ מול אותו טווח אשתקד, ושולי-הרווח דווקא עלו ל-⁦58.6%⁩. הפירוט בדוח «מגמות רב-שנתיות».",
+              "definitions": "שולי-רווח = סך הרווח הגולמי חלקי סך ההכנסה על כל האוכלוסייה יחד, לא ממוצע של אחוזים · רווח גולמי = הכנסה פחות עלויות ישירות (דיילות · ציוד · נסיעות); הוצאות המשרד אינן נכללות · נתח 5 הלקוחות הגדולים = הכנסת חמשת הגדולים חלקי הכנסת כל הלקוחות, על כל ההיסטוריה · \"אשתקד\" = אותם ימים בדיוק בשנה שעברה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-הנהלה_2026-(01-01–16-09)-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦8⁩ מתוך ⁦241⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m2-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על הנהלה",
+              "state_testid": "report-exec-overview",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 4,
+              "rows_page1": 8,
+              "pager_total": 8,
+              "pager_range": "1–8 מתוך 8",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הכנסה▼",
+                "רווח",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=241⁩ (מתוך ⁦837⁩ אירועים במערכת).",
+              "so_what": "לשים לב שהצמיחה השנה לא באה על חשבון הרווח — ⁦1,962,981 ₪⁩ עד ⁦16/09⁩, גידול של ⁦37.7%⁩ מול אותו טווח אשתקד, ושולי-הרווח דווקא עלו ל-⁦58.6%⁩. הפירוט בדוח «מגמות רב-שנתיות».",
+              "definitions": "שולי-רווח = סך הרווח הגולמי חלקי סך ההכנסה על כל האוכלוסייה יחד, לא ממוצע של אחוזים · רווח גולמי = הכנסה פחות עלויות ישירות (דיילות · ציוד · נסיעות); הוצאות המשרד אינן נכללות · נתח 5 הלקוחות הגדולים = הכנסת חמשת הגדולים חלקי הכנסת כל הלקוחות, על כל ההיסטוריה · \"אשתקד\" = אותם ימים בדיוק בשנה שעברה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-הנהלה_2026-(01-01–16-09)-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦8⁩ מתוך ⁦241⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "RECRUIT": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m0-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m2-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "STAFF": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m0-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m2-exec-overview.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "trends": {
+      "id": "מ3",
+      "rpc": "report_m03_trends",
+      "drill": true,
+      "identities": {
+        "CEO": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m0-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מגמות רב-שנתיות",
+              "state_testid": "report-trends",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 3,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-line",
+                "chart-card-line"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 3,
+              "pager_total": 3,
+              "pager_range": "1–3 מתוך 3",
+              "table_headers": [
+                "שנה▲",
+                "אירועים",
+                "הכנסה",
+                "רווח",
+                "שולי-רווח",
+                "מחיר לשעה",
+                "עלות לשעה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=736⁩ בכל השנים. השנה הנוכחית חלקית — עד ⁦16/09⁩ — ואינה ברת-השוואה לשנים מלאות.",
+              "so_what": "לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-⁦260 ₪⁩ ל-⁦305 ₪⁩ לשעה, מול עלייה מ-⁦46 ₪⁩ ל-⁦47 ₪⁩ בעלות; זו הסיבה ששולי-הרווח עמדו על ⁦58.6%⁩.",
+              "definitions": "שנה = השנה שבה התקיים האירוע, לא זו שבה נשלחה החשבונית · מחיר לשעה = כל הכנסת השנה חלקי כל שעות-העבודה שדווחו בה · עלות לשעה = שכר-הבסיס והבונוסים האישיים חלקי אותן שעות; נסיעות אינן נכללות, כי הן סכום קבוע למשמרת ולא תשלום לפי שעה · מרווח לשעה = מחיר לשעה פחות עלות לשעה · רווח = הרווח שקפא בסגירה הכספית היכן שקפא, אחרת הרווח שהמערכת מחשבת עכשיו.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מגמות-רב-שנתיות_2024–2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: שנה · אירועים · הכנסה · רווח · שולי-רווח · מחיר לשעה · עלות לשעה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מגמות רב-שנתיות",
+              "state_testid": "report-trends",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 4,
+              "hint_ids": [
+                "reports.trends.purpose",
+                "reports.trends.partialYear",
+                "reports.trends.costPerHour",
+                "reports.trends.drillPath"
+              ],
+              "charts": 3,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-line",
+                "chart-card-line"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 3,
+              "pager_total": 3,
+              "pager_range": "1–3 מתוך 3",
+              "table_headers": [
+                "שנה▲",
+                "אירועים",
+                "הכנסה",
+                "רווח",
+                "שולי-רווח",
+                "מחיר לשעה",
+                "עלות לשעה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=736⁩ בכל השנים. השנה הנוכחית חלקית — עד ⁦16/09⁩ — ואינה ברת-השוואה לשנים מלאות.",
+              "so_what": "לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-⁦260 ₪⁩ ל-⁦305 ₪⁩ לשעה, מול עלייה מ-⁦46 ₪⁩ ל-⁦47 ₪⁩ בעלות; זו הסיבה ששולי-הרווח עמדו על ⁦58.6%⁩.",
+              "definitions": "שנה = השנה שבה התקיים האירוע, לא זו שבה נשלחה החשבונית · מחיר לשעה = כל הכנסת השנה חלקי כל שעות-העבודה שדווחו בה · עלות לשעה = שכר-הבסיס והבונוסים האישיים חלקי אותן שעות; נסיעות אינן נכללות, כי הן סכום קבוע למשמרת ולא תשלום לפי שעה · מרווח לשעה = מחיר לשעה פחות עלות לשעה · רווח = הרווח שקפא בסגירה הכספית היכן שקפא, אחרת הרווח שהמערכת מחשבת עכשיו.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מגמות-רב-שנתיות_2024–2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: שנה · אירועים · הכנסה · רווח · שולי-רווח · מחיר לשעה · עלות לשעה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "FINANCE": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m0-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מגמות רב-שנתיות",
+              "state_testid": "report-trends",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 3,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-line",
+                "chart-card-line"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 3,
+              "pager_total": 3,
+              "pager_range": "1–3 מתוך 3",
+              "table_headers": [
+                "שנה▲",
+                "אירועים",
+                "הכנסה",
+                "רווח",
+                "שולי-רווח",
+                "מחיר לשעה",
+                "עלות לשעה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=736⁩ בכל השנים. השנה הנוכחית חלקית — עד ⁦16/09⁩ — ואינה ברת-השוואה לשנים מלאות.",
+              "so_what": "לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-⁦260 ₪⁩ ל-⁦305 ₪⁩ לשעה, מול עלייה מ-⁦46 ₪⁩ ל-⁦47 ₪⁩ בעלות; זו הסיבה ששולי-הרווח עמדו על ⁦58.6%⁩.",
+              "definitions": "שנה = השנה שבה התקיים האירוע, לא זו שבה נשלחה החשבונית · מחיר לשעה = כל הכנסת השנה חלקי כל שעות-העבודה שדווחו בה · עלות לשעה = שכר-הבסיס והבונוסים האישיים חלקי אותן שעות; נסיעות אינן נכללות, כי הן סכום קבוע למשמרת ולא תשלום לפי שעה · מרווח לשעה = מחיר לשעה פחות עלות לשעה · רווח = הרווח שקפא בסגירה הכספית היכן שקפא, אחרת הרווח שהמערכת מחשבת עכשיו.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מגמות-רב-שנתיות_2024–2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: שנה · אירועים · הכנסה · רווח · שולי-רווח · מחיר לשעה · עלות לשעה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m2-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מגמות רב-שנתיות",
+              "state_testid": "report-trends",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 3,
+              "chart_types": [
+                "chart-card-bar",
+                "chart-card-line",
+                "chart-card-line"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 3,
+              "pager_total": 3,
+              "pager_range": "1–3 מתוך 3",
+              "table_headers": [
+                "שנה▲",
+                "אירועים",
+                "הכנסה",
+                "רווח",
+                "שולי-רווח",
+                "מחיר לשעה",
+                "עלות לשעה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית — פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום · הוצאו: אירועים שטרם התקיימו, אירועים בתהליך ואירועים מבוטלים · ⁦n=736⁩ בכל השנים. השנה הנוכחית חלקית — עד ⁦16/09⁩ — ואינה ברת-השוואה לשנים מלאות.",
+              "so_what": "לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-⁦260 ₪⁩ ל-⁦305 ₪⁩ לשעה, מול עלייה מ-⁦46 ₪⁩ ל-⁦47 ₪⁩ בעלות; זו הסיבה ששולי-הרווח עמדו על ⁦58.6%⁩.",
+              "definitions": "שנה = השנה שבה התקיים האירוע, לא זו שבה נשלחה החשבונית · מחיר לשעה = כל הכנסת השנה חלקי כל שעות-העבודה שדווחו בה · עלות לשעה = שכר-הבסיס והבונוסים האישיים חלקי אותן שעות; נסיעות אינן נכללות, כי הן סכום קבוע למשמרת ולא תשלום לפי שעה · מרווח לשעה = מחיר לשעה פחות עלות לשעה · רווח = הרווח שקפא בסגירה הכספית היכן שקפא, אחרת הרווח שהמערכת מחשבת עכשיו.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מגמות-רב-שנתיות_2024–2026-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: שנה · אירועים · הכנסה · רווח · שולי-רווח · מחיר לשעה · עלות לשעה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "RECRUIT": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m0-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m2-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "STAFF": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m0-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m2-trends.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "discounts": {
+      "id": "מ4",
+      "rpc": "report_m04_discounts",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m0-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "הנחות ורווחיות",
+              "state_testid": "report-discounts",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "הצעה",
+                "לקוח",
+                "אירוע",
+                "הופקה",
+                "הנחה▼",
+                "הכנסה",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "שתי אוכלוסיות שונות בדף אחד, ובכוונה: שיעור-האישור נמדד על הצעות מחיר — ⁦837⁩ אושרו ו-⁦337⁩ נדחו (הצעות שנסגרו בסיבה «נפתחה בטעות» אינן נספרות כדחייה) · שולי-הרווח נמדדים על האירועים שנולדו מההצעות המאושרות וכבר התקיימו — ⁦n=736⁩; ⁦101⁩ הצעות מאושרות טרם הפכו לאירוע שהתקיים ואינן כאן.",
+              "so_what": "לשים לב שכל מדרג-הנחה עמוק יותר מוריד את שולי-הרווח, בלי יוצא מן הכלל — מ-⁦57.8%⁩ בלי הנחה ועד ⁦50.7%⁩ מעל ⁦10%⁩ הנחה, פער של ⁦7.1⁩ נקודות; ההנחה לא מוחזרת בנפח.",
+              "definitions": "מדרג-הנחה = ההנחה הקבועה של הלקוח ועוד ההנחה הידנית שניתנה בהצעה, יחד · \"10%+ (פתוח)\" = כל הנחה מעל 10%, בלי חסם עליון · שולי-רווח של מדרג = סך הרווח של אירועי המדרג חלקי סך ההכנסה שלהם, לא ממוצע של אחוזים · שיעור אישור = אושרו חלקי (אושרו + נדחו); הצעות שנסגרו כי \"נפתחה בטעות\" אינן נספרות כדחייה · \"לפני שנה\" = בדיוק אותו חישוב על מה שהיה במערכת לפני שנה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: הנחות-ורווחיות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: הצעה · לקוח · אירוע · הופקה · הנחה · הכנסה · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦736⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "הנחות ורווחיות",
+              "state_testid": "report-discounts",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 3,
+              "hint_ids": [
+                "reports.discounts.purpose",
+                "reports.discounts.approvalPopulation",
+                "reports.discounts.tierSort"
+              ],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "הצעה",
+                "לקוח",
+                "אירוע",
+                "הופקה",
+                "הנחה▼",
+                "הכנסה",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "שתי אוכלוסיות שונות בדף אחד, ובכוונה: שיעור-האישור נמדד על הצעות מחיר — ⁦837⁩ אושרו ו-⁦337⁩ נדחו (הצעות שנסגרו בסיבה «נפתחה בטעות» אינן נספרות כדחייה) · שולי-הרווח נמדדים על האירועים שנולדו מההצעות המאושרות וכבר התקיימו — ⁦n=736⁩; ⁦101⁩ הצעות מאושרות טרם הפכו לאירוע שהתקיים ואינן כאן.",
+              "so_what": "לשים לב שכל מדרג-הנחה עמוק יותר מוריד את שולי-הרווח, בלי יוצא מן הכלל — מ-⁦57.8%⁩ בלי הנחה ועד ⁦50.7%⁩ מעל ⁦10%⁩ הנחה, פער של ⁦7.1⁩ נקודות; ההנחה לא מוחזרת בנפח.",
+              "definitions": "מדרג-הנחה = ההנחה הקבועה של הלקוח ועוד ההנחה הידנית שניתנה בהצעה, יחד · \"10%+ (פתוח)\" = כל הנחה מעל 10%, בלי חסם עליון · שולי-רווח של מדרג = סך הרווח של אירועי המדרג חלקי סך ההכנסה שלהם, לא ממוצע של אחוזים · שיעור אישור = אושרו חלקי (אושרו + נדחו); הצעות שנסגרו כי \"נפתחה בטעות\" אינן נספרות כדחייה · \"לפני שנה\" = בדיוק אותו חישוב על מה שהיה במערכת לפני שנה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: הנחות-ורווחיות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: הצעה · לקוח · אירוע · הופקה · הנחה · הכנסה · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦736⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "FINANCE": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m0-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "הנחות ורווחיות",
+              "state_testid": "report-discounts",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "הצעה",
+                "לקוח",
+                "אירוע",
+                "הופקה",
+                "הנחה▼",
+                "הכנסה",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "שתי אוכלוסיות שונות בדף אחד, ובכוונה: שיעור-האישור נמדד על הצעות מחיר — ⁦837⁩ אושרו ו-⁦337⁩ נדחו (הצעות שנסגרו בסיבה «נפתחה בטעות» אינן נספרות כדחייה) · שולי-הרווח נמדדים על האירועים שנולדו מההצעות המאושרות וכבר התקיימו — ⁦n=736⁩; ⁦101⁩ הצעות מאושרות טרם הפכו לאירוע שהתקיים ואינן כאן.",
+              "so_what": "לשים לב שכל מדרג-הנחה עמוק יותר מוריד את שולי-הרווח, בלי יוצא מן הכלל — מ-⁦57.8%⁩ בלי הנחה ועד ⁦50.7%⁩ מעל ⁦10%⁩ הנחה, פער של ⁦7.1⁩ נקודות; ההנחה לא מוחזרת בנפח.",
+              "definitions": "מדרג-הנחה = ההנחה הקבועה של הלקוח ועוד ההנחה הידנית שניתנה בהצעה, יחד · \"10%+ (פתוח)\" = כל הנחה מעל 10%, בלי חסם עליון · שולי-רווח של מדרג = סך הרווח של אירועי המדרג חלקי סך ההכנסה שלהם, לא ממוצע של אחוזים · שיעור אישור = אושרו חלקי (אושרו + נדחו); הצעות שנסגרו כי \"נפתחה בטעות\" אינן נספרות כדחייה · \"לפני שנה\" = בדיוק אותו חישוב על מה שהיה במערכת לפני שנה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: הנחות-ורווחיות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: הצעה · לקוח · אירוע · הופקה · הנחה · הכנסה · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦736⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m2-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "הנחות ורווחיות",
+              "state_testid": "report-discounts",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "הצעה",
+                "לקוח",
+                "אירוע",
+                "הופקה",
+                "הנחה▼",
+                "הכנסה",
+                "שולי-רווח"
+              ],
+              "extra_tables": 0,
+              "population": "שתי אוכלוסיות שונות בדף אחד, ובכוונה: שיעור-האישור נמדד על הצעות מחיר — ⁦837⁩ אושרו ו-⁦337⁩ נדחו (הצעות שנסגרו בסיבה «נפתחה בטעות» אינן נספרות כדחייה) · שולי-הרווח נמדדים על האירועים שנולדו מההצעות המאושרות וכבר התקיימו — ⁦n=736⁩; ⁦101⁩ הצעות מאושרות טרם הפכו לאירוע שהתקיים ואינן כאן.",
+              "so_what": "לשים לב שכל מדרג-הנחה עמוק יותר מוריד את שולי-הרווח, בלי יוצא מן הכלל — מ-⁦57.8%⁩ בלי הנחה ועד ⁦50.7%⁩ מעל ⁦10%⁩ הנחה, פער של ⁦7.1⁩ נקודות; ההנחה לא מוחזרת בנפח.",
+              "definitions": "מדרג-הנחה = ההנחה הקבועה של הלקוח ועוד ההנחה הידנית שניתנה בהצעה, יחד · \"10%+ (פתוח)\" = כל הנחה מעל 10%, בלי חסם עליון · שולי-רווח של מדרג = סך הרווח של אירועי המדרג חלקי סך ההכנסה שלהם, לא ממוצע של אחוזים · שיעור אישור = אושרו חלקי (אושרו + נדחו); הצעות שנסגרו כי \"נפתחה בטעות\" אינן נספרות כדחייה · \"לפני שנה\" = בדיוק אותו חישוב על מה שהיה במערכת לפני שנה.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: הנחות-ורווחיות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: הצעה · לקוח · אירוע · הופקה · הנחה · הכנסה · שולי-רווח",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦736⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "RECRUIT": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m0-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m2-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "STAFF": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m0-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m2-discounts.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "staffing": {
+      "id": "מ6",
+      "rpc": "report_m06_staffing",
+      "drill": false,
+      "identities": {
+        "CEO": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m0-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "קהל מול צוות",
+              "state_testid": "report-staffing",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 2,
+              "chart_types": [
+                "chart-card-scatter",
+                "chart-card-histogram"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הוערכו",
+                "הגיעו",
+                "פער▼",
+                "דיילות",
+                "אורחים לדיילת"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית (פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום) ושיש להם גם הערכת-אורחים בהצעה וגם מספר אורחים בפועל · ⁦n=717⁩ מתוך ⁦736⁩; הוצאו ⁦19⁩ אירועים שבהם לא נרשם מספר האורחים בפועל בסגירה.",
+              "so_what": "לשים לב שהאיוש בפועל נדיב מהתכנון ולא הפוך — יחס חציוני של ⁦40.8⁩ אורחים לדיילת מול פרמטר-תכנון ⁦50⁩, ורק ב-⁦31⁩ אירועים מתוך ⁦717⁩ (⁦4.3%⁩) היחס עלה על ⁦50⁩.",
+              "definitions": "\"הוערכו\" = מספר האורחים שנרשם בהצעת המחיר לפני האירוע · \"הגיעו\" = מספר האורחים שנרשם בסגירה התפעולית · \"דיילות\" = דיילות שאושרו סופית לאירוע, לא דיילות שהוזמנו · יחס = הגיעו חלקי דיילות · יחס חציוני = החציון על פני האירועים, לא סך האורחים חלקי סך הדיילות · פרמטר-התכנון הוא נקודת-מוצא לשיבוץ, לא יעד ולא סף.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: קהל-מול-צוות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הוערכו · הגיעו · פער · דיילות · אורחים לדיילת",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦135⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "קהל מול צוות",
+              "state_testid": "report-staffing",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 4,
+              "hint_ids": [
+                "reports.staffing.purpose",
+                "reports.staffing.medianRatio",
+                "reports.staffing.planningParam",
+                "reports.staffing.scatterSample"
+              ],
+              "charts": 2,
+              "chart_types": [
+                "chart-card-scatter",
+                "chart-card-histogram"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הוערכו",
+                "הגיעו",
+                "פער▼",
+                "דיילות",
+                "אורחים לדיילת"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית (פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום) ושיש להם גם הערכת-אורחים בהצעה וגם מספר אורחים בפועל · ⁦n=717⁩ מתוך ⁦736⁩; הוצאו ⁦19⁩ אירועים שבהם לא נרשם מספר האורחים בפועל בסגירה.",
+              "so_what": "לשים לב שהאיוש בפועל נדיב מהתכנון ולא הפוך — יחס חציוני של ⁦40.8⁩ אורחים לדיילת מול פרמטר-תכנון ⁦50⁩, ורק ב-⁦31⁩ אירועים מתוך ⁦717⁩ (⁦4.3%⁩) היחס עלה על ⁦50⁩.",
+              "definitions": "\"הוערכו\" = מספר האורחים שנרשם בהצעת המחיר לפני האירוע · \"הגיעו\" = מספר האורחים שנרשם בסגירה התפעולית · \"דיילות\" = דיילות שאושרו סופית לאירוע, לא דיילות שהוזמנו · יחס = הגיעו חלקי דיילות · יחס חציוני = החציון על פני האירועים, לא סך האורחים חלקי סך הדיילות · פרמטר-התכנון הוא נקודת-מוצא לשיבוץ, לא יעד ולא סף.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: קהל-מול-צוות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הוערכו · הגיעו · פער · דיילות · אורחים לדיילת",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦135⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "FINANCE": {
+          "m0": {
+            "mode": 0,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m0-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "קהל מול צוות",
+              "state_testid": "report-staffing",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 2,
+              "chart_types": [
+                "chart-card-scatter",
+                "chart-card-histogram"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הוערכו",
+                "הגיעו",
+                "פער▼",
+                "דיילות",
+                "אורחים לדיילת"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית (פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום) ושיש להם גם הערכת-אורחים בהצעה וגם מספר אורחים בפועל · ⁦n=717⁩ מתוך ⁦736⁩; הוצאו ⁦19⁩ אירועים שבהם לא נרשם מספר האורחים בפועל בסגירה.",
+              "so_what": "לשים לב שהאיוש בפועל נדיב מהתכנון ולא הפוך — יחס חציוני של ⁦40.8⁩ אורחים לדיילת מול פרמטר-תכנון ⁦50⁩, ורק ב-⁦31⁩ אירועים מתוך ⁦717⁩ (⁦4.3%⁩) היחס עלה על ⁦50⁩.",
+              "definitions": "\"הוערכו\" = מספר האורחים שנרשם בהצעת המחיר לפני האירוע · \"הגיעו\" = מספר האורחים שנרשם בסגירה התפעולית · \"דיילות\" = דיילות שאושרו סופית לאירוע, לא דיילות שהוזמנו · יחס = הגיעו חלקי דיילות · יחס חציוני = החציון על פני האירועים, לא סך האורחים חלקי סך הדיילות · פרמטר-התכנון הוא נקודת-מוצא לשיבוץ, לא יעד ולא סף.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: קהל-מול-צוות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הוערכו · הגיעו · פער · דיילות · אורחים לדיילת",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦135⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "rendered",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\FINANCE-m2-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "קהל מול צוות",
+              "state_testid": "report-staffing",
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 2,
+              "chart_types": [
+                "chart-card-scatter",
+                "chart-card-histogram"
+              ],
+              "tiles": 4,
+              "tile_doors": 0,
+              "rows_page1": 50,
+              "pager_total": 50,
+              "pager_range": "1–50 מתוך 50",
+              "table_headers": [
+                "אירוע",
+                "לקוח",
+                "תאריך",
+                "הוערכו",
+                "הגיעו",
+                "פער▼",
+                "דיילות",
+                "אורחים לדיילת"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית (פרויקט הסתיים · ממתין לסגירה · ממתין לחשבונית · ממתין לתשלום) ושיש להם גם הערכת-אורחים בהצעה וגם מספר אורחים בפועל · ⁦n=717⁩ מתוך ⁦736⁩; הוצאו ⁦19⁩ אירועים שבהם לא נרשם מספר האורחים בפועל בסגירה.",
+              "so_what": "לשים לב שהאיוש בפועל נדיב מהתכנון ולא הפוך — יחס חציוני של ⁦40.8⁩ אורחים לדיילת מול פרמטר-תכנון ⁦50⁩, ורק ב-⁦31⁩ אירועים מתוך ⁦717⁩ (⁦4.3%⁩) היחס עלה על ⁦50⁩.",
+              "definitions": "\"הוערכו\" = מספר האורחים שנרשם בהצעת המחיר לפני האירוע · \"הגיעו\" = מספר האורחים שנרשם בסגירה התפעולית · \"דיילות\" = דיילות שאושרו סופית לאירוע, לא דיילות שהוזמנו · יחס = הגיעו חלקי דיילות · יחס חציוני = החציון על פני האירועים, לא סך האורחים חלקי סך הדיילות · פרמטר-התכנון הוא נקודת-מוצא לשיבוץ, לא יעד ולא סף.",
+              "window_label": "⁦01/01/2026–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: קהל-מול-צוות_כל-הזמנים-·-כל-הלקוחות.xlsx",
+              "export_columns": "עמודות: אירוע · לקוח · תאריך · הוערכו · הגיעו · פער · דיילות · אורחים לדיילת",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": "מוצגות ⁦50⁩ מתוך ⁦135⁩ שורות",
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": false,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": false,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "RECRUIT": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m0-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\RECRUIT-m2-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "מבט-על דיילות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 1,
+              "chart_types": [
+                "chart-card-bar"
+              ],
+              "tiles": 5,
+              "tile_doors": 4,
+              "rows_page1": 6,
+              "pager_total": 6,
+              "pager_range": "1–6 מתוך 6",
+              "table_headers": [
+                "דיילת",
+                "סטטוס",
+                "משמרות",
+                "הבריזה",
+                "ציון אמינות▲",
+                "משמרת אחרונה"
+              ],
+              "extra_tables": 0,
+              "population": "אוכלוסייה: שיבוצים שסומנה בהם נוכחות, באירוע שכבר התקיים ובפרויקט שלא בוטל · n=1,699 שיבוצים אצל 98 דיילות · הוצאו: 72 היעדרויות באישור מראש ומחלה (לא נספרות לא במונה ולא במכנה) · 343 סירובים · 176 זימונים שלא נענו · 107 שיבוצים שנוכחותם טרם סומנה.",
+              "so_what": "לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים — 6 מהן פעילות ומוצעות היום בשיבוץ.",
+              "definitions": "הגדרות: הגעה בזמן = שיבוצים שסומן בהם \"הגיעה\" בלי דרגת-איחור, מתוך כל השיבוצים שסומנה בהם נוכחות · דיילת אדומה = ציון-אמינות נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440) · ג'יני = מדד ריכוזיות בין 0 (כל דיילת מקבלת אותו מספר משמרות) ל-1 (דיילת אחת מקבלת הכול), על 106 הדיילות שעבדו בחלון · דיילת פעילה = הסטטוס 'פעילה' בכרטיס שלה — אינו \"עבדה לאחרונה\" · אירוע עם חוסר = אירוע שטרם התקיים ומספר המשובצות-סופית בו קטן ממספר הדיילות הנדרש.",
+              "window_label": "⁦16/09/2025–16/09/2026⁩ · כל הלקוחות",
+              "export_file": "יירד: מבט-על-דיילות_12-החודשים-האחרונים-(16-09-2025–16-09-2026).xlsx",
+              "export_columns": "עמודות: דיילת · סטטוס · משמרות · הבריזה · ציון אמינות · משמרת אחרונה",
+              "export_disabled": false,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": false,
+                  "selected": true
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        },
+        "STAFF": {
+          "m0": {
+            "mode": 0,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m0-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          },
+          "m2": {
+            "mode": 2,
+            "state": "masked",
+            "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\STAFF-m2-staffing.png",
+            "console_errors": 0,
+            "console_samples": [],
+            "measure": {
+              "h1": "דו\"חות",
+              "state_testid": null,
+              "scroll_overflow_px": 0,
+              "body_overflow_px": 0,
+              "hints_visible": 0,
+              "hint_ids": [],
+              "charts": 0,
+              "chart_types": [],
+              "tiles": 0,
+              "tile_doors": 0,
+              "rows_page1": 0,
+              "pager_total": null,
+              "pager_range": null,
+              "table_headers": [],
+              "extra_tables": 0,
+              "population": null,
+              "so_what": null,
+              "definitions": null,
+              "window_label": null,
+              "export_file": null,
+              "export_columns": null,
+              "export_disabled": null,
+              "crumbs": null,
+              "row_cap": null,
+              "crossfilter_label": null,
+              "missing_params": null,
+              "tabs": [
+                {
+                  "id": "reports-tab-exec",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-finance",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-hostesses",
+                  "masked": true,
+                  "selected": false
+                },
+                {
+                  "id": "reports-tab-customers",
+                  "masked": true,
+                  "selected": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "extras": {
+    "drill": {
+      "surface": "trends",
+      "levels": [
+        {
+          "level": 0,
+          "state": "rendered",
+          "url": "http://localhost:5189/reports?tab=exec&report=trends",
+          "crumbs": null,
+          "export_file": "יירד: מגמות-רב-שנתיות_2024–2026-·-כל-הלקוחות.xlsx",
+          "tiles": 4,
+          "rows": 3
+        },
+        {
+          "level": 1,
+          "url": "http://localhost:5189/reports?tab=exec&report=trends&drill=%7B%22kind%22%3A%22year%22%2C%22year%22%3A2024%7D",
+          "crumbs": "כל השנים|⁦2024⁩",
+          "export_file": "יירד: מגמות-רב-שנתיות_2024-·-כל-הלקוחות_2024.xlsx",
+          "tiles": 4,
+          "rows": 12,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-trends-drill1.png",
+          "console_errors": 0
+        },
+        {
+          "level": 2,
+          "url": "http://localhost:5189/reports?tab=exec&report=trends&drill=%7B%22kind%22%3A%22month%22%2C%22year%22%3A2024%2C%22month%22%3A1%7D",
+          "navigated_away": false,
+          "crumbs": "כל השנים|⁦2024⁩|ינואר ⁦2024⁩",
+          "export_file": "יירד: מגמות-רב-שנתיות_ינואר-2024-·-כל-הלקוחות_ינואר-2024.xlsx",
+          "tiles": 4,
+          "rows": 13,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-trends-drill2.png",
+          "console_errors": 0
+        }
+      ],
+      "note": null
+    },
+    "export": {
+      "surface": "exec-overview",
+      "export_file": "יירד: מבט-על-הנהלה_2026-(01-01–16-09)-·-כל-הלקוחות.xlsx",
+      "export_columns": "עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח",
+      "export_disabled": false,
+      "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-exec-overview-export-caption.png",
+      "block_png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence\\CEO-m2-exec-overview-export-caption-block.png"
+    }
+  },
+  "login": {
+    "CEO": {
+      "ok": true,
+      "attempts": 1,
+      "reused": false
+    },
+    "FINANCE": {
+      "ok": true,
+      "attempts": 1,
+      "reused": false
+    },
+    "RECRUIT": {
+      "ok": true,
+      "attempts": 1,
+      "reused": false
+    },
+    "STAFF": {
+      "ok": true,
+      "attempts": 1,
+      "reused": false
+    }
+  },
+  "failures": [],
+  "finished_at": "2026-09-16T20:32:46.026Z"
+}

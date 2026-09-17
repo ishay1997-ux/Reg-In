@@ -1,0 +1,117 @@
+{
+  "report_file": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\p5-fix-doc-3.json",
+  "files_touched": [
+    "docs/micro_guides/module-11.md",
+    "src/modules/11_reports/CLAUDE.md",
+    "docs/PROJECT_MASTER.md",
+    "docs/micro_guides/close-findings-module-11.md"
+  ],
+  "fixes": [
+    {
+      "item": "T6 — module-11.md §3.3 did not sum (37 of 39 rulings bucketed)",
+      "files": [
+        "docs/micro_guides/module-11.md"
+      ],
+      "what_changed": "Ruling 7 added to bucket (א) (16 -> seventeen); ruling 18 recorded on its own line like ruling 25; a dated 17/09/2026 note under the (ג) table states both, cites F-07/T6, and restates the sum as 39 = 17 + 10 + 10 + 1 + 1.",
+      "live_check": "reportsCatalog.js lines 7-9 read this turn - the source block cites הכרעה 18 and 'אין מספר-דוח בממשק'; uncapped grep for 'דוח [0-9]'/'דו\"ח [0-9]' over src/modules/11_reports excluding tests = 0 hits."
+    },
+    {
+      "item": "T7 (fact half) — src/modules/11_reports/CLAUDE.md trap row claimed HTTP 200 for a totally failed classification run",
+      "files": [
+        "src/modules/11_reports/CLAUDE.md"
+      ],
+      "what_changed": "Trap row rewritten: 502 is the fatal-failure answer, 200 is reserved for the non-fatal nothing-saved exit, 409 carries error+status:'running'. The advice ('branch on body.status, never res.ok') is kept verbatim and strengthened with why it matters at 502 (res.ok is false there; invokeClassify reads error.context.json() on any non-2xx).",
+      "live_check": "supabase/functions/classify-feedback/index.ts read this turn: lines ~647-660 return { status:'failed', http:502 }; lines ~825-828 return json({error, run_id, status:'running'}, 409)."
+    },
+    {
+      "item": "§4c refresh (part) — T4 money-gate fact added as invariant 7 in src/modules/11_reports/CLAUDE.md",
+      "files": [
+        "src/modules/11_reports/CLAUDE.md"
+      ],
+      "what_changed": "New invariant 7: m19/m21 gate only on 'לקוחות', the money is in the payload, masking is client-side (CustomersTab.jsx:28 canSeeMoney, customers/payload.jsx:105 maskMoney); the conflict is Ishay's (recorded product decision, cards-customers ⑤ מ21) and points at the §6 line.",
+      "live_check": "Latest migration file per function measured this turn: report_m19_customers_overview (J2 20260917021500) and report_m21_drifting (J1 20260917005500) contain assert_module_permission('לקוחות') only - zero 'כספים' permission test in either body."
+    },
+    {
+      "item": "PROJECT_MASTER §6 — the seven OWED lines for the items that stay open (T2 T4 T5 T8 T9 T12 T13)",
+      "files": [
+        "docs/PROJECT_MASTER.md"
+      ],
+      "what_changed": "Seven register lines inserted after the five 17/09 E2E rows, in the register's shape (🚧 מN ← מ11 · what · מקור: ... *(17/09/2026)*), each naming what was measured and by whom, with an HTML comment above saying T1/T3/T6/T7/T10/T11 close in this round and have no line. T2 is written as a question with the exact revoke statement; T4 flags that the §7 question itself is still owed; T13 names the existing 🚧 מ6 (סגירה) row so the debt is not counted twice.",
+      "live_check": "T13's own command re-run this turn: awk '/^## Session Log/{f=1;next} /^## Reference/{f=0} f' docs/CLAUDE_CODE_LOG.md | wc -l = 2,626 (the audit's 2,599 was pre-its-own-rows) - the line carries 2,626 with the command. §2.7 read this turn: four test identities, מנהלת פרויקטים absent (its only two occurrences in module-11.md are audit rows 686/726)."
+    },
+    {
+      "item": "§4c refresh (part 2) — finiteNumber single-home note added as invariant 8, after the code fixer landed T1",
+      "files": [
+        "src/modules/11_reports/CLAUDE.md"
+      ],
+      "what_changed": "Invariant 8 names the home the code fixer chose - src/lib/reportsFormat.js:40 - states the invariant ('a non-finite value is absence, never zero', so '  ' -> null) and forbids toFiniteNumber from src/lib/pricing.js in reports code because it returns 0 for '  '. The file header now records that the §4c refresh the audit left owed was done on 17/09 and lists its three parts.",
+      "live_check": "Read on disk this turn: src/lib/reportsFormat.js:40 'export function finiteNumber(value)'; reportsCustomers.js:21 / reportsExecutive.js:25 / reportsHostesses.js:16 all 'import { finiteNumber } from ./reportsFormat'. Source: the code fixer's p5-fix-code-3.json T1 entry (red red-t1.log 'finiteNumber is not a function' -> green 1,686 tests)."
+    },
+    {
+      "item": "D-39 — one new §9 row in module-11.md, dated 17/09/2026 'closing-audit fix round ⑦'",
+      "files": [
+        "docs/micro_guides/module-11.md"
+      ],
+      "what_changed": "(a) B-1 and B-2 with the code fixer's proof-of-fix test names and its red-before/green-after lines (ExportBar.test.jsx describe 'ExportBar — כשל-הייצוא נאמר על המסך (B-1)', 3 cases, 7 tests/3 failed -> 32 passed; CustomersTab.test.jsx '409 «ריצת-ניתוח כבר פועלת» מציג את מצב-הריצה...' + the T11 console case, 35 tests/2 failed -> 35 passed). (b) T1/T3/T10/T11 closed by code with what each changed, T6/T7 closed by this doc round. (c) the seven open items, each pointing at its new §6 line, with the T4 caveat that the §7 registration is still owed. (d) E2E: p5-e2e-final.json absent at 04:29 -> 'טעון בדיקה' with the time, and the inherited p3-e2e-rerun numbers marked as inherited.",
+      "test_added": "n/a (doc)",
+      "live_check": "ls of docs/specs/module_11_reports/build-2026-09-16/results/p5-e2e-final.json at 04:29 = no such file; the row's pipe count re-measured after removing two literal '|' inside code spans that would have split the table cell (row now has 4 pipes = 3 columns, like D-38)."
+    },
+    {
+      "item": "close-findings-module-11.md — one dated line appended under §2 (audit text untouched)",
+      "files": [
+        "docs/micro_guides/close-findings-module-11.md"
+      ],
+      "what_changed": "A block quote right under the §2 heading listing what this round closed (B-1 B-2 T1 T3 T6 T7 T10 T11) and what stayed open with a §6 line each (T2 T4 T5 T8 T9 T12 T13), stating that §7's OWED §6 registration is now paid, with the one exception that T4's conflict question still needs a PROJECT_MASTER_sec7.md entry, and pointing at D-39.",
+      "live_check": "git status shows the file modified; prettier --check on all four touched files exit 0."
+    }
+  ],
+  "gates": {
+    "check:docs-structure": "exit 0 — 165 קבצים נסרקו, אפס ממצאים (log: <scratchpad>/g-ds.log)",
+    "check:declared-counts": "exit 0 — 6 מספרים מוצהרים, כולם תואמים (log: g-dc.log)",
+    "check:iron-rules": "exit 0 — 17/17 resolve (log: g-ir.log)",
+    "check:context": "exit 0 — tree intact, 9 plugins, 20 skill files; it still prints the two open m9 debts, unchanged by this round (log: g-ctx.log)",
+    "check:bidi (extra)": "exit 0 (log: g-bidi.log)",
+    "prettier --check on the 4 touched files": "exit 0 (log: g-prettier.log)",
+    "CR=0": "perl tr/\r// on all four files = 0"
+  },
+  "not_done": [
+    {
+      "item": "PROJECT_MASTER_sec7.md entry for T4 (the money-crosses-the-wire conflict question)",
+      "why": "Out of my file scope (§7 register was not assigned to me). Flagged inside the T4 §6 line, inside D-39 and inside the close-findings line as 'טעון ביצוע' so it is not silently lost."
+    },
+    {
+      "item": "No §6 lines for T1 · T3 · T6 · T7 · T10 · T11",
+      "why": "By instruction: they close in this round. D-39 records each with what changed and where."
+    },
+    {
+      "item": "STATUS.md / CLAUDE_CODE_LOG.md rows for this fix round",
+      "why": "Not in my file list; the orchestrator owns them."
+    }
+  ],
+  "not_verified": [
+    "Full `npm run gate` — not run by me (only the four doc gates + bidi + prettier). The code fixer's report said gates were still pending at the time I read it.",
+    "E2E: docs/specs/module_11_reports/build-2026-09-16/results/p5-e2e-final.json did not exist at 17/09 04:29 (checked twice, 04:05 and 04:29). D-39 says טעון בדיקה with that time; the 185/6/7 numbers it quotes are explicitly marked inherited from p3-e2e-rerun.json.",
+    "The live `permissions` row for מנהלת פרויקטים (לקוחות edit + כספים blocked, one active user) — inherited from the audit's F-12, not re-queried this round (no DB access in my scope); both the §6 T4 line and invariant 7 say so in the text.",
+    "The conference-story screen numbers (Gini 0.46 · 581 ימים · n=106/1,877) restated in the T12 §6 line — inherited from F-17's live render, not re-rendered by me.",
+    "The code fixer's red/green logs (red-b1.log, green-b1.log, red-b2.log, green-b2.log, red-t1.log, red-t3-t10.log, vt.log) — quoted from its report; I read its JSON, not the logs.",
+    "T2's revoke statement is written as a proposal only — nothing was run against the database."
+  ],
+  "blind_spot": "Two of my new §6 lines rest on a DB state I did not query this round. The T4 line and invariant 7 of src/modules/11_reports/CLAUDE.md both say the role `מנהלת פרויקטים` holds `לקוחות edit` + `כספים blocked` with one active user; I measured only the code half (m19 J2 / m21 J1 gate on 'לקוחות' with zero 'כספים' test in either body). Checkable in one query: `select role_name, module, level from permissions where module in ('לקוחות','כספים') order by role_name;` — if that role is gone or its levels changed, the conflict question I wrote for Ishay names a role that no longer exists, and T5 ('she is not a test identity') loses its subject. The same applies to T2's four table grants, taken from F-02's relacl join: `select relname, relacl from pg_class where relname in ('login_attempts','feedback_rpc_calls','project_changes','seed_registry');` decides true-or-false whether the revoke I proposed to Ishay is still needed.",
+  "assumed": [
+    {
+      "what": "Ruling 18 is recorded on its own line rather than added to bucket (ג)'s table of ten",
+      "source_checked": "close-findings-module-11.md F-07, which prescribes exactly '39 = 17 + 10 + 10 + 1 + 1' — so (ג) stays ten and 18 stands beside ruling 25",
+      "tag": "followed the audit's prescription"
+    },
+    {
+      "what": "T5's §6 line is addressed 🚧 מ12 ← מ11 although its real trigger is 'the next evidence round', which is not a module",
+      "source_checked": "the register's own shape (every live row targets a module); the line states the trigger in words so the grep-by-module retrieval still finds it",
+      "tag": "shape compromise, stated in the line"
+    },
+    {
+      "what": "reportsCatalog.js cited as ':7–9' for ruling 18",
+      "source_checked": "read this turn — the source block spans lines 7–11 and names הכרעה 18 at lines 8–9; the citation range contains it",
+      "tag": "range kept as the audit wrote it"
+    }
+  ]
+}

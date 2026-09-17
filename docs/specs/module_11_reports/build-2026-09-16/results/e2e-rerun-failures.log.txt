@@ -1,0 +1,314 @@
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+Running 58 tests using 1 worker
+
+  ok  1 [chromium] › e2e\customer-page.spec.js:105:3 › עמוד הלקוח (מודול 3 / צעד 3.5) — CEO › רשימת הלקוחות: עמודת הכנסות, מיון, והסינון שורד ניווט-חזרה (5.3s)
+  x   2 [chromium] › e2e\customer-page.spec.js:130:3 › עמוד הלקוח (מודול 3 / צעד 3.5) — CEO › העמוד: מדדים חיים, לשוניות, סיבת-דחייה על השורה, ופעולות לפי סטטוס (17.0s)
+  ok  3 [chromium] › e2e\customer-page.spec.js:209:3 › עמוד הלקוח (מודול 3 / צעד 3.5) — CEO › "+ הצעה חדשה" פותח טופס עם הלקוח **וההנחה שלו** — לא רק מנווט (4.5s)
+  ok  4 [chromium] › e2e\customer-page.spec.js:227:3 › עמוד הלקוח (מודול 3 / צעד 3.5) — CEO › חלון המסמך מעמוד-הלקוח מפיק PDF תקין (הזרקת פרטי הלקוח עובדת) (5.6s)
+  ok  5 [chromium] › e2e\customer-page.spec.js:251:3 › עמוד הלקוח (מודול 3 / צעד 3.5) — CEO › §7.34 — ארכוב לקוח עם הצעה פתוחה מתריע, ו"ביטול" באמת לא מארכב (4.6s)
+  ok  6 [chromium] › e2e\customer-page.spec.js:292:3 › עמוד הלקוח — מנהלת כספים (edit על לקוחות, view על הצעות) › רואה את העמוד ועריכת-פרטים, ולא רואה אישור/דחייה/הצעה-חדשה (3.6s)
+  ok  7 [chromium] › e2e\customer-page.spec.js:328:3 › עמוד הלקוח — תפקיד חסום › כתובת ישירה ל-/customers/:id נחסמת (המסלול עטוף ב-ProtectedRoute) (2.9s)
+  ok  8 [chromium] › e2e\dashboard.spec.js:40:5 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנכ"ל: המסך נפתח, והמיסוך נכון (2.9s)
+  ok  9 [chromium] › e2e\dashboard.spec.js:40:5 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנהלת כספים: המסך נפתח, והמיסוך נכון (2.2s)
+  ok 10 [chromium] › e2e\dashboard.spec.js:40:5 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנהלת פרויקטים: המסך נפתח, והמיסוך נכון (2.4s)
+  ok 11 [chromium] › e2e\dashboard.spec.js:40:5 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנהלת גיוס: המסך נפתח, והמיסוך נכון (2.5s)
+  ok 12 [chromium] › e2e\dashboard.spec.js:40:5 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנהלת לוגיסטיקה (STAFF): המסך נפתח, והמיסוך נכון (2.2s)
+  x  13 [chromium] › e2e\dashboard.spec.js:82:3 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנכ"ל: ניווט-חודש משנה את הכתובת ואת הכותרת, ו"היום" מחזיר (12.5s)
+  ok 14 [chromium] › e2e\finance.spec.js:94:3 › מודול 8 · כספים — E2E פנימי (S1/S2/S3), קריאה-בלבד › S1: שלוש הלשוניות עולות, כל מונה-לשונית עקבי עם השורות שרונדרו (4.1s)
+  x  15 [chromium] › e2e\finance.spec.js:141:3 › מודול 8 · כספים — E2E פנימי (S1/S2/S3), קריאה-בלבד › S2: לחיצה על השורה הידועה פותחת את חלון-הסגירה עם שער-חשבונית גלוי (15.1s)
+  ok 16 [chromium] › e2e\finance.spec.js:187:3 › מודול 8 · כספים — E2E פנימי (S1/S2/S3), קריאה-בלבד › S3: דיאלוג דוח-השכר נפתח עם תצוגה-מקדימה, וההיסטוריה יושבת בתוכו (4.4s)
+  ok 17 [chromium] › e2e\prices.spec.js:75:3 › מנכ"ל — הקטלוג נטען ונערך (4.3) › הקטלוג מציג את 11 המוצרים ואת כפתור ההוספה (3.4s)
+  ok 18 [chromium] › e2e\prices.spec.js:83:3 › מנכ"ל — הקטלוג נטען ונערך (4.3) › עורך המדרגות נפתח עם חמש המדרגות האמיתיות של תג-ממותג (3.7s)
+  ok 19 [chromium] › e2e\prices.spec.js:98:3 › מנכ"ל — הקטלוג נטען ונערך (4.3) › "עד" קטן מ"מכמות" חוסם את השמירה — ואף כתיבה לא יוצאת (3.4s)
+  ok 20 [chromium] › e2e\prices.spec.js:121:3 › מנכ"ל — הקטלוג נטען ונערך (4.3) › מחיר מתחת לעלות מזהיר אך אינו חוסם — והשמירה אכן יוצאת (LOCAL-20) (7.4s)
+  ok 21 [chromium] › e2e\prices.spec.js:152:3 › מנכ"ל — הקטלוג נטען ונערך (4.3) › מק"ט ריק חוסם יצירת מוצר — ואף כתיבה לא יוצאת (3.5s)
+  ok 22 [chromium] › e2e\prices.spec.js:183:3 › פרמטרי-תמחור: שמירה ווולידציה (4.3b ②, הועבר ללשונית "פרמטרים") › שמירת שני הפרמטרים יחד יוצאת עם השם והערך הנכונים (§7.84) (3.2s)
+  x  23 [chromium] › e2e\prices.spec.js:218:3 › פרמטרי-תמחור: שמירה ווולידציה (4.3b ②, הועבר ללשונית "פרמטרים") › יחס-אורחים לא-תקין (0) חוסם שמירה — ואף כתיבה לא יוצאת (13.3s)
+  ok 24 [chromium] › e2e\prices.spec.js:255:3 › קטלוג: toggle סטטוס-מוצר (4.3b ④) › שינוי סטטוס-מוצר שולח PATCH עם המק"ט והערך הנכונים (4.5s)
+  ok 25 [chromium] › e2e\prices.spec.js:294:3 › קיר-ההרשאות: המסך CEO-בלבד, והמסד אוכף בעצמו (4.3) › מנהלת פרויקטים נחסמת מהמסך — ואינה רואה ולו שורת-קטלוג אחת (2.9s)
+  ok 26 [chromium] › e2e\prices.spec.js:306:3 › קיר-ההרשאות: המסך CEO-בלבד, והמסד אוכף בעצמו (4.3) › 🔒 והחומה אינה המסך: כתיבה ישירה ל-products עם ה-JWT שלה אינה משנה כלום (4.9s)
+  ok 27 [chromium] › e2e\projects.spec.js:68:5 › מודול 6 · מבט-העל — חמשת התפקידים › מנכ"ל — המסך נטען עם שורות אמיתיות, בלי מצב-שגיאה (3.8s)
+  ok 28 [chromium] › e2e\projects.spec.js:68:5 › מודול 6 · מבט-העל — חמשת התפקידים › מנהלת פרויקטים — המסך נטען עם שורות אמיתיות, בלי מצב-שגיאה (4.1s)
+  ok 29 [chromium] › e2e\projects.spec.js:68:5 › מודול 6 · מבט-העל — חמשת התפקידים › מנהלת לוגיסטיקה — המסך נטען עם שורות אמיתיות, בלי מצב-שגיאה (3.8s)
+  ok 30 [chromium] › e2e\projects.spec.js:68:5 › מודול 6 · מבט-העל — חמשת התפקידים › מנהלת גיוס ושיבוץ — המסך נטען עם שורות אמיתיות, בלי מצב-שגיאה (3.7s)
+  ok 31 [chromium] › e2e\projects.spec.js:68:5 › מודול 6 · מבט-העל — חמשת התפקידים › מנהלת כספים ולקוחות — המסך נטען עם שורות אמיתיות, בלי מצב-שגיאה (3.4s)
+  ok 32 [chromium] › e2e\projects.spec.js:86:3 › מודול 6 · מבט-העל והכרטיס — מנהלת לוגיסטיקה › רואה מוני-לוגיסטיקה אמיתיים, ו"הכנסה מתוכננת" מציגה — (חסימת הצעות-מחיר) (4.7s)
+  ok 33 [chromium] › e2e\projects.spec.js:124:3 › מודול 6 · הכרטיס — מנהלת גיוס ושיבוץ › לשונית הלוגיסטיקה מציגה מצב-חסימה (🔒) — לא "לא הוזמנו מוצרים" ולא שגיאה (4.4s)
+  -  34 [chromium] › e2e\projects.spec.js:164:3 › מודול 6 · מבט-העל — מצבי-ריק › ריק-אחרי-סינון: נוסח משלו + "נקי סינון" — שונה מנוסח הריק-האמיתי
+  ok 35 [chromium] › e2e\projects.spec.js:184:3 › מודול 6 · מבט-העל — מצבי-ריק › ריק-אמיתי (מיוצר ביירוט-רשת): נוסח משלו + קישור להצעות — ושונה מריק-אחרי-סינון (3.6s)
+  -  36 [chromium] › e2e\projects.spec.js:205:3 › מודול 6 · מבט-העל — מצבי-ריק › לשונית ריקה: המונה נשאר 0 על הלשונית, והנוסח חיובי — לא שגיאה
+  x  37 [chromium] › e2e\projects.spec.js:235:3 › מודול 6 · לשונית-לוגיסטיקה — ריק-כדין מול תקלה › ריק-כדין על פרויקט בלי מוצרים, ותקלה מיוצרת-ברשת — הנוסחים שונים (25.2s)
+  ok 38 [chromium] › e2e\projects.spec.js:291:3 › מודול 6 · הכרטיס — פרויקט פעיל › לשונית-הסגירה מושבתת עם נימוק, ותא סיבת-הביטול אינו קיים על פרויקט שלא בוטל (6.7s)
+  ok 39 [chromium] › e2e\projects.spec.js:330:3 › מודול 6 · כרטיס פרויקט — הקישור לשיבוץ חכם › 🔗 הקישור מלשונית "צוות דיילות" נוחת על השיבוץ של אותו פרויקט (8.1s)
+  ok 40 [chromium] › e2e\reports.spec.js:175:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: ארבע לשוניות פתוחות, ודף-ברירת-המחדל נושא אוכלוסייה · "אז מה" · אריחים · טבלה (4.8s)
+  ok 41 [chromium] › e2e\reports.spec.js:213:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: ארבע לשוניות-ברירת-המחדל עולות, אפס שגיאות-קונסול (11.5s)
+  ok 42 [chromium] › e2e\reports.spec.js:234:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: גלולת-תקופה משנה את הכתובת, את תווית-החלון ואת שורת-האוכלוסייה (5.0s)
+  ok 43 [chromium] › e2e\reports.spec.js:261:3 › מודול 11 · מעטפת-הדוחות והמסעות שלה › מנכ"ל: מסנן-הלקוח מצמצם את "לקוחות מתרחקים" (9.8s)
+  ok 44 [chromium] › e2e\reports.spec.js:293:3 › מודול 11 · מיסוך לפי תפקיד (התוצאה הנכונה, לא תקלה) › מנהלת לוגיסטיקה: ארבע לשוניות ממוסכות והודעה אחת — ולא טבלה ריקה (3.7s)
+  ok 45 [chromium] › e2e\reports.spec.js:315:3 › מודול 11 · מיסוך לפי תפקיד (התוצאה הנכונה, לא תקלה) › מנהלת כספים ולקוחות: דיילות ממוסכת, שלוש האחרות פתוחות (4.5s)
+  ok 46 [chromium] › e2e\reports.spec.js:334:3 › מודול 11 · מיסוך לפי תפקיד (התוצאה הנכונה, לא תקלה) › מנהלת גיוס ושיבוץ: רק דיילות פתוחה, והיא גם לשונית-ברירת-המחדל (4.0s)
+  ok 47 [chromium] › e2e\reports.spec.js:357:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ3: שורה פותחת רמה, הרענון שומר עליה, והפירור חוזר לשורש (8.4s)
+  ok 48 [chromium] › e2e\reports.spec.js:393:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ9: אריח-דלת פותח מדרג, הפירורים והייצוא נוקבים בו, והשורות הן דלת לפרויקט (4.6s)
+  x  49 [chromium] › e2e\reports.spec.js:427:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט (הכרעה 19) (13.9s)
+  ok 50 [chromium] › e2e\reports.spec.js:441:3 › מודול 11 · ייצוא (ת4) › משטח עם שורות: הכפתור מוריד קובץ, ושמו הוא זה שהובטח על המסך (3.8s)
+  ok 51 [chromium] › e2e\reports.spec.js:457:3 › מודול 11 · ייצוא (ת4) › משטח שהסינון רוקן: הכפתור מנוטרל עם "אין שורות לייצא" (5.4s)
+  ok 52 [chromium] › e2e\reports.spec.js:492:3 › מודול 11 · סינון-צולב גרף⇐טבלה (📐9 · הכרעה 15-ד) › מ12: בחירה בגרף מצמצמת את הטבלה, מכריזה באזור-החי, נכנסת לשם-הקובץ ומתנקה (3.7s)
+  ok 53 [chromium] › e2e\reports.spec.js:539:3 › מודול 11 · מצב-הטמעה 0 מול 2 (C3 · מבחן-המחיקה) › רמה 2: לכל אחת מארבע הלשוניות יש לפחות משפט-הסבר אחד (11.5s)
+  ok 54 [chromium] › e2e\reports.spec.js:553:3 › מודול 11 · מצב-הטמעה 0 מול 2 (C3 · מבחן-המחיקה) › רמה 0: אפס משפטי-הסבר — והבסיס כולו נשאר על המסך (9.6s)
+  ok 55 [chromium] › e2e\reports.spec.js:571:3 › מודול 11 · שער מ22 "טרם אושרה ריצת-ניתוח" (פיקסטורה, לא ריצה אמיתית) › מנכ"ל (edit): הבלוק המסביר, ייצוא חסום בנימוקו, וכפתור "הרץ ניתוח" קיים — ואינו נלחץ (4.1s)
+  ok 56 [chromium] › e2e\reports.spec.js:588:3 › מודול 11 · שער מ22 "טרם אושרה ריצת-ניתוח" (פיקסטורה, לא ריצה אמיתית) › מנהלת פרויקטים (view): אותו שער — בלי כפתור-הרצה כלל (3.8s)
+  ok 57 [chromium] › e2e\reports.spec.js:604:3 › מודול 11 · כשל-רשת ⇒ "נסי שוב", ולעולם לא "אין נתונים" › קריאת-הדוח נופלת ⇒ מעטפת-תקלה; ביטול-היירוט + "נסי שוב" ⇒ המשטח מצויר (4.1s)
+  ok 58 [chromium] › e2e\reports.spec.js:675:3 › מודול 11 · סדר-תווים בתא (מ9 · אינווריאנט 5 · 📐18) › מ9: תא-המדרג ותא-איש-הקשר תו-בתו מול המטען, וכל מספר בעמוד מבודד (3.1s)
+
+
+  1) [chromium] › e2e\customer-page.spec.js:130:3 › עמוד הלקוח (מודול 3 / צעד 3.5) — CEO › העמוד: מדדים חיים, לשוניות, סיבת-דחייה על השורה, ופעולות לפי סטטוס 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('[data-testid^="customer-project-"]:not([data-testid*="-link-"])')
+    Expected: 3
+    Received: 6
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 10000ms
+      - waiting for locator('[data-testid^="customer-project-"]:not([data-testid*="-link-"])')
+        23 × locator resolved to 6 elements
+           - unexpected value "6"
+
+
+      164 |     await expect(
+      165 |       page.locator('[data-testid^="customer-project-"]:not([data-testid*="-link-"])'),
+    > 166 |     ).toHaveCount(Math.min(projectCount, 50))
+          |       ^
+      167 |
+      168 |     // ארבע פעולות על הצעה בתהליך · צפייה בלבד על סגורה (הסגורות נעולות ב-DB ממילא).
+      169 |     // **חובה שזו תהיה הצעה `in_progress` אמיתית** — על סגורה שלוש האסרציות היו עוברות
+        at C:\Users\ishay\Reg-In\e2e\customer-page.spec.js:166:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\customer-page-עמוד-הלקוח-מ-8249c--על-השורה-ופעולות-לפי-סטטוס-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\customer-page-עמוד-הלקוח-מ-8249c--על-השורה-ופעולות-לפי-סטטוס-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\customer-page-עמוד-הלקוח-מ-8249c--על-השורה-ופעולות-לפי-סטטוס-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\customer-page-עמוד-הלקוח-מ-8249c--על-השורה-ופעולות-לפי-סטטוס-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › e2e\dashboard.spec.js:82:3 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנכ"ל: ניווט-חודש משנה את הכתובת ואת הכותרת, ו"היום" מחזיר 
+
+    Error: expect(locator).not.toHaveText(expected) failed
+
+    Locator:  locator('h2').first()
+    Expected: not "מה דורש טיפול"
+    Received: "מה דורש טיפול"
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "not toHaveText" with timeout 10000ms
+      - waiting for locator('h2').first()
+        23 × locator resolved to <h2 class="mb-3 text-base font-bold text-slate-800">מה דורש טיפול</h2>
+           - unexpected value "מה דורש טיפול"
+
+
+      92 |     await page.getByTestId('dashboard-cal-next').click()
+      93 |     await expect(page).toHaveURL(/month=\d{4}-\d{2}-01/)
+    > 94 |     await expect(title).not.toHaveText(before)
+         |                             ^
+      95 |
+      96 |     await page.getByTestId('dashboard-cal-today').click()
+      97 |     await expect(page).not.toHaveURL(/month=/)
+        at C:\Users\ishay\Reg-In\e2e\dashboard.spec.js:94:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\dashboard-מסך-הבית-—-חמש-ה-70064-ובת-ואת-הכותרת-ו-היום-מחזיר-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\dashboard-מסך-הבית-—-חמש-ה-70064-ובת-ואת-הכותרת-ו-היום-מחזיר-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\dashboard-מסך-הבית-—-חמש-ה-70064-ובת-ואת-הכותרת-ו-היום-מחזיר-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\dashboard-מסך-הבית-—-חמש-ה-70064-ובת-ואת-הכותרת-ו-היום-מחזיר-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › e2e\finance.spec.js:141:3 › מודול 8 · כספים — E2E פנימי (S1/S2/S3), קריאה-בלבד › S2: לחיצה על השורה הידועה פותחת את חלון-הסגירה עם שער-חשבונית גלוי 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('closing-payment-block')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for getByTestId('closing-payment-block')
+
+
+      170 |       // אותו אינווריאנט בשלב הבא: "שמור תשלום" חסום כל עוד שדה-התאריך ריק
+      171 |       // (`disabled={value === ''}`), ובפתיחה הוא ריק.
+    > 172 |       await expect(page.getByTestId('closing-payment-block')).toBeVisible()
+          |                                                               ^
+      173 |       await expect(page.getByTestId('closing-payment-date')).toHaveValue('')
+      174 |       await expect(page.getByTestId('closing-save-payment')).toBeDisabled()
+      175 |     } else {
+        at C:\Users\ishay\Reg-In\e2e\finance.spec.js:172:63
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\finance-מודול-8-·-כספים-—--904b7--הסגירה-עם-שער-חשבונית-גלוי-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\finance-מודול-8-·-כספים-—--904b7--הסגירה-עם-שער-חשבונית-גלוי-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\finance-מודול-8-·-כספים-—--904b7--הסגירה-עם-שער-חשבונית-גלוי-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\finance-מודול-8-·-כספים-—--904b7--הסגירה-עם-שער-חשבונית-גלוי-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › e2e\prices.spec.js:218:3 › פרמטרי-תמחור: שמירה ווולידציה (4.3b ②, הועבר ללשונית "פרמטרים") › יחס-אורחים לא-תקין (0) חוסם שמירה — ואף כתיבה לא יוצאת 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('[data-param="יחס_אורחים_לדיילת"]').getByRole('alert')
+    Expected: "ערך חוקי: מספר שלם חיובי"
+    Received: "ערך חוקי: מספר שלם בין 1 ל-150"
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveText" with timeout 10000ms
+      - waiting for locator('[data-param="יחס_אורחים_לדיילת"]').getByRole('alert')
+        23 × locator resolved to <p role="alert" id="settings-error-יחס_אורחים_לדיילת" class="mt-1 font-medium text-red-600">ערך חוקי: מספר שלם בין 1 ל-150</p>
+           - unexpected value "ערך חוקי: מספר שלם בין 1 ל-150"
+
+
+      237 |     // 🔀 הבדל-צורה מהכרטיס הישן, לא ריכוך: שם השגיאה הופיעה **אחרי** לחיצה על "שמור";
+      238 |     // כאן היא מוצגת מיד, וכפתור-השמירה עצמו מנוטרל — כלומר המסלול חסום בשלב מוקדם יותר.
+    > 239 |     await expect(page.locator('[data-param="יחס_אורחים_לדיילת"]').getByRole('alert')).toHaveText(
+          |                                                                                       ^
+      240 |       'ערך חוקי: מספר שלם חיובי',
+      241 |     )
+      242 |     await expect(page.getByTestId('settings-save-button')).toBeDisabled()
+        at C:\Users\ishay\Reg-In\e2e\prices.spec.js:239:87
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prices-פרמטרי-תמחור-שמירה--5aae1--שמירה-—-ואף-כתיבה-לא-יוצאת-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prices-פרמטרי-תמחור-שמירה--5aae1--שמירה-—-ואף-כתיבה-לא-יוצאת-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\prices-פרמטרי-תמחור-שמירה--5aae1--שמירה-—-ואף-כתיבה-לא-יוצאת-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\prices-פרמטרי-תמחור-שמירה--5aae1--שמירה-—-ואף-כתיבה-לא-יוצאת-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium] › e2e\projects.spec.js:235:3 › מודול 6 · לשונית-לוגיסטיקה — ריק-כדין מול תקלה › ריק-כדין על פרויקט בלי מוצרים, ותקלה מיוצרת-ברשת — הנוסחים שונים 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('logistics-state-legal-empty')
+    Expected: visible
+    Timeout: 20000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 20000ms
+      - waiting for getByTestId('logistics-state-legal-empty')
+
+
+      261 |     await expect(page.getByTestId('project-card-page')).toBeVisible({ timeout: 15_000 })
+      262 |     const legal = page.getByTestId('logistics-state-legal-empty')
+    > 263 |     await expect(legal).toBeVisible({ timeout: 20_000 })
+          |                         ^
+      264 |     const legalEmptyText = await legal.textContent()
+      265 |
+      266 |     // הנוסח של ריק-כדין: עובדה חיובית, לא תקלה.
+        at C:\Users\ishay\Reg-In\e2e\projects.spec.js:263:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\projects-מודול-6-·-לשונית--a27d6-מיוצרת-ברשת-—-הנוסחים-שונים-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\projects-מודול-6-·-לשונית--a27d6-מיוצרת-ברשת-—-הנוסחים-שונים-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\projects-מודול-6-·-לשונית--a27d6-מיוצרת-ברשת-—-הנוסחים-שונים-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\projects-מודול-6-·-לשונית--a27d6-מיוצרת-ברשת-—-הנוסחים-שונים-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [chromium] › e2e\reports.spec.js:427:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט (הכרעה 19) 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/projects\/\d+/
+    Received string:  "http://localhost:4173/reports?tab=finance&report=aging&drill=%7B%22id%22%3A1040%2C%22kind%22%3A%22project%22%7D"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 10000ms
+        23 × locator resolved to <html lang="he" dir="rtl">…</html>
+           - unexpected value "http://localhost:4173/reports?tab=finance&report=aging&drill=%7B%22id%22%3A1040%2C%22kind%22%3A%22project%22%7D"
+
+
+      432 |     await expect(row).toHaveAttribute('role', 'button')
+      433 |     await clickCentered(row)
+    > 434 |     await expect(page).toHaveURL(/\/projects\/\d+/)
+          |                        ^
+      435 |   })
+      436 | })
+      437 |
+        at C:\Users\ishay\Reg-In\e2e\reports.spec.js:434:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\reports-מודול-11-·-קידוח-�-6d746--אל-כרטיס-הפרויקט-הכרעה-19--chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\reports-מודול-11-·-קידוח-�-6d746--אל-כרטיס-הפרויקט-הכרעה-19--chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\reports-מודול-11-·-קידוח-�-6d746--אל-כרטיס-הפרויקט-הכרעה-19--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\reports-מודול-11-·-קידוח-�-6d746--אל-כרטיס-הפרויקט-הכרעה-19--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6 failed
+    [chromium] › e2e\customer-page.spec.js:130:3 › עמוד הלקוח (מודול 3 / צעד 3.5) — CEO › העמוד: מדדים חיים, לשוניות, סיבת-דחייה על השורה, ופעולות לפי סטטוס 
+    [chromium] › e2e\dashboard.spec.js:82:3 › מסך-הבית — חמש הזהויות (§7.10 · §7.97) › מנכ"ל: ניווט-חודש משנה את הכתובת ואת הכותרת, ו"היום" מחזיר 
+    [chromium] › e2e\finance.spec.js:141:3 › מודול 8 · כספים — E2E פנימי (S1/S2/S3), קריאה-בלבד › S2: לחיצה על השורה הידועה פותחת את חלון-הסגירה עם שער-חשבונית גלוי 
+    [chromium] › e2e\prices.spec.js:218:3 › פרמטרי-תמחור: שמירה ווולידציה (4.3b ②, הועבר ללשונית "פרמטרים") › יחס-אורחים לא-תקין (0) חוסם שמירה — ואף כתיבה לא יוצאת 
+    [chromium] › e2e\projects.spec.js:235:3 › מודול 6 · לשונית-לוגיסטיקה — ריק-כדין מול תקלה › ריק-כדין על פרויקט בלי מוצרים, ותקלה מיוצרת-ברשת — הנוסחים שונים 
+    [chromium] › e2e\reports.spec.js:427:3 › מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד › מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט (הכרעה 19) 
+  2 skipped
+  50 passed (5.9m)

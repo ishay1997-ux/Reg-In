@@ -1,0 +1,191 @@
+{
+  "tab": "hostesses",
+  "runner": {
+    "command": "node evidence-run.mjs --tab hostesses --extras error --stagger 40",
+    "exit": 0,
+    "failures": [],
+    "log": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence-run-hostesses.log",
+    "json": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\evidence-run-hostesses.json",
+    "logins": { "CEO": "ok (1 attempt)", "FINANCE": "ok (1)", "RECRUIT": "ok (1)", "STAFF": "ok (1)" }
+  },
+  "screenshots": 34,
+  "surfaces": [
+    {
+      "id": "מ14",
+      "slug": "hostess-overview",
+      "h1": "מבט-על דיילות",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "masked", "RECRUIT": "rendered", "STAFF": "masked" },
+      "modes_agree": true,
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 10,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 5,
+      "rows_page1": 6,
+      "pager_total": 6,
+      "five_pass": {
+        "direction": "PASS — scroll_overflow_px=0, body_overflow_px=0; the window line renders the range LTR-isolated inside a right-aligned Hebrew sentence: '⁦16/09/2025–16/09/2026⁩ · כל הלקוחות'; no ₪ on this surface and every percent is digits-then-sign ('87.2%' on the tile הגעה בזמן, '16.3%' inside ריכוזיות המשמרות) — no '%87.2' anywhere.",
+        "inventory": "PASS — 5 tiles / 1 bar chart / 1 table / 1 export block, and nothing without a job: the only solid-teal control on the screen is the selected period pill '12 חודשים'; 'ייצוא לאקסל' is a single outline button, no duplicate action.",
+        "consistency": "PASS with one cross-surface note — every tile subline uses the same ▲/▼ + 'התקופה המקבילה אשתקד' form and the same 'חלון קפוא · 12 חודשים' footnote; but the company-average constant prints at six decimals here ('מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771 … (0.910440)') against four on מ15 — see anomaly HOST-4.",
+        "copy": "PASS — h1 'מבט-על דיילות' and all five tile labels (הגעה בזמן · דיילות אדומות · ריכוזיות המשמרות · דיילות פעילות · אירועים עם חוסר) are word-for-word spec §1.4 row 'דיילות'; the subtitle 'מה מצב המאגר?' is the catalog question (reportsCatalog.js:137); the table title is derived, not typed: '6 הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך'.",
+        "empty_input": "PASS (N/A by design) — the only input on the surface is the customer <select>, whose neutral first option already reads 'כל הלקוחות'; there is no free-text or date field on the surface, so no placeholder is owed. C3 deletion test: at mode 0 the population line, the 'אז מה' sentence and the definitions block all survive and only the 10 <Hint> paragraphs disappear (CEO-m0-hostess-overview.png)."
+      }
+    },
+    {
+      "id": "מ15",
+      "slug": "reliability",
+      "h1": "אמינות והתייצבות",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "masked", "RECRUIT": "rendered", "STAFF": "masked" },
+      "modes_agree": true,
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 10,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 4,
+      "rows_page1": 50,
+      "pager_total": 87,
+      "five_pass": {
+        "direction": "PASS — overflow 0; numeric columns are end-aligned and the name/status columns start-aligned; percentages uniform ('87.2%', '9.8%', '2.5%' on the tiles; '54.5%', '100.0%' in the table); the pager reads '1–50 מתוך 87 · עמוד 1/2' with הקודם disabled on page 1.",
+        "inventory": "PASS — 4 tiles, 1 bar chart (איחור ואי-הגעה לפי יום בשבוע), 2 tables (main 87 rows + 'אי-הגעה לפי דירוג', 4 rows) and 2 chip groups ('מסנני-דף: אדומות וענבר בלבד · פעילות בלבד' and 'יום בשבוע: ראשון…שישי'); the weekday list is built from the chart data, so no empty Saturday pill is offered.",
+        "consistency": "PARTIAL — chips reuse the ReportChips pill shape and aria-pressed semantics, and both tables use the same pager control; but the same company-average constant is printed here at four decimals ('0.9584 … 0.8338 … 0.9104') and at six on מ14 (anomaly HOST-4).",
+        "copy": "FAIL on one string — tiles (הגעה בזמן · איחור · אי-הגעה (הבריזה) · דיילות מסומנות) and the two absence column headers ('הבריזה · ב-12 חודשים', 'אי-הגעה · אי-פעם') match spec §1.4, but the definitions block ends 'הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ', putting a camelCase code identifier and an internal ruling number on the user's screen (anomaly HOST-2).",
+        "empty_input": "PASS (N/A by design) — only the customer <select> and toggle chips; no free-text field. C3 deletion test passes: mode 0 keeps population, 'אז מה' and definitions and drops exactly the 10 hints (CEO-m0-reliability.png)."
+      }
+    },
+    {
+      "id": "מ16",
+      "slug": "quality-cost",
+      "h1": "איכות מול עלות",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "masked", "RECRUIT": "rendered", "STAFF": "masked" },
+      "modes_agree": true,
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 9,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 4,
+      "rows_page1": 17,
+      "pager_total": 17,
+      "five_pass": {
+        "direction": "FAIL on one value — ₪ is on the correct side and whole everywhere it appears ('43 ₪' on the תעריף שעתי חציוני tile, '44 ₪' in its subline, '41 ₪'/'42 ₪'/'43 ₪' in the table, reference line 'חציון התעריף 43'), except the יקרות ומדורגות נמוך subline 'תעריף מעל החציון (43.27) וגם דירוג 3 ומטה' — two decimals and no ₪, the same median twice in two forms on one screen (anomaly HOST-1).",
+        "inventory": "PASS — 4 tiles, 1 scatter, 1 table, 1 chip ('בלי דירוג בלבד', on by default per card ①7); missing rating is an explicit '—' cell, never blank; the chart carries the note '17 דיילות ללא דירוג אינן בגרף — ראי את השבב \"בלי דירוג בלבד\" בטבלה', so the 17-row table against the n=50 population is explained on screen.",
+        "consistency": "PASS — the scatter lives inside the dir=\"ltr\" ChartCard with its Hebrew title and note outside it, both reference lines are labelled in Hebrew ('חציון התעריף 43', 'חציון הדירוג · 4'), and the table uses the same header/sort-arrow form as the other three surfaces ('משמרות▼').",
+        "copy": "PASS — h1 'איכות מול עלות', subtitle 'מי שווה את התעריף שלה?' (catalog), and the four tile labels (דיילות בלי דירוג · תעריף שעתי חציוני · יקרות ומדורגות נמוך · מסומנות \"לא לשלוח\") are word-for-word spec §1.4; table title 'הדיילות הפעילות שאין להן דירוג · מיון לפי משמרות, מהעמוסה'.",
+        "empty_input": "PASS (N/A by design) — customer <select> only. C3 deletion test passes: mode 0 keeps population / 'אז מה' / definitions, hints 9⇒0 (CEO-m0-quality-cost.png)."
+      }
+    },
+    {
+      "id": "מ17",
+      "slug": "fairness",
+      "h1": "הוגנות השיבוץ",
+      "identity_matrix": { "CEO": "rendered", "FINANCE": "masked", "RECRUIT": "rendered", "STAFF": "masked" },
+      "modes_agree": true,
+      "scroll_overflow_px": 0,
+      "console_errors": 0,
+      "hints_m2": 9,
+      "hints_m0": 0,
+      "charts": 1,
+      "tiles": 6,
+      "rows_page1": 50,
+      "pager_total": 106,
+      "five_pass": {
+        "direction": "PASS — overflow 0; the Lorenz card is the dir=\"ltr\" island (axes 0%–100%) with the Hebrew title 'עקומת לורנץ · חלוקת המשמרות בין הדיילות' and its note outside it; the population sentence keeps both n values LTR-isolated ('⁦n=106⁩ דיילות, ⁦1,869⁩ משמרות … ⁦2,479⁩ זימונים'); hours are bare numbers with the unit named in the subline and in the second table's header 'זמן-תגובה חציוני (שעות)'.",
+        "inventory": "PASS — 6 tiles, 1 chart, 2 tables (106-row fairness table + 94-row 'הדיילות שעונות הכי לאט'); the unmeasured metric is declared rather than faked: the אימוץ המלצת Smart Match tile shows '—' plus 'טרם נמדד' and the sentence 'ועד שייצברו שיבוצים המדד מציג \"—\" ולא 0%'.",
+        "consistency": "PASS — both tables use the identical pager ('1–50 מתוך 106 · עמוד 1/3' and '1–50 מתוך 94 · עמוד 1/2') and the same ▼ sort-arrow convention; tile sublines all end with the same '12 החודשים האחרונים' footnote.",
+        "copy": "PASS — h1 'הוגנות השיבוץ', subtitle 'האם השיבוץ הוגן ומהיר?', and the six tile labels (ריכוזיות המשמרות · רבע הדיילות העמוסות · אימוץ המלצת Smart Match · זמן-תגובה חציוני לזימון · זמן-תגובה, אחוזון 90 · אחוז היענות לזימון) are word-for-word spec §1.4. Checked rather than assumed: the second table's 'דירוג' column is the same 1–5 card rating as on מ16, not the Smart Match 'דרג' — key 'rating' in supabase/migrations/20260916194500_module11_i2_rpc_round3.sql:2601.",
+        "empty_input": "PASS (N/A by design) — customer <select> only, no free-text field. C3 deletion test passes: mode 0 keeps population / 'אז מה' / definitions, hints 9⇒0 (CEO-m0-fairness.png)."
+      }
+    }
+  ],
+  "anomalies": [
+    {
+      "id": "HOST-1",
+      "surface": "מ16 quality-cost",
+      "what": "The 'יקרות ומדורגות נמוך' tile prints the hourly-rate median with two decimals and no ₪, while every other rate on the same screen is whole ₪ — the same number appears twice in two forms.",
+      "evidence": "CEO-m2-quality-cost.png (tile row): 'תעריף מעל החציון (43.27) וגם דירוג 3 ומטה' beside the tile 'תעריף שעתי חציוני 43 ₪' and the scatter reference line 'חציון התעריף 43'. Source of the string: supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql:3377 — `'תעריף מעל החציון (' || coalesce(round(v_median, 2)::text, '—') || ') וגם דירוג 3 ומטה'`; i2 (20260916194500) does not redefine report_m16_quality_cost, so i1 is the live body. Breaks 📐4 / micro-guide §9 D-34 ⑤ ('per-hour rates are whole-₪ everywhere: tiles, text tiles, server prose, the m16 reference line').",
+      "severity": "defect",
+      "owner": "rpc"
+    },
+    {
+      "id": "HOST-2",
+      "surface": "מ15 reliability",
+      "what": "The on-screen definitions block cites an internal ruling number and a camelCase code identifier to the end user.",
+      "evidence": "DOM `[data-testid=\"report-definitions\"]` (evidence-run-hostesses.json, CEO.m2.measure.definitions) and CEO-m2-reliability.png: '… הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.' String source: supabase/migrations/20260916194500_module11_i2_rpc_round3.sql:2153. Same class as D-34 ④, which removed '(הכרעה 36)' from population sentences — that ruling named `population`, so `definitions` looks like a scope gap rather than a regression.",
+      "severity": "defect",
+      "owner": "rpc"
+    },
+    {
+      "id": "HOST-3",
+      "surface": "all four (shell filter row)",
+      "what": "All four hostesses RPCs declare `meta.customer_filter_ignored: true`, but nothing in src/ ever reads that flag — the customer selector is still offered and the window label echoes the chosen customer, so picking one would state a filter the report does not apply.",
+      "evidence": "`grep -rn customer_filter_ignored src/` ⇒ zero hits; the flag is set true for the hostesses surfaces (e.g. supabase/migrations/20260916194500_module11_i2_rpc_round3.sql:2616 for מ17, and the i1 block at lines 2730/3192/3463/3894); ReportsPage.jsx:259-260 feeds `selectedCustomer?.company_name` into `formatWindowLabel`, and ReportsPage.test.jsx:646-648 asserts the label then reads 'בטא הפקות' and not 'כל הלקוחות'. Screen state as shipped: CEO-m2-fairness.png shows 'לקוח: כל הלקוחות' and the label '⁦16/09/2025–16/09/2026⁩ · כל הלקוחות'. NOT verified on screen: I did not pick a customer and re-measure, so the claim 'the numbers stay identical' rests on the RPC flag, not on a screenshot.",
+      "severity": "defect",
+      "owner": "shell"
+    },
+    {
+      "id": "HOST-4",
+      "surface": "מ14 vs מ15",
+      "what": "The same three reliability constants are printed at six decimals on מ14 and four on מ15 — two precisions for one number inside one tab.",
+      "evidence": "מ14 definitions: 'נמוך מ-87% מממוצע החברה (0.958358) — כלומר מתחת ל-0.833771; ענבר = מתחת ל-95% ממנו (0.910440)'. מ15 definitions: 'נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת ענבר = … מתחת ל-0.9104'. Both read from the live DOM in evidence-run-hostesses.json (CEO.m2.measure.definitions) and visible in CEO-m2-hostess-overview.png / CEO-m2-reliability.png. Secondary: מ14 says 'ענבר' where מ15 says 'דיילת ענבר'.",
+      "severity": "cosmetic",
+      "owner": "rpc"
+    },
+    {
+      "id": "HOST-5",
+      "surface": "מ15 reliability (export caption)",
+      "what": "Two column labels contain the same '·' that separates columns in the export caption, so the caption reads as ten columns for an eight-column table.",
+      "evidence": "table_headers (8): ['דיילת','סטטוס','משמרות','הגיעה בזמן','איחור','הבריזה · ב-12 חודשים','אי-הגעה · אי-פעם','ציון אמינות▲']; export caption on the same screen: 'עמודות: דיילת · סטטוס · משמרות · הגיעה בזמן · איחור · הבריזה · ב-12 חודשים · אי-הגעה · אי-פעם · ציון אמינות' (CEO-m2-reliability.png, filters row). The export file name carries the separator too: 'אמינות-והתייצבות_חלון-קפוא-·-12-החודשים-האחרונים.xlsx'.",
+      "severity": "cosmetic",
+      "owner": "rpc"
+    },
+    {
+      "id": "HOST-6",
+      "surface": "shell — masked tab pill (seen on every hostesses URL for FINANCE and STAFF)",
+      "what": "The masked-tab lock is a literal 🔒 emoji, which renders in its own orange-brown colours inside a teal/slate palette, instead of a lucide-react size-4 icon.",
+      "evidence": "ReportsPage.jsx:129-133 renders `<span aria-hidden=\"true\" className=\"ml-1\">🔒</span>`; visible as an orange glyph on STAFF-m2-hostess-overview.png (four masked pills) and FINANCE-m2-hostess-overview.png (the דיילות pill). src/CLAUDE.md §4.3 sets 'אייקונים בגודל size-4 מ-lucide-react' and §2.6/root §2.8 forbid invented colours. Shell-wide, so the other three tab agents will see the same pills.",
+      "severity": "cosmetic",
+      "owner": "shell"
+    },
+    {
+      "id": "HOST-7",
+      "surface": "מ14 error envelope",
+      "what": "In the error state the window line collapses to a bare 'כל הלקוחות' with no date range, while the period pill still shows '12 חודשים' selected — the screen states a population it can no longer date.",
+      "evidence": "CEO-m2-hostess-overview-error.png: h1 'מבט-על דיילות' / 'מה מצב המאגר?' / 'כל הלקוחות', versus '⁦16/09/2025–16/09/2026⁩ · כל הלקוחות' in CEO-m2-hostess-overview.png. Mechanism (read, not guessed): ReportsPage.jsx:247 takes `serverToday` from the RPC's window, so an aborted RPC leaves `periodRange(period, null)` without from/to. The envelope itself is correct — 'לא ניתן לטעון את הנתונים.' + 'נסי שוב', it does NOT say 'אין נתונים', and 'נסי שוב' recovered to rendered.",
+      "severity": "cosmetic",
+      "owner": "shell"
+    },
+    {
+      "id": "HOST-8",
+      "surface": "measurement harness (affects the whole matrix, not this tab alone)",
+      "what": "Onboarding mode 2 could not be forced for FINANCE and RECRUIT: both show 0 hints at mode 2, and their m0 and m2 PNGs are byte-for-byte the same size. Mode 2 on the hostesses tab is therefore verified for CEO only — including for RECRUIT, the one identity that owns this tab.",
+      "evidence": "Log lines 'RECRUIT m2 hostess-overview: … hints=0' (all four surfaces) against 'CEO m2 hostess-overview: … hints=10'; file sizes RECRUIT-m0-fairness.png = RECRUIT-m2-fairness.png = 448,924 B, FINANCE-m0-exec-overview.png = FINANCE-m2-exec-overview.png = 175,300 B. Mechanism: evidence-common.mjs forceOnboardingMode maps the PostgREST array — an EMPTY array stays empty — and AuthContext.jsx:169-175 uses `maybeSingle()`, so no row ⇒ mode 0. Deduction: FINANCE and RECRUIT have no notification_preferences row (had they had one with mode 0, the intercept would have rewritten it to 2). Checkable in one query: `select email, onboarding_mode from notification_preferences`. Not a product defect — the same pattern is the one e2e/reports.spec.js:128 uses.",
+      "severity": "question",
+      "owner": "doc"
+    }
+  ],
+  "known_ruled_excluded": [
+    "מ16 lists all 50 active hostesses while the table shows 17 — the 'בלי דירוג בלבד' chip is ON by default (HostessesTab.jsx:110, card ①7, server meta.default_filter) and the chart note says so on screen; pager '1–17 מתוך 17' is the filtered total, not a cap.",
+    "The hostesses tab opens on 12 rolling months (ruling ⑧H2) — reportsCatalog.js:130 defaultPeriod '12m'; the '12 חודשים' pill is selected on all four surfaces.",
+    "מ15's red/amber queue is a frozen 12-month window that ignores the period filter — stated on screen ('חלון קפוא · 12 חודשים')."
+  ],
+  "not_verified": [
+    "Onboarding mode 2 for FINANCE, RECRUIT and STAFF — the PostgREST intercept cannot force a mode for an identity with no notification_preferences row (HOST-8). Every mode-2 judgement above is CEO's.",
+    "The clear-chip wording '× נקי בחירה' was never reachable on this tab: ReportSurface.jsx:632 renders it only under a cross-filter selection, and HostessesTab.jsx:133-137 records that מ14/מ15/מ17 have no row-key xKey and מ16's cross-filter is switched off on purpose — so no hostesses surface can show it. Code-verified only, never on screen.",
+    "HOST-3's consequence — that picking a customer leaves the numbers unchanged while the label names the customer — was not exercised: I never selected a customer, so the flag+label chain is the evidence, not a screenshot.",
+    "Drill, export-dialog and empty-after-filter extras: none run for this tab (no drillable surface here per reportsCatalog.js:158-161; my dispatch's extras flag was 'error' only).",
+    "Keyboard, screen-reader and contrast behaviour: the run measured pixels and DOM only; no focus-order or axe pass was part of it."
+  ],
+  "blind_spot": "Every number on these four screens was read back from the same RPC that produced it, so this evidence cannot tell whether מ15's 'ציון אמינות' column is in fact the identical value Smart Match uses when it ranks a hostess — the very claim the screen makes out loud ('הציון הוא בדיוק reliabilityScore של Smart Match'). Checkable without me: pick one hostess from CEO-m2-reliability.png (רותם עמר, 0.759, 11 משמרות) and compare that cell against what src/lib/ computes for her in the module-4 assignment screen; if the two differ, the sentence on מ15 is false and no screenshot in this run would have caught it.",
+  "files_opened_beyond_floor": [
+    "src/modules/11_reports/reportsCatalog.js (locked report names, hostesses defaultPeriod)",
+    "src/lib/onboardingCopy.m11.hostesses.js (which surfaces own §⑩ keys, to judge hints_m2=0)",
+    "src/modules/11_reports/tabs/HostessesTab.jsx (default chips, table titles, cross-filter declaration)",
+    "src/modules/11_reports/tabs/hostesses/ChipRow.jsx (chip semantics; whether a clear-chip exists)",
+    "src/modules/11_reports/ReportsPage.jsx (masked pill markup, window label, customer filter)",
+    "src/components/Hint.jsx and src/contexts/AuthContext.jsx:160-185 (why mode 2 did not take for two identities)",
+    "supabase/migrations/20260916194500_module11_i2_rpc_round3.sql and 20260916114500_module11_i1_rpc_formats_and_notes.sql (source of the two prose findings; which body is live)",
+    "docs/micro_guides/module-11.md §9 D-28/D-34 (the two rows the addendum points at)"
+  ]
+}

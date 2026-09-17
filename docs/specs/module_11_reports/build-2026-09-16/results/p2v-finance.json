@@ -1,0 +1,197 @@
+{
+  "tab": "כספים",
+  "apply": {
+    "migration": "supabase/migrations/20260916051950_module11_e_rpcs_finance.sql",
+    "result": "applied via MCP apply_migration (name module11_e_rpcs_finance) — success. Verified byte-identical: md5(pg_proc.prosrc) equals md5 of each $function$ body in the file for all four functions (m07 4979746229e6f06ac160eb0f066fbae6 / 19078 B · m08 486f7edc7017b6b77ba92f20d2728ceb / 12728 B · m09 677ea580e8f2a4476c1b6718ac9be390 / 22753 B · m12 360113bada40e700272ec5b35669ad78 / 16064 B). prosecdef=true · proconfig={search_path=\"\"} · proacl={postgres=X,service_role=X,authenticated=X} (no anon, no PUBLIC) · all four carry comments · file CR bytes = 0.",
+    "error": null
+  },
+  "live_calls": [
+    { "rpc": "report_m07_finance_overview", "identity": "FINANCE (allowed)", "http_or_error": 200, "n": 35, "tiles": 4, "rows": 4 },
+    { "rpc": "report_m08_profitability", "identity": "FINANCE (allowed)", "http_or_error": 200, "n": 236, "tiles": 5, "rows": 30 },
+    { "rpc": "report_m09_aging", "identity": "FINANCE (allowed)", "http_or_error": 200, "n": 35, "tiles": 4, "rows": 35 },
+    { "rpc": "report_m12_equipment", "identity": "FINANCE (allowed)", "http_or_error": 200, "n": 1771, "tiles": 4, "rows": 9 },
+    { "rpc": "report_m09_aging p_drill={bucket:d90p}", "identity": "FINANCE", "http_or_error": 200, "n": 35, "tiles": 4, "rows": 3 },
+    { "rpc": "report_m09_aging p_drill={bucket:d90p,customer_id:401}", "identity": "FINANCE", "http_or_error": 200, "n": 35, "tiles": 4, "rows": 1 },
+    { "rpc": "report_m09_aging p_drill={bucket:current}", "identity": "FINANCE", "http_or_error": 200, "n": 35, "tiles": 4, "rows": 10 },
+    { "rpc": "report_m09_aging p_drill={bucket:zzz}", "identity": "FINANCE", "http_or_error": 200, "n": 35, "tiles": 4, "rows": 35 },
+    { "rpc": "all four (p_customer_id=401)", "identity": "FINANCE", "http_or_error": 200, "n": "m07 8 · m08 50 · m09 8 · m12 401", "tiles": 4, "rows": 4 },
+    { "rpc": "all four", "identity": "RECRUIT (blocked)", "http_or_error": "403 / 42501 'אין לך הרשאה לבצע פעולה זו במודול כספים' — NOT an empty object", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "all four", "identity": "STAFF (blocked)", "http_or_error": "403 / 42501 — NOT an empty object", "n": null, "tiles": 0, "rows": 0 }
+  ],
+  "payloads_saved": [
+    "<scratchpad>/results/payloads/m07_baseline.json", "<scratchpad>/results/payloads/m08_baseline.json",
+    "<scratchpad>/results/payloads/m09_baseline.json", "<scratchpad>/results/payloads/m12_baseline.json",
+    "<scratchpad>/results/payloads/m09_drill1.json", "<scratchpad>/results/payloads/m09_badbucket.json",
+    "<scratchpad>/results/payloads/m07_defaults.json", "<scratchpad>/results/payloads/m09_defaults.json",
+    "<scratchpad>/results/payloads/m12_defaults.json", "<scratchpad>/results/payloads/m07_cust401.json",
+    "<scratchpad>/results/payloads/m08_cust401.json", "<scratchpad>/results/payloads/m09_cust401.json",
+    "<scratchpad>/results/payloads/m12_cust401.json", "<scratchpad>/results/payloads/_summary.json"
+  ],
+  "findings": [
+    {
+      "surface": "מ9 · גיול חובות (and מ7's open-debt tile + table)",
+      "severity": "blocker",
+      "lens": "Window / Definition",
+      "claim_refuted": "Builder's population_sentence and the tile's own window text: 'זהו צילום-רגע ולא סיכום-תקופה — אינו מושפע ממסנן התקופה'. Measured false: the period picker silently moves the aging 'today'.",
+      "evidence": "Three live signed-in calls, same params except p_to. p_to=2026-09-10 ⇒ buckets 10/13/8/1/3, over_60 = 4 / 23,384 ₪. p_to=2026-06-30 ⇒ buckets 32/1/1/0/1. p_to=2026-12-31 ⇒ buckets 0/0/0/0/35. In every case population.n stays 35 and open_debt stays 236,382 ₪, and the tile keeps printing 'אינו מושפע ממסנן התקופה' while the window text mutates to 'נכון ל-30/06' / 'נכון ל-31/12'. Cause: `v_to := coalesce(p_to, v_today)` and then `dov = greatest(v_to - (sent_d + v_terms), 0)` (migration lines 699 / 743). Every row's days_overdue, the bucket column, the chart, `מעל 60 יום`, `מדרג 90+`, meta.current_tile and so_what all move with the filter. Same class in מ7: open_debt VALUE is always as-of-now (payment_date is null) but its label says 'נכון ל-30/06', and the 4-row table's ימי-איחור shift with p_to — one tile, two as-of dates.",
+      "conflict_question": {
+        "source_a": "cards-finance.md מ9 §③ 'כל הזמנים · מדד-מלאי' + the payload's own population.label + 📐3 (processes-approved 783): 'אריח שאינו מגיב למסנן-התקופה נושא זאת במפורש'. ⇒ the aging as-of date must be Israel-today, not p_to.",
+        "source_b": "The migration's own post-apply verification recipe, header line 51: '(א) מ9 בשורש עם \"היום\"=10/09/2026' — i.e. p_to IS the way the acceptance oracle (spec.md §🔢, measured for 10/09/2026) is reproduced. With v_today the oracle cannot be re-run today at all.",
+        "note": "Both cannot hold. The mechanism is measured broken against what the screen says; the resolution (a separate p_asof, or v_today + a test-only override) is a product/design call, not mine. Reported, not patched."
+      }
+    },
+    {
+      "surface": "מ7 · מבט-על כספים",
+      "severity": "major",
+      "lens": "Definition / Permission-of-params (§7.83)",
+      "claim_refuted": "Builder's rulings_made_visible: '§7.83 (פרמטר חסר) → meta.missing_params ב-m07/m09 (תנאי_תשלום_ימים) וב-m08 (סף_סטיית_תקציב_אחוז); **אין ברירת-מחדל שקטה בשום מסלול**'. m07's deviation threshold is a hardcoded literal.",
+      "evidence": "select position('סף_סטיית_תקציב_אחוז' in prosrc)>0, position('0.15' in prosrc)>0 from pg_proc where proname='report_m07_finance_overview' ⇒ false, true. The tile `over_threshold_month` filters on `r > 0.15` (migration lines 250/252/253); the param is never read in m07 and `meta.missing_params` came back `[]` on the live call even though the tile depends on it. Card מ7 §③ names the source explicitly: `params.סף_סטיית_תקציב_אחוז`(15). Consequence measured: params currently holds 15, so today m07 (0) and m08 (30 over) agree — but if Ishay edits the param, m07's tile and the מ8 page it is a door to would disagree, and a deleted param row would give m07 a silent 15% instead of 'חסר פרמטר מערכת'. C5 (micro-guide §2ב): 'Missing `params` row ⇒ \"חסר פרמטר מערכת: <name>\", never a silent default.'",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ9 (root + drill) · מ8",
+      "severity": "major",
+      "lens": "Contract (C8) / 📐1",
+      "claim_refuted": "Builder's ruling 4 entry: '`tiles[].compare` בכל אריח שיש לו בסיס-השוואה אמיתי'. Five tiles return `compare: null` although the approved mockup draws a comparison half for each, and all five values are measurable today.",
+      "evidence": "Live payload: m09 root `over_60`.compare = null · `bucket_90p`.compare = null; m09 level-1 `bucket_amount`.compare = null · `share_of_open`.compare = null; m08 `median_deviation`.compare = null. Approved mockup 03_tab_finance_approved.html: line 2766-2772 `tile('מעל 60 יום', …, '▲ לפני חודש: ' + money(17946) + ' (3 חשבוניות)')` and `tile('מדרג 90+', …, '▲ לפני חודש: ' + money(2899) + ' (1 חשבונית)')`; line 1016 level-1 cmp 'לפני חודש במדרג זה: 15,047 ₪ (2 חשבוניות)'; line 1021 'לפני חודש: 7.3%'; line 767 m8 cmp '▼ 2025: 0.0%'. My own as-of-11/08/2026 query (same definition, snapshot a month back) returns exactly those numbers: prev_over60 3 / 17,946 · prev_90p 1 / 2,899 · prev_d61_90 2 / 15,047 · 15,047÷204,963 = 7.3% · prev_current 14 / 99,425 (this last one the RPC DOES return, in meta.current_tile) — so the shape is already implemented once in the same function. 📐1 (processes-approved 781): '\"—\" מותר רק כשאין שינוי, לא כשלא נמדד … אריח בלי בסיס-השוואה אינו נכנס לדף.' Card מ9 §③ line 328 and line 330 name the same previous-period values.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ9 · גיול חובות, drill level 2",
+      "severity": "major",
+      "lens": "Definition / Population",
+      "claim_refuted": "Builder's drill claim: 'שלוש הרמות אומתו חי כשאילתות … האריחים, שורת-\"אז מה\" והעמודות יורדים עם הרמה'. At level 2 the customer count does NOT descend with the level.",
+      "evidence": "Live call p_drill={bucket:'d90p', customer_id:401} ⇒ rows = 1 (project 1460, אלפא סיסטמס, 10,163 ₪), tiles[0] = {label:'חוב במדרג 90+', value:10163, count:1, customers:3}, so_what = 'לגבות 10163 ₪ במדרג 90+ — 1 חשבוניות אצל 3 לקוחות; הוותיקה ממתינה כבר 103 ימים.' The screen shows one customer's single invoice and the sentence says three customers. Cause: in the big select the customers expression is `(select count(distinct customer_id) from tagged where v_level > 0 and bucket_key = v_bucket)` — it is the only one of the four level-scoped expressions missing the `and (v_level = 1 or customer_id = v_cust)` guard that its neighbours on lines 826-832 all carry. Same line also produces the Hebrew number-agreement bug '1 חשבוניות' (the approved mockup writes '1 חשבונית' / 'מלקוח אחד', line 1008).",
+      "conflict_question": null
+    },
+    {
+      "surface": "all four",
+      "severity": "major",
+      "lens": "Contract (C8 / C4 / 📐4) — money and bidi inside server-built sentences",
+      "claim_refuted": "Builder's assumption that the client formats everything per 📐4 via reportsFormat.js. Four payload keys are finished Hebrew sentences with raw integers baked in — the tab cannot route them through the formatter.",
+      "evidence": "Live payloads: m09 so_what 'לגבות 23384 ₪ מ-4 לקוחות … 10163 ₪.' · m07 so_what '…236382 ₪.' · m09 population.label '\"שוטף\" (10 חשבוניות · 68585 ₪)' · m07 meta.notes[0] 'חובות אבודים: 2 חשבוניות · 31004 ₪' · m12 meta.notes 'נמדד על 82 שורות מתוך 1771' / 'כ-480 ₪'. The approved mockup writes the same sentence as 'לגבות 23,384 ₪ … 10,163 ₪' (line 496/2775). 📐4 (processes-approved 784) binds ₪ formatting 'בכל מקום (אריח · טבלה · **שורת-\"אז מה\"** · ציר)'; C4 binds 'Money `1,250 ₪` … through the existing formatter'. The sibling executive migration does exactly that — `to_char(round(x),'FM999,999,999') || ' ₪'` wrapped in LRI/PDI, 67 occurrences and 23 LRI-wrapped subs; the finance migration has 0. Bidi risk is not theoretical: reportsFormat.js documents that a bare number+₪ rendered '₪ 46,400' (glyph on the wrong side) in a real browser on 16/09/2026, and states that `npm run check:bidi` does NOT catch runtime-built strings.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ7 · מ12 (and every tile)",
+      "severity": "major",
+      "lens": "Contract (C8) — `tiles[].sub` absent; four mockup numbers have no home in the payload",
+      "claim_refuted": "Builder's C8 compliance claim ('every top-level key present'). Top-level keys are all present; the per-tile sub-row is not, and four numbers the approved mockup prints exist nowhere in the payload.",
+      "evidence": "grep \"'sub',\" on the four tab migrations: executive 24 · customers 16 · hostesses 0 · finance 0. Missing numbers: m07 `over_threshold_month` sub 'מתוך 13 אירועים שהתקיימו בספטמבר' (13 — measured by me as the September denominator, absent from the payload) and compare 'אוגוסט: 4 מתוך 18' (18 — measured, absent); m07 `hostess_pay_month` compare 'אוגוסט: 19,253 ₪ (83 משמרות)' (83 — measured, absent: compare carries no `count`); m12 `gap_pct` sub '4,182 יחידות מתוך 126,650 מתוכננות' (both measured by me, neither returned — the payload has only the rounded 3.3%).",
+      "conflict_question": {
+        "source_a": "micro-guide §2ב C8 amendments, locked 16/09/2026 05:5X: 'Six additive fields the executive builder needed for elements that exist in the approved mockup and had no home … `tiles[].sub` (the 📑ב visible-denominator sub-row) · `tiles[].compare.note`'.",
+        "source_b": "This migration's filename timestamp is 20260916051950 (05:19:50) — it was written BEFORE the amendment was recorded, so the finance builder could not have read it. Orchestration gap, not builder negligence."
+      }
+    },
+    {
+      "surface": "all four",
+      "severity": "major",
+      "lens": "Contract (C8) — `drill_key` shape differs from the executive tab",
+      "claim_refuted": "Builder's ruling 19 entry: '`rows[].drill_key` בכל שורה בארבעת המשטחים'. Present, but not in the shape C8 fixes.",
+      "evidence": "Live payloads: m07 {project_id} · m08 {project_id} · m09 L0/L2 {project_id}, L1 {bucket, customer_id} · m12 {sku}, {sku, upcoming}, {project_id}. No `kind` anywhere (grep \"'kind'\" on the finance migration = 0). The executive migration returns `jsonb_build_object('kind','project','id', t.project_id)` (line 240; 23 occurrences). C8: \"`drill_key` shape: `{ \\\"kind\\\": \\\"project|quote|year|month|tier|bucket|customer|hostess\\\", … }` — uniform across tabs.\" Customers and hostesses migrations also have 0, so three tabs diverge from one — the shell's shared handler will see two incompatible shapes.",
+      "conflict_question": {
+        "source_a": "C8 amendment (05:5X) fixing the uniform `{kind, …}` shape.",
+        "source_b": "Finance (05:19:50), hostesses (05:23:59) and customers (05:25:11) migrations all predate or coincide with it and use bare field names. Only executive (05:26:00) implements it."
+      }
+    },
+    {
+      "surface": "shared shell (outside my write scope, inside my field of view)",
+      "severity": "major",
+      "lens": "Contract — React key built from an object",
+      "claim_refuted": "n/a (not a builder claim) — a mechanism measured broken that every finance row will hit.",
+      "evidence": "src/modules/11_reports/components/ReportTable.jsx:138 `key={row.drill_key ?? `${page}-${index}`}` (and :71 `key={row.drill_key ?? index}`). `drill_key` is an object in all four finance payloads, so `key` stringifies to \"[object Object]\" for every drillable row ⇒ one duplicate key for the whole table, React duplicate-key warning, and broken reconciliation when the table re-sorts or the drill level changes. All four finance surfaces return drill_key on every row (m09 on 35 rows).",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ9 · drill labels",
+      "severity": "minor",
+      "lens": "Contract (C2 — appearance ⇐ the approved mockup)",
+      "claim_refuted": "Builder disclosed only the 'שוטף' Hebrew fix (conflicts[7] covers §1.4 vs mockup); two further label deviations from the mockup were not disclosed.",
+      "evidence": "(a) Level 2 tile label is `'חוב ב' || v_bucket_name` = 'חוב במדרג 90+', identical to level 1. The mockup builds a different string at level 2: `tile('חוב הלקוח ' + agIn(bk), …)` (line 2833) ⇒ 'חוב הלקוח במדרג 90+ יום'. Verified live: level-1 and level-2 payloads both return 'חוב במדרג 90+'. (b) `v_bucket_name` for d90p is 'מדרג 90+' — the only bucket that drops ' יום'; the mockup's `agName` (line 2741) yields 'מדרג 90+ יום' for it. Root-tile labels 'מעל 60 יום' and 'מדרג 90+' DO match the mockup (lines 2766/2769) even though §1.4 lacks them — that deviation is explicitly sanctioned by the C8 amendment ('the RPC copies them from the approved mockup where §1.4 and the mockup differ').",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ8 · רווחיות פרויקטים",
+      "severity": "minor",
+      "lens": "Contract (C8) / 📐2",
+      "claim_refuted": "Builder's ruling 📐2 entry ('`population.label` בארבעתם'). The label is right; the machine-readable `excluded` map contradicts it.",
+      "evidence": "Live payload: population.label = '… הוצאו: פרויקטים פעילים ומבוטלים · n=236 …' while population.excluded = {\"מתחת לרצפת-המהותיות\": 123}. The 123 are NOT excluded from n=236 — they are inside the population and only out of the ranking (meta.notes says so correctly). C8 defines `excluded` as `{ \"<reason>\": int }` under 📐2's 'מי הוצא'; a tab that renders `excluded` will print 'הוצאו: מתחת לרצפת-המהותיות 123' beside a label that says the opposite.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ9 · מ8",
+      "severity": "minor",
+      "lens": "Contract (C8 missing_params) / silent-failure doctrine",
+      "claim_refuted": "Builder: 'אין ברירת-מחדל שקטה בשום מסלול' — true for the tile values, but `so_what` still asserts a measured fact.",
+      "evidence": "Reasoned from the SQL, not run (the params rows exist live): m09 with `תנאי_תשלום_ימים` absent ⇒ v_terms null ⇒ every `dov` null ⇒ every bucket_key null ⇒ v_over60_n = 0 ⇒ so_what = 'אין חוב מעל 60 יום — כל החוב הפתוח בתוך התנאים או באיחור קצר.' m08 with `סף_סטיית_תקציב_אחוז` absent ⇒ `r > null/100` is null ⇒ v_over = 0 ⇒ so_what = 'אין פרויקטים שחרגו מהתקציב בתקופה שנבחרה.' Both sentences are false statements presented as measurement. `meta.missing_params` is populated in both cases, so the tab CAN suppress — but C8 only says it must 'paint no tile that depends on it', and `so_what` is not a tile. Worth an explicit line in the tab brief.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ7 · מ12",
+      "severity": "minor",
+      "lens": "Definition / 📐4 · C8",
+      "claim_refuted": "The migration's own stated convention (header line 32): '₪ שלמים: מעגלים כל שורה ואז מסכמים'.",
+      "evidence": "(a) m07 `hostess_pay_month`.value and .compare.value are raw sums of `actual_hours * hourly_rate_snapshot` — live compare.value = 19252.5, with agorot, the only unrounded money value in the tab. Independently measured: August 2026 = 83 shifts / 19,252.5 ₪. Not a display defect (formatShekelWhole rounds to 19,253 ₪) but it breaks '₪ בלי אגורות בכל מקום' at the payload level and the tile is no longer the sum of what a table would show. (b) m12 `gap_pct`.compare.direction has no 'flat' branch (`case when … then 'up' else 'down' end`, lines 1193-1195) and silently returns 'down' when v_prev_planned is 0 (nullif ⇒ null ⇒ else). C8 fixes direction as 'up|down|flat'.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ9 · מ12",
+      "severity": "minor",
+      "lens": "Contract (C8 window) / dead value",
+      "claim_refuted": "—",
+      "evidence": "(a) m09 returns window = {from:'2026-01-01', to:'2026-09-10', label:'כל הזמנים · צילום-רגע'}. A tab that builds the 📐17 subtitle from from/to (as the other surfaces require) will print a period the page declares it ignores; only `label` is safe here. (b) m12 declares and computes `v_sku_n` (= 9, verified) and never returns it — the card's '9 מק\"טים' has no payload home (derivable as rows.length, but not stated).",
+      "conflict_question": null
+    }
+  ],
+  "baseline_table": [
+    { "metric": "מ9 · חשבוניות פתוחות", "definition_ref": "spec.md §🔢 3.2 (hand-computed oracle) · deriveDaysOverdue (projectFinance.js:153)", "independent_value": 35, "rpc_value": 35, "baseline": 35, "verdict": "match" },
+    { "metric": "מ9 · דליים (שוטף·1–30·31–60·61–90·90+) ספירה", "definition_ref": "spec.md §🔢 3.2 · AGING_BUCKETS (reportsFinance.js)", "independent_value": "10 · 13 · 8 · 1 · 3", "rpc_value": "10 · 13 · 8 · 1 · 3", "baseline": "10 · 13 · 8 · 1 · 3", "verdict": "match" },
+    { "metric": "מ9 · סכומי דליים ₪", "definition_ref": "spec.md §🔢 3.2, per-row round then sum", "independent_value": "68,585 · 87,574 · 56,839 · 5,438 · 17,946", "rpc_value": "identical", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ9 · סך הכל ₪", "definition_ref": "spec.md §🔢 3.2", "independent_value": "236,382 (per-row round) · 236,380 (sum-then-round)", "rpc_value": 236382, "baseline": 236382, "verdict": "match — and the builder's conflicts[0] is confirmed: the rounding ORDER is what separates 236,382 from 236,380, and it is written nowhere but in the code comments" },
+    { "metric": "מ9 · מעל 60 יום", "definition_ref": "card מ9 §⑥ (d61_90 + d90p) · spec §🔢", "independent_value": "4 חשבוניות · 23,384 ₪", "rpc_value": "4 · 23,384 ₪", "baseline": "4 · 23,384 ₪", "verdict": "match — card §③ line 328 says '3 חשבוניות', contradicting its own bucket table (1+3) in line 323; spec §🔢 and the mockup say 4" },
+    { "metric": "מ9 · שלוש השורות המחושבות-ביד", "definition_ref": "spec.md §🔢 3.1", "independent_value": "11/05⇒92⇒90+ (proj 1468) · 03/06⇒69⇒61–90 (proj 1505) · 12/08⇒0⇒שוטף (no live row)", "rpc_value": "same, rows confirm 1468=92/d90p and 1505=69/d61_90; no open invoice sent 12/08/2026", "baseline": "same", "verdict": "match (row 3 is a definition boundary, covered only by the unit test)" },
+    { "metric": "מ9 · ימים לתשלום (חציון)", "definition_ref": "card מ9 §⑥ · ח8-6", "independent_value": "—", "rpc_value": "35 על 675", "baseline": "35 על 675", "verdict": "match (RPC value = card; not re-derived independently)" },
+    { "metric": "מ9 · החשבונית הישנה ביותר", "definition_ref": "story ② · 📐7", "independent_value": "proj 1040, 574 days, מועצה מקומית שוהם, sent 14/01/2025", "rpc_value": "identical, and it is rows[0] under the days-desc sort", "baseline": "574 ימים · מועצה מקומית שוהם · 01/2025", "verdict": "match" },
+    { "metric": "מ9 · אוכלוסיית-הגרף מול הדף", "definition_ref": "📐2 · card מ9 §③", "independent_value": "35 page / 25 chart / 10 tile; 167,797 + 68,585 = 236,382", "rpc_value": "meta.overdue_only {n:25, amount:167797}, current_tile {10, 68585}", "baseline": "35 · 25 · 10", "verdict": "match" },
+    { "metric": "מ9 · חובות אבודים", "definition_ref": "📑ב#6 ('ב-₪ ולא כמונה בלבד' — does not say WHICH ₪)", "independent_value": "2 invoices — projects 823 (revenue 16,224 · final_profit 8,532.90) and 1108 (revenue 14,780 · final_profit 5,979.30); Σrevenue = 31,004 ₪", "rpc_value": "2 · 31,004 ₪ (revenue)", "baseline": "card §③: 1 · −4,146 ₪ · project 1115 | mockup: 'הוצאו: חוב אבוד (2)'", "verdict": "mismatch vs card, match vs mockup — the card is stale (project 1115 is not in the live written-off set at all). Which ₪ (revenue excluded from the balance vs final_profit) stays Ishay's ruling, as the builder said" },
+    { "metric": "מ8 · פרויקטים בתקופה", "definition_ref": "ruling 36 (4 statuses) · final_event_date 01/01–10/09/2026", "independent_value": 236, "rpc_value": 236, "baseline": 236, "verdict": "match" },
+    { "metric": "מ8 · חרגו / סך החריגה / שולי-רווח / חציון-סטייה", "definition_ref": "card מ8 §③ · §7.58 · budgetDeviationRatio", "independent_value": "30 · 5,280 ₪ · 58.3% · −1.7%", "rpc_value": "30 · 5,280 ₪ · 58.3% · −1.7%", "baseline": "30 · 5,280 ₪ · 58.3% · card says −0.1%", "verdict": "match on all four; the card's −0.1% is unreproducible and the approved mockup (line 766) already says −1.7% — builder's conflicts[1] confirmed" },
+    { "metric": "מ8 · אשתקד (2025 YTD)", "definition_ref": "card מ8 §③", "independent_value": "178 אירועים · 17 חרגו · 2,937 ₪ · 55.9%", "rpc_value": "178 · 17 · 2,937 ₪ · 55.9%", "baseline": "178 · card says 21 (9.6%) · 2,937 ₪ · 55.9%", "verdict": "match — and the card refutes itself: 9.6% × 178 = 17, not 21. Mockup line 752 says '2025: 17 (9.6%)'" },
+    { "metric": "מ8 · מונה רצפת-המהותיות", "definition_ref": "📑ב#5 ('< 4 שעות מתוכננות OR < 1,000 ₪ עלות-עבודה מתוכננת')", "independent_value": "123 of 236 (money leg alone 118 · hours leg alone 39)", "rpc_value": 123, "baseline": "not measured (card ⑧8.8: 'לא הומצא')", "verdict": "match with the builder — and I confirm the shape of his conflicts[2]: the ₪ leg is dominant (118/236), and the floor does exclude project 1560, the project the mockup's own so-what names. Ishay's ruling" },
+    { "metric": "מ8 · מונה הקפואים", "definition_ref": "📑ב footnote coalesce(final_profit, gross_profit)", "independent_value": 206, "rpc_value": "meta.frozen_count 206", "baseline": "not measured", "verdict": "match" },
+    { "metric": "project_finance — רשומות", "definition_ref": "signoff-baseline line 35: '730 רשומות · 713 רווחיים · 12 בהפסד'", "independent_value": "count(*) = 745 · final_profit>0 713 · <0 12 · =0 5 · null 15", "rpc_value": "n/a (source check, not a tile)", "baseline": "730 / 713 / 12", "verdict": "partial mismatch — 730 reproduces only as 'rows with a non-null final_profit' (713+12+5). The builder reported '730 רשומות … match:true'; count(*) is 745. Not displayed anywhere, but the claim as written is not reproducible" },
+    { "metric": "מ7 · יתרת-חוב פתוחה", "definition_ref": "card מ7 §③", "independent_value": "236,382 ₪ / 35", "rpc_value": "236,382 / 35, compare 204,963 / 28", "baseline": "236,382 / 35; card line 149 says prev '204,963 ₪ · 23 חשבוניות', card line 327 says 28", "verdict": "match — my as-of-11/08 query gives 28 / 204,963; the mockup (line 2764) also says 28. Card line 149 is stale" },
+    { "metric": "מ7 · צפוי להיכנס ב-30 יום", "definition_ref": "card מ7 §③ (contractual due + that customer's median lateness: ≥3 paid ⇒ personal, else segment, else company)", "independent_value": "10 invoices / 65,930 ₪ — identical under both (d, d+30] and [d, d+30]", "rpc_value": "65,930 / 10", "baseline": "card says 65,930 / **6**; approved mockup line 514 says '10 חשבוניות'", "verdict": "match vs mockup, mismatch vs card — the card's 6 is unreproducible in any window variant. Builder's note confirmed" },
+    { "metric": "מ7 · חצי-ההשוואה של אותו אריח", "definition_ref": "card מ7 §③ ('השוואה רטרוספקטיבית, לא אותה נוסחה')", "independent_value": "3 payments / 37,166 ₪ in (11/08, 10/09]", "rpc_value": "37,166 / 3", "baseline": "card says '37,166 ₪ (24 תשלומים)'; mockup tooltip line 517 says '**3 תשלומים**, 11/08–10/09'", "verdict": "match vs mockup, mismatch vs card — card stale" },
+    { "metric": "מ7 · פרויקטים שחרגו החודש + אשתקד-חודש", "definition_ref": "card מ7 §③ (param 15%)", "independent_value": "Sep 01–10: 0 of 13 · Aug: 4 of 18 · rolling-30: 3 of 27", "rpc_value": "0 · compare 4 · meta.open_items.rolling_30 {over_threshold:3, hostess_pay:12987}", "baseline": "card says prev '2 מתוך 5'; mockup line 522 says 'אוגוסט: 4 מתוך 18'", "verdict": "match vs mockup, mismatch vs card — but see finding #2: the RPC reaches 0/4/3 with a hardcoded 0.15, not with the param" },
+    { "metric": "מ7 · שכר דיילות החודש + אשתקד-חודש", "definition_ref": "card מ7 §③ (actual_hours × hourly_rate_snapshot, by assignments.event_date)", "independent_value": "Sep 0 ₪ / 0 shifts · Aug 19,252.5 ₪ / 83 shifts", "rpc_value": "0 / 0, compare 19252.5 (no count)", "baseline": "0 · 'אוגוסט 19,253 ₪ · 83 משמרות'", "verdict": "match on value (19,252.5 rounds to 19,253); the 83 shifts are missing from compare — see findings #6 and #12" },
+    { "metric": "מ7 · גרף יתרת-החוב, 12 נקודות", "definition_ref": "card מ7 §③ line 154 ('נמדדו חי 07/09/2026 ואומתו שוב בתור-הביצוע')", "independent_value": "205,131(23) · 279,393(38) · 408,021(53) · 322,051(42) · 333,573(39) · 409,194(50) · 194,810(31) · 345,649(43) · 325,366(40) · 176,573(26) · 248,233(36) · 236,382(35 · is_today)", "rpc_value": "identical", "baseline": "176,057(22) · 223,022(37) · 408,021(52) · 278,225(41) · 279,974(38) · 342,719(49) · 159,309(30) · 306,949(42) · 270,615(39) · 128,049(21) · 129,771(20) · 236,382(11)", "verdict": "mismatch on 11 of 12 — the data moved in the seeding round; only 12/2025's VALUE survives (its COUNT is 53, not 52), so the builder's 'שתי נקודות-העוגן תואמות בדיוק' is half right. Per 📐22 these are sums, i.e. findings-class, but the RPC computes them live and correctly. ⚠️ Consequence for the tab: the card's so-what claim '236,382 … הנמוכה ב-12 החודשים האחרונים' is now FALSE (live minimum = 176,573 in 07/2026). The approved mockup already removed that clause (comment at line 493); the card did not, and the RPC's so_what never makes the claim" },
+    { "metric": "מ12 · שורות / עתידיות / מק\"טים", "definition_ref": "card מ12 §③ · §④", "independent_value": "1,771 · 123 · 9 · project_change_id links = 0", "rpc_value": "1,771 · 123 · (9 computed, not returned) · —", "baseline": "1,771 · 123 · 9 · 0", "verdict": "match" },
+    { "metric": "מ12 · עלות ציוד בתקופה + אשתקד", "definition_ref": "card מ12 §③ (planned_qty × closing_unit_cost, by final_event_date)", "independent_value": "350,944 ₪ / 534 rows · 2025 YTD 274,038 ₪", "rpc_value": "350,944 / 534, compare 274,038", "baseline": "350,944 / 534 · 274,038", "verdict": "match" },
+    { "metric": "מ12 · עלות ציוד כל-הזמנים", "definition_ref": "card מ12 §③ ('Σ תשעת ה-sku')", "independent_value": "1,191,808 ₪ (+ 480 ₪ for the three ㉗ estimated rows = 1,192,288)", "rpc_value": "1,191,808; no_cost_source.amount 480", "baseline": "card + mockup 1,191,808; spec §🎯 'מוזמן 1,192,288'", "verdict": "match — the builder's reconciliation is independently confirmed: two populations, both right" },
+    { "metric": "מ12 · פער הוזמן מול הגיע + אשתקד", "definition_ref": "card מ12 §③ ((planned−actual)/planned, 01/01–10/09)", "independent_value": "2026: 126,650 planned, 122,468 actual ⇒ 4,182 ⇒ **3.3%** · 2025: 98,979 / 94,579 ⇒ 4,400 ⇒ **4.4%**", "rpc_value": "3.3 · compare 4.4", "baseline": "card says 2.5% (4,182 מתוך 126,650) and 4.5% (4,400 מתוך 98,979); mockup line 1903-1906 says 3.3% and 4.4%", "verdict": "match vs mockup — and the card refutes itself arithmetically with its own numerator and denominator. Builder confirmed" },
+    { "metric": "מ12 · תשעת מחירי-המק\"ט", "definition_ref": "card מ12 §③", "independent_value": "table rows sum to 1,191,808", "rpc_value": "233,480 · 174,600 · 173,590 · 141,600 · 132,875 · 103,338 · 97,720 · 74,025 · 60,580", "baseline": "identical", "verdict": "match, digit for digit" },
+    { "metric": "מ12 · הצהרת-אוכלוסייה של אריח-הפער", "definition_ref": "spec.md §🎯 (15/09/2026): 'נמדד על 162 שורות מתוך 1,771' (1,609 autofilled, 90.9%)", "independent_value": "82 measured of 1,771 · 1,689 autofilled (95.4%) · 0 rows with a NULL autofill flag", "rpc_value": "meta.notes[0] 'נמדד על 82 שורות מתוך 1771' (computed live)", "baseline": "162 of 1,771", "verdict": "mismatch — builder's conflicts[5] independently confirmed: 80 more rows were flagged autofilled between 15/09 and 16/09. Computing it live is the right call; who changed 80 rows is still unknown and worth someone checking" },
+    { "metric": "מ12 · שורות ללא מקור-עלות (㉗)", "definition_ref": "card מ12 §③ · ruling ㉗", "independent_value": "3 rows (the only 3 with no unit_cost at all), projects 1581/1594/1606, 120 units B-SAT-LAN", "rpc_value": "3 · 480 ₪, plus a full table in meta.extra_tables", "baseline": "3 · ≈479 ₪", "verdict": "match (±1 ₪ = per-row rounding of 3.9918 ₪/unit)" },
+    { "metric": "מ12 · בלוק ההזמנה, שורה ראשונה", "definition_ref": "card מ12 §③ (upcoming 30d, cancelled excluded)", "independent_value": "—", "rpc_value": "תג שם אקולוגי - ממותג · 2,607 · 6 אירועים", "baseline": "2,607 · 6", "verdict": "match" }
+  ],
+  "tests_pass_but_would_not_catch": [
+    "**The rounding ORDER — the single decision the builder called a definition — is not protected by the aging tests.** The 35-invoice fixture in reportsFinance.test.js:123-159 holds pre-rounded integers, so an implementation that summed first and rounded last returns the identical 236,382. Only `roundedShekelSum([1.4,1.4,1.4])` guards the order, and `summariseAging` does NOT call `roundedShekelSum` — it uses its own inline `addTo` with `Math.round`. Delete that `Math.round` and all 73 tests stay green.",
+    "**No test executes the SQL.** The test file's header claims 'הקובץ הזה הוא גם האורקל של ה-SQL', but `npm run test:run` never reads the migration. Change `when s.dov <= 30 then 'd1_30'` to `< 30` in report_m09_aging and the suite is still green; the only thing that caught the live SQL was calling the function.",
+    "**Two of the three bucket-edge copies can drift apart silently.** AGING_BUCKETS' labels ('שוטף','1–30','31–60','61–90','90+') exist a second time as a `(values …)` list inside the m09 SQL and a third time in the mockup. No test compares the payload's `drill.buckets[].label` to AGING_BUCKETS.",
+    "**Zero tests for מ7, מ12 and the מ8 aggregate.** Untested in any language: the expected-30-days median-lateness cascade (≥3 paid ⇒ personal median, else segment, else company), the 12-month debt series' month-end as-of logic, the materiality floor (4 h OR 1,000 ₪), the equipment cost path `coalesce(closing_unit_cost, unit_cost_snapshot)`, and the ㉗ estimated unit price. מ12 is the builder's own declared blind spot and has no unit test at all.",
+    "**The threshold comparison is untested.** `budgetDeviationRatio` has four tests, but the `r > threshold/100` comparison lives only in SQL. Swapping `>` for `>=` changes '30 חרגו' with no test failing — and finding #2 (m07's hardcoded 0.15) is exactly this hole in practice.",
+    "**`medianOf` is tested but is not what runs.** Production uses `percentile_cont(0.5)` in SQL; the JS twin is asserted, the SQL one is not. The even-count averaging rule is only proven for the twin.",
+    "**A test that would have caught finding #4** (the unfiltered customer count at drill level 2) cannot exist in this suite at all — no drill shaping lives in reportsFinance.js, so the level-scoping logic has no JS twin to test."
+  ],
+  "not_verified": [
+    "No browser. The two charts per surface, the stacked-bar legend mapping through CUSTOMER_TYPE_LABELS, the 📐20 dashed 'today' column and the RTL of the payload's Hebrew sentences were read, not rendered. Finding #5's bidi risk is reasoned from reportsFormat.js's own measured incident, not re-observed on screen.",
+    "`npm run gate` / knip / jscpd not run — three other builders write in parallel and a whole-tree gate would measure their work. Only my tab's files: eslint 0 · prettier 0 · 73/73 vitest (reportsFinance.test.js + projectFinance.test.js) · CR bytes 0 on both lib files and the migration.",
+    "Identities exercised: FINANCE (allowed), RECRUIT and STAFF (both blocked, both 42501 on all four). CEO and PROJECTS were not called — the matrix says CEO=edit and PROJECTS=blocked on 'כספים', neither was proven here.",
+    "m09 with an unknown bucket falls back to level 0 correctly, but `drill.echo` still returns `{bucket:'zzz'}` while `drill.level` is 0. I did not check what the shell does with an echo that contradicts the level.",
+    "The מ7 expected-30-days cascade: I reproduced the total (10 / 65,930 ₪) using the same three-tier median formula the RPC uses, because the card does not spell the cascade out any further than the RPC does. That is a reconstruction of the RPC's formula, not an independent definition — the number is confirmed, the formula is not adversarially tested.",
+    "`docs/schema.sql` not refreshed (no schema change — four new functions only). `supabase.migrations` list not re-read after the apply; the evidence for the apply is pg_proc, not the migration registry.",
+    "Supabase advisors were not re-run after the apply; the migration header predicts four `authenticated_security_definer_function_executable` notices."
+  ],
+  "blind_spot": "**For מ8 and מ12 my 'independent' query is not fully independent.** The card's §③ names the source columns (`finance_project_money().budget_deviation` / `.planned_hours` / `hourly_rate_snapshot` · `coalesce(closing_unit_cost, unit_cost_snapshot)`), and there is no second source in the repo, so my query necessarily re-uses the same expressions the RPC uses. For those two surfaces I proved *the SQL computes what the card's columns say* — not *the columns are the right ones*. A wrong cost path inside `finance_project_money` would pass my check and the builder's identically. Only מ9 has a genuinely external oracle (the hand-computed spec §🔢), and that is the one surface I can say is verified in the strong sense. **The concrete thing someone can still check:** the builder's own suggestion — run `sum(round(planned_qty * coalesce(closing_unit_cost, unit_cost_snapshot)))` for a handful of projects against what module 5's logistics screen shows for the same projects, and see whether two screens agree. I did not do it. **Second, smaller:** every number here is measured on 16/09/2026 data that provably moved between 15/09 and 16/09 (80 logistics rows re-flagged). The durable claims in this report are the mechanisms (findings #1-#8); the digits in baseline_table are true as of the run and will drift again."
+}

@@ -1,0 +1,171 @@
+{
+  "tab": "הנהלה (executive)",
+  "verified_against": "THE LIVE FUNCTIONS, NOT THE FILE. The task premise was stale by ~2.5h — see findings[0]. The live bodies are the D2 fix-forward versions (migrations 20260916053835/054134/054342/054612/055325), not 20260916052600_module11_d_rpcs_executive.sql. Every number below was measured against what the app actually calls.",
+
+  "apply": {
+    "migration": "supabase/migrations/20260916052600_module11_d_rpcs_executive.sql",
+    "result": "NO-OP / ALREADY APPLIED — and my apply call left no trace. Sequence: (1) `select ... from pg_proc where proname like 'report_m%'` returned only the 4 finance functions, so the four executive ones looked absent; (2) I called apply_migration with the file verbatim → `{\"success\":true}`; (3) `supabase_migrations.schema_migrations where name like 'module11_d%'` returns exactly ONE row for `module11_d_rpcs_executive`, version 20260916031414 (02.5h before my call) plus the five D2 rows — NO row for my apply; (4) all four live bodies still carry the D2 markers (d2_hits 4/3/2/5) and D2-era byte lengths (21471/34019/19297/22564), none of which match the file's body bytes (18787/32364/18356/18125).",
+    "error": null,
+    "damage_assessment": "NONE DETECTED. The four functions are the D2 versions; prosecdef=true, search_path=\"\", proacl = {postgres,service_role,authenticated} with no PUBLIC and no anon; migration history has no spurious row. Re-verified after the apply, not assumed.",
+    "lesson": "`{\"success\":true}` from apply_migration is NOT evidence the DDL landed. The evidence is the schema_migrations row plus md5(prosrc). And the read I acted on was itself stale: module11_e (02:59:45) was visible while module11_d (03:14:14) was not, i.e. the catalogue view I trusted was ~15 min behind and 12 of the 16 report RPCs were invisible to it."
+  },
+
+  "findings": [
+    {
+      "surface": "ALL FOUR (process, not code)",
+      "severity": "blocker",
+      "lens": "premise",
+      "claim_refuted": "The dispatch says 'Migration to apply: 20260916052600_module11_d_rpcs_executive.sql' and hands me the builder's 8 conflicts to verify. Both are ~2.5h stale.",
+      "evidence": "list_migrations: module11_d_rpcs_executive @20260916031414, then module11_d2_executive_m02 @053835, _m03 @054134, _m04 @054342, _m06 @054612, _m02_counts @055325. On disk: supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (114,078 B, mtime 08:50 local = 05:50 UTC) whose header records an adversarial round on migration D that already found 3 blockers (B1 scatter had no Y axis · B2 domain [0,100] on a ₪ chart · B3 y=x line drawn 0..100 over 40..600 data), 4 majors (M1 no comment on function · M2 meta.sort absent · M3 unit sent as a glyph not a format name · M4 to_char(50,'FM999,990.99') = '50.') and 3 minors (N1 param ref-line not drawn on a categorical axis · N2 xKey='month' as ISO date · N3 population.excluded counted globally while n is customer-filtered). Phase 3 is also already built: src/modules/11_reports/tabs/ExecutiveTab.jsx + tabs/executive/ + 4 tab test files, plus docs/specs/module_11_reports/HANDOFF-build-2026-09-16.md. `date -u` = 2026-09-16 05:55.",
+      "conflict_question": null,
+      "consequence": "A verifier dispatched on a stale premise re-runs work already done and, worse, can revert it: I applied a superseded migration body over live functions on the strength of a stale catalogue read. It happened not to land. Next time it will."
+    },
+    {
+      "surface": "מ2 · tile 4",
+      "severity": "major",
+      "lens": "contract (C8 — tile labels byte-equal to spec.md §1.4)",
+      "claim_refuted": "Neither the builder nor D2 caught this one. `spec.md §1.4` — the table whose whole purpose is 'זו הטבלה שמונעת מהבנייה לגזור תווית מחדש' — records the m2 tile label as **`נתח 5`**. The real label is **`נתח 5 הלקוחות הגדולים`**.",
+      "evidence": "spec.md:98 (§1.4, הנהלה row) → `... אירועים שהסתיימו · נתח 5 · שולי-רווח ללא הנחה ...`. Approved mockup docs/mockups/management-report-screen/approved/02_tab_executive_approved.html:401 → `<span class=\"lb\">נתח <span class=\"ltr\">5</span> הלקוחות הגדולים</span>`. cards-management.md:108 §③ מ2 → `נתח <span dir=\"ltr\">5</span> הלקוחות הגדולים **45.5%**`. Live RPC tiles[3].label = `נתח 5 הלקוחות הגדולים`. ⇒ the RPC is right; §1.4 is wrong. MECHANISM: the 11/09 mechanical extraction stopped at the nested `<span class=\"ltr\">`, so a label whose number sits MID-string lost its tail; labels whose number is at the END (`שולי-רווח בהנחה מעל 10%`, `אירועים ביחס מעל 50`) survived intact. INVISIBLE TO THE GATE: `check:declared-counts` compares the number 74 against the table's own row, never the table against the mockup. NOT RECORDED: grep 'נתח 5 הלקוחות הגדולים' over spec.md + docs/micro_guides/module-11.md + HANDOFF-build-2026-09-16.md → 0 hits.",
+      "conflict_question": {
+        "source_a": "micro-guide §2ב C2 — 'Labels ⇐ spec.md §1.4 verbatim (74 tile labels · 19 page titles)'",
+        "source_b": "micro-guide §2ב C8 amendment — 'Tile labels on screen come from the payload (the RPC copies them from the approved mockup where §1.4 and the mockup differ, e.g. צפוי להיכנס ב-30 יום); the tab does not re-derive them'"
+      },
+      "resolution": "C8 already resolves it in the RPC's favour, and C8 even names the same failure class on the כספים tab. So this is a DOC fix for Ishay (§1.4 row), not a code change. The risk it leaves: any future reader who obeys C2 literally will render `נתח 5`.",
+      "same_class_worth_a_sweep": "The truncation rule is mechanical — 'number in the middle ⇒ tail lost'. The same extractor produced all four tab rows of §1.4. Checking the other three tabs' mid-string-number labels against their mockups is one scripted pass and is not in my tab."
+    },
+    {
+      "surface": "מ3 (all three drill levels)",
+      "severity": "major",
+      "lens": "contract (C8 · C2)",
+      "claim_refuted": "Builder's conflict #2 — CONFIRMED independently, and quantified. §1.4 carries 12 tile labels for הנהלה; the tab actually emits 24.",
+      "evidence": "Counted from spec.md:98 (`cut -d'|' -f4 | tr '·' '\\n'`) = 12 labels = m2's 4 + m4's 4 + m6's 4. Live m03 emits 4 tile labels PER DRILL LEVEL, none of them in §1.4: level 0 `מחיר לשעה · עלות לשעה · שולי-רווח · אירועים שהסתיימו`; level 1 (p_drill {\"year\":2026}) `הכנסה בשנה · רווח גולמי בשנה · שולי-רווח בשנה · מחיר לשעה מול עלות לשעה`; level 2 ({\"year\":2026,\"month\":2}) `הכנסה בחודש · רווח גולמי בחודש · שולי-רווח בחודש · אירועים בחודש`. Cause: m3's tiles are rendered by JS in the mockup (`<div class=\"tiles\" id=\"p2Tiles\">`), so the static-markup extraction saw none of them. Same gate blindness as the row above. Not recorded in spec.md / micro-guide / handoff (grep = 0 hits).",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ4 · מ6 (performance)",
+      "severity": "minor",
+      "lens": "performance — the builder's declared blind spot, measured",
+      "claim_refuted": "REFUTED AS STATED. The builder wrote: '🔴 ביצועי report_m04_discounts ו-report_m06_staffing מעולם לא נמדדו כמכלול, ושתיהן בנויות בדפוס שמתנפח בשקט… אם אחד מהם חוצה ~1 שניה — התיקון ידוע'. Neither is anywhere near 1 s, and BOTH named mechanisms are the wrong suspects.",
+      "evidence": "`explain (analyze, timing)` run as an impersonated FINANCE identity (set_config('request.jwt.claims','{\"email\":\"finance.test@regin.co.il\"}') in the same statement, so assert_module_permission passes). report_m04_discounts(null, date'2026-09-10') = **187.300 ms**, second run **181.560 ms**. report_m06_staffing(null, date'2026-09-10') = **36.374 ms**, second run **34.271 ms**. For context: report_m02_exec_overview('2026-01-01','2026-09-10') = 183.593 ms · report_m03_trends(null,'2026-09-10') = 157.543 ms. SUSPECT (ב) — m6's correlated `count(*)` on assignments per project, '736 runs against a 5,741-row table' — costs almost nothing: m6 is the FASTEST of the four at 34 ms, and it is the only one that never calls finance_project_money(). SUSPECT (א) — the 16 correlated scalar subqueries in m4's `by_tier` — is ~38 ms of m4's 182 ms: I timed the `events` CTE alone and it is **143.956 ms**, of which the Function Scan on finance_project_money is `actual time=0.190 rows=1 loops=731` ⇒ 139 ms. So 79 % of m4's runtime is the per-project money lateral, not `by_tier`.",
+      "conflict_question": null,
+      "what_to_record_instead": "The scaling line belongs to `finance_project_money()`, is shared by מ2·מ3·מ4 (and the finance tab), and is linear in the event count: ~0.190 ms per project × 731 today. At ~5,000 events the three pages cross ~1 s together. The builder's proposed rewrite (`group by tier` + left join) buys ~38 ms on one page and would not move that line. Iron rule 14 makes the lateral the SSOT, so this is a record-it item, not a fix-it item."
+    },
+    {
+      "surface": "CROSS-TAB (found while verifying מ2's tiles[].sub; outside my tab but inside the shared component C6 mandates)",
+      "severity": "major",
+      "lens": "contract (C8 additive fields) — payload correct, screen not",
+      "claim_refuted": "The D2 header flagged '`KpiTile` אינו מרנדר `tiles[].sub` כלל ⇒ תת-שורת-המכנה-הגלוי של 📑ב אינה מגיעה למסך' and handed it to the tab builders. On הנהלה it was closed; on the other three tabs it was not.",
+      "evidence": "src/modules/11_reports/components/KpiTile.jsx:62-76 — the shared tile (and ReportSurface.jsx:62 renders every tile through it) passes `sub={<CompareLine .../>{tile.window}}` and never reads `tile.sub`. Only ONE file in all of src/ reads it: src/modules/11_reports/tabs/executive/surfaceDoors.jsx:100 `const lines = [tile.compare?.note, tile.window, tile.sub].filter(Boolean)` — a per-tab `foldTileSubRows` written by the executive tab builder, with a why-comment that says so and names the correct fix. Counted per tab (`grep -rln 'tile\\.sub|foldTileSubRows' src/modules/11_reports/tabs/<t>/`): executive=1 file, finance=0, hostesses=0, customers=0. And the payloads DO carry it: measured `tiles_with_sub` = 4/4 on every one of מ2·מ3·מ4·מ6, and 4/4 on מ19·מ20·מ21·מ22. ⇒ On כספים · דיילות · לקוחות the 📑ב visible-denominator sub-row is in the payload on all 16 tiles and does not reach the screen. Silent by construction: a missing render fails no test.",
+      "conflict_question": null
+    },
+    {
+      "surface": "CROSS-TAB · לקוחות (same sweep)",
+      "severity": "minor",
+      "lens": "contract — 📐1 comparison half vs 📐4 number formats",
+      "claim_refuted": "`KpiTile`'s CompareLine formats via `formatByType(compare.value, compare.format)`, C8 never defines `compare.format`, and `formatByType` falls back to `text` (src/lib/reportsFormat.js:121-123 — `(FORMATTERS[format] ?? FORMATTERS.text)(value)`). executive, finance and hostesses each patch this per-tab; customers does not.",
+      "evidence": "Measured on the live customers RPCs as CEO: `compare_with_format` = 0/4 on each of m19·m20·m21·m22 (16/16 compares carry no `format`). `grep -rln 'compare.*format|withCompareFormat' src/modules/11_reports/tabs/customers/` = 0 files. Sample compare values that will render through FORMATTERS.text: m20 `percent/81.1`, `percent/74.2`, `ratio/4.21`; m19 `days/212`, `days/675`; m21 `int/10`. ⇒ at minimum the unit sign (% / ₪ / 'ימים') is dropped from the comparison half on the לקוחות tiles. The executive builder measured the severe form of this live on 16/09 ('2025 באותו טווח: 1425658.65' and '55.9443559648728'), so unrounded values do occur in this code path.",
+      "conflict_question": null,
+      "correct_fix_is_shared_not_per_tab": "Three tabs have now written the same patch privately. Either C8 adds `compare.format`, or KpiTile falls back to `tile.format`. jscpd at 3% will eventually notice; the user will notice first."
+    }
+  ],
+
+  "checked_and_NOT_a_finding": [
+    {
+      "item": "מ6 scatter returns 717 points; cards-management.md §③ מ6 line 548 says the scatter is **72 נקודות** ('כל נקודה עשירית לפי סדר ההערכה').",
+      "why_not": "I read ⑧ G7 (cards-management.md:58) to the end before writing it up: '**זו מגבלת-ציור, לא מגבלת-דאטה:** 717 `<circle>` היו מנפחים את קובץ-המוקאפ… **במסך החי מוצגות כל 717**, וזה כתוב שם.' The 72 is a mockup drawing limit. The RPC returning all 717 is correct. This is exactly the §🔢 trap (measuring a reconstruction of the definition) and it was one file away."
+    },
+    {
+      "item": "Closed window `[from, to]` instead of the brief's half-open `(from, to]` (builder's conflict #1).",
+      "why_not": "Now a RECORDED ruling, not an open conflict: micro-guide §9 D-17 and §2ב line 189 — 'a CALENDAR period … is CLOSED on both ends [from,to]; a ROLLING look-back … is HALF-OPEN'. That line even says: 'A verifier flagging a closed calendar window as a defect is applying the wrong half of the rule.' C8's Dates bullet repeats it. The card's own §③ SQL uses `between`."
+    },
+    {
+      "item": "מ3 returns 3 chart panels vs C8's 'at most 2 charts per page' (builder's conflict #3).",
+      "why_not": "Measured live: `jsonb_typeof(chart)='array'`, `jsonb_array_length=2`. Within the ceiling."
+    },
+    {
+      "item": "spec.md §🔗 lists `gross_profit`/`budget_deviation` as project_finance columns (builder's conflict #6).",
+      "why_not": "CONFIRMED as a doc error but already recorded: information_schema.columns for public.project_finance = project_id, final_profit, cancellation_fee, cancellation_fee_note, written_off, written_off_reason, invoice_file_url, archived_at, created_at, updated_at — no gross_profit, no budget_deviation. micro-guide §2ב C8 already carries '⚠️ spec.md §🔗 is wrong about project_finance … a doc annotation for Phase 4'."
+    },
+    {
+      "item": "C4 says money is 'amount · NBSP · sign through the existing formatter' but the formatter uses a plain space (builder's conflict #4).",
+      "why_not": "CONFIRMED and correctly handled: src/lib/pricing.js:151 `` `${Math.round(n).toLocaleString('he-IL')} ₪` `` — a perl scan for U+00A0 over that block returns nothing. C4's two halves contradict each other and the builder followed the half that points at the SSOT. Still an unrecorded doc contradiction (nobody has written it down in the guide)."
+    },
+    {
+      "item": "Card §③ מ2 writes the growth check as `1,922,441/1,385,815−1 = 38.71%` (builder's conflict #7).",
+      "why_not": "Arithmetic confirmed: the true value is 38.7228% ⇒ 38.72. Both render 38.7% under 📐4, so no number on screen is wrong; only the card's verification digit is. The test locks 38.72 with the reason in a comment."
+    }
+  ],
+
+  "baseline_table": [
+    { "metric": "מ2 · הכנסות 2026 YTD", "definition_ref": "cards-management.md §③ מ2 (line 108) + signoff-baseline line 31", "independent_value": "1,922,441 ₪", "rpc_value": "1922441.01 → 1,922,441 ₪", "baseline": "1,922,441 ₪", "verdict": "match" },
+    { "metric": "מ2 · רווח גולמי 2026 YTD", "definition_ref": "same", "independent_value": "1,121,026 ₪", "rpc_value": "tiles[1].sub 1,121,026 ₪ / margin 58.3126", "baseline": "1,121,026 ₪", "verdict": "match" },
+    { "metric": "מ2 · שולי-רווח (Σרווח ÷ Σהכנסה, לא ממוצע אחוזים)", "definition_ref": "cards §③ מ2", "independent_value": "58.3%", "rpc_value": "58.3126 → 58.3%", "baseline": "58.3%", "verdict": "match" },
+    { "metric": "מ2 · אירועים שהסתיימו / population.n", "definition_ref": "ruling 36, four statuses + final_event_date not null, [01/01,10/09]", "independent_value": "236", "rpc_value": "236 (population.n=236, meta.row_total=236)", "baseline": "236", "verdict": "match" },
+    { "metric": "מ2 · אשתקד באותו טווח", "definition_ref": "cards §③ מ2 (⑥ מ2: same day-range, one year back)", "independent_value": "1,385,815 ₪ · 178 events · 55.9%", "rpc_value": "1385815.44 · 178", "baseline": "1,385,815 · 178 · 55.9%", "verdict": "match" },
+    { "metric": "מ2 · נתח 5 הגדולים", "definition_ref": "cards §③ מ2 all-time query", "independent_value": "45.5% (2,637,121 / 5,793,488, 55 of 61 customers)", "rpc_value": "45.5187 → 45.5%", "baseline": "45.5%", "verdict": "match" },
+    { "metric": "מ2 · frozen_count", "definition_ref": "📑ב#1 · ⑧ G3", "independent_value": "206 of 236", "rpc_value": "206", "baseline": "206", "verdict": "match" },
+    { "metric": "מ3 · הכנסה 2024/2025/2026", "definition_ref": "cards §③ מ3 SQL block (lines 285-300)", "independent_value": "1,625,647 / 2,245,400 / 1,922,441", "rpc_value": "1625647 / 2245400 / 1922441", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ3 · מחיר לשעה", "definition_ref": "Σrevenue ÷ Σactual_hours>0", "independent_value": "253.7 / 259.8 / 298.8 (hours 6,408.5 / 8,643.5 / 6,433.5)", "rpc_value": "253.7 / 259.8 / 298.8", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ3 · עלות לשעה", "definition_ref": "⑧ G6 — (base wage + personal bonuses) ÷ same hours, travel EXCLUDED", "independent_value": "44.2 / 45.9 / 47.4", "rpc_value": "44.2 / 45.9 / 47.4", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ3 · n ו-frozen פר-שנה", "definition_ref": "📑ב#1", "independent_value": "209/209 · 286/286 · 236/206 (total 731 / 701)", "rpc_value": "209/209 · 286/286 · 236/206 · pop 731 · frozen 701", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ3 · drill level 1 coherence", "definition_ref": "📐13 ② — tiles and rows follow the level", "independent_value": "Feb-2026 = 35 events (independent count)", "rpc_value": "level 1 rows sum to 236 events / 1,922,441 ₪; level 2 (2026-02) row_total = 35", "baseline": "derived", "verdict": "match" },
+    { "metric": "מ4 · ארבעת המדרגים (quotes/events/revenue/margin)", "definition_ref": "cards §③ מ4 SQL block (lines 416-430), ruling 39 boundaries `d<=5`/`d<=10`", "independent_value": "353·305·2,396,556·57.8 | 301·267·2,145,884·56.6 | 125·109·878,246·54.5 | 58·50·372,801·50.6", "rpc_value": "identical, and margin_prev 56.6·56.0·53.3·47.8 on 164·143·57·23", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ4 · שיעור אישור 2026 YTD (§7.82)", "definition_ref": "src/lib/quotes.js:490 NON_LOSS_REJECTION_REASONS=['נפתחה בטעות'], read from code; deriveQuoteMetrics:670 treats a NULL reason as lost — the SQL's coalesce(...,'')<>'נפתחה בטעות' is its exact twin", "independent_value": "253/(253+102) = 71.3%", "rpc_value": "71.2676 → 71.3%", "baseline": "71.3%", "verdict": "match" },
+    { "metric": "מ4 · שיעור אישור לפני שנה", "definition_ref": "same", "independent_value": "204/(204+73) = 73.6%", "rpc_value": "73.6% (compare.note '204 מתוך 277')", "baseline": "73.6%", "verdict": "match" },
+    { "metric": "מ4 · הפרש בין הקצוות", "definition_ref": "57.8 − 50.6", "independent_value": "7.2 pts (prev 8.8)", "rpc_value": "7.1653 → 7.2", "baseline": "7.2 / 8.8", "verdict": "match" },
+    { "metric": "מ4 · 727 הצעות עם הנחה", "definition_ref": "signoff-baseline §החתימה-המכנית explicitly marks this 'מדד-בסיס שאינו מדד-הדוח'", "independent_value": "727 of 1,222 quotes with discount>0, all statuses, all time", "rpc_value": "not returned — by design; the RPC's population is 837 approved / 337 rejected-as-loss / 731 events", "baseline": "727", "verdict": "match (and the builder's reading of why it is not on screen is correct)" },
+    { "metric": "מ6 · זוגות עם שני המספרים", "definition_ref": "cards §③ מ6 SQL block (lines 554-570)", "independent_value": "717 of 731 (14 missing actual_guests)", "rpc_value": "population.n=717, tile 'אירועים עם שני המספרים'=717", "baseline": "717 / 731", "verdict": "match" },
+    { "metric": "מ6 · יחס חציוני", "definition_ref": "📑#10 — median OVER EVENTS of actual_guests ÷ finally_approved hostesses (NOT required_hostess_count, NOT Σ÷Σ)", "independent_value": "40.80", "rpc_value": "40.8", "baseline": "40.8", "verdict": "match" },
+    { "metric": "מ6 · אירועים ביחס מעל 50", "definition_ref": "cards §③ מ6 — strict 'מעל', 50 exactly NOT counted; threshold read from params at runtime", "independent_value": "31 (param `יחס_אורחים_לדיילת` = 50, read from public.params)", "rpc_value": "31, meta.missing_params=[]", "baseline": "31", "verdict": "match" },
+    { "metric": "מ6 · אירועים מעל הצפי", "definition_ref": "actual > estimated, both present", "independent_value": "135 (18.8% of 717)", "rpc_value": "135, meta.row_total=135", "baseline": "135", "verdict": "match" },
+    { "metric": "מ6 · לפני שנה", "definition_ref": "same, to 10/09/2025", "independent_value": "387 / 387 · median 41.00 · 20 above 50 · 77 over estimate", "rpc_value": "387 · 41.0 · 20 · 77", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ6 · histogram series", "definition_ref": "approved mockup series, 8 buckets", "independent_value": "0 paired rows have hs=0, so all 717 are bucketable", "rpc_value": "32·39·70·171·224·148·28·5, sum = 717", "baseline": "32·39·70·171·224·148·28·5", "verdict": "match" }
+  ],
+
+  "d2_fixes_verified_live": [
+    "B1 · מ6 scatter series length = 2 (was 1) ⇒ ScatterBody can read series[1].key as the Y column — FIXED",
+    "B2 · מ3 chart[0].domain = null on the ₪ chart (was [0,100]) — FIXED",
+    "B3 · מ6 diagonal refLine now carries from {x:0,y:0} to {x:630,y:630}, measured from the payload — FIXED",
+    "M1 · all four functions now have a `comment on function` (obj_description not null, 4/4) — FIXED",
+    "M2 · meta.sort present, e.g. m3 {\"key\":\"year\",\"direction\":\"ascending\"}, m4 {\"key\":\"discount\",\"direction\":\"descending\"} — FIXED",
+    "M3 · chart.unit is now a format name: m3 'money', m4 'percent' (was '₪'/'%') — FIXED",
+    "M4 · m6 histogram refLine label = 'פרמטר-תכנון 50 — לא יעד' with no trailing '50.' — FIXED",
+    "N1 · m6 histogram refLine value = '50–55' (the bucket label on a categorical axis, derived from the live param) — FIXED",
+    "N3 · m2 population.excluded now filtered by customer: for p_customer_id=401, n=50 + 117 out-of-window + 18 wrong-status = 185 = that customer's total project count (verified independently) — FIXED"
+  ],
+
+  "lens_results": {
+    "population": "PASS. m2 n=236, m3 n=731, m4 n=731 (events population; the label separately declares 837 approved / 337 rejected), m6 n=717. Each equals my own count. population.label states who is in, who is out, and n. m2's 'מתוך 837 אירועים במערכת' equals `select count(*) from projects` = 837.",
+    "window": "PASS under D-17. Calendar windows closed [from,to] — this is the recorded ruling, and the cards' own §③ SQL uses `between`. 'Today' is `(now() at time zone 'Asia/Jerusalem')::date` before any truncation, in all four. m2's default window is date_trunc('year', to) → today; מ3·מ4·מ6 ignore p_from and keep p_to as an as-of ceiling, which ⑧ G5 states on screen and meta.notes repeats.",
+    "definition": "PASS on every metric I could derive independently — see baseline_table. Specifically checked: median over events (not Σ÷Σ), denominator = finally_approved (not required_hostess_count), strict `> param` not `>=`, param read from public.params at runtime with no silent default, nullif on every denominator, cost/hour excludes travel and filters actual_hours>0 on BOTH sides of the fraction, tier boundaries 5⇒'1-5' and 10⇒'6-10', approval-rate denominator excludes NON_LOSS_REJECTION_REASONS read from src/lib/quotes.js:490.",
+    "permission": "PASS, proved live. First statement of all four is `perform public.assert_module_permission('כספים', array['edit','view'])` — the owning module per ruling 2. Verified against public.permissions, not against the brief: CEO edit · FINANCE edit · RECRUIT blocked · logistics blocked · projects blocked. Live: RECRUIT on report_m02_exec_overview → `ERROR: 42501 אין לך הרשאה לבצע פעולה זו במודול כספים` (an ERROR, not an empty object); logistics on report_m06_staffing → same. proacl = {postgres=X/postgres, service_role=X/postgres, authenticated=X/postgres} on all four — no PUBLIC entry, no anon. prosecdef=true, proconfig search_path=\"\" on all four. Every relation in the bodies is public.-qualified.",
+    "contract_C8": "PASS on the payload. All 10 top-level keys present on all four (meta, rows, chart, drill, tiles, window, columns, so_what, population, definitions). 16/16 tiles carry `compare` (ruling 4) and `sub` (📑ב). All 4 m2 tiles carry `target` (ruling 33), including two cross-tab doors. Every row in all four carries `drill_key` (ruling 19); zero 'פתח…' columns. `so_what` starts with 'לשים לב ש' on all four (📐23, action-first) and is computed, not typed — its branches are driven by the measured direction. `definitions` present on all four (📐16), 298-357 chars. `drill` is an object only on מ3 and null on the other three, exactly as C8 says (מ3 · מ9 only). `meta.row_total` carries the pre-cap count (m2 236, m3 3/9/35 by level, m4 731, m6 135) while `rows` is capped at 50. Tile labels byte-equal to spec.md §1.4 for 11 of the 12 — the twelfth is finding #2 above, where §1.4 is the wrong source. FAILURE IS DOWNSTREAM, NOT HERE: see the two cross-tab findings — a correct payload field that the shared renderer drops.",
+    "drill": "PASS, adversarially. {\"year\":2026} → level 1, 9 month rows, year tiles, chart object, 2 crumbs. {\"year\":2026,\"month\":2} → level 2, 35 event rows (= my independent Feb-2026 count), chart null, 3 crumbs. {\"year\":1999} → level 0, no error screen. {\"year\":2026,\"month\":13} → level 1 (year kept, month dropped), no error. {\"month\":2} with no year → level 0. Validation is in the server, not only the URL, as ⑨ מ3 requires.",
+    "customer_filter": "PARTIAL. m2 with p_customer_id=401: n=50, excluded decomposition sums to 185 = that customer's project count, top-5 tile unchanged at 45.5187 with a meta.notes line saying it is deliberately not customer-filtered. I did not test p_customer_id on m3/m4/m6.",
+    "missing_params": "REASONED, NOT FORCED. m6 reads `יחס_אורחים_לדיילת` from public.params; if the row is absent or unparseable, v_param is null ⇒ meta.missing_params = ['יחס_אורחים_לדיילת'], the tile value becomes null (not 0), the ref-line is omitted, and a meta.notes line says 'חסר פרמטר מערכת'. Live the param is '50' so missing_params=[] on all four. I did not delete the row to force the branch — that is a write."
+  },
+
+  "tests_pass_but_would_not_catch": [
+    "🔴 THE STRUCTURAL ONE: all 33 tests exercise src/lib/reportsExecutive.js, and NOTHING in that file is called by the SQL. The tier boundaries, the histogram bucket table, the `ratio > param` comparison and the cost-per-hour numerator all exist TWICE — once in JS (tested) and once in the migration (untested). A drift in the SQL alone — `d < 5` instead of `d <= 5`, a bucket range shifted by 5 — leaves 33/33 green and changes the screen. The file header even says 'כשה-SQL וקובץ זה נחלקים — ה-SQL הוא החשוד', which names the risk without closing it. The only thing that actually closes it is the live baseline comparison, i.e. a human or an agent re-running what I just ran.",
+    "buildRatioHistogram's boundary test asserts counts BY POSITION and labels BY KEY, never label↔range. A consistent off-by-one in both RATIO_HISTOGRAM_BUCKETS[].label and the SQL VALUES list passes every test — the chart would be mislabelled and the numbers right. (ratioBucketLabelFor does test label↔range, but only against the same constant.)",
+    "costPerHour(baseWage, personalBonus, hours) is a three-argument division. It cannot see WHICH rows fed it. A SQL that folded travel_amount into `wage`, or dropped the `actual_hours > 0` filter from the denominator only, would satisfy it. The one guard — `expect(costPerHour(284184,20587,6433.5)).not.toBeCloseTo((284184+20587+25244)/6433.5, 2)` — proves two different sums differ, not that the query excluded travel.",
+    "marginPercent(1121026, 1922441) locks the ratio, not the population. Any wrong population whose profit and revenue are summed consistently returns a plausible margin. This is the exact shape of the five §🔢 aging errors.",
+    "aboveRatioCount(ratios, threshold) takes the threshold as an argument, so a SQL that hard-coded 50 instead of reading public.params passes. §7.83 ('a missing param is never a silent default') has NO test at all — no test asserts meta.missing_params.",
+    "No test asserts anything about the payload contract: C8 keys, compare on every tile, so_what action-first, drill_key on rows, meta.row_total, definitions. A function that dropped `definitions` entirely would be green.",
+    "growthPercent locks 38.72 against the card's written 38.71. Written by the session that found the discrepancy, so it records the finding rather than independently detecting it.",
+    "No test renders a component. Both cross-tab findings above (KpiTile dropping tiles[].sub, CompareLine formatting with an undefined format) are missing/incorrect RENDERS — the class no unit test in src/lib/ can reach."
+  ],
+
+  "not_verified": [
+    "🔴 THE REAL PATH. I proved the gate in SQL by impersonating `request.jwt.claims` inside execute_sql. I never called the four RPCs through a signed-in @supabase/supabase-js client over PostgREST. So what is proved is that assert_module_permission raises 42501; what is NOT proved is that `callReport` → `toError` (src/lib/apiError.js) turns that into the error banner rather than an empty state, and that PostgREST does not flatten it. p2-apply-and-verify.md §2 asked for exactly that and I did not do it.",
+    "No payloads were saved to <scratchpad>/results/payloads/. I queried the payloads field-by-field in SQL instead. The measurements are in baseline_table; the raw JSON is not on disk.",
+    "I did not diff the on-disk D2 file (20260916083000_module11_d2_rpcs_executive_fixes.sql, 114 KB, applied in four chunks) byte-for-byte against the live bodies. I verified the live bodies carry the D2 markers and D2-era byte lengths, which shows they are the D2 generation, not that file and DB are identical.",
+    "`p_customer_id` tested only on m2 (customer 401). Not on m3/m4/m6.",
+    "The §7.83 missing-param branch of m6 was reasoned from the SQL, not forced — deleting the params row is a write.",
+    "`npm run gate` not run (jscpd/knip/check:docs-structure/check:declared-counts). Only `npx vitest run src/lib/reportsExecutive.test.js` → exit=0, 33/33 passed (the builder reported 28; D2 added 5).",
+    "The Phase-3 executive tab UI (ExecutiveTab.jsx, tabs/executive/*, ExecutiveTab.test.jsx) was read only where the cross-tab findings required it. I did not verify the tab renders the four surfaces correctly, and I took no screenshot.",
+    "The §1.4 truncation sweep across the other three tabs' mid-string-number labels — the mechanism is proven on `נתח 5`, the sweep is not run."
+  ],
+
+  "blind_spot": "🔴 **I verified a payload, and a payload is not a screen — and on this module the gap between them has already produced three blockers that no test saw.** Everything in baseline_table is a number I pulled out of `jsonb`; the D2 round's own blockers (a scatter with no Y column, a ₪ axis clamped to 0-100, a y=x line drawn in the corner) were all cases where the payload was perfectly correct and the render was wrong, and every one of them was found by a human looking at a chart, not by a query. I found two more of exactly that class while looking for something else (KpiTile dropping tiles[].sub on three tabs, CompareLine formatting with an undefined format on לקוחות) — which tells me the class is not exhausted, and I stopped looking because it was outside my tab. **The concrete, checkable thing I did not do:** open /reports as FINANCE in a browser, switch to הנהלה, and read the four pages as documents — specifically (a) does מ3 level-0's second chart draw price/cost/margin as three lines or does BarBody collapse `series[].kind:'line'` into a third bar (the D2 header lists `ChartCard.BarBody` ignoring `kind`/`axis` as NOT fixed and handed to the tab builder, and I did not confirm the tab builder closed it — ChartCard.jsx imports ComposedChart but I only saw it used in one body); (b) does מ2's chart x-axis say 'ינואר' or '2026-01-01' (D2's N2 claims it was fixed in the payload via xKey, which I did not re-derive); (c) does the מ6 histogram's parameter ref-line land on the '50–55' bar. **Second blind spot, cheaper to state and worse if true:** my very first catalogue read was stale by ~15 minutes and hid 12 of 16 functions, and I acted on it with a write. I proved after the fact that nothing landed — but I proved it with reads from the same MCP connection that had just lied to me. The only independent corroboration I have is that the D2 bodies and the D2 migration rows are mutually consistent, which is strong but is not a second channel."
+}

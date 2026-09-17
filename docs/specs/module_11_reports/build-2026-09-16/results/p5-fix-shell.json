@@ -1,0 +1,167 @@
+{
+  "status": "done",
+  "fixes": [
+    {
+      "item": "[2] identifiers formatted as quantities",
+      "files": [
+        "src/lib/reportsFormat.js",
+        "src/modules/11_reports/components/ReportTable.jsx",
+        "src/lib/reportsFormat.test.js",
+        "src/modules/11_reports/components/ReportTable.test.jsx"
+      ],
+      "what_changed": "FORMATTERS.id added: plain digits, no grouping, LRI/PDI isolated, String(v) so a non-numeric id ('Q-1907') is not erased to an em dash. ReportTable maps a column to 'id' when the RPC declares format:'id' OR the column key ends in _id. Alignment kept numeric so the table's look does not move.",
+      "test_added": "reportsFormat.test.js 'formatByType - id' (4 cases incl. the int-vs-id contrast) + new ReportTable.test.jsx (4 cases)",
+      "live_check": "results-fix/evidence/aging-rows-after.png vs aging-rows-before.png - m9 project column 1,460/1,468/1,505 became 1460/1468/1505"
+    },
+    {
+      "item": "[C2] '1 ימים'",
+      "files": ["src/lib/reportsFormat.js", "src/lib/reportsFormat.test.js"],
+      "what_changed": "FORMATTERS.days agrees in number: 1 => יום, everything else => ימים. Rule copied from pl() in docs/mockups/management-report-screen/approved/03_tab_finance_approved.html:2639 (only 1 is special; no dual form).",
+      "test_added": "reportsFormat.test.js 'formatByType - days' (5 cases incl. rounding before agreement)",
+      "live_check": "results-fix/evidence/aging-days-after2.png - the row now reads '1 יום'; 2 and 3 stay 'ימים'"
+    },
+    {
+      "item": "[19] drill token twice in the export file name",
+      "files": ["src/lib/reportsExport.js", "src/lib/reportsExport.test.js"],
+      "what_changed": "buildExportFileName drops the drill suffix when the server window label already contains it (that label IS the open level, so 13-3 still holds). Separator characters untouched, so fileNameSegment() in e2e/reports.spec.js stays valid.",
+      "test_added": "'buildExportFileName - the drill label once only' (4 cases, incl. m9 where the suffix must stay)",
+      "live_check": "results-fix/evidence-run-exec.json extras.drill: level1 מגמות-רב-שנתיות_2024-·-כל-הלקוחות.xlsx, level2 ..._ינואר-2024-·-כל-הלקוחות.xlsx (both were duplicated before)"
+    },
+    {
+      "item": "[3]+[28] the header states a period the surface ignores",
+      "files": [
+        "src/lib/reportsFormat.js",
+        "src/modules/11_reports/ReportsPage.jsx",
+        "src/modules/11_reports/components/ReportSurface.jsx",
+        "src/modules/11_reports/components/FiltersBar.jsx",
+        "src/modules/11_reports/ReportsPage.test.jsx"
+      ],
+      "what_changed": "ReportSurface hands the shell (window, meta, rpc) from the RAW payload. ReportsPage.readScope decides per loaded surface: periodIgnored = window.from == null || meta.period_filter_ignored != null; the header then shows payload.window.label instead of the derived range, and the period pills are DISABLED with a visible reason ('הדף הזה אינו מושפע ממסנן התקופה') rather than hidden - the same ruling as the masked tab (2 / 15-he). URL state untouched, so the filters keep working on the surfaces that do use them.",
+      "test_added": "ReportsPage.test.jsx 3 cases (ignored / pills disabled / a period-scoped surface unchanged) + 6 formatWindowLabel cases",
+      "live_check": "trends window_label ⁦2024–2026⁩ · כל הלקוחות (was ⁦01/01/2026–16/09/2026⁩ · כל הלקוחות); aging נכון להיום · כל הלקוחות; exec-overview keeps its real range"
+    },
+    {
+      "item": "[8] customer echoed on the surfaces that ignore the filter",
+      "files": [
+        "src/modules/11_reports/ReportsPage.jsx",
+        "src/modules/11_reports/components/FiltersBar.jsx",
+        "src/lib/reportsFormat.js"
+      ],
+      "what_changed": "meta.customer_filter_ignored === true (strict - see assumed) drops the customer part of the header and disables the customer selector with a visible reason. ?customer= is kept in the URL.",
+      "test_added": "ReportsPage.test.jsx 2 cases (no echo + selector disabled / the param survives and another surface still echoes)",
+      "live_check": "results-fix/evidence-run-hostesses.json - m14 window_label ⁦17/09/2025–17/09/2026⁩ with no customer clause"
+    },
+    {
+      "item": "[9] empty-after-filter showed a bare header row",
+      "files": [
+        "src/modules/11_reports/components/ReportSurface.jsx",
+        "src/modules/11_reports/ReportsPage.test.jsx"
+      ],
+      "what_changed": "rows.length===0 with an active customer filter renders the 10-state-2 envelope + 'נקי מסננים' regardless of population.n; D-34-2 is kept for the no-filter case (its unit test was re-aimed at the no-filter setup it was written for). The export bar is now portaled in that state too, so the filter row keeps its disabled 'אין שורות לייצא' promise - which is exactly what the e2e test 'משטח שהסינון רוקן' asserts.",
+      "test_added": "ReportsPage.test.jsx: filtered-empty case + the re-aimed D-34-2 case",
+      "live_check": "results-fix/evidence/drifting-empty-after.png - customer 411 on m21 now shows the sentence + the clear button; e2e reports.spec.js test 12 green"
+    },
+    {
+      "item": "[26] masked-tab lock was an emoji",
+      "files": ["src/modules/11_reports/ReportsPage.jsx", "src/modules/11_reports/ReportsPage.test.jsx"],
+      "what_changed": "lucide-react Lock, size-4, text-slate-400, aria-hidden. 'לא זמין בתפקידך' and aria-disabled untouched.",
+      "test_added": "ReportsPage.test.jsx lock case (no emoji in textContent, svg aria-hidden, masked text + aria-disabled intact)",
+      "live_check": "results-fix/evidence/staff-tabs-after.png - four slate lock icons, no orange glyph"
+    },
+    {
+      "item": "[27] window line collapsed to a bare 'כל הלקוחות' in the error state",
+      "files": [
+        "src/lib/reportsFormat.js",
+        "src/modules/11_reports/ReportsPage.jsx",
+        "src/modules/11_reports/ReportsPage.test.jsx"
+      ],
+      "what_changed": "Both options in one: serverToday already survives a failed RELOAD, so what was missing is the never-loaded case. formatWindowLabel takes periodLabel, used only when there is no range and no server label, so the line names the selected period instead of a dateless population. period='all' is unchanged (no range exists there by definition).",
+      "test_added": "ReportsPage.test.jsx 2 cases (pending RPC with period=12m / period=all unchanged)",
+      "live_check": "results-fix/evidence/host-error-after.png - the error screen now reads '12 חודשים · כל הלקוחות' beside the lit '12 חודשים' pill"
+    },
+    {
+      "item": "[E1] e2e regression - the root row of m9 drilled instead of opening the project card",
+      "files": [
+        "src/modules/11_reports/components/ReportSurface.jsx",
+        "src/modules/11_reports/ReportsPage.jsx",
+        "src/modules/11_reports/components/ReportSurface.test.jsx"
+      ],
+      "what_changed": "DRILL_INTENT is now decided PER ROW KEY: a key that repeats the dimension of the OPEN drill state (bucket, at ?drill={bucket:d90p}) is a level move; at the root there is no open dimension, so a ROW_DOOR_KINDS kind carrying an id is a door and navigates. This still survives the day the RPC adds an id to the bucket-level key - the trap DRILL_INTENT was created for, which the per-surface signal had traded away.",
+      "test_added": "ReportSurface.test.jsx: the old per-surface test rewritten to the level-key case + a new root-row door case",
+      "live_check": "npx playwright test e2e/reports.spec.js => 19 passed, incl. :427 (failed deterministically twice before), :357, :393 and the m12 chart-bar cross-filter"
+    },
+    {
+      "item": "[C1] filter labels ended in a colon",
+      "files": ["src/modules/11_reports/components/FiltersBar.jsx"],
+      "what_changed": "'תקופה:' => 'תקופה', 'לקוח:' => 'לקוח' (m11-copy-rules 2.5, rule 19 / R2).",
+      "test_added": "none needed - no test asserted the colon",
+      "live_check": "results-fix/evidence/bar2-after.png - 'לקוח' with no colon"
+    },
+    {
+      "item": "[C9]+[C10] hint contradicted the base / two wordings for one tile",
+      "files": ["src/lib/onboardingCopy.m11.hostesses.js"],
+      "what_changed": "reports.fairness.term.rank1 now agrees with the base (the system HAS started recording the recommended rank: assignments.recommended_rank exists at docs/schema.sql:1133 and is written by src/modules/04_hostesses/api.js RANK_COLUMN; what is missing is accumulated assignments). reports.hostessOverview.term.gini adopts m17's single wording, which also says why last year's value sits beside it.",
+      "test_added": "none added - the hostesses hint-id suites cover resolution and stay green (no key changed)",
+      "live_check": "not checked on screen: m2 hints render (hints=10 on m14) but I did not read the hint text out of a PNG"
+    }
+  ],
+  "assumed": [
+    {
+      "what": "A table column whose key ends in _id is an identifier and is rendered with FORMATTERS.id even when the RPC declares format:'int' (quote_id, project_id, customer_id, hostess_id). Suffix, not substring: 'paid_days' is untouched.",
+      "tag": "הנחתי",
+      "source_checked": "the live column declarations in supabase/migrations (…d2_rpcs_executive_fixes.sql:1280 quote_id int; FinanceTab fixtures project_id int). C8 gains format:'id' for future RPCs - the doc fixer writes that."
+    },
+    {
+      "what": "meta.customer_filter_ignored is read as === true, never as truthy.",
+      "tag": "נמדד (not assumed)",
+      "source_checked": "the flag is boolean true only on the four hostesses RPCs; the executive RPCs send false; the CUSTOMERS RPCs send a jsonb ARRAY of tile keys (…i2_rpc_round3.sql:3160) and m20 sends '[]'::jsonb - Boolean([]) is true, so a truthy read would have disabled the customer filter on m20 for no reason."
+    },
+    {
+      "what": "'The surface ignores the period' is read as window.from == null (or meta.period_filter_ignored present), NOT from a boolean named period_filter_ignored.",
+      "tag": "נמדד - contradicts the brief's premise",
+      "source_checked": "meta.period_filter_ignored exists in ONE function (report_m09_aging) and is an echo object jsonb_build_object('p_from',p_from,'p_to',p_to), not a boolean. m3/m4/m6 carry no such key; what they carry is 'from', null in the window block (…i2_rpc_round3.sql:609, …d2_rpcs_executive_fixes.sql:1217,1545). m22 carries neither - see not_done."
+    },
+    {
+      "what": "Period pills are disabled (not hidden) on a surface that ignores them, with the reason written beside them; same for the customer selector.",
+      "tag": "הכרעה שלי, הפיכה",
+      "source_checked": "same ruling as the masked tab (2 / 15-he) and FilterPill's own disabled+title contract. Consequence, stated: from such a surface the period cannot be changed until the reader moves to a surface that uses it."
+    }
+  ],
+  "gates": {
+    "vitest": "npx vitest run src/modules/11_reports src/lib/reports src/modules/09_settings => 723 passed | 1 failed (29 files), exit 1. The single failure is src/modules/11_reports/tabs/ExecutiveTab.test.jsx:775, a file OUTSIDE my set (see not_done). Everything I own is green.",
+    "e2e_reports": "npx playwright test --config=playwright.e2e.config.js e2e/reports.spec.js => 19 passed, exit 0 (log: scratchpad/e2e-reports2.log)",
+    "eslint": "exit 0 (src/modules/11_reports + reportsExport.js + reportsFormat.js + their tests + onboardingCopy.m11.hostesses.js)",
+    "prettier": "--check exit 0 on the same set",
+    "dup": "npm run dup exit 0 - total 1.01%, jsx 1.28% (cap 3%)",
+    "bidi": "npm run check:bidi exit 0",
+    "build": "npm run build exit 0 (the last build is what the preview on 5189 and the playwright preview served)",
+    "cr": "CR=0 on all 14 files touched (12 modified + 2 new test files)"
+  },
+  "not_done": [
+    {
+      "item": "[1] export caption file name broken across the bidi boundary",
+      "why": "NOT REPRODUCIBLE, and the proposed fix measured as a regression - so it was implemented, measured and reverted. The anomaly cites results/evidence/CEO-m2-exec-overview-export-caption-block.png as two lines with .xlsx at the left of line 2; in that exact PNG, and in the full page CEO-m2-exec-overview.png at 1280px, the caption is ONE line and .xlsx sits at its far left = the logical END of the name read right-to-left, which is correct for a Hebrew reader. Wrapping the name in <bdi dir=ltr> moved .xlsx to immediately after the word יירד, before the name. Side-by-side evidence: scratchpad/results-fix/evidence/bar2-before.png vs bar2-after.png (and caption-zoom-before.png vs caption-zoom.png). ExportBar is unchanged apart from a why-first comment; a new ExportBar.test.jsx now LOCKS the measured-correct rendering (exact caption text, no isolate characters, no bdi/dir node) so the non-fix cannot slip in later without a fresh measurement."
+    },
+    {
+      "item": "[28] m22 still prints a period it does not use",
+      "why": "The shell rule picks up any surface whose payload says window.from is null, and m22 is the only period-ignoring surface that does not: it computes v_from := coalesce(p_from, date_trunc('year', v_to)) and never uses it in a query - it only echoes it into the window. One-token RPC fix, outside my set: supabase/migrations/20260917005500_module11_j1_rpc_round4.sql:3486 ('from', v_from => 'from', null), or add meta.period_filter_ignored there. The moment it lands the shell fixes m22 with no further code change; v_from is computed at line 3177 of the same file."
+    },
+    {
+      "item": "[2] collateral - one tab test still asserts the grouped id",
+      "why": "src/modules/11_reports/tabs/ExecutiveTab.test.jsx:775 finds the m4 row by findAllByText(isolateLtr('1,907')); with the id formatter the cell now reads the isolated 1907. tabs/** is outside my set and I did not touch it. EXACT ONE-LINE PATCH: isolateLtr('1,907') => isolateLtr('1907'). Until it is applied, vitest on module 11 exits 1 with that single failure. FinanceTab.test.jsx declares project_id columns too but asserts no grouped text, so it stays green."
+    },
+    {
+      "item": "EMPTY_AFTER_FILTER wording when the emptying filter is a customer",
+      "why": "The state-2 sentence is 'אין נתונים בתקופה שנבחרה' (locked in components/reportsCopy.js) and it now appears for a CUSTOMER filter on m21 - see drifting-empty-after.png. m11-copy-rules 2.5 rules exactly this class under rule 17 ('אין שינויי-תכולה בתקופה שנבחרה' => 'ללקוח שנבחר'), so the fix has a written rule behind it, but it needs a second locked string plus a per-filter branch shared by 16 surfaces. Product wording is Ishay's ruling: reported, not changed."
+    }
+  ],
+  "not_verified": [
+    "[2] on m4 itself (quote_id): my dispatch was exec-overview+trends; I verified the identical mechanism on m9's project column instead, plus a unit test built on m4's own column declaration.",
+    "[C9]/[C10] as rendered text: the hostesses run shows hints=10 on m14, but I read the hint strings out of the source, not out of a PNG.",
+    "[8] with a customer actually selected on a hostesses surface: verified with no customer chosen (header has no customer clause, selector disabled). The 'picking a customer changes nothing' half is the flag+label chain, not a screenshot.",
+    "The error state on a hostesses surface WITH ?customer=: the flags exist only once a payload loads, so there the selector stays enabled and a chosen customer would still be echoed. Not exercised - see blind_spot.",
+    "npm run gate as a whole (knip, gitleaks, audit, check:context, check:docs-structure): I ran the gates my brief named plus build. The doc and rpc fixers are editing docs/ and supabase/migrations/ in parallel, so a full gate now would measure their tree, not mine.",
+    "e2e/accessibility.spec.js and the rest of the e2e suite: not run. The E2E agent's two uncommitted spec files were left exactly as they were."
+  ],
+  "blind_spot": "src/modules/11_reports/ReportsPage.jsx - readScope only ever fires from a payload that LOADED (ReportSurface calls onWindow after a successful callReport). So every filter guarantee added here is silent in the two states where no payload exists: loading and error. Concrete, checkable scenario: open /reports?tab=hostesses&report=hostess-overview&customer=414 with the RPC aborted (the evidence runner's --extras error does exactly this) and the customer selector is enabled with 'בטא הפקות' selected, on a surface whose RPC declares customer_filter_ignored: true. One runner call settles it true-or-false; the fix, if Ishay wants it, is a static per-surface declaration in reportsCatalog.js instead of a per-payload flag."
+}

@@ -442,6 +442,10 @@ async function listProjectAssignments(projectId) {
 // יצא, ודיווח "נכשל" היה גורם למנהלת לשלוח שוב — כלומר הדיילת מקבלת שני זימונים.
 const emptyOutcome = () => ({ sent: 0, unknown: 0, failed: 0 })
 
+// שם עמודת-דרג-השיבוץ במקום אחד: הוא מופיע גם בכתיבה וגם בזיהוי-הכשל שנסוג ממנה,
+// ושני עותקים היו מתפצלים בשקט ביום שהעמודה תשנה שם.
+const RANK_COLUMN = 'recommended_rank'
+
 // 🔴 **הליבה המשותפת ל"שלח את הקישור שוב" בשני המסכים** — הכפתור הצובר של מבט-העל,
 // והפריט בתפריט-השורה. `screens-approved` מסך 4 §➕ אומר במפורש שהן *"אותה פעולה בדיוק"*,
 // ושני עותקים היו מתפצלים בשקט ברגע שאחד מהם יתוקן.
@@ -573,7 +577,12 @@ export async function resendInvite(row, origin) {
 // במייל, ומייל הוא הבטחה"*. עדכון תעריף במאגר מחר אינו משנה זימון שכבר יצא.
 // ⚠️ **`event_date` אינו נכתב כאן** — טריגר `assignments_sync_event_date` ממלא אותו
 // מ-`projects.final_event_date` בכל insert, וכתיבה ידנית הייתה יכולה לסתור אותו.
-export async function createShiftInvites({ projectId, hostessIds, origin }) {
+// 🆕 **`ranks` — ארגומנט רביעי, אופציונלי** (מ11 צעד 1.5 · כרטיס ת5 · `db_roadmap` M11-4):
+// מפת `hostessId ← דרג-ההמלצה`. חסר ⇒ כל שורה נכתבת בלי העמודה, כלומר `NULL`. ⚠️ **כל
+// הקוראים הקיימים ממשיכים לעבוד ללא שינוי** — וזו הסיבה שהוא אופציונלי ולא חובה: זימון
+// שלא נולד ברשימת-ההמלצות (תפריט-השורה) **חייב** להישאר `NULL`, כי דוח 14א מודד אימוץ-
+// המלצה ורק היכן שהייתה המלצה.
+export async function createShiftInvites({ projectId, hostessIds, origin, ranks }) {
   if (!hostessIds?.length) return emptyOutcome()
 
   const nowIso = new Date().toISOString()
@@ -597,7 +606,14 @@ export async function createShiftInvites({ projectId, hostessIds, origin }) {
 
   const outcome = emptyOutcome()
   for (const hostess of hostesses ?? []) {
-    const inserted = await insertInviteRow({ project, hostess, nowIso })
+    const inserted = await insertInviteRow({
+      project,
+      hostess,
+      nowIso,
+      // ‏`?? null` ולא `?? undefined`: "אין דרג" הוא ערך מוצהר שעובר עד לכתיבה, ולא
+      // מפתח שנשמט בדרך בלי שאיש ישים לב.
+      rank: ranks?.[hostess.hostess_id] ?? null,
+    })
     if (!inserted) {
       outcome.failed += 1
       continue
@@ -616,7 +632,7 @@ export async function createShiftInvites({ projectId, hostessIds, origin }) {
 // `(project_id, hostess_id, assignment_number)` ⇒ שני כותבים שחישבו את אותו מספר —
 // **השני מקבל `23505` ונעצר בקול.** זה בדיוק מה שהופך את המרוץ ללא-מסוכן: אין דריסה
 // שקטה, ורק צריך לחשב מחדש ולנסות שוב. **פעם אחת** — כישלון שני אינו מרוץ אלא תקלה.
-async function insertInviteRow({ project, hostess, nowIso, attempt = 0 }) {
+async function insertInviteRow({ project, hostess, nowIso, rank = null, attempt = 0 }) {
   const { data: existing, error: readError } = await supabase
     .from('assignments')
     .select('project_id, hostess_id, assignment_number')
@@ -624,9 +640,8 @@ async function insertInviteRow({ project, hostess, nowIso, attempt = 0 }) {
     .eq('hostess_id', hostess.hostess_id)
   if (readError) return null
 
-  const { data, error } = await supabase
-    .from('assignments')
-    .insert({
+  const { data, error } = await insertWithRank(
+    {
       project_id: project.project_id,
       hostess_id: hostess.hostess_id,
       assignment_number: nextAssignmentNumber(
@@ -637,14 +652,62 @@ async function insertInviteRow({ project, hostess, nowIso, attempt = 0 }) {
       assignment_status: 'pending',
       hourly_rate_snapshot: hostess.hourly_rate,
       invite_sent_at: nowIso,
-    })
-    .select()
-    .maybeSingle()
+    },
+    rank,
+    hostess,
+  )
 
   if (error?.code === '23505' && attempt === 0) {
-    return insertInviteRow({ project, hostess, nowIso, attempt: 1 })
+    return insertInviteRow({ project, hostess, nowIso, rank, attempt: 1 })
   }
   return error ? null : data
+}
+
+// 🔴 **דרג-השיבוץ נכתב כאן ורק כאן — פעם אחת, על ה-insert** (מ11 צעד 1.5, כרטיס ת5).
+// 🚫 **ולא ב-`writeInviteToken`:** היא נתיב ה*שליחה-החוזרת*, ו-M11-4 עצמו אומר שהדרג
+// *"אינו נדרס בשליחה-חוזרת"* — כלומר כתיבה שם סותרת את הכלל. היא גם **מיובאת ע"י מודול 6**
+// (`06_projects/api.js` · `sendDateChangeReinvites`), שם אין דרג כלל.
+//
+// 🔑 **והעמודה אינפורמטיבית בלבד ⇒ כשל שלה לא ייקח איתו זימון** (ת5: *"הכתיבה נכשלת →
+// הזימון **לא** נכשל בגללה — נרשם `NULL` ו-`console.warn`"*). ⚠️ **וזה לא תיאורטי:** עד
+// שהמיגרציה של מ11 מוחלת, העמודה אינה קיימת ו-PostgREST מחזיר `PGRST204` על כל זימון.
+async function insertWithRank(row, rank, hostess) {
+  if (rank === null || rank === undefined) return writeAssignmentRow(row)
+
+  const attempted = await writeAssignmentRow({ ...row, [RANK_COLUMN]: rank })
+  if (!isRankWriteFailure(attempted.error)) return attempted
+
+  console.warn(
+    `דרג-השיבוץ לא נשמר לדיילת ${hostess.hostess_id} באירוע ${row.project_id} — הזימון נשלח, והדרג יישאר ריק.`,
+    attempted.error,
+  )
+  return writeAssignmentRow(row)
+}
+
+function writeAssignmentRow(row) {
+  return supabase.from('assignments').insert(row).select().maybeSingle()
+}
+
+// מאילו כשלים נסוגים — **ורק מהם**: `42703` = עמודה שאינה קיימת (Postgres) · `PGRST204` =
+// "העמודה אינה בקאש-הסכמה" (‏PostgREST — מה שמוחזר בפועל כל עוד המיגרציה טרם הוחלה) · וכל
+// כשל שנוקב בשם העמודה (הפרת-CHECK על טווח-הדרג).
+// 🚫 **`23505` מוחרג במפורש:** הוא מרוץ על המפתח המשולש ולא בעיית-דרג, ויש לו ניסיון-חוזר
+// משלו שחייב להישאר — נסיגה שהייתה בולעת אותו הייתה הופכת מרוץ שקוף לשורה שקטה בלי דרג.
+function isRankWriteFailure(error) {
+  if (!error || error.code === '23505') return false
+  if (error.code === '42703' || error.code === 'PGRST204') return true
+  return `${error.message ?? ''} ${error.details ?? ''}`.includes(RANK_COLUMN)
+}
+
+// 🔴 **הדרג = המיקום ב-`ranked` (סדר-הציון של המערכת), 1-based — ולא המיקום ברשימה
+// שעל המסך.** ‏`candidates` הוא `sortByAngle(ranked.filter(...))`, כלומר העדשה שהמנהלת
+// בחרה; דוח 14א שואל *"האם נלקחה ההמלצה מס' 1 של המערכת"*, ולכן מיון-תצוגה שהיה משנה
+// את המספר היה הופך את הדוח לחסר-פשר. **גר כאן ולא במסך** כי הוא מגדיר את צורת
+// הארגומנט `ranks` ש-`createShiftInvites` מקבלת — זהו חוזה של שכבת-הנתונים.
+export function buildRecommendedRanks(ranked) {
+  return Object.fromEntries(
+    (ranked ?? []).map((candidate, index) => [candidate.hostess_id, index + 1]),
+  )
 }
 
 // ---- אישור סופי, והשחרור שנוסע איתו ----
