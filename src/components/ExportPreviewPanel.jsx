@@ -7,6 +7,15 @@
 // 🔑 **`reports-export-file` נשאר ה-testid של הבטחת-השם** — הוא זז מתחת לכפתור לתוך החלון
 // (הכרעת-ישי 17/09/2026), אבל **החוזה לא השתנה**: `e2e/reports.spec.js` קורא ממנו את השם
 // המובטח ומשווה אותו בייט-בבייט לקובץ שנחת. ‏testid חדש היה הופך העברה למחיקה.
+//
+// 🔴 **גלילה אופקית עם פס נראה — הכרעת-ישי 17/09/2026:** *"וצריך אפשרות לזוז ימינה שמאלה
+// לראות את כל העמודות"*. ‏`overflow-auto` אכן גולל, **אבל בלי פס-גלילה נראה** — ולכן טבלה
+// שנחתכה נראית כטבלה שנגמרה. 📊 **נמדד 17/09:** 8 עמודות של גיול-חובות דורשות 565px והמכל
+// קיבל 551 ⇒ הערך בעמודה האחרונה נקרא **"0–61" במקום "31–60"**. 🔑 **ומספר שנחתך גרוע ממספר
+// שחסר — הוא נקרא כמספר.** ⇒ `overflow-x-scroll`, **פס קבוע גם כשהתוכן נכנס**, כי דוח עם
+// 15 עמודות יגלוש בכל רוחב והאפשרות לזוז צריכה להיראות תמיד ולא רק כשהיא כבר דחופה.
+// ♿ **ו-`tabIndex` + `role="region"` אינם קוסמטיקה:** אזור שניתן לגלול חייב להיות
+// מגיע-במקלדת, אחרת העמודות הנסתרות אינן נגישות למי שאינה משתמשת בעכבר.
 
 const HEAD_CELL = 'sticky top-0 bg-slate-50 px-2 py-1 text-right font-medium text-slate-600'
 const BODY_CELL = 'whitespace-nowrap border-t border-slate-200 px-2 py-1 text-right'
@@ -57,7 +66,12 @@ export default function ExportPreviewPanel({
       )}
 
       {!loading && !error && hasTable && (
-        <div className="max-h-64 overflow-auto rounded-md bg-white">
+        <div
+          className="max-h-64 overflow-x-scroll overflow-y-auto rounded-md bg-white"
+          tabIndex={0}
+          role="region"
+          aria-label="תצוגה מקדימה של הקובץ — ניתן לגלול הצידה לעמודות נוספות"
+        >
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr>

@@ -209,8 +209,17 @@ export default function ExportConfigPanel({
         </label>
       )}
 
+      {/*
+        🔴 **`min-w-0` על שני ה-labels, וזו מלכודת-flexbox שנמדדה ולא שוערה.**
+        ‏📊 נמדד 17/09/2026 ב-1024px: השורה `clientWidth` **178** · `scrollWidth` **282** ⇒
+        **גלישה של 104px**, ו-`export-to` יצא מהעמודה (left 461 מול גבול-שורה 565) ונחתך.
+        **הסיבה:** ‏`flex-1` הוא `flex: 1 1 0%` אבל **`min-width` נשאר `auto`** ⇒ הרוחב
+        המינימלי הוא הרוחב האינטרינזי של `<input type="date">` (‏137px כל אחד + 8px gap = 282).
+        **שני שדות-תאריך פשוט מסרבים להתכווץ.** ⇒ `min-w-0` מרשה להם.
+        ✅ פיזי-נייטרלי — אינו utility לוגית ואינו מפר את `src/CLAUDE.md §2.4`.
+      */}
       <div className="flex gap-2">
-        <label className="flex-1 text-xs text-slate-600">
+        <label className="min-w-0 flex-1 text-xs text-slate-600">
           מתאריך
           <Input
             type="date"
@@ -220,7 +229,7 @@ export default function ExportConfigPanel({
             data-testid="export-from"
           />
         </label>
-        <label className="flex-1 text-xs text-slate-600">
+        <label className="min-w-0 flex-1 text-xs text-slate-600">
           עד תאריך
           <Input
             type="date"

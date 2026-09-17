@@ -184,7 +184,26 @@ export default function ExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="max-w-5xl" data-testid="export-dialog">
+      {/*
+        🔴 **`sm:max-w-5xl` ולא `max-w-5xl`, וזה לא סגנון — `max-w-5xl` לבדו לא עשה דבר.**
+        ‏📊 נמדד 17/09/2026 בשלושה רוחבי-מסך (1024 · 1366 · 1920): החלון יצא **512px בכולם**,
+        ו-`getComputedStyle(...).maxWidth` החזיר `512px` — כלומר **גודל המסך לא שינה כלום.**
+        **הסיבה:** מחרוזת-הבסיס של `DialogContent` (`ui/dialog.jsx:46`) מסתיימת ב-`sm:max-w-lg`
+        (‏32rem = 512px). ‏Tailwind פולט וריאנטים-רספונסיביים **אחרי** ה-utilities הבסיסיות,
+        ולכן מעל 640px הוריאנט גובר על `max-w-5xl` — ו-`cn()`/`tailwind-merge` **אינו מאחד
+        ביניהם**, כי אלה שתי תכונות שונות (עם וריאנט ובלי). ⇒ הכיתוב שלנו נדרס בשקט.
+        🔑 **מתקנים בוריאנט תואם**, כדי שהתיקון לא יידרס באותו אופן.
+        ⚠️ **התוצאה שנמדדה קודם:** תצוגה-מקדימה 268px · טבלה 565px ⇒ **2 מתוך 8 עמודות נראות.**
+        *(שאלת-ישי שחשפה זאת: "רק 3 נכנסו? דמיין מסך 15.6 אינטש לפחות".)*
+      */}
+      {/*
+        ⚠️ **ולמה `7xl` (1280px) ולא `5xl` (1024):** אחרי התיקון לעיל החלון הגיע ל-1024
+        **בכל** רוחב-מסך, ו-📊 נמדד ש-8 העמודות של גיול-חובות דורשות 565px מול 551 שקיבלו
+        ⇒ **העמודה השמינית נחתכה באמצע ערך** (*"0–61"* במקום *"31–60"*). **שאלת-ישי:
+        *"דמיין מסך 15.6 אינטש לפחות"*** — ובצדק: מסך 1366 או 1920 שילם על רוחב ולא קיבל אותו.
+        🔑 **ו-`max-w-[calc(100%-2rem)]` של הבסיס נשאר בתוקף**, ולכן במסך צר החלון מצטמצם לבד.
+      */}
+      <DialogContent dir="rtl" className="sm:max-w-7xl" data-testid="export-dialog">
         <DialogHeader>
           <DialogTitle className="text-base">{title}</DialogTitle>
           <DialogDescription className="text-xs text-slate-500">
