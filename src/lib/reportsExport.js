@@ -150,7 +150,11 @@ function numericCell(value, format) {
  */
 const BIDI_CONTROLS = /[‎‏؜⁦-⁩‪-‮]/g
 
-const stripBidiControls = (text) => text.replace(BIDI_CONTROLS, '')
+// 🔑 **מיוצא — ולא מועתק — כי מנוע-הסינון חייב להשוות על אותו טקסט בדיוק** (`exportFilters.js`).
+// ‏why: ערך שנושא תו-בידוד בלתי-נראה נראה על המסך זהה לחלוטין, אבל `'עמק חפר' === '⁦עמק חפר⁩'`
+// הוא `false`. מסנן שמשווה על הגולמי היה מחזיר *"אין שורות"* על חיפוש שהמשתמשת רואה בעיניה
+// שהוא תואם — **כשל שקט מושלם**. עותק שני של הביטוי היה נפרד ביום שהרשימה תתעדכן.
+export const stripBidiControls = (text) => text.replace(BIDI_CONTROLS, '')
 
 function cellFor(value, format) {
   switch (format) {
