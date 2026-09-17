@@ -1,0 +1,388 @@
+{
+ "f2_state": {
+  "registry_rows": [
+   "module11_f2_hostesses_m17 (20260916040735)",
+   "module11_f2_hostesses_m16 (20260916040925)",
+   "module11_f2_hostesses_m15 (20260916041215)",
+   "module11_f2_hostesses_m14 (20260916041541)",
+   "module11_f2_hostesses_m15_fix (20260916042105)",
+   "module11_f2_hostesses_m14_winlabel (20260916042649)",
+   "module11_f2_hostesses_m17_winlabel (20260916042928)"
+  ],
+  "registry_reverified_by": "select version,name from supabase_migrations.schema_migrations where name like '%module11%' - all 7 rows present, re-checked this turn (16/09 08:2X)",
+  "md5_match": "4/4",
+  "md5_evidence": "file 20260916065642_module11_f2_rpcs_hostesses_fixes.sql (107,587 bytes, CR=0) vs select md5(prosrc), length(prosrc) from pg_proc: m14 f83581cb01fd2bdde5e5203759e2ab0f/27766 - m15 80be2d9e.../27450 - m16 f0603ab0.../12303 - m17 0ad0fbbc.../23704. All four identical, so the F2 file (winlabel fixes included) IS the live body.",
+  "permission_matrix": "CEO 200 - RECRUIT 200 - FINANCE 42501 - STAFF 42501, on all four RPCs (signed-in Node script reading .env.local, deleted after use, no credential printed)",
+  "pg_proc_report_m1_count": 6,
+  "pg_proc_report_m1_names": [
+   "report_m12_equipment",
+   "report_m14_hostess_overview",
+   "report_m15_reliability",
+   "report_m16_quality_cost",
+   "report_m17_fairness",
+   "report_m19_customers_overview"
+  ],
+  "function_comments": "all four carry a comment on function declaring the population (read verbatim this turn via obj_description)"
+ },
+ "per_finding": [
+  {
+   "id": "F1 - blocker - report_m17_fairness never compiled",
+   "fix_present": "yes - position(\"h.full_name), '[]'::jsonb) j\") in live prosrc = 12136; position(\"'drill', null\") = 21505; position(\"'kind', 'hostess'\") = 10305",
+   "reverified_by": "Live CEO call report_m17_fairness({}) returns 200 with 6 tiles / 106 rows / 107 Lorenz vertices. Every C8 number re-derived from my OWN SQL against the function's own definition: gini 0.458145, n=106, total=1869, shift_stats max 49 / mean 17.6 / median 13.5, shares 27=55.8% / 53=16.3% / 11=26.4%, Lorenz[1]=(0.9434,0.0535); speed area 2,479 invited / 2,296 answered / 183 unanswered / 92.6% / median 9.9h / p90 20.7h - all exact matches to the payload. adoption tile value=null with the explicit absence sentence (never 0%); drill=null; drill_key {kind:'hostess',id} on all 106 rows; tiles[].sub on all 6 tiles.",
+   "result": "PASS (with a stated digit drift)",
+   "note": "The task's expected digits (gini 0.4559 - 55.3/16.2/26.0 - max 48) are the 10/09/2026 signoff baseline. The rolling 12-month window anchored on Israel-today is now (2025-09-16, 2026-09-16], and on THAT window the same definitions give 0.4581 - 55.8/16.3/26.4 - max 49. 9.9 / 20.7 / 92.6% match the baseline exactly. Six days of rolling window - the same 26-22 class as F4, and I established it from my own queries rather than by trusting the RPC."
+  },
+  {
+   "id": "F2 - blocker - m14 red-queue tile window",
+   "fix_present": "yes - position('v_frz_from') = 1635 and position('chalon kafu label') = 21053 in live m14 prosrc",
+   "reverified_by": "Four live CEO calls: {} / {p_from:null,p_to:null} / {p_to:'2026-08-16'} / {p_from:'2026-08-01',p_to:'2026-08-31'}. red_hostesses tile = 6 in ALL FOUR, identical sub ('6 of 87 hostesses with 3+ shifts - 5 amber - 6 of the reds active'), label 'frozen window - 12 months' in all four, and it equals report_m15_reliability's own frozen population (87 hostesses / 6 red / 5 amber). meta.notes[0] states the tile ignores the period filter and that the other tiles do move. meta.frozen_window={from:2025-09-16,to:2026-09-16}. The other m14 tiles DO move with the caller window (on_time 87.2 -> 89.3, gini 0.4581 -> 0.2569).",
+   "result": "PASS"
+  },
+  {
+   "id": "F3 - blocker - m16 scatter series",
+   "fix_present": "yes - position(\"'key', 'rating'\") = 8899, position(\"'xKey', 'hourly_rate'\") = 8989",
+   "reverified_by": "Live m16 chart = {type:'scatter', xKey:'hourly_rate', domain:[1,5], series:[{key:'hourly_rate',label:'rate'},{key:'rating',label:'rating'}]}, 50 data points. Matches ScatterBody (ChartCard.jsx:283-297), which binds XAxis dataKey={xKey} name={series[0].label} and YAxis dataKey={series[1].key} domain={domain}. refLines carry median rate 43.27 and median rating 4.",
+   "result": "PASS at the producer+consumer code-contract level. NOT verified in a browser render - no UI run; HostessesTab.jsx was being written in parallel."
+  },
+  {
+   "id": "F4 - major - m15 drift (no code change, by ruling)",
+   "fix_present": "n/a by ruling",
+   "reverified_by": "My own query rebuilding attendanceCounts word-for-word over (2025-09-16, 2026-09-16] returns obs=1699 / on_time=1482 (87.2%) / late=167 / ghosted=43 / 98 hostesses / C=0.958358 - every one an exact match to the live payload, including meta.company_average=0.958358. Live m15: flagged=11 (6 red, 5 amber of 87), population n=87 / 1683 shifts / 11 excluded (16 shifts), chart Wednesday 3.4.",
+   "result": "PASS - the live values ARE the card's definition applied to today's data. The card's 10/09 digits (6/4/87, 13 below, 18 of 1712, C=0.958815) are the same formula six days earlier."
+  },
+  {
+   "id": "F5 - major - ruling 37 by-rating no-show rates",
+   "fix_present": "yes - position('no_show_by_rating') = 18349 and position('extra_tables') = 26279 in live m15 prosrc",
+   "reverified_by": "I re-derived all six from my OWN SQL using the function's two definitions (12m = ghosted-only over the frozen attendance population; ever = all no_show reasons over all marked history): rating 5 -> 0.6 / 1.2 (n 541 / 1233); rating 4 -> 2.8 / 4.9 (565 / 1192); rating 3 -> 6.6 / 14.6 (137 / 281). Payload meta.no_show_by_rating = {months12:{3:6.6,4:2.8,5:0.6}, ever:{3:14.6,4:4.9,5:1.2}} - exact. meta.extra_tables[0] = title 'no-show by rating', columns rating / 12 months / ever, 4 rows (the unrated band 3.3/8.4 is in the table only, not in the object - as the migration comment states).",
+   "result": "PASS - with one digit drift to state: the card baseline is 6.5/2.8/0.5 for the 12m column; today's frozen window gives 6.6/2.8/0.6. The 'ever' column (14.6/4.9/1.2) has no window and matches the baseline exactly, which is itself the proof that the 12m delta is window drift and not a formula change."
+  },
+  {
+   "id": "F6 - major - m16 returned 17 rows of 50",
+   "fix_present": "yes - position('no_rating_count') = 11947. NOTE: position(\"filter (where h.rating is null)\") = 4506 is a HIT, but I read the site: both occurrences are Hebrew comments documenting the removal (file lines 1181-1184). The live rows aggregate is 'order by coalesce(w.shifts,0) desc, h.full_name' with no filter.",
+   "reverified_by": "Live m16: rows.length=50, exactly 17 with rating:null, sorted shifts descending 49,48,47...0 (monotonicity verified in Python), which is 26-7 per card 3 m16 ('table - 8 of 17, sorted by shifts descending'); meta.default_filter='no_rating', meta.no_rating_count=17, meta.row_total=50, meta.sort={key:'shifts',direction:'descending'}.",
+   "result": "PASS"
+  },
+  {
+   "id": "F7 - major - WEEKDAY_NAMES_HE not exported",
+   "fix_present": "not mine - owned by the tab builder",
+   "reverified_by": "CLOSED THIS TURN by the parallel tab builder, verified from disk: src/lib/dates.js:100 now reads 'export const WEEKDAY_NAMES_HE', and two consumers import it (src/modules/11_reports/tabs/hostesses/payloadTransforms.jsx:11 and tabs/HostessesTab.jsx:19). Live m15 chart still returns xKey:'dow' with numeric 0..5 (Saturday absent - no marked shifts) and label_source:'WEEKDAY_NAMES_HE'.",
+   "result": "PASS (closed by another agent; verified from disk this turn, not inherited)"
+  },
+  {
+   "id": "minor - m14 definitions printed a third company average",
+   "fix_present": "yes - m14 now computes C on the frozen window (v_c_frozen)",
+   "reverified_by": "Live m14 definitions string says 'from the company average (0.958358) - i.e. below 0.833771', and meta.company_average=0.958358 - byte-identical to m15's meta.company_average and to my own independent avg(val)=0.958358. The three-different-values symptom is gone.",
+   "result": "PASS"
+  },
+  {
+   "id": "minor - population-sentence exclusions must count past events only",
+   "fix_present": "yes - position('event_date <= v_today') = 8892 in live m14 prosrc",
+   "reverified_by": "MEASURED, not merely read. With the default window the guard is a no-op (v_to == v_today), so I called m14 with p_from='2025-09-16', p_to='2027-09-16'. 'unanswered invites' stayed 176 and 'attendance not yet marked' stayed 107 - future pendings and future unmarked shifts are NOT counted as exclusions - while 'refusals' rose 343 -> 409, exactly as the migration's own comment declares ('refusals stay as they are - not ruled, and reported'). Default-window counts 72/343/176/107 all match my own query.",
+   "result": "PASS"
+  },
+  {
+   "id": "minor - meta shape uneven (m15 had no drill_echo)",
+   "fix_present": "yes - position('drill_echo') in live m15 prosrc = 27422",
+   "reverified_by": "All four return meta.drill_echo and meta.customer_filter_ignored:true. Echo works: m17 with p_drill {kind:'hostess',id:1} returns meta.drill_echo={kind:'hostess',id:1} with drill:null; m15 with p_drill {dow:3} returns drill_echo={dow:3} AND meta.selected_dow=3. All four also carry meta.sort (the 26-9 reader), measured_at, missing_params:[], frozen_count, notes, run.",
+   "result": "PASS"
+  },
+  {
+   "id": "minor - 0.4329 previous-window Gini (record fix, no code)",
+   "fix_present": "recorded in the F2 file header, lines 78-88",
+   "reverified_by": "Read the header in full this turn: it states the 06/09 window (2024-09-06, 2025-09-06] -> n=95 / 1,455 / 0.4329 and the card's 10/09 re-measure -> 95 / 1,446 / 0.4299. Live m17 meta.previous today = {n:97, shifts:1457, gini:0.4383} on (2024-09-16, 2025-09-16] - a third day, same definition.",
+   "result": "PASS (record) - but the 06/09 arithmetic is inherited from the verifier, not re-measured by me. Listed in not_verified."
+  },
+  {
+   "id": "minor - overviewHasGap identity conflict (m14 'events with a gap')",
+   "fix_present": "n/a - product question, not a code defect",
+   "reverified_by": "Live tile = 4 of 23 events / 14 places / 6 pending invites, window 'next 30 days', compare 'days 31-60' = 2. The card's own formula is what is implemented (C2).",
+   "result": "OPEN - carried forward unchanged; needs Ishay's ruling (the card also claims identity with src/lib/projects.js:203 overviewHasGap, a strictly wider predicate)"
+  }
+ ],
+ "winlabel_audit": [
+  {
+   "rpc": "m14",
+   "tile": "on_time",
+   "default_value": "87.2%",
+   "month_value": "89.3%",
+   "label": "'last 12 months' -> '01/08/2026-31/08/2026'",
+   "verdict": "PASS - value moves, label moves with it"
+  },
+  {
+   "rpc": "m14",
+   "tile": "red_hostesses",
+   "default_value": "6",
+   "month_value": "6",
+   "label": "'frozen window - 12 months' in both",
+   "verdict": "PASS - value frozen, label frozen; identical also with p_to='2026-08-16' and with p_from/p_to null"
+  },
+  {
+   "rpc": "m14",
+   "tile": "gini",
+   "default_value": "0.4581 (sub 55.8% / 16.3%)",
+   "month_value": "0.2569 (sub 42.9% / 30.8%)",
+   "label": "'last 12 months' -> '01/08/2026-31/08/2026'",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m14",
+   "tile": "active_hostesses",
+   "default_value": "50",
+   "month_value": "50",
+   "label": "'as of 16/09/2026' in both",
+   "verdict": "PASS - as-of-today tile, value static, label static. Observation only: its sub carries a window-scoped clause ('106 worked in the window' -> '34 worked in the window') that DOES move while the tile label says 'as of'. Honest (the word 'window' points at the page's period chip), but it is the one place in the tab where a tile's sub and its window label describe different windows."
+  },
+  {
+   "rpc": "m14",
+   "tile": "gap_events",
+   "default_value": "4",
+   "month_value": "4",
+   "label": "'next 30 days' in both",
+   "verdict": "PASS - forward-looking tile, immune to the period filter by design"
+  },
+  {
+   "rpc": "m15",
+   "tile": "on_time",
+   "default_value": "87.2%",
+   "month_value": "87.2%",
+   "label": "'frozen window - 12 months' in both",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m15",
+   "tile": "late",
+   "default_value": "9.8%",
+   "month_value": "9.8%",
+   "label": "'frozen window - 12 months' in both",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m15",
+   "tile": "no_show",
+   "default_value": "2.5%",
+   "month_value": "2.5%",
+   "label": "'frozen window - 12 months' in both",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m15",
+   "tile": "flagged",
+   "default_value": "11",
+   "month_value": "11",
+   "label": "'frozen window - 12 months' in both",
+   "verdict": "PASS - m15 is frozen end to end: every tile, the payload.window object AND its label ('frozen window - the last 12 months') stay put under the month preset. This answers the task's open question: m15 WAS already consistent and needed no winlabel fix; only m14 and m17 did."
+  },
+  {
+   "rpc": "m17",
+   "tile": "gini",
+   "default_value": "0.4581",
+   "month_value": "0.2569",
+   "label": "'last 12 months' -> '01/08/2026-31/08/2026'",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m17",
+   "tile": "top_quarter",
+   "default_value": "55.8% (27 of 106)",
+   "month_value": "42.9% (9 of 34)",
+   "label": "follows the window",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m17",
+   "tile": "rank1_adoption",
+   "default_value": "null",
+   "month_value": "null",
+   "label": "'not yet measured' in both",
+   "verdict": "PASS - declared absence, never 0%, in both windows"
+  },
+  {
+   "rpc": "m17",
+   "tile": "median_response",
+   "default_value": "9.9",
+   "month_value": "10.6",
+   "label": "follows the window",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m17",
+   "tile": "p90_response",
+   "default_value": "20.7",
+   "month_value": "21.4",
+   "label": "follows the window",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "m17",
+   "tile": "response_rate",
+   "default_value": "92.6%",
+   "month_value": "99%",
+   "label": "follows the window",
+   "verdict": "PASS"
+  },
+  {
+   "rpc": "ALL",
+   "tile": "payload.window + so_what + definitions + population",
+   "default_value": "-",
+   "month_value": "-",
+   "label": "-",
+   "verdict": "PASS - m17's so_what restates the moved numbers (27/55.8% -> 9/42.9%); m14's so_what quotes the FROZEN queue (6 red) in both windows, which is correct because the tile it describes is frozen and its label says so."
+  }
+ ],
+ "m17_live": {
+  "window": "(2025-09-16, 2026-09-16] - label 'last 12 months (16/09/2025-16/09/2026)'",
+  "gini": 0.4581,
+  "gini_independently_derived": 0.458145,
+  "shares": {
+   "top_quarter": "55.8% (27 of 106)",
+   "bottom_half": "16.3% (53)",
+   "top_decile": "26.4% (11)"
+  },
+  "shift_stats": {
+   "max": 49,
+   "median": 13.5,
+   "mean": 17.6
+  },
+  "response": {
+   "median_h": 9.9,
+   "p90_h": 20.7,
+   "rate_pct": 92.6,
+   "answered": 2296,
+   "invited": 2479,
+   "unanswered": 183
+  },
+  "lorenz_vertices": 107,
+  "lorenz_first": {
+   "x": 0.9434,
+   "y": 0.0535
+  },
+  "rank1_adoption": {
+   "value": null,
+   "window": "not yet measured",
+   "sub": "declared absence sentence, shows a dash and never 0%"
+  },
+  "drill": null,
+  "drill_key": "{kind:'hostess', id} on all 106 rows",
+  "rows": 106,
+  "tiles": 6,
+  "tiles_with_sub": 6,
+  "meta": {
+   "previous": {
+    "n": 97,
+    "shifts": 1457,
+    "gini": 0.4383
+   },
+   "top_decile_pct": 26.4,
+   "extra_tables": "1 - 'the slowest responders', 94 rows",
+   "sort": {
+    "key": "shifts",
+    "direction": "descending"
+   },
+   "customer_filter_ignored": true,
+   "drill_echo": null,
+   "missing_params": []
+  },
+  "population": "n=106 hostesses, 1,869 shifts - 80 excluded - the speed area declares its own separate n=2,479"
+ },
+ "f3": null,
+ "f3_reason": "No mechanism inside my write scope is measured broken. Every number in all four payloads was re-derived independently from its own definition and matched exactly (m14 1699/1482/87.2/167/43/98/C=0.958358; m14 exclusions 72/343/176/107 plus the future-window probe; m15's six by-rating rates; m17's gini/shares/shift_stats/Lorenz/response times). The three real defects I DID measure are in defects_found_outside_f3_gate: two are module-wide and one is a shared-component contract whose correct fix is a single line outside my write scope. Patching only the hostesses RPCs would leave the identical break in the finance tab and would declare the same state in two places.",
+ "defects_found_outside_f3_gate": [
+  {
+   "id": "D1 - measured in real Chromium - 'n=<isolate>N</isolate>' renders as 'N=n'",
+   "severity": "cosmetic but real, and module-wide",
+   "evidence": "I served a probe page over http (dir=rtl, Arial) and read each character's visual left offset via Range.getBoundingClientRect, then sorted by position. The BARE form renders correctly: 'n=1699 shibutzim' - the reader sees 'n=1699'. The ISOLATE-WRAPPED form does not: 'n=U+2066 106 U+2069 dayalot' - the reader sees '106=n'. Cause: the '=' sits OUTSIDE the isolate, between an L character and a neutral isolate object, so it resolves to the RTL paragraph level and is placed to the LEFT of the 'n'.",
+   "where": "m17 population.label and m17 tiles[0].compare.label ('n=97 vs n=106 today') - and the SAME pattern, outside my scope, in report_m07_finance_overview, report_m08_profitability (also '(11)'), report_m09_aging and report_m12_equipment population labels.",
+   "fix": "put the '=' inside the isolate: chr(8294) || 'n=' || value || chr(8297). One token per site, 6 functions across two tabs - it needs one owner, not two partial migrations."
+  },
+  {
+   "id": "D2 - meta.extra_tables[].sort is read by nobody, so no aria-sort on any extra table (26-9)",
+   "severity": "accessibility - live producer/consumer mismatch",
+   "evidence": "ReportSurface.jsx ExtraTable passes sort={sortFromColumns(table.columns)} ONLY, unlike the main table which is sort={payload.meta?.sort ?? sortFromColumns(payload.columns)}. m15's and m17's extra tables supply table.sort (a key nothing reads) and their columns carry no 'sorted' flag, so ReportTable's HeaderCell (line 45) computes sorted=undefined and emits no aria-sort on any th. Not a crash - a silently missing WCAG H63 attribute on exactly the surface 26-9 was written for. Affects m12 (finance) as well.",
+   "fix": "one line in src/modules/11_reports/components/ReportSurface.jsx: sort={table.sort ?? sortFromColumns(table.columns)}. Strictly better than adding columns[].sorted in SQL, which would declare the sort twice.",
+   "scope": "NOT in my write scope - the reports foundation / tab builder owns ReportSurface.jsx."
+  },
+  {
+   "id": "D3 - thousands separators are inconsistent inside one tab",
+   "severity": "style - no rendering defect",
+   "evidence": "Scan of all four payloads for 4+ digit runs outside dates: m14 carries '1482 of 1699 shifts' and 'n=1699'; m15 carries '1482 of 1699' and 'n=1683'; m16 none; m17 uses separators everywhere ('2,296', '2,479', '1,869', '1,940'). The finance tab already treated this class as worth its own migration (module11_e2c_finance_m12_population_separators). The bidi probe showed the bare form renders CORRECTLY, so this is consistency, not corruption - reported and deliberately not fixed under the 'never for taste' gate."
+  },
+  {
+   "id": "D4 - npm run check:bidi is RED, and it is not the hostesses tab",
+   "severity": "blocks npm run gate",
+   "evidence": "npm run check:bidi exits 1 on src/lib/reportsCustomers.js:98 - 'days > 1.5x0' inside a Hebrew comment, a digit glued to the multiplication sign with no isolation. Proven pre-existing and not mine: I stashed src/lib/reportsHostesses.test.js with git stash push -u, re-ran check:bidi, got the identical single finding, then popped the stash and verified the working tree was unchanged.",
+   "scope": "src/lib/reportsCustomers.js - the customers agent's file."
+  }
+ ],
+ "payload_changes": [],
+ "tests": {
+  "file": "src/lib/reportsHostesses.test.js (untracked, 375 lines, CR=0)",
+  "before": "37 tests - eslint RED: 'responsivenessScore' is defined but never used (no-unused-vars), the interrupted fixer's dangling import",
+  "after": "44 tests - eslint exit 0 - prettier exit 0 - CR=0 (perl)",
+  "six_required": [
+   {
+    "test": "AMBER boundary (score == amber => not amber)",
+    "state": "already present, kept"
+   },
+   {
+    "test": "topDecileShare on n=106 => 26.0%",
+    "state": "already present, kept"
+   },
+   {
+    "test": "Lorenz first vertex on a 106-point live fixture",
+    "state": "already present, kept - SHIFT_COUNTS_2026_09_10, dated in the comment, n=106 / 1,862"
+   },
+   {
+    "test": "hostessReliabilityScore delegates to responsivenessScore (spy)",
+    "state": "ADDED - 2 tests. This is the one that finished the dangling import. Asserts toHaveBeenCalledTimes(1) and the exact argument mapping ({answered: count, confirmed: total}), which is the non-obvious half: responsivenessScore computes (confirmed + m*C)/(answered + m), so count is the DENOMINATOR; swapping the two yields 1.29 instead of 0.759. The second test asserts the mock is NOT called at all when C, m or count is missing."
+   },
+   {
+    "test": "reliabilityParamOrderNote attribution with order asserted",
+    "state": "ADDED - 2 tests. The existing test only did toContain on each of the four strings separately, which cannot tell the sentence from its inverse. The new test pins the pairing ('red coefficient (0.95)' / 'amber coefficient (0.87)') and the order via indexOf, plus the params-correct case (0.87 red, 0.95 amber) => null."
+   },
+   {
+    "test": "medianOf with null / NaN",
+    "state": "ADDED - 3 tests. null, NaN, '', '  ' and undefined all fall out of the series; an all-missing series => null not 0; and the zero-mutant's answer (42 on [41,null,43,47]) is asserted against explicitly."
+   }
+  ],
+  "mutation_probes": [
+   {
+    "mutant": "replace 'return responsivenessScore({answered, confirmed}, average, damping)' with the inlined formula '(confirmed + damping*average)/(answered + damping)' - the exact duplication iron rule 14 forbids",
+    "result": "1 failed | 43 passed - ONLY the new delegation test went red, proving all 43 number-based tests are blind to it"
+   },
+   {
+    "mutant": "swap ${red}/${amber} inside the reliabilityParamOrderNote template",
+    "result": "1 failed | 43 passed - only the new attribution test went red"
+   },
+   {
+    "mutant": "drop the null guard in sortedCounts (if (parsed === null || parsed < 0) -> if (parsed < 0)), so null sorts as 0",
+    "result": "2 failed | 42 passed - only the two new medianOf tests went red; the Gini/Lorenz/concentration suites never noticed, because none of their fixtures contains a null"
+   },
+   {
+    "restore": "copied back, vitest exit 0 (44 passed), and 'git diff --stat -- src/lib/reportsHostesses.js' is empty => the lib file is byte-identical to HEAD. I changed only the .test.js."
+   }
+  ],
+  "gates": {
+   "npx vitest run reportsHostesses + reportsExecutive + reportsCustomers": "exit 0 - 3 files / 104 tests",
+   "full npx vitest run (regression)": "exit 0 - 109 files / 2,695 tests",
+   "npx eslint on both lib files": "exit 0",
+   "npx prettier --check on both lib files": "exit 0",
+   "CR count (perl)": "reportsHostesses.js 0 - reportsHostesses.test.js 0",
+   "npm run check:bidi": "exit 1 - pre-existing on src/lib/reportsCustomers.js:98, proven not mine by the stash test (D4)"
+  }
+ },
+ "not_verified": [
+  "No browser render of any hostesses surface. F3's scatter, F6's 50 rows and both extra tables are verified at the producer+consumer CODE contract only - HostessesTab.jsx was being written by the parallel builder throughout this turn (src/modules/11_reports/tabs/hostesses/ appeared mid-session).",
+  "The 06/09/2026 Gini anchor (n=95 / 1,455 / 0.4329). I read the verifier's arithmetic and the F2 header and did NOT re-run that window myself. The previous-window value I DID see live is meta.previous = {n:97, shifts:1457, gini:0.4383}.",
+  "m14's chart (12 monthly points) and m15's by-dow chart were read but their per-bucket rates were not independently re-derived - only the tab-level totals were.",
+  "meta.cheap_top_rated / rate_by_rating / median_rate_all in m16, and meta.response_median_by_rating plus the 94-row speed table in m17, were shape-checked but their values were not re-derived.",
+  "Whether the tab builder's HostessesTab.jsx consumes meta.no_show_by_rating or meta.extra_tables (or both) - it is being written in parallel and I did not read its final state.",
+  "The D1 bidi rendering was measured in Chromium with Arial on a bare dir=rtl page, not inside the app's own typography and CSS. The bidi algorithm is font-independent so the conclusion should hold, but I did not reproduce it inside ReportSurface.",
+  "pg_get_functiondef was not diffed against the file's full CREATE statement - I compared md5(prosrc) of the bodies only, so signature, volatility and grants are unverified for F2."
+ ],
+ "blind_spot": "m17's least(v_to, v_today) clamp versus m14's gini, on a future window - a divergence whose shape I found but did not close. m17's fairness CTE clamps its upper bound ('a.event_date > v_prev_from and a.event_date <= least(v_to, v_today)', F2 file line 1425) while m14's gini block at file lines 400-408 is the twin that feeds the SAME number into m14's gini tile. I verified the two agree on the default window and on the August preset (both 0.4581, both 0.2569) - but I never called either with a p_to in the future, so I do not know whether m14's gini clamps too. THE CHECKABLE SCENARIO: call report_m14_hostess_overview({p_from:'2025-09-16', p_to:'2027-09-16'}) and report_m17_fairness with the same arguments and compare tiles[key='gini'].value between them. If they differ, m14's overview tile and the page its own ruling-33 target opens are quoting two different Gini numbers for one window - the identical failure shape as F2's red-queue, one tile over. This is not hypothetical: I proved the future window is reachable and does change behaviour, because on exactly that call m14's 'refusals' exclusion went 343 -> 409. A cheaper second check on the same file: grep -n 'least(v_to, v_today)' supabase/migrations/20260916065642_module11_f2_rpcs_hostesses_fixes.sql and confirm whether the m14 block near line 408 carries the clamp that the m17 block at line 1425 carries.",
+ "assumed": [
+  "That md5(prosrc) == the file's $function$ body is sufficient proof that the seven-row registry split applied the file and nothing else. I checked the hash, the byte length and the registry names, but did not diff pg_get_functiondef against the file's full CREATE statement.",
+  "That 26-7 for m16 means 'shifts descending' - taken from card 3 m16 ('table - 8 of 17, sorted by shifts descending'), which I read in full this turn, rather than from 26-7's own wording alone ('sort by the displayed metric'), under which one could argue m16's displayed metric is the rate/rating pair.",
+  "That FINANCE and STAFF returning 42501 on all four is the complete permission story. I did not test PROJECTS or LOGISTICS identities, and did not test a user holding 'hostesses' view-only rather than edit."
+ ]
+}

@@ -9,7 +9,38 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
--- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 08/09/2026 22:5X** (מצב-הטמעה, מיגרציה `20260908221959_onboarding_mode`:
+-- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 16/09/2026 19:4X** (מודול 11, פזה 4 — **הריענון-במקום השני**,
+--    זה שצעד 1.1 הזמין לעצמו: "הסנפשוט הזה טעון ריענון-במקום נוסף אחרי שמיגרציות A–G ינחתו".
+--    **גם הפעם במקום ולא מחדש** — הקובץ הוא סנפשוט מוער, וייצור-מחדש גורף היה מוחק את ההערות.
+--    **מה נוסף, כולו נמדד מול `pg_catalog`/`information_schema` ב-16/09/2026 19:4X ולא נקרא מקובצי-המיגרציה:**
+--    ① **שתי טבלאות חדשות** — `feedback_ai_runs` (סעיף 34) ו-`feedback_ai_insights` (סעיף 35), כל אחת
+--      עם RLS דלוק ומדיניות-קריאה אחת גדורה על 'דו"חות' · ② **עמודה חדשה** `assignments.recommended_rank`
+--      + האילוץ וההערה שלה (סעיף 18) · ③ **17 פונקציות חדשות** — 16 דוחות + `approve_feedback_ai_run` —
+--      בבלוק חדש בסעיף 24, **וכותרת הסעיף 50 ⇒ 67** · ④ **7 אינדקסים חדשים** (4 על `feedback_ai_runs`
+--      כולל האינדקס החלקי של H1, ו-3 על `feedback_ai_insights`) · ⑤ **טריגר חדש** `feedback_ai_runs_set_updated_at`
+--      ⇒ 28 ⇒ 29 · ⑥ **2 מדיניות חדשות** ⇒ 63 ⇒ 65 · ⑦ **פסקת `bak_*` בסוף הכותרת עודכנה** — היא תיארה
+--      את המצב **לפני** מיגרציה H0, שהוחלה באותו יום ב-04:5X וסגרה בדיוק את החשיפה שהיא מתארת ·
+--      ⑧ ארבע שורות `params` חדשות (נתונים, לא DDL) — ר' סעיף 12.
+--    **הספירות החיות:** 38 טבלאות-בסיס · 67 פונקציות · 65 מדיניות (53 ב-`public`, 12 על `storage.objects`) ·
+--    77 אינדקסים · 29 טריגרים. **השאילתה שמחזירה את חמשתן בשורה אחת יושבת בסעיף 24, מעל ספירת-הפונקציות** —
+--    כדי שהמספר הבא שייכתב כאן יימדד ולא ייגזר מהקודם.
+--    ✅ ✏️ **תוקן-במקום 17/09/2026 (סבב J2):** הפסקה שעמדה כאן אמרה
+--    ש-`20260916194500_module11_i2_rpc_round3.sql` **טרם הוחל**. הוא הוחל באותו ערב ב-20:4X,
+--    ואחריו הוחלו גם J1 (`…005500`, סבב 4) ו-J2 (`…021500`, סבב 5) — שלושתם
+--    מזיזים **גופי-פונקציה בלבד** (טקסט · פורמטים · יעדי-דלת) ואינם נוגעים בטבלה,
+--    בעמודה, ב-policy או בחתימה ⇒ **הספירות שלמעלה לא זזו**, והמצביעים בסעיף 24
+--    עודכנו. ‏🔴 **ואל תצטט גם את זה — הרץ:**
+--      select name from supabase_migrations.schema_migrations where name like 'module11_%' order by version;
+--    *(רוענן קודם: 16/09/2026 04:4X — מודול 11 צעד 1.1, **ריענון-במקום** מול הקטלוג
+--    החי, בלי לייצר את הקובץ מחדש. הדלתא שנמצאה ותוקנה: ① שלוש עמודות-המשוב ב-`projects` +
+--    שלושת ה-CHECK שלהן — `positive_feedback_reason` · `negative_feedback_reasons` ·
+--    `positive_feedback_reasons` (מיגרציות `20260904230000` ו-`20260904233000`) · ② **בלוק הטבלה
+--    `seed_registry` כולו חזר** — הוא נמחק בשוגג במיזוג `77a7e31b` (03/09) יחד עם **כותרת סעיף 24**,
+--    ושתי השורות התמזגו לשורה אחת פגומה · ③ חתימות `submit_feedback` ו-`record_feedback`,
+--    מספר-העמודות של `get_project_finance_detail`, ומצביע-הגוף של `replace_customer_contacts` ·
+--    ④ ספירת-המדיניות 62 ⇒ 63 · ⑤ שש טבלאות-הגיבוי `bak_*`, שקיימות חי ולא הופיעו כאן כלל.
+--    **אומת מול `pg_catalog`/`information_schema` 16/09/2026 04:3X:** 36 טבלאות-בסיס ב-`public` ·
+--    50 פונקציות · 63 מדיניות · 70 אינדקסים · 28 טריגרים)* · רוענן קודם: 08/09/2026 22:5X (מצב-הטמעה, מיגרציה `20260908221959_onboarding_mode`:
 --    סעיף 32 — עמודה `onboarding_mode integer` + אילוץ-בשם + הערת-עמודה + הערת-טבלה מעודכנת + מדיניות רביעית
 --    `notification_preferences_ceo_all`; **אומת מול `pg_catalog` אחרי ההחלה** — 4 policies, 0 smallint בסכמה.
 --    אפס טבלאות/פונקציות חדשות) · רוענן קודם: 03/09/2026 23:2X (מיזוג שני סשנים) (מודול 7, צעדים 1.2–1.3 — שתי מיגרציות,
@@ -90,16 +121,57 @@
 -- 🚫 **אין כאן סעיף "היסטוריה"/"יומן שינויים"** — הקובץ מתאר הווה בלבד. ציר השינויים חי
 --    ב-`supabase/migrations/` וב-`docs/db_roadmap.md`.
 --
--- מוסכמות: כל 30 הטבלאות ב-`public` עם RLS **מופעל** (נמדד 03/09/2026 אחרי מיגרציית מרשם-הזריעה).
--- כל 62 המדיניות (50 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+-- מוסכמות: כל 32 **טבלאות-המערכת** ב-`public` עם RLS **מופעל** (נמדד מחדש 16/09/2026 19:4X — היו 30,
+--    ‏`feedback_ai_runs` ו-`feedback_ai_insights` של מודול 11 הצטרפו).
+-- 🔴 **וב-`public` יושבות היום 38 טבלאות-בסיס, לא 32** — שש מהן `bak_*`; ר' הפסקה בסוף הכותרת.
+-- כל 65 המדיניות (53 ב-public, 12 על `storage.objects`) הן PERMISSIVE ומוגדרות `to authenticated`.
+--    ‏*(עד 16/09 בערב היה כתוב "63 (51 ב-public)"; שתי החדשות הן מדיניות-הקריאה של שתי טבלאות מ11.)*
+--    (עד 16/09 היה כתוב כאן "62 (50 ב-public)" — ספירה שלא עודכנה כשנוספה המדיניות
+--    `notification_preferences_ceo_all` ב-08/09. הקובץ עצמו החזיק 63 `create policy` כבר אז.)
 -- 🔴 **PERMISSIVE = הן מתאחדות ב-OR.** שתי policies על אותה טבלה מרחיבות גישה, לא מצמצמות —
 --    ולכן policy חדשה "מגודרת היטב" אינה מגבילה אף אחד שכבר עובר דרך policy אחרת.
--- 🔴 חמש טבלאות נותרו deny-all **במכוון**: `project_changes` (נקראת רק דרך ה-RPC הממסך),
+-- 🔴 **אחת-עשרה טבלאות הן deny-all במכוון — חמש "עסקיות" ושש `bak_*`** *(עודכן 16/09/2026 19:4X:
+--    מיגרציה H0 הוסיפה את השש)*. החמש: `project_changes` (נקראת רק דרך ה-RPC הממסך),
 --    `login_attempts` ו-`login_rpc_calls` (רק דרך פונקציות ה-DEFINER של הכניסה), `feedback_rpc_calls`
 --    (נוספה 27/08/2026 ב-F — אותו דפוס, לדף-המשוב הציבורי), ו-`seed_registry` (נוספה 03/09/2026 —
 --    נכתבת ונקראת רק דרך ארבע פונקציות `seed_*`; סעיף 33). מ-27/08/2026
 --    **אין יותר אף טבלה עסקית שחסומה מחוסר-בנייה** — `salary_reports` הייתה האחרונה. הפונקציה `moddatetime` (טריגר
 -- `updated_at`) יושבת בסכמה `extensions`, לא ב-`public`.
+--
+-- 🔴 **שש טבלאות-גיבוי `bak_*` — חיות ב-`public`, RLS כבוי, ולא היו בקובץ הזה עד 16/09/2026.**
+--    נוצרו בידי סשני תיקון-הזריעה של מודול 11 (09/09 ו-10/09/2026) כעותק-לפני-כתיבה, **לא דרך
+--    מיגרציה** — אין להן קובץ ב-`supabase/migrations/`, ולכן הן לא הופיעו בשום ריענון קודם:
+--    `bak_hostesses_20260909` (15 עמודות) · `bak_assignments_20260909` · `bak_assignments_20260910`
+--    (21 עמודות כל אחת) · `bak_projects_20260909` · `bak_projects_20260910` (38 עמודות כל אחת) ·
+--    `bak_project_finance_20260910` (10 עמודות). המבנה זהה לטבלת-המקור בזמן ההעתקה.
+--    ✅ **נסגר באותו יום — מיגרציה `20260916045200_module11_h0_harden_backup_tables` (הוחלה 16/09/2026 04:5X).**
+--    לכל שש: `revoke all` מ-`anon` ומ-`authenticated` + `enable row level security` **בלי policies**
+--    (deny-all מכוון, דפוס `login_attempts`) + הערת-טבלה. **אומת אחרי ההחלה:** מנכ"ל מחובר ⇒ `42501` על select.
+--    *(המצב שנמדד 16/09/2026 04:3X ושההידוק סגר, נשאר כאן כי הוא הנימוק:)* לכולן היה `relrowsecurity = false`,
+--    אפס policies, ו-`anon` **וגם** `authenticated` החזיקו SELECT/INSERT/UPDATE/DELETE/TRUNCATE
+--    (ברירת-המחדל של `public` ב-Supabase) — כלומר עותק מלא של `projects` (כולל משוב), של `assignments`,
+--    של פרטי-הדיילות ושל כספי-הפרויקטים **לא היה מוגן במנגנון שמגן על טבלאות-המקור**, והוא נגיש דרך מפתח
+--    ה-anon הציבורי. לא נבדק בקריאת-REST בפועל — נמדד בקטלוג בלבד. **אף קוד אינו קורא מהן** (grep ⇒ 0).
+--    🚫 **מחיקת הטבלאות עצמן לא נעשתה והיא הכרעת-ישי** — הן העותק היחיד-בתוך-המסד של זריעת מ11.
+--    ר' `docs/micro_guides/module-11.md` §9 D-8 ו-D-11, ו-`docs/db_roadmap.md §10ב`.
+--
+-- 🔐 **T2 · 17/09/2026 (מיגרציה J3) — ארבע מתוך החמש העסקיות הודקו באותו דפוס של ה-`bak_*`.**
+--    ‏`login_attempts` · `feedback_rpc_calls` · `project_changes` · `seed_registry` עדיין החזיקו
+--    **הרשאות-טבלה מלאות ל-`anon` ול-`authenticated`** (ברירת-המחדל של Supabase) בעוד RLS-בלי-מדיניות
+--    חוסמת אותן. ‏**לא הייתה דרך-ניצול חיה** — הגרנט לבדו אינו קורא שורה — אבל הוא `alter table …
+--    disable row level security` אחד ממצב עולם-קריא, בדיוק סיפור ה-`bak_*`. ⇒ `revoke all … from
+--    anon, authenticated` על ארבעתן. ‏`login_rpc_calls` כבר הייתה הרמטית.
+--    **לפני** *(נמדד ב-`pg_class.relacl`, 17/09/2026)*: `{postgres=arwdDxtm/postgres, anon=arwdDxtm/postgres,
+--    authenticated=arwdDxtm/postgres, service_role=arwdDxtm/postgres}` · **אחרי**: `{postgres=arwdDxtm/postgres,
+--    service_role=arwdDxtm/postgres}`.
+--    🔑 **ולמה זה לא שבר דבר:** כל **14** הקוראות של ארבעתן הן `security definer` עם `search_path=''`
+--    *(נמדד ב-`pg_proc`: `check_login_lock` · `register_failed_login` · `reset_login_attempts` ·
+--    `feedback_rate_limit` · `apply_scope_change` · `finance_project_money` · `list_project_changes` ·
+--    `list_projects_overview` · `report_m12_equipment` · חמש `seed_*`/`enforce_quote_in_progress_lock`)*,
+--    ו-DEFINER רצה בהרשאות הבעלים. בקוד-הלקוח אין אף `.from('<טבלה>')` על ארבעתן (‏`grep` ב-`src/` וב-`e2e/` ⇒ 0).
+--    ✅ **נבדק אחרי ההחלה, מחוברת כ-E2E_CEO:** ‏`check_login_lock` ו-`reset_login_attempts` מחזירות 200;
+--    קריאה ישירה ל-`login_attempts` מחזירה עכשיו **42501** במקום מערך ריק שקט — שיפור, לא רגרסיה.
+--    ר' `docs/PROJECT_MASTER.md §6` T2 ו-`docs/archive/close-findings-module-11.md` F-02.
 -- ============================================================
 
 
@@ -649,6 +721,17 @@ create policy params_delete_settings_only on params
 --   → supabase/migrations/20260902211549_module9_a_params_owner_types_seed.sql
 --     (עמודת-הבעלות + FK + אינדקס · הטיפוס השישי `shift_invites` · שלוש מדיניות-הכתיבה
 --      שהחליפו את `params_write_ceo_only`)
+--
+-- 🆕 **16/09/2026 — ארבע שורות של מודול 11, שינוי-נתונים ולא DDL** (ולכן אין כאן `alter`):
+--    `מכפיל_מרווח_מתרחק`=1.5 · `סף_סטיית_תקציב_אחוז`=15 · `מקדם_אמינות_אדום`=0.87 ·
+--    `מקדם_אמינות_ענבר`=0.95 — כולן `param_type = 'control_alerts'`, `owner_role_id` = מנכ"ל.
+--    ‏`params` **43 ⇒ 47 שורות** (נמדד 16/09 19:4X).
+--    → supabase/migrations/20260916043500_module11_c_report_params.sql · `db_roadmap` M11-5
+-- ⚠️ **התקרה/הרצפה של פרמטר מספרי אינן כאן ואינן יכולות להיות כאן** — אין לטבלה עמודות כאלה.
+--    הן כללי-טיפוס ב-`src/lib/paramsRegistry.js`, **שהערתו שלו אומרת ש-`min`/`max`/`decimals`
+--    אינם נאכפים בשום מקום.** קוד שמניח אכיפה כאן מניח דבר שאינו קיים.
+-- 🔴 **וחמש שורות `params` חיות הן `owner_role_id is null`** (נמדד 16/09) — כרטיס ת6 של מ11 מתאר
+--    אחת כ"היחידה בלי בעלים". חוב רשום ב-`PROJECT_MASTER §6`; לא שונה כאן, כי זה משנה מי רשאית לערוך.
 
 
 -- ============================================================
@@ -1063,6 +1146,19 @@ create table assignments (
   -- מ8 (27/08/2026): הסטטוס שקדם ל-released בביטול פרויקט; בסיס פיצוי §7.16.
   -- nullable במכוון — ביטולי-עבר נשארים NULL ואינם מניבים פיצוי (מגבלה מוצהרת).
   released_from_status text,
+  -- מ11 (16/09/2026, M11-4): מיקום הדיילת בדירוג Smart Match ברגע יצירת שורת-הזימון.
+  -- 🔴 כותב יחיד: `insertInviteRow` ב-src/modules/04_hostesses/api.js, **בהכנסה בלבד**.
+  --    `writeInviteToken` (מסלול השליחה-החוזרת, מיובא גם ע"י מ6) אינו נוגע בה — דריסה בשליחה
+  --    חוזרת הייתה סותרת את M11-4 עצמו. כתיבה שנכשלת אינה מפילה את הזימון: NULL + console.warn.
+  -- ⚠️ אין מילוי-לאחור: כל 5,741 השורות הקיימות NULL, ודוח 14א מצהיר על ההיעדר במקום להציג 0%.
+  recommended_rank integer,
+  -- מ11 · J3 (17/09/2026, T9): מתי נחתם `recommended_rank`, **בשעון המסד**.
+  -- 🔴 כותב יחיד: הטריגר `assignments_recommended_rank_stamp` — ‏**לא** הלקוח (`src/CLAUDE.md` §3,
+  --    מלכודת-השעון: `new Date().toISOString()` במחשב עם שעון סוטה חותם תאריך שקרי).
+  -- 🪤 והטריגר הוא `before insert or update of recommended_rank` ולא `update` לבדו: הדרג נכתב
+  --    **בהכנסה בלבד** (ר' העמודה שמעל), ולכן טריגר-`update` היה עמודה שלעולם נשארת NULL.
+  -- ⚠️ אין מילוי-לאחור: כל השורות שקדמו לטריגר נשארות NULL בשתי העמודות.
+  recommended_rank_set_at timestamptz,
   constraint assignments_pkey                 primary key (project_id, hostess_id, assignment_number),
   constraint assignments_invite_token_key     unique (invite_token),
   constraint assignments_project_id_fkey      foreign key (project_id)       references projects (project_id)      on delete cascade,
@@ -1080,7 +1176,8 @@ create table assignments (
     or (attendance_status = 'no_show'::text and lateness_level is null     and no_show_reason is not null)
   ),
   constraint assignments_no_show_zero_hours check (attendance_status is distinct from 'no_show'::text or actual_hours = 0::numeric),
-  constraint assignments_released_from_status_check check (released_from_status is null or released_from_status = any (array['pending'::text, 'confirmed_available'::text, 'declined'::text, 'finally_approved'::text, 'released'::text, 'approval_withdrawn'::text]))
+  constraint assignments_released_from_status_check check (released_from_status is null or released_from_status = any (array['pending'::text, 'confirmed_available'::text, 'declined'::text, 'finally_approved'::text, 'released'::text, 'approval_withdrawn'::text])),
+  constraint assignments_recommended_rank_check check (recommended_rank is null or recommended_rank >= 1)
 );
 
 alter table assignments enable row level security;
@@ -1110,6 +1207,26 @@ create trigger assignments_set_updated_at
 create trigger assignments_recompute_project_status
   after insert or delete or update on assignments
   for each row execute function trg_recompute_project_status();
+
+-- מ11 · J3 (17/09/2026, T9) — חותמת-הדרג. ‏`is distinct from` ולא `<>`: ‏`update` שמזכיר את
+-- העמודה בלי לשנות אותה מפעיל את הטריגר, ו-NULL מול NULL ב-`<>` הוא NULL ולא `false`.
+create trigger assignments_recommended_rank_stamp
+  before insert or update of recommended_rank on assignments
+  for each row execute function stamp_recommended_rank_set_at();
+
+-- הערת-עמודה (comment on column)
+-- recommended_rank — 'מיקום הדיילת בדירוג Smart Match (ranked) ברגע שנוצרה שורת-הזימון. נכתב פעם
+--   אחת בלבד ע"י insertInviteRow, ואינו נדרס בשליחה-חוזרת. NULL = לא הייתה המלצה (זימון מחיפוש
+--   ידני, או שיבוץ שקדם למיגרציה) — ואין מילוי-לאחור, כדי שדוח 14א לא יציג אחוז-אימוץ מומצא.
+--   כרטיס ת5, M11-4.'
+--   → supabase/migrations/20260916043400_module11_b_assignments_recommended_rank.sql
+-- recommended_rank_set_at — 'מתי נחתם recommended_rank, בשעון המסד. נכתב אך ורק ע"י הטריגר
+--   assignments_recommended_rank_stamp — לא ע"י הלקוח, כדי ששעון-דפדפן סוטה לא יחתום תאריך שקרי.
+--   NULL = אין דרג (או שורה שקדמה לטריגר); אין מילוי-לאחור, מאותו טעם שהעמודה recommended_rank
+--   עצמה אינה ממולאת לאחור. T9, M11-4, כרטיס ת5.'
+--   ✅ **נבדק בטרנזקציה שגולגלה לאחור, 17/09/2026:** הכנסה עם דרג ⇒ נחתמה · הכנסה בלי דרג ⇒ NULL ·
+--      עדכון דרג ⇒ נחתם · עדכון לאותו ערך ⇒ החותמת **לא זזה** · דרג ⇒ NULL ⇒ החותמת מתאפסת.
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql
 
 -- מדיניות RLS
 create policy assignments_select_by_permission on assignments
@@ -1352,45 +1469,55 @@ create policy logistics_write_by_permission on logistics
 -- כתיבה מתבצעת דרך פונקציות בלבד (סעיף 24); ללקוח יש policy קריאה בלבד.
 -- 🔴 **אין כאן עמודת project_bonus.**
 create table projects (
-  project_id               serial      not null,
-  quote_id                 integer     not null,
-  owner_email              text        not null,
-  final_event_date         date        not null,
-  final_location           text        not null,
-  required_hostess_count   integer     not null,
-  project_status           text        not null default 'not_started',
-  invoice_sent             boolean     not null default false,
-  feedback_status          text        not null default 'not_sent',
-  actual_guests            integer,
-  actual_hours             numeric,
-  cancel_reason            text,
-  payment_date             date,
-  feedback_score           integer,
-  negative_feedback_reason text,
-  feedback_notes           text,
-  summary_report_url       text,
-  created_at               timestamptz not null default now(),
-  updated_at               timestamptz not null default now(),
-  event_name               text,
-  customer_id              bigint,
-  final_start_time         time,
-  final_end_time           time,
-  lat                      numeric,
-  lng                      numeric,
-  customer_name            text,
-  owner_name               text,
-  owner_phone              text,
+  project_id                serial      not null,
+  quote_id                  integer     not null,
+  owner_email               text        not null,
+  final_event_date          date        not null,
+  final_location            text        not null,
+  required_hostess_count    integer     not null,
+  project_status            text        not null default 'not_started',
+  invoice_sent              boolean     not null default false,
+  feedback_status           text        not null default 'not_sent',
+  actual_guests             integer,
+  actual_hours              numeric,
+  cancel_reason             text,
+  payment_date              date,
+  feedback_score            integer,
+  negative_feedback_reason  text,
+  feedback_notes            text,
+  summary_report_url        text,
+  created_at                timestamptz not null default now(),
+  updated_at                timestamptz not null default now(),
+  event_name                text,
+  customer_id               bigint,
+  final_start_time          time,
+  final_end_time            time,
+  lat                       numeric,
+  lng                       numeric,
+  customer_name             text,
+  owner_name                text,
+  owner_phone               text,
   -- חמש עמודות מודול 6: ביטול פרויקט וסגירה תפעולית
-  cancelled_at             timestamptz,
-  cancelled_by             text,
-  cancel_type              text,
-  operationally_closed_at  timestamptz,
-  operationally_closed_by  text,
+  cancelled_at              timestamptz,
+  cancelled_by              text,
+  cancel_type               text,
+  operationally_closed_at   timestamptz,
+  operationally_closed_by   text,
   -- שתי עמודות מודול 8 (27/08/2026): חותמת שליחת-החשבונית (ממנה נגזרים ימי-האיחור
   -- מול תנאי_תשלום_ימים) וטוקן דף-המשוב הציבורי (נטבע בשליחה, מאופס ל-NULL בארכוב).
   -- 🔴 הכסף עצמו אינו כאן — הוא בטבלת-הבת project_finance (סעיף 27, product-Q2).
-  invoice_sent_at          timestamptz,
-  feedback_token           text,
+  invoice_sent_at           timestamptz,
+  feedback_token            text,
+  -- שלוש עמודות המשוב הרב-ערכי (04/09/2026, מיגרציות 20260904230000 + 20260904233000):
+  -- ההדגש החיובי (ציונים 4–5) נולד כערך-יחיד, ומיד אחריו הומרו שני הצדדים לבחירה-מרובה.
+  -- 🔑 עמודות-היחיד **לא ירדו**: `submit_feedback` ו-`record_feedback` כותבות את שתיהן —
+  --    את המערך המלא, ואת `[1]` שלו לעמודת-היחיד — כדי שקוד פרוס שקורא את הישנה לא יישבר
+  --    (Expand-Contract). קורא חדש צריך את עמודות-המערך; עמודות-היחיד הן שארית-תאימות.
+  -- ⚠️ המחיקה/ההוספה **אינה סימטרית בין הצדדים:** לשלילי יש `negative_feedback_reason`
+  --    מאז מ8, ולחיובי נולדו השניים יחד ב-04/09.
+  positive_feedback_reason  text,
+  negative_feedback_reasons text[]      default '{}'::text[],
+  positive_feedback_reasons text[]      default '{}'::text[],
   constraint projects_pkey                        primary key (project_id),
   constraint projects_quote_id_key                unique (quote_id),
   constraint projects_feedback_token_key          unique (feedback_token),
@@ -1404,6 +1531,11 @@ create table projects (
   constraint projects_feedback_status_check       check (feedback_status = any (array['not_sent'::text, 'sent'::text, 'completed'::text, 'no_response'::text])),
   constraint projects_feedback_score_check        check (feedback_score >= 1 and feedback_score <= 5),
   constraint projects_negative_feedback_reason_check check (negative_feedback_reason is null or negative_feedback_reason = any (array['איחור דיילות'::text, 'תפקוד דיילות'::text, 'איכות תגים'::text, 'ניהול לקוי'::text, 'אחר'::text])),
+  constraint projects_positive_feedback_reason_check check (positive_feedback_reason is null or positive_feedback_reason = any (array['מקצועיות הדיילות'::text, 'עמידה בזמנים'::text, 'איכות תגים וציוד'::text, 'ניהול ותקשורת'::text, 'אחר'::text])),
+  -- 🔑 המערכים נבדקים ב-`<@` (הכלה), לא ב-`= any` — כל ערך במערך חייב להיות מהרשימה,
+  --    ומערך ריק `{}` עובר. שתי הרשימות שונות זו מזו, ו-'אחר' מופיע בשתיהן.
+  constraint projects_negative_feedback_reasons_check check (negative_feedback_reasons is null or negative_feedback_reasons <@ array['איחור דיילות'::text, 'תפקוד דיילות'::text, 'איכות תגים'::text, 'ניהול לקוי'::text, 'אחר'::text]),
+  constraint projects_positive_feedback_reasons_check check (positive_feedback_reasons is null or positive_feedback_reasons <@ array['מקצועיות הדיילות'::text, 'עמידה בזמנים'::text, 'איכות תגים וציוד'::text, 'ניהול ותקשורת'::text, 'אחר'::text]),
   constraint projects_cancel_type_check           check (cancel_type is null or cancel_type = any (array['customer'::text, 'force_majeure'::text, 'other'::text])),
   -- שלושת הסטטוסים שאחרי הסגירה התפעולית מחייבים דוח-סיכום
   constraint projects_closed_needs_report check (
@@ -1449,6 +1581,16 @@ create policy projects_select_by_permission on projects
         and p.permission_level = any (array['edit'::text, 'view'::text])
     )
   );
+--   → supabase/migrations/20260904230000_feedback_positive_and_negative_reasons.sql
+--     (‏`positive_feedback_reason` + ה-CHECK שלה + הערת-עמודה)
+--   → supabase/migrations/20260904233000_feedback_multi_select_reasons.sql
+--     (שתי עמודות-המערך + שני ה-CHECK + מילוי-ראשוני מהעמודות הבודדות)
+-- 🔴 **שתי המיגרציות האלה אינן רשומות ב-`supabase_migrations.schema_migrations`** (נמדד
+--    16/09/2026: הרשם קופץ מ-`20260903155157` ל-`20260906053752`), **והמסד בכל זאת מחזיק את
+--    העמודות ואת האילוצים.** כלומר ה-SQL הורץ לא דרך `apply_migration`. הראיה הנוספת: הקובץ
+--    מכיל `comment on column` לשתי עמודות-המערך, **ובמסד החי אין להן הערה** — רק ל-
+--    `positive_feedback_reason` יש. ⇒ מה שרץ חי אינו זהה-בייט לקובץ. **טעון בדיקה של ישי:**
+--    האם להריץ מיגרציית-תיקון-קדימה שמוסיפה את שתי ההערות ומיישרת את הרשם.
 
 
 -- ============================================================
@@ -1867,7 +2009,217 @@ create policy notification_preferences_ceo_all on notification_preferences
 
 -- ============================================================
 -- 33. מרשם-הזריעה — public.seed_registry (זריעת נתוני-ההדגמה, מודול 7)
--- =====================================================-- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
+-- ============================================================
+-- 🎯 **"מדבקה" על כל שורה שגנרטור נתוני-ההדגמה (`scripts/demo-seed.mjs`) יצר** — לקוח ·
+--    דיילת · הצעה · פרויקט — כדי ש-`seed_reset` תמחק בדיוק את מה שנזרע ו-`seed_backdate_*`
+--    יזיזו תאריכים **רק** של שורות רשומות. הדמו הישן (לקוחות 46–49, פרויקטים 3/7/8/13/14,
+--    חמש הדיילות) **אינו במרשם** ⇒ בלתי-נגיש לפונקציות האלה מבנייה.
+-- 🔴 **RLS דלוק בלי policies במכוון** — הגישה רק דרך ארבע פונקציות ה-DEFINER (סעיף 24,
+--    "זריעה"), באותו דפוס של `login_attempts`/`feedback_rpc_calls`. אף מסך אינו קורא אותה.
+-- 🔑 **והשפעתה היחידה על טבלה קיימת:** `enforce_quote_in_progress_lock` (הטריגר של quotes/
+--    quote_services) מתיר עדכון/מחיקה של הצעה **רשומה כאן** כשמפתח-הסשן `regin.seed_bypass`
+--    דלוק — והמפתח נקבע רק בתוך `seed_backdate_quote`/`seed_reset`. הצעה אמיתית לעולם אינה
+--    כאן ⇒ הנעילה עליה לא נחלשה.
+create table seed_registry (
+  entity_type text        not null,
+  entity_id   bigint      not null,
+  batch_id    text        not null,
+  created_at  timestamptz not null default now(),
+  constraint seed_registry_pkey              primary key (entity_type, entity_id),
+  constraint seed_registry_entity_type_check check (entity_type = any (array['customer'::text, 'hostess'::text, 'quote'::text, 'project'::text]))
+);
+
+alter table seed_registry enable row level security;
+
+-- הערת-טבלה (comment on table)
+-- 'רישום שורות שנוצרו ע"י גנרטור נתוני-ההדגמה (scripts/demo-seed.mjs). RLS דלוק בלי policies
+--  במכוון — גישה רק דרך seed_register / seed_backdate_* / seed_reset.'
+
+-- אינדקסים
+-- seed_registry_pkey      — unique btree (entity_type, entity_id) [נוצר ע"י האילוץ seed_registry_pkey]
+-- seed_registry_batch_idx — btree (batch_id)  [המפתח של seed_reset]
+
+-- טריגרים: אין (אין updated_at — שורת-רישום אינה נערכת, רק נוצרת ונמחקת)
+-- מדיניות RLS: אין (deny-all במכוון)
+--   → supabase/migrations/20260903180958_seed_registry_and_helpers.sql
+
+
+-- ============================================================
+-- 34. ריצות סיווג-AI של הערות-לקוח — public.feedback_ai_runs (מודול 11)
+-- ============================================================
+-- 🆕 נוספה 16/09/2026 (מיגרציה A של מודול 11). שורה אחת לכל ריצת-סיווג של הערות המשוב.
+-- 🔴 **הכותבת היא פונקציית-הקצה `supabase/functions/classify-feedback` ב-service role, ולכן
+--    לטבלה אין ולו מדיניות-כתיבה אחת** — בדיוק הדפוס של `email_log`, שגם לו רק policy קריאה.
+--    הפעולה היחידה שמגיעה מהדפדפן היא **אישור-להצגה**, והיא RPC: `approve_feedback_ai_run`.
+-- ⚠️ **ואם תתווסף כאן אי-פעם policy כתיבה — היא מתאחדת ב-OR עם הקריאה** (ר' כותרת הקובץ).
+create table feedback_ai_runs (
+  run_id       bigint      not null generated by default as identity,
+  started_at   timestamptz not null default now(),
+  finished_at  timestamptz,
+  status       text        not null,
+  sent_count   integer     not null default 0,
+  ok_count     integer     not null default 0,
+  failed_count integer     not null default 0,
+  model        text,
+  run_by       text,
+  approved_at  timestamptz,
+  approved_by  text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  constraint feedback_ai_runs_pkey        primary key (run_id),
+  constraint feedback_ai_runs_run_by_fkey      foreign key (run_by)      references users (email) on delete restrict,
+  constraint feedback_ai_runs_approved_by_fkey foreign key (approved_by) references users (email) on delete restrict,
+  constraint feedback_ai_runs_status_check check (status = any (array['running'::text, 'done'::text, 'partial'::text, 'failed'::text])),
+  constraint feedback_ai_runs_counts_nonneg check (sent_count >= 0 and ok_count >= 0 and failed_count >= 0)
+);
+
+alter table feedback_ai_runs enable row level security;
+
+-- הערת-טבלה (comment on table)
+-- 'ריצת-סיווג אחת של הערות-לקוח (מודול 11, כרטיס ת2). הכתיבה היא של פונקציית-השרת
+--  classify-feedback ב-service role; האישור להצגה הוא RPC מגודר edit על מודול הדוחות.
+--  דף 20 מציג רק שורות מריצה מאושרת.'
+
+-- הערות-עמודה (comment on column) — התמצית
+-- status       — 'running בתחילת ריצה · done בסיום מלא · partial כשמכסה או פסק-זמן קטעו והסיווגים
+--                 שכבר נעשו נשמרו · failed כשלא נשמר דבר.'
+-- sent_count   — 'כמה הערות נשלחו למודל בריצה הזו; ok_count/failed_count הם הפילוח שלהן.'
+-- model        — 'שם-הדגם שסיווג בפועל. נשמר כדי שהשוואת אדם-מול-מודל תדע איזה מודל היא משווה.'
+-- run_by       — 'המייל של מי שלחצה "הרץ ניתוח" (auth.email(), תקדים projects.cancelled_by).'
+-- approved_at  — 'רגע האישור להצגה. NULL = טרם אושרה, ואז דף 20 אומר "טרם אושרה ריצת-ניתוח"
+--                 ואינו מציג דוח ריק.'
+-- approved_by  — 'המייל של מי שאישרה להצגה. נכתב אך ורק ע"י approve_feedback_ai_run, לעולם לא מהדפדפן.'
+
+-- אינדקסים
+-- feedback_ai_runs_pkey — unique btree (run_id) [נוצר ע"י האילוץ feedback_ai_runs_pkey]
+create index feedback_ai_runs_run_by_idx      on feedback_ai_runs using btree (run_by);
+create index feedback_ai_runs_approved_by_idx on feedback_ai_runs using btree (approved_by);
+-- 🔴 נעילת-המסד לשער הלחיצה-הכפולה (מיגרציה H1): לכל היותר ריצה אחת ב-'running' בכל רגע.
+--    שער-התוכנה בפונקציית-הקצה הוא קריאה-ואז-כתיבה בלי נעילה ⇒ שתי לחיצות באותן מאות-מילישניות
+--    היו פותחות שתי ריצות ושורפות מכסה. ההכנסה השנייה נופלת עכשיו ב-23505.
+create unique index feedback_ai_runs_one_running_idx on feedback_ai_runs using btree ((true))
+  where (status = 'running'::text);
+
+-- טריגרים
+create trigger feedback_ai_runs_set_updated_at
+  before update on feedback_ai_runs
+  for each row execute function moddatetime('updated_at');
+
+-- מדיניות RLS (1 — קריאה בלבד; ר' ההערה בראש הסעיף)
+create policy feedback_ai_runs_select_by_permission on feedback_ai_runs
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select m.module_id from modules m where m.module_name = 'דו"חות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+--   → supabase/migrations/20260916043300_module11_a_feedback_ai_tables.sql (הטבלה · המדיניות · ה-RPC)
+--   → supabase/migrations/20260916052500_module11_h1_one_running_ai_run.sql (האינדקס החלקי)
+
+
+-- ============================================================
+-- 35. תוצאות סיווג-AI פר-פרויקט — public.feedback_ai_insights (מודול 11)
+-- ============================================================
+-- 🆕 נוספה 16/09/2026 (מיגרציה A של מודול 11). שורה אחת לכל הערת-לקוח שסווגה.
+-- 🔴 **`project_id` הוא UNIQUE** ⇒ סיווג אחד לכל פרויקט, וריצה חוזרת **מחליפה** ולא מצטברת.
+--    ⚠️ ולכן סיווג-מחדש אחיד של שורות ישנות מחייב **מחיקה קודם** — `loadCandidates` של פונקציית-הקצה
+--    מדלגת על פרויקט שכבר מסווג. (נמדד: 40 שורות של ריצה 5 סווגו בדגם שלא ישמש שוב.)
+-- 🔴 **שתי רשימות-נושאים ולא אחת, וזו אינה קוסמטיקה:** הערך 'אחר' קיים בשתי הרשימות ⇒ מערך יחיד
+--    לא היה יכול לומר אם 'אחר' היה תלונה או מחמאה — שזה בדיוק מה שדוח 20 קיים בשבילו.
+--    שתי רשימות-ה-CHECK הן **העתק-בייט** משתי הרשימות של `projects` (מיגרציה 20260904233000),
+--    וזה מה שמאפשר מטריצת-הסכמה אדם↔מודל צד-מול-צד.
+-- ⚠️ **הטקסונומיה אינה ניתנת לעדכון ע"י המודל** — היא השפה שהלקוח בוחר ממנה (§4.5 של מדריך מ11).
+create table feedback_ai_insights (
+  insight_id      bigint      not null generated by default as identity,
+  run_id          bigint      not null,
+  project_id      integer     not null,
+  sentiment       integer,
+  negative_topics text[]      not null default '{}'::text[],
+  positive_topics text[]      not null default '{}'::text[],
+  free_topic      text,
+  quote           text,
+  red_flag        boolean     not null default false,
+  unclassifiable  boolean     not null default false,
+  classified_at   timestamptz not null default now(),
+  constraint feedback_ai_insights_pkey           primary key (insight_id),
+  constraint feedback_ai_insights_project_id_key unique (project_id),
+  constraint feedback_ai_insights_run_id_fkey     foreign key (run_id)     references feedback_ai_runs (run_id) on delete cascade,
+  constraint feedback_ai_insights_project_id_fkey foreign key (project_id) references projects (project_id)     on delete cascade,
+  constraint feedback_ai_insights_sentiment_check check (sentiment >= 1 and sentiment <= 5),
+  constraint feedback_ai_insights_negative_topics_check check (negative_topics <@ array['איחור דיילות'::text, 'תפקוד דיילות'::text, 'איכות תגים'::text, 'ניהול לקוי'::text, 'אחר'::text]),
+  constraint feedback_ai_insights_positive_topics_check check (positive_topics <@ array['מקצועיות הדיילות'::text, 'עמידה בזמנים'::text, 'איכות תגים וציוד'::text, 'ניהול ותקשורת'::text, 'אחר'::text])
+);
+
+alter table feedback_ai_insights enable row level security;
+
+-- הערת-טבלה (comment on table)
+-- 'תוצאת-הסיווג של הערת-לקוח אחת, פרויקט אחד לכל היותר (כרטיס ת2). המודל מקבל טקסט וציון בלבד —
+--  לא שם-לקוח ולא כסף (§4.5).'
+
+-- הערות-עמודה (comment on column) — התמצית
+-- sentiment       — 'סנטימנט 1–5 כפי שהמודל קרא את ההערה. NULL כשלא ניתן לסווג — ולעולם לא 0,
+--                    שהוא ציון ולא "לא ידוע".'
+-- negative_topics — 'נושאים שליליים מתוך חמש הקטגוריות שכבר במסד. מערך ריק = סווג ולא נמצא נושא.'
+-- positive_topics — 'נושאים חיוביים מתוך חמש הקטגוריות שכבר במסד. הערך "אחר" קיים בשתי הרשימות,
+--                    ולכן הן שתי עמודות ולא אחת.'
+-- free_topic      — 'תג-נושא חופשי אחד (מילה–שתיים) שהמודל מוסיף כשהוא מסווג "אחר", כדי שדף 20
+--                    יראה מה "אחר" מכיל. כרטיס ת2, הכרעה 11.'
+-- quote           — 'משפט אחד מתוך ההערה, כלשונו — מה שמוצג ליד דגל אדום.'
+-- red_flag        — 'ההערה מחייבת מבט אנושי. נספרת במבט-על הלקוחות.'
+-- unclassifiable  — 'המודל לא הצליח לסווג (כולל שגיאת-פורמט בהערה בודדת). השורה נשמרת בכוונה —
+--                    "לא ניתן לסווג" הוא מידע, ושורה חסרה הייתה נקראת כאילו ההערה לא נשלחה כלל.'
+
+-- אינדקסים
+-- feedback_ai_insights_pkey           — unique btree (insight_id) [נוצר ע"י האילוץ]
+-- feedback_ai_insights_project_id_key — unique btree (project_id) [נוצר ע"י האילוץ]
+create index feedback_ai_insights_run_id_idx on feedback_ai_insights using btree (run_id);
+
+-- טריגרים: אין (שורת-סיווג נכתבת פעם אחת; אין updated_at)
+
+-- מדיניות RLS (1 — קריאה בלבד; הכתיבה היא service role, ר' סעיף 34)
+create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
+  for select to authenticated
+  using (
+    exists (
+      select 1 from permissions p
+      where p.role_id = (select current_user_role_id())
+        and p.module_id = (select m.module_id from modules m where m.module_name = 'דו"חות')
+        and p.permission_level = any (array['edit'::text, 'view'::text])
+    )
+  );
+--   → supabase/migrations/20260916043300_module11_a_feedback_ai_tables.sql
+
+
+-- ============================================================
+-- 24. פונקציות בסכמה public — 68 פונקציות
+-- ============================================================
+-- 🚫 **הגופים אינם כאן במכוון** (ר' כותרת הקובץ). לכל פונקציה: חתימה · מצב אבטחה · search_path ·
+--    למי יש EXECUTE · ומצביע לקובץ המיגרציה שבו הגוף הנוכחי חי.
+-- ✏️ **50 ⇒ 67 ב-16/09/2026 19:4X** — 17 פונקציות של מודול 11 (16 דוחות + `approve_feedback_ai_run`).
+-- ✏️ **67 ⇒ 68 ב-17/09/2026 10:5X** — מיגרציית J3 הוסיפה את `stamp_recommended_rank_set_at()`
+--    (טריגר-החותמת של T9), ואיתה טריגר אחד: **29 ⇒ 30**.
+-- 🔴 **המספר הזה נמדד, ואין לגזור אותו מהמספר הקודם.** השאילתה שמחזירה אותו ואת ארבע
+--    הספירות האחרות של הכותרת בשורה אחת:
+--      select (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
+--                where n.nspname='public' and c.relkind='r')                        as base_tables,
+--             (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+--                where n.nspname='public')                                          as functions,
+--             (select count(*) from pg_policies where schemaname in ('public','storage')) as policies,
+--             (select count(*) from pg_indexes where schemaname='public')            as indexes,
+--             (select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid
+--                join pg_namespace n on n.oid=c.relnamespace
+--                where n.nspname='public' and not t.tgisinternal)                    as triggers;
+--    ⇒ 16/09/2026 19:4X: 38 · 67 · 65 · 77 · 29.
+--    ⇒ **17/09/2026 10:5X (אחרי J3, הורצה מחדש ולא נגזרה): 38 · 68 · 65 · 77 · 30.**
+-- לכל 67 הפונקציות `search_path = ""` — נמדד ב-`pg_proc.proconfig` 16/09/2026 19:4X: 67 מתוך 67, ערך זהה.
+-- ♻️ **שוחזר 16/09/2026 (מודול 11 צעד 1.1):** שורת-הכותרת הזו **וכל בלוק `seed_registry` שמעליה**
+--    נמחקו בשוגג במיזוג `77a7e31b` (03/09/2026) — שתי השורות התמזגו לשורה פגומה אחת ו-34 שורות
+--    ירדו. המקור לשחזור: `git show 538d781a:docs/schema.sql`, ואז אימות מול הקטלוג החי
+--    (הטבלה · 2 אילוצים · 2 אינדקסים · RLS דלוק · 0 policies — כולם קיימים חי כפי שכתוב כאן).
+-- ⚠️ `moddatetime` (הטריגר של updated_at) **אינה כאן** — היא יושבת בסכמה `extensions`.
 --
 -- מקרא: SD = security definer · SI = security invoker · [רשימת התפקידים] = מי קיבל EXECUTE.
 
@@ -1910,6 +2262,12 @@ create policy notification_preferences_ceo_all on notification_preferences
 -- sync_assignment_event_date() returns trigger
 --   SD · plpgsql · [service_role]
 --   → supabase/migrations/20260809124327_module4_one_event_per_day_constraint.sql
+-- stamp_recommended_rank_set_at() returns trigger
+--   SD · plpgsql · search_path='' · [postgres, service_role]   ← **חדשה (מ11 · J3, 17/09/2026, T9)**
+--   מחתימה `assignments.recommended_rank_set_at` ב-`now()` של המסד כשנכתב או משתנה
+--   `recommended_rank`; מחיקת-דרג מאפסת גם את החותמת. **הטריגר הוא `before insert or update of`** —
+--   הדרג נכתב בהכנסה בלבד, ולכן טריגר-`update` לבדו היה עמודה שלעולם נשארת NULL.
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql
 -- sync_assignments_on_project_date_change() returns trigger
 --   SD · plpgsql · [service_role]
 --   → supabase/migrations/20260809124327_module4_one_event_per_day_constraint.sql
@@ -1997,9 +2355,12 @@ create policy notification_preferences_ceo_all on notification_preferences
 -- get_finance_overview() returns table (22 columns — S1's three tabs)
 --   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
 --   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
--- get_project_finance_detail(p_project_id integer) returns table (30 columns — S2's balance)
+-- get_project_finance_detail(p_project_id integer) returns table (34 columns — S2's balance)
 --   SD · stable · plpgsql · [authenticated, service_role] · gated 'כספים'
 --   → supabase/migrations/20260827144459_module8_finance_money_ssot_and_readers.sql
+--   ✏️ **30 ⇒ 34 (נמדד 16/09/2026).** הגוף הנוכחי מ-`20260904233000_feedback_multi_select_reasons`:
+--      נוספו `positive_feedback_reason` ואחריו `negative_feedback_reasons` · `positive_feedback_reasons`
+--      (שניהם `text[]`, מוחזרים עטופים ב-`coalesce(..., '{}')` ⇒ לעולם לא NULL בצד-הלקוח).
 
 -- ── מודול 8 · פעולות-הכתיבה (27/08/2026, E2) ────────────────────────
 -- 🔴 `set_project_finance_fields` של מ6 **הוסרה** כאן (ה22, אפס אתרי-קריאה).
@@ -2028,7 +2389,7 @@ create policy notification_preferences_ceo_all on notification_preferences
 -- record_invoice_sent(integer, text) returns jsonb           SD · plpgsql
 -- record_payment(integer, date) returns jsonb                SD · plpgsql
 --   🔴 אצל מבוטל — **זהו רגע הקפאת-הרווח** (Q-4), לא שמירת-הסכום ולא הארכוב.
--- record_feedback(integer, integer, text, text, boolean) returns jsonb   SD · plpgsql
+-- record_feedback(integer, integer, text, text, boolean, text[]) returns jsonb   SD · plpgsql
 --   ציון מתחת לסף מחייב סיבה; כתיבה על שורה `completed` מותרת עד הארכוב (B-15).
 --   🔴 **הגוף הנוכחי מ-מודול 9 (מיגרציה C), לא מ-E2.** הסף אינו קבוע-בקוד יותר —
 --      נקרא מ-`params.סף_שביעות_רצון`; שורה חסרה/לא-מספרית ⇒ `P0001` בעברית
@@ -2050,6 +2411,10 @@ create policy notification_preferences_ceo_all on notification_preferences
 --   ולא יותר מאחד. שער: assert_module_permission('לקוחות', ['edit']).
 --   ACL בפועל: {postgres, authenticated, service_role} — **בלי `anon`** (נסגר באותה מיגרציה,
 --   בגלל מוקש H5→H5b מ-28/08). → supabase/migrations/20260902141451_n2b_replace_customer_contacts_rpc.sql
+--   ✏️ **הגוף החי כבר לא משם (נמדד 16/09/2026): הוא מ-**
+--      `20260909183000_c01_replace_customer_contacts_feminine_imperative.sql` — **החתימה,
+--      ההרשאות וה-RLS לא נגעו**; השינוי היחיד הוא מילה אחת בהודעת ה-`raise` של איש-הקשר
+--      הראשי ("סמן" ⇒ "סמני", הכרעת-ישי 09/09/2026 על C-01).
 
 -- ── מודול 8 · דוח-השכר (27/08/2026, E3) ────────────────────────
 -- generate_salary_report(date) returns jsonb                 SD · plpgsql · [authenticated]
@@ -2070,7 +2435,14 @@ create policy notification_preferences_ceo_all on notification_preferences
 -- mint_feedback_token(integer) returns text                  SD · plpgsql · [authenticated]
 --   מגודרת 'פרויקטים' — הקורא הוא מסלול-המייל של מ6. get-or-create; מסרבת רק ל-finished.
 -- get_feedback_page(text) returns jsonb                      SD · plpgsql · [anon, authenticated]
--- submit_feedback(text, integer, text) returns jsonb         SD · plpgsql · [anon, authenticated]
+-- submit_feedback(text, integer, text, text[], text[]) returns jsonb   SD · plpgsql · [anon, authenticated]
+--   ✏️ **החתימה גדלה פעמיים ב-04/09/2026** — תחילה `(text, integer, text, text, text)` ואז
+--      `(text, integer, text, text[], text[])`, שהיא החיה. שמות הארגומנטים: `p_token` ·
+--      `p_score` · `p_notes` · `p_negative_reasons` · `p_positive_reasons` (שני האחרונים
+--      `default '{}'`). הגוף מסנן כל ערך מול הרשימה של הצד שלו, מאפס את הצד השני, וכותב
+--      גם את המערך וגם את `[1]` שלו לעמודת-היחיד.
+--      → supabase/migrations/20260904230000_feedback_positive_and_negative_reasons.sql
+--      → supabase/migrations/20260904233000_feedback_multi_select_reasons.sql (הגוף החי)
 --   🔴 שתי הפונקציות היחידות של מ8 שאנונימי קורא להן. תשובת not_found **זהה
 --      בייט-בבייט** לטוקן שגוי/ריק/מת — אומת. אין policy ל-anon על אף טבלה.
 --   → supabase/migrations/20260827155303_module8_public_feedback_rpc.sql
@@ -2093,7 +2465,11 @@ create policy notification_preferences_ceo_all on notification_preferences
 -- ✅ **ACL בפועל לשלושתן, נמדד 02/09/2026: `{postgres, service_role, authenticated}` —
 --    בלי `anon`.** ההענקה נכתבה מפורשות גם לשתי הקיימות (`revoke … from public, anon,
 --    authenticated` ואז `grant … to authenticated`), כדי שהמצב יהיה כתוב ולא מוסק.
--- record_feedback(integer, integer, text, text, boolean) returns jsonb   SD · plpgsql · [authenticated, service_role]
+-- record_feedback(integer, integer, text, text, boolean, text[]) returns jsonb   SD · plpgsql · [authenticated, service_role]
+--   ✏️ **הארגומנט השישי `p_reasons text[] default null` נוסף ב-04/09/2026** (מיגרציה
+--      `20260904233000_feedback_multi_select_reasons`) — **החתימה השתנתה**, וה-`drop function`
+--      של הישנה נכתב באותה מיגרציה. הגוף כותב גם `negative_feedback_reasons` (המערך המנוקה)
+--      וגם `negative_feedback_reason` (`[1]` שלו), ומאפס את הצד החיובי כשהציון מתחת לסף.
 --   הדלתא מול הגוף שקדם: `p_score < 3` ⇒ `p_score < v_threshold` **בשני המקומות**
 --   (השער וה-`case`), וההודעה נושאת מעכשיו את הסף בפועל. הקריאה ל-`params` יושבת
 --   **אחרי** מסלול `p_mark_no_response` ואחרי בדיקת 1–5 — סימון "לא ענה לסקר" עובד
@@ -2162,6 +2538,159 @@ create policy notification_preferences_ceo_all on notification_preferences
 --     §7.96 כלשונו, אחרי שנמדד #15 ⇒ 3,635 ₪ לאירוע שלא יתקיים). הגוף החי = הקובץ השני.
 --   → supabase/migrations/20260903182735_module7_dashboard_summary_rpc.sql (המקור + הכותרת המלאה)
 --   → supabase/migrations/20260903184711_module7_dashboard_cancelled_on_calendar_and_profit.sql (הגוף החי)
+
+-- ── מודול 11 · דו"חות מנהלים (16/09/2026) — 17 פונקציות ──────────────────
+-- 16 פונקציות-קריאה, אחת לכל משטח בנוי, + פונקציית-כתיבה אחת.
+-- 🔑 **דפוס אחיד לכל ה-16, ושלושת חלקיו נבדקים יחד ולא לחוד:**
+--    ‏(1) חתימה: `(p_from date default null, p_to date default null, p_customer_id integer default null,
+--        p_drill jsonb default null) returns jsonb` — ‏`null` בתאריכים = חלון-ברירת-המחדל של הכרטיס,
+--        מחושב **בשעון ישראל**. ‏`p_drill` הוא מה שהופך דוח-קידוח לפונקציה אחת ולא לשלוש.
+--    ‏(2) ‏`security definer` · `stable` · `set search_path to ''` · כל רלציה מוסמכת `public.`.
+--    ‏(3) ‏המשפט הראשון בגוף הוא `assert_module_permission('<המודול הבעלים>', array['edit','view'])`,
+--        ואחריו `revoke execute … from public, anon, authenticated` ואז `grant execute … to authenticated`.
+-- 🔴 **והשער הוא של המודול שמחזיק את הדאטה, לא של 'דו"חות'** (הכרעה 2): לשוניות הנהלה+כספים ⇐
+--    ‏'כספים' · דיילות ⇐ 'דיילות' · לקוחות ⇐ 'לקוחות'. ‏**'דו"חות' שומר על המסלול ועל שתי טבלאות-ה-AI בלבד.**
+--    ⇒ מנהלת-לוגיסטיקה שחסומה ב-'כספים' רואה לשונית ממוסכת, וזו ההתנהגות הנכונה ולא באג.
+-- ⚠️ **שתי חריגות-חתימה, שתיהן מכוונות:** ‏`report_m07_finance_overview` ו-`report_m09_aging` נושאות
+--    פרמטר חמישי `p_asof date default null` — **לשחזור אורקל-הקבלה בלבד; הלקוח אינו שולח אותו.**
+--    השינוי נעשה במיגרציה E2 אחרי שנמדד ש-`origin/main` ו-`origin/dev` אינם מכירים את הפונקציות כלל.
+-- 📐 **מטען-התשובה** (`population` · `window` · `tiles` · `chart` · `columns` · `rows` · `so_what` ·
+--    `definitions` · `drill` · `meta`) נעול ב-`docs/micro_guides/module-11.md` §2ב C8 — **שם, לא כאן.**
+-- 🔴 **הערת-הפונקציה של כל אחת מה-16 היא הצהרת-האוכלוסייה שלה** (📐2) — מי בפנים, מי בחוץ, ואיזה
+--    חלון. זה הטקסט שמופיע גם על המסך, ולכן `comment on function` כאן אינו נוי אלא חוזה.
+-- report_m02_exec_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
+--   → supabase/migrations/20260916052600_module11_d_rpcs_executive.sql (המקור)
+--   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (סבב 5 — חצאי-ההשוואה = 'אשתקד')
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql (הגוף החי, J3 — תוויות-החודשים מקוצרות)
+-- report_m03_trends(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים' · **דוח-קידוח** (שנה←חודש←אירוע)
+--   → supabase/migrations/20260916052600_module11_d_rpcs_executive.sql (המקור)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql (הגוף החי, J3 — תוויות-החודשים מקוצרות)
+-- report_m04_discounts(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
+--   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה + מקרא-הגרף = 'אשתקד' · `quote_id` ב-`format:'id'`)
+-- report_m06_staffing(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
+--   → supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד')
+-- report_m07_finance_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb, p_asof date) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים' · **חתימה בת 5**
+--   → supabase/migrations/20260916051950_module11_e_rpcs_finance.sql (המקור)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (סבב 5 — `project_id` ב-`format:'id'` · ציר-החודשים עברי (`xKey='label'`, המפתח `month` נשמר))
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql (הגוף החי, J3 — תוויות-החודשים מקוצרות)
+-- report_m08_profitability(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
+--   🔴 **רצפת-המהותיות מוצאת את השורות מ-`rows`** (📑ב#5 — *"אינו בדירוג"*), ולא רק ממיינת
+--      אותן לסוף. ‏`meta.below_materiality` ממשיך למנות אותן על כל האוכלוסייה.
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · `project_id` ב-`format:'id'`)
+-- report_m09_aging(p_from date, p_to date, p_customer_id integer, p_drill jsonb, p_asof date) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים' · **דוח-קידוח** · **חתימה בת 5**
+--   🔴 ימי-האיחור נמדדים מול **מועד-הפירעון** (`invoice_sent_at` + `תנאי_תשלום_ימים`), לא מול יום-השליחה.
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — `project_id` ב-`format:'id'` (שתי הרמות) · פסקת-הגרף עוברת ל-'מדרג' (אין 'דלי' על המסך))
+-- report_m12_equipment(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (סבב קודם)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · `project_id` ב-`format:'id'` (ב-`meta.extra_tables`))
+-- report_m14_hostess_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
+--   → supabase/migrations/20260916052359_module11_f_rpcs_hostesses.sql (המקור)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (סבב 5 — חצאי-ההשוואה = 'אשתקד' · 'חלון קבוע' במקום 'קפוא' · ציר-החודשים עברי)
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql (הגוף החי, J3 — תוויות-החודשים מקוצרות)
+-- report_m15_reliability(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
+--   הציון הוא `reliabilityScore` של Smart Match מילה-במילה (הכרעה 38); הספים 0.87/0.95 נקראים מ-`params`.
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · 'חלון קבוע' במקום 'קפוא' (תווית-החלון · ארבעה אריחים · ההגדרות))
+-- report_m16_quality_cost(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
+-- report_m17_fairness(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
+--   → supabase/migrations/20260916065642_module11_f2_rpcs_hostesses_fixes.sql (המקור)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד')
+-- report_m19_customers_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
+--   🔒 **§7.100 (17/09/2026) — שער-כסף שני, בתוך הגוף ולא בלשונית:** קוראת שאין לה `view`/`edit`
+--      על **'כספים'** מקבלת `rows[].revenue_12m = null` ו-`tiles[concentration_vs_drifting].detail`
+--      בלי `top5_revenue`/`total_revenue`/`first_drifting.revenue`, ‏+ `meta.money_masked = true`.
+--      שער 'לקוחות' עצמו לא זז (42501 למי שחסומה עליו). התת-שאילתה זהה לזו של
+--      `get_dashboard_summary` — ‏`assert_module_permission` מעלה שגיאה ולכן אינה משמשת כאן.
+--   → supabase/migrations/20260916052511_module11_g_rpcs_customers.sql (המקור)
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (סבב 5 — תווית-החודש נושאת שנה רק כשהציר חוצה שנה קלנדרית)
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql (הגוף החי, J3 — מיסוך-הכסף + תוויות-החודשים מקוצרות)
+-- report_m20_satisfaction(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' (המכנה נשמר בסוגריים))
+-- report_m21_drifting(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
+--   🔒 **§7.100 (17/09/2026) — ר' מ19.** כאן ארבעה מקומות: אריח `marked_revenue_12m` (ערך · `sub` ·
+--      `detail`) · `only_personal_cadence.sub` ו-`detail.revenue` · `rows[].revenue_12m` ·
+--      **שורת-"אז מה"**, שבה הסכום מוחלף ב-*"(לא זמין בתפקידך)"* דרך אותה תבנית-רג'קס של
+--      `MONEY_RUN` בלשונית. משפט-המדיניות ב-`meta.notes` (‏`₪` בלי ספרות) נשאר על המסך.
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
+--   → supabase/migrations/20260917105300_module11_j3_money_gate_grants_rank_months.sql (הגוף החי, J3 — מיסוך-הכסף)
+-- report_m22_notes(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+--   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'לקוחות'
+--   בלי ריצת-סיווג מאושרת: `rows` ריק · `meta.run` ריק · `meta.export_blocked_reason` נעול ·
+--   אריח הדגלים האדומים מחזיר `null` **ולא 0** — "אין נתון" אינו "אפס".
+--   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
+--   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
+--   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4 — `meta.run.approved_by` נושא שם-אדם, הדוא"ל ב-`approved_by_email`)
+--   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — `window.from = null` + `meta.period_filter_ignored` — הדף מפסיק להדהד תקופה שאינו שואל בה)
+-- approve_feedback_ai_run(p_run_id bigint) returns jsonb
+--   SD · **volatile** · plpgsql · [authenticated, service_role]   ← **חדשה** · שער **edit** על 'דו"חות'
+--   🔴 **פונקציית-הכתיבה היחידה של מודול 11.** מסרבת לריצה ב-`running`, לריצה `failed` ולאישור שני
+--   (`P0001 "ריצת-הניתוח כבר אושרה להצגה."`), ומאשרת `partial`. אומתה חי: מנכ"ל ✅ · גיוס `42501`.
+--   → supabase/migrations/20260916043300_module11_a_feedback_ai_tables.sql
+-- ✅ **`20260916194500_module11_i2_rpc_round3.sql` — הוחל במלואו 16/09/2026 (נמדד 20:4X).**
+--    **תשע רשומות רשם, לפי סדר ההחלה:** `module11_i2_m17` · `_m21` · `_m20` · `_m22` · `_m14` ·
+--    `_m15` · `_m19` · `_m03` · `_m09` *(האחרונה, גרסה `20260916171421`)*.
+--    ⇒ **תשע הפונקציות שלמעלה נשאו שני מצביעים:** ‏I1 כמקור-הביניים (סבב 2) ו-I2 כגוף החי.
+--    ⚠️ **המשפט הזה נכון ל-16/09 בלבד, וסבבי J1/J2 שמתחתיו עידנו אותו** —
+--    המצביע הקובע הוא **השורה האחרונה של כל פונקציה למעלה**, ולא הסיכום הזה.
+-- 🔑 **וההוכחה שהקובץ הוא באמת מה שרץ, כי "הוחל" לבדו אינו מוכיח זאת בקובץ שמוחל בחלקים:**
+--    ‏`md5(prosrc)` החי הושווה ל-md5 של גוף ה-`$function$` שבקובץ — **9 מתוך 9 זהים** *(ובנוסף:
+--    חתימה · `comment on function` · `revoke` · `grant` זהים-בייט ל-I1, 9/9)*. המקור:
+--    ‏`<scratchpad>/results/p2-fixB2.json`, מפתח `gates.md5_after_apply`.
+--    *(בין 19:4X ל-20:1X הקובץ היה באמצע ההחלה — 8 מתוך 9, בלי `_m09` — ולכן הסעיף הזה נשא
+--     "טעון בדיקה" עד שנמדד שוב.)*
+-- 🔴 **ואל תצטט את השורות האלה לסבב הבא — הרץ את הבדיקה:**
+--      select name from supabase_migrations.schema_migrations where name like 'module11_i2%' order by version;
+-- ✅ **`20260917021500_module11_j2_rpc_round5.sql` — הוחל במלואו 17/09/2026.**
+--    **שלוש-עשרה רשומות רשם, לפי סדר ההחלה:** `module11_j2_m02` · `_m04` · `_m06` ·
+--    `_m07` · `_m08` · `_m09` · `_m12` · `_m14` · `_m15` · `_m17` · `_m19` · `_m20` · `_m22`.
+--    **שלוש שלא זזו:** `m03` · `m16` · `m21` — והנימוק לכל אחת כתוב בכותרת המיגרציה
+--    (בסיס-ההשוואה שלהן אינו "אותו טווח שנה אחורה": שנה נקובה · חציון · חודש קודם).
+-- 🔑 **וההוכחה:** ‏`md5(prosrc)` החי הושווה ל-md5 של גוף ה-`$function$` שבקובץ — **13 מתוך 13
+--    זהים**, ו-`proacl` של כל שש-עשרה נשאר `postgres=X | service_role=X | authenticated=X` (אין PUBLIC, אין anon).
+-- 🔴 **ואל תצטט גם את אלה — הרץ:**
+--      select name from supabase_migrations.schema_migrations where name like 'module11_j2%' order by version;
 
 -- ============================================================
 -- 25. עבודות מתוזמנות — cron.job (3 עבודות, כולן active)

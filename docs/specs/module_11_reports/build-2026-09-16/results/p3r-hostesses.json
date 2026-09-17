@@ -1,0 +1,207 @@
+{
+  "tab": "hostesses",
+  "verdicts": [
+    {
+      "index": 1,
+      "lens": "B",
+      "surface": "מ14 (and any surface whose chart returns zero data)",
+      "claim": "One click on the 'החודש' period chip leaves an empty 260px chart frame with no empty-state text; ChartCard has no data.length===0 branch.",
+      "real": true,
+      "corrected_severity": "major",
+      "owner": "shell",
+      "fix_hint": "In ChartCard, when data.length === 0 render the title + a 📐10 empty line instead of the legend, the dir=ltr figure and the sr-only table.",
+      "reason": "Reproduces at HEAD 04ccafff, re-read not inherited: ChartCard.jsx:785-830 renders <ChartLegend>, the dir=\"ltr\" figure and AccessibleDataTable unconditionally, and the file has no data-length branch anywhere. The m14 chart is coalesce(v_chart,'[]') in the CURRENT RPC (untracked I1 migration, m14 body), and the 'החודש' chip is still offered (reportsPeriod.js:13) — round 2's rolling-12m default changed the landing state, not the reachable one. Class-wide across all 16 surfaces, which is why it stays major."
+    },
+    {
+      "index": 2,
+      "lens": "A",
+      "surface": "מ15 · אמינות והתייצבות",
+      "claim": "The page never says at level 0 what 'אדומה' and 'ענבר' mean in numbers, although both words appear on it three times.",
+      "real": true,
+      "corrected_severity": "major",
+      "owner": "rpc",
+      "fix_hint": "Append the two thresholds to report_m15_reliability's definitions (m14's own wording is copyable), using the meta.red_threshold / meta.amber_threshold it already computes.",
+      "reason": "Reproduces on the CURRENT RPC, not the one the verifier read: the untracked I1 migration (20260916114500, mtime 18:18) carries the newest m15 body, and its definitions string (formula · lateness grades · both no-show columns · הבריזה · ביטלה-אחרי-אישור · the frozen window) carries no band threshold — while the same file's m14 definitions prints 'דיילת אדומה = … מתחת ל-X; ענבר = … Y' in full. m15 even computes meta.red_threshold/amber_threshold and never says them. This is C3's deletion test ('at mode 0 the page is fully usable') failing on the surface where the bands drive the action; the numbers exist only at level 2 (scoreBasis) or one surface back on מ14. Absent from the builder's מ15 deviations_from_mockup."
+    },
+    {
+      "index": 3,
+      "lens": "A",
+      "surface": "מ15 · אמינות והתייצבות",
+      "claim": "Ruling 38 (the reliability component in Smart Match stays on) is on no מ15 surface at level 0; the mockup carries it as a base 🔗 block with the weight 0.35.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "doc",
+      "fix_hint": "Reconcile §3.3's row 38 ('phase 2, the reliability RPC') with its own 🔑 closing sentence ('visible on screen' in the phase-3 step); if the screen reading wins, one sentence rides along with #2's definitions edit.",
+      "reason": "Demoted from a build defect to a doc contradiction. The MECHANISM is honoured and I read it this turn: the I1 m15 body's own comment declares 'הציון הוא reliabilityScore של Smart Match מילה-במילה (הכרעה 38)', and §3.3's table routes ruling 38 to 'phase 2, the reliability RPC'. What actually reproduces is that §3.3 contradicts itself — the 🔑 sentence under that table binds every ruling in it to being visible on screen in the phase-3 tab step. The missing sentence is the SAME mockup paragraph as #2 (04_tab_hostesses_approved.html:703-718), so it is one fix, not two."
+    },
+    {
+      "index": 4,
+      "lens": "B",
+      "surface": "מ16 · איכות מול עלות",
+      "claim": "The shared row-cap note fires on a CLIENT chip filter and reads as a server cap: 'מוצגות 17 מתוך 50 שורות' above a pager reading '1–17 מתוך 17'.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "shell",
+      "fix_hint": "Measure RowCapNote against the RAW (pre-transform) rows length, or suppress it whenever a tab transform shrank rows — the same reason the note is already hidden under a selection.",
+      "reason": "Reproduces at HEAD: ReportSurface.jsx:479 is {!selection && <RowCapNote rowTotal={payload.meta?.row_total} shown={payload.rows.length} />} and RowCapNote (line 168) returns null only when rowTotal <= shown — both measured AFTER the tab's transform. The saved payload (payloads/report_m16_quality_cost__hostesses_defaults.json) has rows=50 and meta.row_total=50, i.e. 50<=50 ⇒ the note would not render at all; it exists only because payloadTransforms.jsx:41-43 filters to the 17 unrated. D-25 rules the note's existence and wording and D-30 ⑥ its wording objection — neither covers a client filter triggering it."
+    },
+    {
+      "index": 5,
+      "lens": "B",
+      "surface": "all four (the shell chip vs the tab chip)",
+      "claim": "Two spellings of the same control ship in one module: '× נקי בחירה' (tab) vs '× נקה בחירה' (shell).",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "ishay",
+      "fix_hint": "One word from Ishay (spec §1.5's feminine imperative vs ruling 15-ד as recorded in D-30 ②); then unify the live call sites and delete FiltersBar's dead clear-chip block (lines 89-101).",
+      "reason": "Reproduces, and the split is wider than the finding says — measured by grep at HEAD: 'נקי בחירה' at HostessesTab.jsx:192, tabs/executive/DiscountsSurface.jsx:24 and components/FiltersBar.jsx:100; 'נקה בחירה' at components/ReportSurface.jsx:464. FiltersBar's copy is DEAD — crossFilterLabel has three hits in the repo, all inside FiltersBar itself, so no caller ever passes it — leaving 2 live tab chips against 1 live shell chip. spec.md:109 rules the feminine form for all three house verbs; §9 D-30 ② records 'נקה בחירה' as ruling 15-ד's wording. Two live recorded sources ⇒ C7 conflict question, not a patch."
+    },
+    {
+      "index": 6,
+      "lens": "B",
+      "surface": "מ15 · אמינות והתייצבות",
+      "claim": "Selecting a weekday changes the whole table silently for a screen reader: the chip row's aria-live region is never given text, and the table's announcer is empty too.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "tab",
+      "fix_hint": "Pass announcement to the weekday ChipRow (HostessesTab.jsx:232-236) like the page-filters row above it, and give ChipRow's label an id + role='group' aria-labelledby (ChipRow.jsx:27-28).",
+      "reason": "Reproduces at HEAD: the weekday ChipRow is built with no announcement prop while the row above passes one (line 229), and ChipRow defaults it to '' (ChipRow.jsx:21,47-49). The table's own region is fed only under a cross-filter selection (ReportSurface.jsx:383 → 487), and this tab has no cross-filter by declaration (D-30 ①), so nothing announces. One correction: ChipRow's why-comment claiming 'ReportSurface אינו מעביר announcement' is now stale — line 487 does pass it — but the effect on this tab is unchanged. The unlabelled chip group is module-wide, not מ15-only."
+    },
+    {
+      "index": 7,
+      "lens": "B",
+      "surface": "מ15 · אמינות והתייצבות (mode 2)",
+      "claim": "Two מ15 hints land at the bottom of the page, below definitions and notes, far from the blocks the card anchors them to.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "tab",
+      "fix_hint": "Move reports.reliability.scoreBasis to beforeChart once #2 renders the thresholds paragraph; leave queuePopulation where it is.",
+      "reason": "Half refuted. The order reproduces (ReportSurface.jsx:498-499 renders Footers then renderExtras; HostessesTab.jsx:61-63 puts both keys in extras), but queuePopulation's anchor is the 'מתחת לסף המדגם: N דיילות אינן בדוח' line that the m15 RPC emits into meta.notes and the shell renders as report-meta-notes immediately above it — that IS onboarding-layer-contract §4ב's 'beneath the block'. Only scoreBasis is really adrift, and it has no anchor at all because the datanote paragraph is missing entirely (#2); fixing #2 gives it a home."
+    },
+    {
+      "index": 8,
+      "lens": "A",
+      "surface": "מ15 · אמינות והתייצבות",
+      "claim": "reports.reliability.absenceColumns is not the card's §⑩ sentence, and the change is not in the builder's declared deviation list.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "doc",
+      "fix_hint": "Log the deviation with the rule that fired (כ11's measure-the-direction-first test) — no copy change; the built wording should stay.",
+      "reason": "Both halves reproduce: onboardingCopy.m11.hostesses.js:102 says 'האחד … והשני … גבוהה ב\"אי-פעם\" ולא תיפגע בציון' where cards-hostesses.md §⑥/§⑩ג say 'השמאלי … הימני … גבוהה בימני ולא תיפגע בשמאלי', and the builder's copy_deviations_from_card_section_10 has four entries covering ten keys, none of them this one. But the substitution is RIGHT and has a written precedent — m11-copy-rules כ11 records 'ומדדתי את הציר לפני שכתבתי מימין' as the standard, and a direction word bound to column position is exactly what an RTL table makes unsafe. The defect is the missing log line, not the sentence."
+    },
+    {
+      "index": 9,
+      "lens": "A",
+      "surface": "מ16 · איכות מול עלות (mode 2)",
+      "claim": "reports.qualityCost.term.quadrants drops the card's identification of WHICH quadrant is which — undeclared — so at mode 2 the hint cannot be matched to the scatter above it.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "tab",
+      "fix_hint": "Restore 'הימני-תחתון' / 'השמאלי-עליון' from the card (the scatter sits inside dir=\"ltr\", so כ11's measure-first test passes), or declare the drop with its rule.",
+      "reason": "Reproduces: onboardingCopy.m11.hostesses.js:164 names no direction, while the card's 'שני הריבועים' row spells out 'מימין-למטה' / 'משמאל-למעלה', and the built scatter sits inside ChartCard's dir=\"ltr\" wrapper with x = hourly rate ascending and y = rating — so the card's directions are the ones actually drawn. Same undeclared class as #8 with the opposite outcome: the direction caution was applied where the axis is LTR and the words were safe, and the hint lost its only link to the chart above it."
+    },
+    {
+      "index": 10,
+      "lens": "A",
+      "surface": "מ14 · מבט-על דיילות (mode 2)",
+      "claim": "reports.hostessOverview.gini still carries the workaround wording whose reason the reconcile round measured away — the sub-row it was rewritten to stop pointing at is now rendered.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "tab",
+      "fix_hint": "Revert the two words to the card's 'התת-שורה מדברת ברבעים' (C3 verbatim) now that the sub row exists.",
+      "reason": "Both halves reproduce: the copy still reads 'הוא מדבר ברבעים' (onboardingCopy.m11.hostesses.js:59), and the reason the builder declared for it — copy_deviations_from_card_section_10[3], 'tiles[].sub is not rendered' — is dead at HEAD: KpiTile.jsx:36-47 renders a kpi-sub line and line 126 feeds it tile.sub. A deviation whose stated rule no longer fires is an undeclared deviation (same class as #8/#9). Nothing on screen is wrong today, which is why it stays minor."
+    },
+    {
+      "index": 11,
+      "lens": "A",
+      "surface": "מ14 · מבט-על דיילות",
+      "claim": "Ruling 33 is only three-fifths honoured: 2 of מ14's 5 overview tiles carry no target, including 'הגעה בזמן', whose natural target מ15 exists.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "rpc",
+      "fix_hint": "Add the two targets (on_time ⇒ report_m15_reliability; gap_events ⇒ report_m06_staffing, cross-tab like D-18's נתח-5 precedent) or record the two nulls in D-18 with their reason.",
+      "reason": "Reproduces on the CURRENT RPC, re-derived from the untracked I1 migration rather than the F2 file the verifier read: m14 builds 'target', null for on_time and gap_events, and real doors for red_hostesses⇒m15, gini⇒m17, active_hostesses⇒m16. §9 D-18 names the only deliberate null pair as finance's two (pages deferred) and is silent on m14's. Round 2 also removed the objection to a cross-tab door — the shell now hides a door whose target tab is masked — so 'אירועים עם חוסר'⇒מ6 would degrade safely for a דיילות-only user."
+    },
+    {
+      "index": 12,
+      "lens": "A",
+      "surface": "מ17 · הוגנות השיבוץ",
+      "claim": "The Smart-Match adoption tile prints 'נמדד מ-—' — a preposition followed by an em dash — on the zero-rows branch.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "rpc",
+      "fix_hint": "On the zero-rows branch drop the preposition: 'טרם נמדד · אין עדיין נתון: …'.",
+      "reason": "Still live on the CURRENT RPC (untracked I1 migration, m17 zero-rows branch emits the literal 'נמדד מ-— · אין עדיין נתון: …'; the data branch two lines below builds 'נמדד מ-' || date correctly). Cosmetic only — every required behaviour (value '—', never 0 %, the absence declared in words) is right, so minor stands."
+    },
+    {
+      "index": 13,
+      "lens": "A",
+      "surface": "מ17 · הוגנות השיבוץ (mode 2)",
+      "claim": "At mode 2 the page contradicts itself: the base note says the system has started recording the recommended rank, the hint says it has not.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "doc",
+      "fix_hint": "Correct the card's §⑥ rank1 row (cards-hostesses.md:441) to the 'started recording now' wording, then re-copy that one hint verbatim per C3.",
+      "reason": "The contradiction reproduces on the current tree, both sides re-read this turn: the I1 m17 body pushes 'אימוץ המלצת Smart Match — אין עדיין נתון: המערכת התחילה לרשום … רק מעכשיו' into meta.notes, while onboardingCopy.m11.hostesses.js:204 says 'המערכת עדיין לא רושמת איזה דרג היא המליצה' — copied verbatim, as C3 requires, from cards-hostesses.md:441. The write exists (src/modules/04_hostesses/api.js:447 RANK_COLUMN, used at line 677). The copy is not at fault; the card row went stale when step 1.5 landed."
+    },
+    {
+      "index": 14,
+      "lens": "A",
+      "surface": "מ14 / מ15 (the red queue)",
+      "claim": "A signoff-baseline mismatch that no drift record carries: the screen says 5 ענבר, the baseline says 4.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "doc",
+      "fix_hint": "Add the amber 4⇒5 drift to D-17's recorded list (or to the baseline's drift annotation) with the window that produced it — per C5 the number is not 'fixed'.",
+      "reason": "Reproduces against the oracle itself: signoff-baseline-2026-09-10.md:40 reads 'תור: 6 אדומות · 4 ענבר מתוך 87' while both live surfaces say 5 ענבר. §9 D-17 records the rolling-window drifts it knew about (87.2 % vs the card's 87.3 %, the 0.4329 previous-window Gini) and p2fix-hostesses.json records gini/shares/max — none mentions the amber count. C5 makes the baseline the acceptance oracle and a mismatch a finding, which is exactly what this is."
+    },
+    {
+      "index": 15,
+      "lens": "C",
+      "surface": "מ14 · HostessesTab.test.jsx",
+      "claim": "The test that exists to prove the table heading's count is DERIVED cannot fail if the count is typed.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "tab",
+      "fix_hint": "Give the m14 fixture 2+ rows (or assert the isolated count taken from payload.rows.length) so the derivation is what the assertion measures.",
+      "reason": "Reproduces exactly as stated: HostessesTab.test.jsx:517 asserts toMatch(/1/) and the m14 fixture holds exactly one row (lines 192-201), so replacing ${isolateLtr(payload.rows.length)} at HostessesTab.jsx:118 with the literal '1' keeps it green; the rows:[] test at 520 takes the other TABLE_TITLES branch and cannot catch it either."
+    },
+    {
+      "index": 16,
+      "lens": "C",
+      "surface": "מ15 · מ16 · מ17",
+      "claim": "The per-surface test floor (labels · population · so-what · row click · empty · error+retry · missing params · export) is met for מ14 only.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "tab",
+      "fix_hint": "Parameterise the floor tests over the four fixtures (it.each([m14,m15,m16,m17])) rather than adding four copies — jscpd fails at 3 %.",
+      "reason": "Directionally right, with the inventory corrected: מ16 has TWO tests (590 default chip, 607 cross-filter explicitly off), not one, and the auto-filter-key test at 641 covers m14+m15+m17 together. But every floor test — labels/population/so-what/definitions (469), row door (491), formats (502), empty heading (520), error+retry (687), missing_params (699), export-disabled (710), blank (717), the deletion test (723) and the mode-2 test (735) — renders SURFACES.m14, so the floor is measured on one surface of four and the named mutations do survive."
+    },
+    {
+      "index": 17,
+      "lens": "C",
+      "surface": "all four (mode 2)",
+      "claim": "The mode-2 test asserts that hints EXIST, never where they are, so the placement drift cannot be caught by the suite.",
+      "real": true,
+      "corrected_severity": "minor",
+      "owner": "tab",
+      "fix_hint": "Assert placement, not existence — one hint per slot checked with compareDocumentPosition against its anchor (e.g. redCount precedes chart-figure).",
+      "reason": "Reproduces: HostessesTab.test.jsx:735-747 checks five m14 hint testids with toBeInTheDocument() only, and the four key-integrity tests (761-793) scan the tab's SOURCE files for 'reports.*' strings — none of them reads document position. Collapsing every id into extras therefore keeps the suite green while producing exactly the bottom-of-page wall #7 measures on מ15."
+    }
+  ],
+  "summary": {
+    "real": 17,
+    "refuted": 0,
+    "by_owner": {
+      "shell": 2,
+      "rpc": 3,
+      "doc": 4,
+      "ishay": 1,
+      "tab": 7
+    },
+    "index_base": "1-based, in the order of findings[] in p3v-hostesses.json",
+    "substance_corrected": "#3 (mechanism honoured — doc contradiction only, not a build defect) · #5 (FiltersBar's chip is dead code; the live split is 2 tab vs 1 shell) · #7 (queuePopulation half refuted — its anchor is directly above it) · #8 (copy is right and has a rule behind it; only the log is missing) · #11 and #12 (re-derived from the CURRENT untracked I1 migration, not the F2 file the verifier cited) · #16 (m16 has two tests, not one)",
+    "measured_against": "HEAD 04ccafff with a clean src/ working tree (git status: only e2e/** modified, plus untracked .agents/.codex/supabase temp and the I1 migration), plus supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql — the newest body for m14/m15/m16/m17 and therefore the RPC source of truth this round",
+    "not_verified": "Nothing was re-measured in a browser: every verdict is code-and-payload evidence at HEAD plus the verifier's saved payloads. The I1 migration is untracked and was still being written at 18:18, so the three rpc-owned verdicts are stamped to that read."
+  }
+}

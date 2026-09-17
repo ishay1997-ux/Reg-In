@@ -1,0 +1,47 @@
+{"baseline": {
+      "dev_sha": "9b5ea534333f5259ea93c3ab1c2acae6423d1401",
+      "results": [
+        {
+          "spec": "e2e/customer-page.spec.js:130",
+          "on_dev": "FAIL (both runs, identical): expect(locator('[data-testid^=\"customer-project-\"]:not([data-testid*=\"-link-\"])')).toHaveCount(3) — Received: 6",
+          "on_branch": "FAIL: projects-tab counter 3 vs 6 rendered rows (same locator/count mismatch as quoted in task)",
+          "verdict": "pre-existing"
+        },
+        {
+          "spec": "e2e/dashboard.spec.js:82",
+          "on_dev": "FAIL (both runs, identical): expect(locator('h2').first()).not.toHaveText('מה דורש טיפול') — still 'מה דורש טיפול' after month-nav click",
+          "on_branch": "FAIL: first <h2> stays 'מה דורש טיפול' after the month step (identical wording)",
+          "verdict": "pre-existing"
+        },
+        {
+          "spec": "e2e/finance.spec.js:141",
+          "on_dev": "FAIL (both runs, identical): expect(getByTestId('closing-payment-block')).toBeVisible() — element(s) not found",
+          "on_branch": "FAIL: closing-payment-block not found (identical)",
+          "verdict": "pre-existing"
+        },
+        {
+          "spec": "e2e/prices.spec.js:218",
+          "on_dev": "FAIL (both runs, identical): expect(locator('[data-param=\"יחס_אורחים_לדיילת\"]').getByRole('alert')).toHaveText('ערך חוקי: מספר שלם חיובי') — Received: 'ערך חוקי: מספר שלם בין 1 ל-150'",
+          "on_branch": "FAIL: screen shows 'ערך חוקי: מספר שלם בין 1 ל-150' vs test expects 'ערך חוקי: מספר שלם חיובי' (identical mismatch)",
+          "verdict": "pre-existing"
+        },
+        {
+          "spec": "e2e/projects.spec.js:235",
+          "on_dev": "FAIL (both runs, identical): expect(getByTestId('logistics-state-legal-empty')).toBeVisible({timeout:20000}) — element(s) not found",
+          "on_branch": "FAIL: logistics-state-legal-empty not found (identical)",
+          "verdict": "pre-existing"
+        }
+      ],
+      "verdict": "All five specs fail on origin/dev (@ 9b5ea534333f5259ea93c3ab1c2acae6423d1401) with the exact same assertion messages, locators, and expected/received values as reported on the branch ishay/module-11-build @ 300e80dc. Reproduced deterministically across two full runs of the five-file suite (39 tests each, same 5 failed / 2 skipped / 32 passed split, byte-identical error blocks). None of these failures are introduced by module-11's changes — all five are pre-existing on dev.",
+      "not_verified": [
+        "Did not test whether these five failures also existed on dev prior to some specific earlier commit (only current origin/dev tip was checked) — not needed for the pre-existing/introduced-by-branch question asked.",
+        "Ran only the exact five specified spec files, not the full e2e suite on dev, so no visibility into whether other dev-only regressions exist outside this set."
+      ],
+      "blind_spot": "The two runs used the same single dev checkout/build/preview server across both invocations (I did not tear down and rebuild between run 1 and run 2), so a bug that depends on stale build artifacts, a single long-lived preview-server process, or DB state mutated by an earlier test in the same run could look 'deterministic across reruns' while actually being sensitive to server/process lifetime rather than to code on dev. Concretely checkable: rerun the same five files against origin/dev after `taskkill` of any port-4173 preview process and a fresh `npm run build`, and confirm the identical five failures with identical messages reappear from a cold server.",
+      "log_files": [
+        "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\npm-ci.log",
+        "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\baseline-dev.log",
+        "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\baseline-dev-rerun.log"
+      ]
+    }
+  }

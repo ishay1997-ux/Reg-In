@@ -1,0 +1,698 @@
+{
+ "measured_at": "2026-09-16 10:04",
+ "surfaces": [
+  {
+   "rpc": "report_m02_exec_overview",
+   "file": "report_m02_exec_overview__exec_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": 236,
+   "n_rows": 8,
+   "rows_with_drill_key": 8,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "label",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      "bar",
+      "bar",
+      "line"
+     ],
+     "axes": [
+      "left",
+      "left",
+      "left"
+     ],
+     "formats": [
+      "money",
+      "money",
+      "money"
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 1
+    }
+   ]
+  },
+  {
+   "rpc": "report_m03_trends",
+   "file": "report_m03_trends__exec_baseline.json",
+   "drill_surface": true,
+   "n_charts": 2,
+   "row_total": 3,
+   "n_rows": 3,
+   "rows_with_drill_key": 3,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "year",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "drill surface: the bar drills (PROOF13 + m9 card row 6)",
+     "kinds": [
+      "bar",
+      "bar",
+      "line"
+     ],
+     "axes": [
+      "left",
+      "left",
+      "right"
+     ],
+     "formats": [
+      "money",
+      "money",
+      "percent"
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 1
+    },
+    {
+     "type": "line",
+     "xKey": "year",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "drill surface: the bar drills (PROOF13 + m9 card row 6)",
+     "kinds": [
+      "line",
+      "line",
+      "line"
+     ],
+     "axes": [
+      "left",
+      "left",
+      "left"
+     ],
+     "formats": [
+      "money",
+      "money",
+      "money"
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 1
+    }
+   ]
+  },
+  {
+   "rpc": "report_m04_discounts",
+   "file": "report_m04_discounts__exec_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": 731,
+   "n_rows": 50,
+   "rows_with_drill_key": 50,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "tier",
+     "explicit_filter_key": null,
+     "auto_key": "tier",
+     "why": "in rows only",
+     "kinds": [
+      "bar",
+      "bar"
+     ],
+     "axes": [
+      "left",
+      "left"
+     ],
+     "formats": [
+      "percent",
+      "percent"
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m06_staffing",
+   "file": "report_m06_staffing__exec_baseline.json",
+   "drill_surface": false,
+   "n_charts": 2,
+   "row_total": 135,
+   "n_rows": 50,
+   "rows_with_drill_key": 50,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "scatter",
+     "xKey": "estimated",
+     "explicit_filter_key": null,
+     "auto_key": "estimated",
+     "why": "in columns",
+     "kinds": [
+      "scatter",
+      "scatter"
+     ],
+     "axes": [
+      "left",
+      "left"
+     ],
+     "formats": [
+      "int",
+      "int"
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    },
+    {
+     "type": "histogram",
+     "xKey": "label",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      "bar"
+     ],
+     "axes": [
+      "left"
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m07_finance_overview",
+   "file": "report_m07_finance_overview__finance_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 4,
+   "rows_with_drill_key": 4,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "month",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m08_profitability",
+   "file": "report_m08_profitability__finance_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 30,
+   "rows_with_drill_key": 30,
+   "tiles_with_sub": 5,
+   "tiles_with_compare": 5,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "project_id",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "key exists but no row value matches any datum (join would be empty)",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m09_aging",
+   "file": "report_m09_aging__finance_baseline.json",
+   "drill_surface": true,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 35,
+   "rows_with_drill_key": 35,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 3,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "stackedBar",
+     "xKey": "bucket",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "drill surface: the bar drills (PROOF13 + m9 card row 6)",
+     "kinds": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "axes": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "formats": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m12_equipment",
+   "file": "report_m12_equipment__finance_baseline.json",
+   "drill_surface": false,
+   "n_charts": 2,
+   "row_total": null,
+   "n_rows": 9,
+   "rows_with_drill_key": 9,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 2,
+   "extra_tables": 2,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "item_name",
+     "explicit_filter_key": null,
+     "auto_key": "item_name",
+     "why": "in columns",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    },
+    {
+     "type": "bar",
+     "xKey": "item_name",
+     "explicit_filter_key": null,
+     "auto_key": "item_name",
+     "why": "in columns",
+     "kinds": [
+      null,
+      null
+     ],
+     "axes": [
+      null,
+      null
+     ],
+     "formats": [
+      null,
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m14_hostess_overview",
+   "file": "report_m14_hostess_overview__hostesses_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 6,
+   "rows_with_drill_key": 6,
+   "tiles_with_sub": 5,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "month",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null,
+      null
+     ],
+     "axes": [
+      null,
+      null
+     ],
+     "formats": [
+      null,
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m15_reliability",
+   "file": "report_m15_reliability__hostesses_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 87,
+   "rows_with_drill_key": 87,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 1,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "dow",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null,
+      null
+     ],
+     "axes": [
+      null,
+      null
+     ],
+     "formats": [
+      null,
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m16_quality_cost",
+   "file": "report_m16_quality_cost__hostesses_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": 50,
+   "n_rows": 50,
+   "rows_with_drill_key": 50,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 1,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "scatter",
+     "xKey": "hourly_rate",
+     "explicit_filter_key": null,
+     "auto_key": "hourly_rate",
+     "why": "in columns",
+     "kinds": [
+      null,
+      null
+     ],
+     "axes": [
+      null,
+      null
+     ],
+     "formats": [
+      null,
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m17_fairness",
+   "file": "report_m17_fairness__hostesses_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 106,
+   "rows_with_drill_key": 106,
+   "tiles_with_sub": 6,
+   "tiles_with_compare": 4,
+   "extra_tables": 1,
+   "charts": [
+    {
+     "type": "lorenz",
+     "xKey": "x",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m19_customers_overview",
+   "file": "report_m19_customers_overview_CEO_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 8,
+   "rows_with_drill_key": 8,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "line",
+     "xKey": "month",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m20_satisfaction",
+   "file": "report_m20_satisfaction_CEO_baseline.json",
+   "drill_surface": false,
+   "n_charts": 4,
+   "row_total": null,
+   "n_rows": 19,
+   "rows_with_drill_key": 19,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "score",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    },
+    {
+     "type": "bar",
+     "xKey": "reason",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    },
+    {
+     "type": "bar",
+     "xKey": "reason",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    },
+    {
+     "type": "bar",
+     "xKey": "year",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 1
+    }
+   ]
+  },
+  {
+   "rpc": "report_m21_drifting",
+   "file": "report_m21_drifting_CEO_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 12,
+   "rows_with_drill_key": 12,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "histogram",
+     "xKey": "label",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null
+     ],
+     "axes": [
+      null
+     ],
+     "formats": [
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  },
+  {
+   "rpc": "report_m22_notes",
+   "file": "report_m22_notes_CEO_baseline.json",
+   "drill_surface": false,
+   "n_charts": 1,
+   "row_total": null,
+   "n_rows": 386,
+   "rows_with_drill_key": 386,
+   "tiles_with_sub": 4,
+   "tiles_with_compare": 4,
+   "extra_tables": 0,
+   "charts": [
+    {
+     "type": "bar",
+     "xKey": "human_tag",
+     "explicit_filter_key": null,
+     "auto_key": null,
+     "why": "xKey not a column/row key",
+     "kinds": [
+      null,
+      null,
+      null
+     ],
+     "axes": [
+      null,
+      null,
+      null
+     ],
+     "formats": [
+      null,
+      null,
+      null
+     ],
+     "has_note": false,
+     "is_today_rows": 0,
+     "partial_rows": 0
+    }
+   ]
+  }
+ ]
+}

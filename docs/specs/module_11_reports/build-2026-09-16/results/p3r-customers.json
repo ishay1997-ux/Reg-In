@@ -1,0 +1,255 @@
+{
+ "tab": "customers",
+ "verdicts": [
+  {
+   "index": 1,
+   "lens": "B",
+   "surface": "מ21 · לקוחות מתרחקים",
+   "claim": "A user without 'כספים' gets masked ₪ tiles/columns/rows on מ21 but the so_what line above them still prints ⁦122,124 ₪⁩ — the tab masks tiles/columns/rows and never touches payload.so_what.",
+   "real": true,
+   "corrected_severity": "blocker",
+   "owner": "tab",
+   "fix_hint": "In tabs/customers/payload.jsx maskMoney(), strip/replace ₪ figures in so_what (and any ₪-bearing meta text) the same way maskTile() already drops a ₪-bearing sub.",
+   "reason": "Reproduced on HEAD 04ccafff: payload.jsx maskMoney touches tiles/columns/rows only (so_what appears nowhere in the file), and probe.json runs.projects.surfaces.drifting.soWhat carries '⁦122,124 ₪⁩' with maskedCount=15. cards-customers.md:408-409 rules that מנהלת-פרויקטים must not see this page's ₪ — a broken mechanism inside a recorded decision, not a product question."
+  },
+  {
+   "index": 2,
+   "lens": "B",
+   "surface": "מ19 מול מ21",
+   "claim": "Same metric masked on מ21 and open on מ19 for the same identity: מנהלת פרויקטים sees 'לא זמין בתפקידך' for הכנסת 12 החודשים on מ21 and ⁦635,764 ₪⁩ per row on מ19.",
+   "real": true,
+   "corrected_severity": "major",
+   "owner": "ishay",
+   "fix_hint": "Rule whether the 'כספים' money mask extends to מ19's revenue_12m column (and its so_what/definitions); if yes, implement in overviewPayload() exactly as driftingPayload() does — the RPC deliberately leaves masking to the tab.",
+   "reason": "Reproduced: the projects-identity probe shows מ19 firstRowText '…⁦635,764 ₪⁩' with bodyHasShekel=true while מ21 masks. But the owner is not the RPC: cards-customers.md §⑤ of מ19 (lines 204-215) states permissions with no money carve-out, §⑤ of מ21 (408-409) adds one and opens with 'זהות למ19' — two live sources, no ruling. C7 makes that a conflict question for Ishay, not a patch."
+  },
+  {
+   "index": 3,
+   "lens": "A",
+   "surface": "מ19 · אריח ④ קצב-התשלום תלוי בסוג הלקוח",
+   "claim": "The comparison half prints a COUNT with the tile's unit: 'על ⁦675⁩ חשבוניות ששולמו: ⁦675⁩ ימים'; compare carries no format so KpiTile falls back to the tile's 'days'.",
+   "real": true,
+   "corrected_severity": "major",
+   "owner": "rpc",
+   "fix_hint": "In report_m19_customers_overview's payment_cadence_by_type tile add 'format','int' to the compare object — or drop compare.value (the label already says 675) once the shell's null-value branch (#11) lands.",
+   "reason": "Verified in source, not only on screen: KpiTile.jsx CompareLine still reads `compare.format ?? fallbackFormat` on HEAD, and the pending I1 migration (line 4321-4324) still builds this compare as {value: v_pay_n, label: 'על <v_pay_n> חשבוניות ששולמו'} with no format — the same variable in both halves. I1's compare-format sweep covered מ3 only ('זה המקרה היחיד'), so it survives the routed server fix."
+  },
+  {
+   "index": 4,
+   "lens": "A",
+   "surface": "מ22 · אריח ④ דגלים אדומים",
+   "claim": "The tile shows ⁦25⁩ red flags over two approved runs while its own comparison line reads 'יימדד אחרי הריצה הראשונה: —'.",
+   "real": true,
+   "corrected_severity": "major",
+   "owner": "rpc",
+   "fix_hint": "In report_m22_notes, branch the red_flags compare on v_run/v_run_cnt (previous approved run's count, or compare:null) instead of the unconditional 'יימדד אחרי הריצה הראשונה'.",
+   "reason": "Confirmed in the SQL body, not only the screen: I1 line 5711 builds `'compare', jsonb_build_object('value', null, 'label', 'יימדד אחרי הריצה הראשונה', 'direction','flat')` unconditionally, while the same tile's window string already branches on v_run_cnt ('⁦2⁩ ריצות מאושרות'). No ruling covers it; not on the routed server-fixer list."
+  },
+  {
+   "index": 5,
+   "lens": "A",
+   "surface": "מ19 · אריח ② · מ22 · אריח ②",
+   "claim": "The comparison half repeats the tile's own value with an ▲ ('▲פילוח לפי שנה: ⁦33⁩') where the approved mockup draws the year split '2024: 4 · 2025: 19 · 2026 עד היום: 10'; tiles[].detail.by_year holds the numbers and never reaches the screen.",
+   "real": true,
+   "corrected_severity": "major",
+   "owner": "rpc",
+   "fix_hint": "Build the compare label from by_year ('⁦2024⁩: ⁦4⁩ · ⁦2025⁩: ⁦19⁩ · ⁦2026⁩ עד היום: ⁦10⁩') with value null and direction flat, in both report_m19_customers_overview and report_m22_notes.",
+   "reason": "Confirmed at both ends: I1 lines 4285 and 5669 both emit {value: v_other, label:'פילוח לפי שנה', direction:'up'} — value identical to the tile value, direction hard-coded; the approved mockup 05_tab_customers_approved.html:509-510 draws the three-year split in that exact slot. Pair with #11 so a null value does not render ': —'."
+  },
+  {
+   "index": 6,
+   "lens": "A",
+   "surface": "all four (7 live charts)",
+   "claim": "Not one of the tab's seven charts carries chart.note, while the approved mockup gives every chart card an explanatory note — including מ20's 'הסולם כאן עצמאי ואינו משותף לגרף השלילי שלצידו'.",
+   "real": true,
+   "corrected_severity": "major",
+   "owner": "rpc",
+   "fix_hint": "Add chart.note to the customers RPCs the way I1 already did for מ9/מ16/מ17 — starting with מ20's two reason charts (independent scales, 0–20 vs 0–10 side by side).",
+   "reason": "Reproduced and not covered: ChartCard.jsx:800 renders chart.note, the mockup carries the paragraphs (lines 559/844/899/936/955/973/1021/1243), and the pending I1 migration adds chart.note to מ9/מ16/מ17 only — its מ20 block has title/unit/layout and no 'note'. Only the מ20 scale note is major (it prevents the bar-length comparison the mockup forbids); the other five are minor content."
+  },
+  {
+   "index": 7,
+   "lens": "B",
+   "surface": "מ20 · מ21 (empty-after-filter)",
+   "claim": "With a customer selected the table drops to zero rows and says nothing — header row, no body, no 'אין … בתקופה שנבחרה', no [נקה מסננים] — because hasContent stays true on population-level tiles/charts.",
+   "real": true,
+   "corrected_severity": "major",
+   "owner": "shell",
+   "fix_hint": "Give ReportTable an empty-body row (card wording + clear-filters affordance) when columns exist and rows are 0, instead of relying on ReportSurface's all-or-nothing hasContent envelope.",
+   "reason": "Reproduced in code and measurement: ReportSurface.jsx hasContent = tiles||charts||rows, ReportTable.jsx maps view.pageRows with no empty branch, and probe ceo_filtered shows מ20/מ21 with exportDisabled=true (no rows to export) and envelope=null. cards-customers.md:173 locks 'טבלה ריקה ⇒ ריק-אחרי-סינון, לא שורה ריקה'. Exactly the silent-empty class §4.3 names as this module's core risk."
+  },
+  {
+   "index": 8,
+   "lens": "B",
+   "surface": "all four (page subtitle, 📐17)",
+   "claim": "With a customer selected the page subtitle still reads '… · כל הלקוחות' while the picker shows the customer and the export filename says 'לקוח-נבחר'; the shell builds its own label and never passes customerName.",
+   "real": true,
+   "corrected_severity": "major",
+   "owner": "shell",
+   "fix_hint": "ReportsPage.jsx:243 — pass customerName (look up customerId in the `customers` state already loaded at line 176) into formatWindowLabel, which accepts it.",
+   "reason": "Reproduced on HEAD: ReportsPage.jsx:243 calls formatWindowLabel({from,to}) while src/lib/reportsFormat.js:213-222 takes customerName and otherwise prints 'כל הלקוחות'; probe ceo_filtered windowLabel = '⁦01/01/2026–16/09/2026⁩ · כל הלקוחות' on all four surfaces. The data is already in the page, so it is a one-line fix — and a subtitle naming the wrong population under a filter is a 📐17/📐2 statement, not cosmetics."
+  },
+  {
+   "index": 9,
+   "lens": "A",
+   "surface": "all four (⑩א anchor) + מ22 run bar",
+   "claim": "The §⑩ 'why' hint of all four surfaces renders above the population line (and on מ22 so does the מ25 run bar), while the card anchors it under the 'אז מה' line and above the tiles; the shell has no slot there.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "shell",
+   "fix_hint": "Add a renderAfterSoWhat (renderBeforeTiles) slot to ReportSurface between the so_what paragraph and <Tiles>, and move the tab's why-hint + run bar into it.",
+   "reason": "Reproduced in code and in the browser: ReportSurface.jsx calls renderTop?.(payload) before <PopulationLine> and offers nothing between so_what and Tiles; probe ceo_mode2 order starts hint-…why → report-population on all four, and מ22 reads why → m25-run-bar → runGate → population. No ruling covers the anchor; C2 binds order to the mockup (so-what 470 > hint 476 > tiles 482)."
+  },
+  {
+   "index": 10,
+   "lens": "A",
+   "surface": "מ19 ① ③ · מ20 ④ · מ21 ④ · מ22 ③",
+   "claim": "On five tiles the comparison value is appended after a label that is already a full sentence, producing a second colon and (on some) a duplicated number.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "rpc",
+   "fix_hint": "Where the compare label is a whole sentence, send compare.value = null (the shell's #11 fix then prints the label alone); otherwise shorten the label to the comparison basis only.",
+   "reason": "The rendered strings in probe.json reproduce exactly and KpiTile.jsx prints `{compare.label}: <Ltr>{value}</Ltr>` unconditionally. ⚠️ the wording is only half accurate: a literal duplicate occurs on 2 of 5 (מ20④ 27:27, מ21④ 2.43:2.43); on מ19① the label carries 68 and the value 212, and on מ22③ the 37 is duplicated from the sub, not the label. Cosmetic ⇒ minor — and note מ21④'s trailing '2.43' arrives as a string, so it renders without bidi isolates."
+  },
+  {
+   "index": 11,
+   "lens": "B",
+   "surface": "מ21 ② · מ22 ① ④",
+   "claim": "Three tiles use compare.label as a sentence with compare.value null and the tile prints a dangling em-dash: '… לא סכום שצפוי להיאבד: —'.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "shell",
+   "fix_hint": "In KpiTile.jsx CompareLine, when compare.value is null/undefined render the label alone (no ': ' and no NO_VALUE) — one branch that serves all 16 surfaces and unblocks the RPC fixes in #5 and #10.",
+   "reason": "Reproduced on HEAD: CompareLine has no null branch (`{compare.label}: <Ltr>{valueText}</Ltr>`, valueText = formatByType(null,…) = '—' per reportsFormat NO_VALUE), and probe shows the three rendered lines. Shell round 2 added compare.note but not this branch."
+  },
+  {
+   "index": 12,
+   "lens": "A",
+   "surface": "מ19 · טבלת ⁦8⁩ הגדולים",
+   "claim": "'ממוצע המשוב שלו' shows 4.6 (format 'ratio') where the approved mockup shows '4.63 · n=129' — two decimals and the sample size, which is absent from the payload column.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "rpc",
+   "fix_hint": "Same pattern I1 ⑤ used for מ21: emit a combined text cell (score + ' · n=<count>') under a new row key and point the column at it, or declare the column 'score' and add the n — no tenth column (G-ל5 locks the count).",
+   "reason": "Confirmed in the pending I1 body (avg_feedback declared 'ratio', one decimal) against mockup line 671 '4.63 · n=129'. NOT a duplicate of the routed 'מ21 two-number cell' item — that one is מ21's score_pair; this column was never touched by I1. A declaration question ⇒ rpc, and it is content the mockup draws ⇒ minor."
+  },
+  {
+   "index": 13,
+   "lens": "B",
+   "surface": "מ19 · גרף ממוצע לפי חודש",
+   "claim": "The x-axis and the chart's screen-reader table print raw ISO keys '2026-01'…'2026-08' instead of an Israeli month label.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "rpc",
+   "fix_hint": "Return a Hebrew month label in chart.data (as report_m03_trends does with its 'label' key) and point xKey at it — the category axis has no formatter by design.",
+   "reason": "Reproduced and not covered by shell round 2: ChartCard's categoryAxis(xKey) passes axisProps() with no tickFormatter (the landed 'formatted axis ticks' fix is on the VALUE axis, and formatAxisTick passes 'text' through anyway); I1 gives this chart unit/series format but leaves xKey='month' over raw v_chart keys. probe headers show '2026-01'…"
+  },
+  {
+   "index": 14,
+   "lens": "B",
+   "surface": "מ22 · פס-הניתוח (מ25)",
+   "claim": "The run bar is amber in every state, including the settled state 5, while the approved mockup styles .runbar white/slate and reserves amber for .runbar.warn.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "tab",
+   "fix_hint": "AnalysisRunBar.jsx:216 — derive the border/background from the state (white + slate-200 by default, amber only for the states the mockup marks .warn).",
+   "reason": "Reproduced at both ends on HEAD: the section className is a fixed 'border-amber-200 bg-amber-50', and the mockup CSS lines 310-316 define .runbar white with .runbar.warn amber. A C2 'pixels ⇐ mockup' item ⇒ minor."
+  },
+  {
+   "index": 15,
+   "lens": "B",
+   "surface": "מ19 (and מ21 for a masked identity)",
+   "claim": "The four overview tiles wrap 2+2 at 1280px with unequal widths where the mockup draws four tiles on one row; the long compare/sub lines widen them.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "shell",
+   "fix_hint": "Give the tile the mockup's own box (min-width 210px, max-width 340px, flex:1 1 210px) in StatTile/Tiles and cap the compare line like SubLine's max-w-[210px] — flex-wrap stays, so Ishay's 08/08 flex-not-grid ruling is untouched.",
+   "reason": "Reproduced, and the mockup is more specific than the finding says: .tiles is itself flex-wrap (line 187) but .tile carries min-width:210px; flex:1 1 210px; max-width:340px (188-190), while the shell's Tiles/StatTile set no width bounds and CompareLine has no max-w — one long comparison sentence alone forces the wrap."
+  },
+  {
+   "index": 16,
+   "lens": "A",
+   "surface": "מ22 · מצב 'טרם אושרה ריצת-ניתוח'",
+   "claim": "In the no-approved-run state the explanation block renders at the very bottom of the page, below the empty table, definitions and meta.notes, while the mockup places that basebanner directly above the table.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "tab",
+   "fix_hint": "Render NoApprovedRun from renderBeforeTable (it fires whenever columns exist, which they do in the no-run payload) instead of renderExtras.",
+   "reason": "The placement is certain from code even though the state was reproduced by rewriting the RPC response: CustomerSurface.jsx puts NoApprovedRun in renderExtras, which ReportSurface renders last, after Footers; the mockup's c4 basebanner (1593) sits above the matrix table (~1608). The better slot already exists in the shell ⇒ tab-owned, minor."
+  },
+  {
+   "index": 17,
+   "lens": "C",
+   "surface": "reconciliation (p2vf-customers.json)",
+   "claim": "The builder's report says 'p2vf-customers.json still does not exist' and reconciles against the migration file instead; the file existed ~80 minutes before the report was written.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "doc",
+   "fix_hint": "Correct the record (the builder's not_verified line / the morning table) to say the file existed and all 12 payload_changes were re-verified — no product change.",
+   "reason": "Both halves check out: results/p2vf-customers.json is 30,856 bytes dated 16/09 09:14 and p3-customers.json (10:36) not_verified[3] literally reads 'p2vf-customers.json still does not exist'. Zero product impact — minor rather than none because an inherited 'the file does not exist' is exactly the class that gets repeated forward."
+  },
+  {
+   "index": 18,
+   "lens": "C",
+   "surface": "CustomersTab.test.jsx — hint-key test",
+   "claim": "The 'every <Hint id> resolves' test reads only tabs/customers/CustomerSurface.jsx, so a typo'd hint key in AnalysisRunBar.jsx or CustomersTab.jsx renders null in production with the suite green.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "tab",
+   "fix_hint": "Scan all of src/modules/11_reports/tabs/customers/** plus CustomersTab.jsx for the /'(reports\\.[A-Za-z.]+)'/ pattern instead of one file, keeping the two-way equality against the copy file.",
+   "reason": "Verified at CustomersTab.test.jsx:788-797 — readFileSync of the single file. The two-way equality does force every copy key to appear in that file, so an unknown (typo'd) key placed elsewhere is invisible exactly as claimed. Test robustness only ⇒ minor."
+  },
+  {
+   "index": 19,
+   "lens": "C",
+   "surface": "CustomersTab.test.jsx — coverage",
+   "claim": "Three coverage gaps: masking asserted only on tiles/sub/column (so the so_what leak passes green); nothing asserted about the empty-after-filter table; the deletion test runs on מ21 only and the level-2 test asserts hint presence, never its anchor.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "tab",
+   "fix_hint": "Add a so_what assertion to the PROJECTS masking test (:580), an empty-table-message assertion to the rows:[] test (:780), and an order assertion (hint after report-so-what, before report-tiles) to the level-2 test.",
+   "reason": "All three gaps verified in the file — but the middle claim's wording is wrong: the export test at :780 DOES render {...overviewPayload(), rows: []}, i.e. tiles+charts+0 rows; what is missing is any assertion about the table, not the render. The gaps are real and each maps to a live finding (#1, #7, #9), which is why they matter more than ordinary coverage."
+  },
+  {
+   "index": 20,
+   "lens": "A",
+   "surface": "מ19 · מ21 · מ22 (tile window lines)",
+   "claim": "Eleven of sixteen tiles ignore the customer filter but their window lines say only 'אינו מושפע ממסנן התקופה'; the customer-filter exemption is stated once, page-level, in meta.notes.",
+   "real": true,
+   "corrected_severity": "minor",
+   "owner": "ishay",
+   "fix_hint": "Rule card ⑧22.5: either the exempt tiles carry 'אינו מושפע ממסנן הלקוח' in their own 📐3 window line (the card's recommendation, one string per tile in the RPCs) or the page-level meta.notes sentence stands as the single statement.",
+   "reason": "Factually reproduced (probe ceo_filtered: all four מ19 tile windows say only 'אינו מושפע ממסנן התקופה', metaNotes carries 'ואינם מושפעים ממסנן הלקוח'), and cards-customers.md:548 item 22.5 is 🔵 open with exactly this recommendation — an open card item is not a recorded ruling, so it does not refute; it routes to Ishay, as the verifier itself framed it."
+  }
+ ],
+ "summary": {
+  "real": 20,
+  "refuted": 0,
+  "by_owner": {
+   "doc": 1,
+   "ishay": 2,
+   "rpc": 7,
+   "shell": 5,
+   "tab": 5
+  },
+  "by_severity": {
+   "blocker": 1,
+   "major": 7,
+   "minor": 12
+  },
+  "measured_against": "HEAD 04ccafff (git status: src/ and docs/ clean at that commit) + the untracked server-fixer migration supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql, which is written but NOT reflected in the payloads the verifier measured (no chart.layout / unit_label in any probe payload).",
+  "severity_changes": [
+   "#1 major => blocker (money reaches a role the card denies money, inside a recorded ruling)"
+  ],
+  "owner_changes": [
+   "#2 rpc => ishay (two live card sources, no ruling => conflict question; and the mask itself is the tab's, per the RPC's own meta.notes)"
+  ],
+  "partial_inaccuracies": [
+   "#10: only 2 of 5 tiles literally repeat a number from the label",
+   "#19: a tiles+charts+rows:[] payload IS rendered at CustomersTab.test.jsx:780 - the gap is the missing assertion, not the missing render",
+   "#16: the no-run STATE was reproduced by rewriting the RPC response; the placement claim is nonetheless proven by CustomerSurface.jsx's renderExtras slot"
+  ],
+  "duplicate_check": "None of the 20 duplicates the five items routed to the server fixer (customers date columns - מ21 two-number cell - chart.layout horizontal - chart.unit/series[].format - target.report): read in the I1 migration body, which fixes those five and leaves #3 (compare.format on m19 tile 4), #4, #5, #6 (customers chart.note), #12 and #13 untouched.",
+  "ruling_check": "Checked against §9 D-9..D-33 and §2ב C1-C8: D-30/D-31 cover cross-filter (not raised here), D-28 the chart cap, D-29 the masked-target door (already closed in this tree). Nothing there covers any of the 20; card ⑧19.2 (closed in this tree), ⑧21.4 (implemented) and ⑧22.5 (open => #20) were the only card items in range."
+ }
+}

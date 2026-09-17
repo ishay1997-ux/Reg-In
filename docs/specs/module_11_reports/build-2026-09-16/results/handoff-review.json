@@ -1,0 +1,481 @@
+{
+  "_meta": {
+    "reviewer": "fresh-context agent, read-only on the repo",
+    "target": "docs/specs/module_11_reports/HANDOFF-build-2026-09-16.md",
+    "target_mtime_local": "2026-09-16 08:31:47 +0300",
+    "reviewed_at_local": "2026-09-16 ~08:40 +0300",
+    "note": "verdict 'stale' = correct when written, overtaken by events (per the review brief); counted separately from 'wrong'."
+  },
+  "q1": [
+    {
+      "claim": "Branch ishay/module-11-build at fd550ea9; 7 commits ahead of origin/dev",
+      "section": "4.1",
+      "check": "git log --oneline origin/dev..HEAD ; git rev-list --count origin/dev..HEAD",
+      "result": "8 commits: f4c18ab3 3d64b0da a8fd49ca ec1d00b5 95a6f211 cd6869b5 0d520fcd fd550ea9. HEAD is still fd550ea9 and origin/dev is still 9b5ea534, so it was 8 at write time too. Also internally inconsistent with row 2 (3 pushed + 5 unpushed = 8).",
+      "verdict": "wrong"
+    },
+    {
+      "claim": "Only a8fd49ca is pushed; the branch is 5 commits ahead of its own remote",
+      "section": "4.2",
+      "check": "git branch -vv ; git reflog show origin/ishay/module-11-build",
+      "result": "reflog: the remote was a8fd49ca, then 'update by push' to fd550ea9. So 3 commits were pushed (a8fd49ca plus its two ancestors) and 5 were not - correct when written. Now 0 ahead.",
+      "verdict": "stale"
+    },
+    {
+      "claim": "Working tree has no modified tracked files; untracked are .agents/ .codex/ supabase/.temp/ src/lib/reportsHostesses.test.js",
+      "section": "4.3",
+      "check": "git status --short (run twice, 5 minutes apart)",
+      "result": "9 modified tracked files now (src/lib/dates.js, 4x src/lib/onboardingCopy.m11.*.js, 4x tabs/*Tab.jsx); untracked also includes header_d2.txt, 4 tab test files, 4 tab directories and 3 uncommitted migrations. The e3 migration file (mtime 08:26:10) already existed 5 minutes before the handoff was saved (08:31:47) and was already missing from this row.",
+      "verdict": "wrong"
+    },
+    {
+      "claim": "11 migration files supabase/migrations/20260916* (A B C D E E2 F F2 G H0 H1)",
+      "section": "4.4",
+      "check": "ls supabase/migrations/20260916* ; ls -la --time-style=full-iso on the extra file",
+      "result": "12 at write time - 20260916081500_module11_e3_rpcs_finance_rounding.sql has mtime 08:26:10, before the handoff's own 08:31:47. 14 now (g2 customers fixes and d2 executive fixes have landed since).",
+      "verdict": "wrong"
+    },
+    {
+      "claim": "The live registry holds 21 m11 rows for those 11 files (E2->3, F->3, F2->7, the rest 1 each)",
+      "section": "4.5",
+      "check": "MCP list_migrations on yfeovxppnfoafmfbdfvh, filtered module11_",
+      "result": "22 rows. The E2=3 / F=3 / F2=7 breakdown is exact. The 22nd is module11_e3_finance_m07, version 20260916053148 = 08:31:48 local - one second after the handoff was saved.",
+      "verdict": "stale"
+    },
+    {
+      "claim": "Registry version != file timestamp (~3-hour UTC skew); compare by name, never by version",
+      "section": "4.6",
+      "check": "compared every 20260916 file name against its registry name and version",
+      "result": "The mismatch is real and the operational rule holds. The magnitude is loose and is not a constant offset: module11_a 2h32m (043300 vs 020111), h0 2h56m, e3 2h43m - so it is not a timezone skew at all, it is author-chosen file timestamps.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "16 report_m* RPCs plus approve_feedback_ai_run are live",
+      "section": "4.7",
+      "check": "select count(*) and string_agg from pg_proc where proname like 'report_m%'; same for approve_feedback_ai_run",
+      "result": "16 exactly (m02 m03 m04 m06 m07 m08 m09 m12 m14 m15 m16 m17 m19 m20 m21 m22) plus approve_feedback_ai_run = 1.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "16/16 function bodies were md5-equal to their files at 08:0X",
+      "section": "4.7",
+      "check": "not re-run (the handoff itself marks this inherited); spot-checked report_m07_finance_overview's live body instead",
+      "result": "Not re-proved. The spot check shows the live report_m07_finance_overview already contains round(sum( - the E3 rounding flip is live in the DB while its migration file is uncommitted, so at least one function is not equal to its last committed file.",
+      "verdict": "unverifiable"
+    },
+    {
+      "claim": "feedback_ai_insights = 426 rows; runs 5 and 6 carry approved_at / approved_by",
+      "section": "4.8",
+      "check": "select run_id, status, ok_count, model, approved_at is not null, approved_by is not null from feedback_ai_runs order by run_id",
+      "result": "426 insights. Runs 1-4 failed with ok_count 0; run 5 partial / 40 / approved; run 6 done / 386 / approved. Both approved rows also have approved_by.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "Approval does NOT change status: run 5 is still partial, run 6 is done",
+      "section": "4.9",
+      "check": "the same query",
+      "result": "Exactly as stated.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "params = 47, assignments = 5,741, recommended_rank non-null = 0",
+      "section": "4.10",
+      "check": "three select count(*)",
+      "result": "47 / 5741 / 0.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "docs/schema.sql does not yet contain report_m02_exec_overview, feedback_ai_runs, recommended_rank, approve_feedback_ai_run (all 0)",
+      "section": "4.11",
+      "check": "grep -c each of the four in docs/schema.sql",
+      "result": "0 0 0 0.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "docs/db_roadmap.md M11-2 to M11-5 all still read 'not written'",
+      "section": "4.12",
+      "check": "grep -n 'M11-[2-5]' docs/db_roadmap.md and read the State column of each row",
+      "result": "All four rows carry the empty-box marker and the words 'not written'.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "e2e/reports.spec.js does not exist; /reports is not in accessibility.spec.js; smoke-anchors.json has no reports block",
+      "section": "4.13",
+      "check": "ls e2e/ ; grep -n reports e2e/smoke-anchors.json e2e/accessibility.spec.js",
+      "result": "25 spec files, no reports.spec.js. Zero 'reports' hits in either file.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "docs/CLAUDE_CODE_LOG.md newest entry is from the previous session (calendar colours); no m11 build entry yet",
+      "section": "4.14",
+      "check": "grep -n '^### ' docs/CLAUDE_CODE_LOG.md",
+      "result": "Newest heading: '16/09/2026 - the calendar colour becomes the status, and a seed fix that had to go through the screen's own door'.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "Estimation record #12 is open, ending with the 'will be closed at the end' placeholder",
+      "section": "4.15",
+      "check": "grep -n '#12' docs/guides/01_estimation_log.md and read the record",
+      "result": "Line 54 header carries the open-lock marker; the record's actuals line is still the placeholder.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "Local main is 13 behind origin/main; local dev is level with origin/dev at 9b5ea534",
+      "section": "4.16",
+      "check": "git fetch origin ; git branch -vv",
+      "result": "main d7185dc0 [origin/main: behind 13]; dev 9b5ea534 [origin/dev] with no ahead/behind.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "Eight agents launched at 08:2X had not returned; a returned agent has written its JSON",
+      "section": "4.17",
+      "check": "ls <scratchpad>/results/ (twice)",
+      "result": "p2-e3-finance.json and p2fix-hostesses.json have since landed, and four tab directories plus two fix migrations (g2, d2) are on disk. At least 2 of the 8 have returned and the P3 builders are actively writing.",
+      "verdict": "stale"
+    },
+    {
+      "claim": "The scratchpad is live and changes under you (tasks/p3-lens.md appeared at 08:22 between two ls calls)",
+      "section": "4.18",
+      "check": "ls -la <scratchpad>/tasks ; repeated ls of results/",
+      "result": "p3-lens.md mtime is 08:22. Independently re-proved: p2-e3-finance.json appeared in results/ between two of my own ls calls during this review.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "npm run check:bidi is RED: src/lib/reportsCustomers.js, the JSDoc line with a digit glued to the multiplication sign",
+      "section": "4.19",
+      "check": "npm run check:bidi > log 2>&1 ; echo exit=$? ; read the log",
+      "result": "exit=1, exactly one candidate line: src\\lib\\reportsCustomers.js:98, that JSDoc line.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "check:docs-structure OK (115 files), check:declared-counts OK (6 numbers), prettier --check on this handoff OK",
+      "section": "4.20",
+      "check": "ran all three, exit codes read from log files (not piped)",
+      "result": "exit 0 and '115 files scanned, zero findings'; exit 0 and '6 declared numbers checked'; exit 0 and 'All matched files use Prettier code style'.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: the Stop hook exits 0 when the tree is clean, silently disabling the doc enforcement",
+      "section": "6",
+      "check": "read .claude/hooks/check-docs-updated.sh",
+      "result": "Confirmed at the CHANGED guard. The hook's own comment says a session that commits everything before finishing bypasses all the enforcement below, silently, and records Ishay's 12/08/2026 ruling not to change that behaviour. The handoff's quote drops one word ('below') but is otherwise verbatim.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: the Stop hook fires while agents are writing under src/modules/11_reports/",
+      "section": "6",
+      "check": "read the hook's per-session marker logic and enforcement 0",
+      "result": "Mechanism confirmed: per-session marker files written by protect-frozen-files.sh carry the exact paths, and enforcement 0 counts a module file only if it appears there. Agents writing on the orchestrator's session id do mark it.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: the bash-dialect hook blocks piping gate output to tail/head",
+      "section": "6",
+      "check": "it fired on two of my own commands during this review",
+      "result": "block-shell-dialect-mixup.sh refused both, with the 'exit code hidden' message and the redirect-to-a-log remedy.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: protect-frozen-files.sh blocks edits to committed migrations; an uncommitted draft is freely editable",
+      "section": "6",
+      "check": "read .claude/hooks/protect-frozen-files.sh",
+      "result": "Confirmed - the append-only branch and its message, which itself states that a not-yet-committed draft migration may be edited freely.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: grep -c with a CR literal is not a CR gate in this Git Bash",
+      "section": "6",
+      "check": "not re-measured (needs a CRLF fixture); micro-guide D-12 records two independent agent measurements",
+      "result": "Recorded by two agents with truth-table fixtures. I did not reproduce it.",
+      "verdict": "unverifiable"
+    },
+    {
+      "claim": "TRAP addendum: 'Root CLAUDE.md section 3 still quotes the old idiom'",
+      "section": "6 and 7",
+      "check": "grep the whole of CLAUDE.md for the idiom; then grep the whole repo",
+      "result": "WRONG. Root CLAUDE.md section 3's CRLF row says only 'verify the CR byte count in the file: must be 0' - the grep idiom appears nowhere in CLAUDE.md. The stale idiom actually lives at docs/guides/prompt_library.md:321. The sentence was inherited verbatim from micro-guide section 9 D-12 without a check, so the Phase-4 doc ripple it schedules is aimed at the wrong file.",
+      "verdict": "wrong"
+    },
+    {
+      "claim": "TRAP: MCP apply_migration truncates at ~90 KB, silently",
+      "section": "6",
+      "check": "cannot be reproduced read-only",
+      "result": "Not reproducible here. Consistent with the observed 12 files producing 22 registry rows.",
+      "verdict": "unverifiable"
+    },
+    {
+      "claim": "TRAP: registry version != file name timestamp",
+      "section": "6",
+      "check": "see row 4.6",
+      "result": "Confirmed.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: REVOKE FROM PUBLIC does not block anon; revoke from public, anon, authenticated explicitly",
+      "section": "6",
+      "check": "has_function_privilege('anon'|'authenticated', oid, 'EXECUTE') on report_m02_exec_overview and approve_feedback_ai_run",
+      "result": "anon=false, authenticated=true on both - the explicit revoke/grant pattern is in place on the live functions.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: RLS on with no policy returns 0 rows and error null (cited to supabase/migrations/CLAUDE.md section 3 and src/modules/11_reports/CLAUDE.md section 3)",
+      "section": "6",
+      "check": "grep both files",
+      "result": "supabase/migrations/CLAUDE.md line 56 carries exactly that trap row; src/modules/11_reports/CLAUDE.md line 33 carries the m11-specific version. Both citations are correct.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: check:declared-counts is hard-coded to five m11 files",
+      "section": "6",
+      "check": "read scripts/check-declared-counts.mjs",
+      "result": "Exactly those five constants: SCREENS (screens-approved.md), SPEC (spec.md), GUIDE (docs/guides/modules/module_11_reports.md), CONTRACT (design-contract.md), micro (docs/micro_guides/module-11.md).",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: lint-staged rewrites *.{js,jsx} on commit via .husky/pre-commit",
+      "section": "6",
+      "check": "cat .husky/pre-commit ; read the lint-staged block in package.json",
+      "result": "pre-commit is 'npx lint-staged'; the config is {\"*.{js,jsx}\": [\"eslint --fix\", \"prettier --write\"]}.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: npm run test:e2e excludes the smoke group via --grep-invert",
+      "section": "6",
+      "check": "read package.json scripts",
+      "result": "test:e2e = playwright test --config=playwright.e2e.config.js --grep-invert <smoke tag>; smoke is a separate script (node scripts/smoke.mjs).",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: format:check OOMs on the whole tree",
+      "section": "6",
+      "check": "not re-run (would risk the OOM); ran prettier --check on a single file instead",
+      "result": "Not re-proved. A single-file prettier --check runs fine.",
+      "verdict": "unverifiable"
+    },
+    {
+      "claim": "TRAP: check:context fails without a module CLAUDE.md; src/modules/11_reports/CLAUDE.md exists",
+      "section": "6",
+      "check": "ls -la src/modules/11_reports/CLAUDE.md",
+      "result": "Exists, 4,410 bytes, mtime 05:52.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: recharts has never rendered in jsdom here; component tests mock it",
+      "section": "6",
+      "check": "grep recharts across src/**/*.test.jsx",
+      "result": "vi.mock('recharts') in ChartCard.test.jsx:13, ReportSurface.test.jsx:7 and ReportsPage.test.jsx:12.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: approval is in approved_at, not status",
+      "section": "6",
+      "check": "see row 4.9",
+      "result": "Confirmed.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: ReportSurface refetches on requestKey; the drill object is JSON.stringify'd, so unstable key order causes a refetch loop",
+      "section": "6",
+      "check": "read src/modules/11_reports/components/ReportSurface.jsx lines 168-206",
+      "result": "Confirmed: drillKey -> filterKey -> requestKey. But UNDERSTATED - the effect dependency array at line 205 is [requestKey, surface.rpc, from, to, customerId, drill, onWindow], so it also holds the raw drill OBJECT and the onWindow FUNCTION. Identity churn in either re-fires the fetch even when requestKey is unchanged; stable key order alone does not close the loop.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: the customer filter is a second RLS-gated read via listCustomers()",
+      "section": "6",
+      "check": "grep listCustomers in src/modules/11_reports/",
+      "result": "ReportsPage.jsx:21 imports it from module 02 and :122 calls it; src/modules/11_reports/CLAUDE.md:33 documents the RECRUIT/STAFF empty-list degradation.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: a totally failed AI run returns HTTP 200; branch on body.status, never res.ok",
+      "section": "6",
+      "check": "grep supabase/functions/classify-feedback/index.ts",
+      "result": "Line 359's comment states exactly that, and line 659 returns a body of { status: 'failed', run_id, ok, failed, remaining, ...diag } through the same respond() helper.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "TRAP: .agents/ and .codex/ are not mine - never stage them",
+      "section": "6",
+      "check": "git status --short",
+      "result": "Both present as untracked directories.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: the catalogue listed m17 as a drill report; the drill set is m3 and m9 only (D-14)",
+      "section": "7",
+      "check": "read micro-guide section 9 D-14",
+      "result": "D-14 is present and states exactly that, citing processes-approved section 13 reports 1/6/16/4.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: the CR grep idiom; replaced by the perl idiom (D-12)",
+      "section": "7",
+      "check": "micro-guide section 9 D-12",
+      "result": "D-12 present. See the separate finding above on its 'root CLAUDE.md section 3' half, which is wrong.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: ReportTable keyed rows on drill_key (an object); rowKey() now returns a stable string, fixed in cd6869b5",
+      "section": "7",
+      "check": "grep rowKey in ReportTable.jsx ; git log",
+      "result": "rowKey() at ReportTable.jsx:66, used at :149. Commit cd6869b5's subject is exactly that fix.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: the hostess-pay tile must be round(sum(...)) = 19,253, not per-row rounding (D-21)",
+      "section": "7",
+      "check": "micro-guide D-21 ; pg_get_functiondef of report_m07_finance_overview",
+      "result": "D-21 present. The live function body contains round(sum( - the flip is already applied to the DB (registry row module11_e3_finance_m07).",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: the Gemini 500s were transient provider capacity, and the function was discarding the provider error body",
+      "section": "7",
+      "check": "no independent channel available read-only",
+      "result": "Not verifiable from the repo or the DB; consistent with the edge function's diag capture.",
+      "verdict": "unverifiable"
+    },
+    {
+      "claim": "GOT WRONG: the free-tier limit is a daily quota, so waiting could never have helped",
+      "section": "7",
+      "check": "grep the micro-guide for the step 2b.4 as-built",
+      "result": "Micro-guide line 527 states the big model's free tier is 20 requests per DAY and that this is why waiting never helped.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: p3-common.md sent four builders to results/p3-foundation-handoff.md, which never existed",
+      "section": "7",
+      "check": "grep tasks/p3-common.md and tasks/p3-common-addendum.md ; ls results/foundation/",
+      "result": "p3-common.md line 10 names that path; results/foundation/ contains report.json and 7 screenshots, no such file. p3-common-addendum.md line 4 corrects it explicitly.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: one renderExtras slot was not enough; five documented slots plus extra_tables and columns[].sorted, covered by ReportSurface.test.jsx (D-22)",
+      "section": "7",
+      "check": "ls src/modules/11_reports/components/ ; micro-guide D-22",
+      "result": "ReportSurface.jsx and ReportSurface.test.jsx both present; D-22 present and names the five slots.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "GOT WRONG: 'nothing is approved' - status = 'approved' returned 0",
+      "section": "7",
+      "check": "see row 4.9",
+      "result": "Confirmed; runs 5 and 6 are approved via approved_at.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "BLIND SPOT 1: results/ has no p2v-management.json and no p2v-customers.json; 8 of the 16 RPCs are live on the builders' own word",
+      "section": "8",
+      "check": "ls <scratchpad>/results/",
+      "result": "Both absent, confirmed. The re-dispatch is in progress: its fix migrations 20260916082900_module11_g2_rpcs_customers_fixes.sql and 20260916083000_module11_d2_rpcs_executive_fixes.sql have just landed, uncommitted, in the working tree.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "BLIND SPOT 3: feedback_ai_insights.project_id is globally unique",
+      "section": "8",
+      "check": "select constraint_name, constraint_type from information_schema.table_constraints where table_name='feedback_ai_insights'",
+      "result": "feedback_ai_insights_project_id_key, type UNIQUE. Confirmed.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "BLIND SPOT 4: exactly one quote in 426 is not a substring of its note (project 1249)",
+      "section": "8",
+      "check": "the exact SQL the handoff names: position(i.quote in p.feedback_notes) = 0",
+      "result": "count = 1, project_id = 1249. Confirmed.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "BLIND SPOT 6: no role is blocked on the reports screen; all five hold view or edit",
+      "section": "8",
+      "check": "select role_name, permission_level from permissions join roles join modules, filtered to the reports module",
+      "result": "5 rows - CEO edit, finance-and-customers manager edit, recruiting manager view, logistics manager view, projects manager view. No 'blocked'.",
+      "verdict": "holds"
+    },
+    {
+      "claim": "BLIND SPOT 7 / prediction: jscpd measured 0.82% on the foundation",
+      "section": "8 and 5E",
+      "check": "npm run dup, exit code read from a log file",
+      "result": "Current total is 0.78% (400 clones / 51,332 lines). The 04:46 scratchpad dup.log says 0.84%. 0.82% is the foundation agent's own reported figure and is not reproducible now. The prediction ('jscpd trips at least once') is still un-falsified and still trending false.",
+      "verdict": "stale"
+    },
+    {
+      "claim": "READING LIST item 5: each results/*.json has not_verified, blind_spot and assumed at top level",
+      "section": "3",
+      "check": "parsed all 10 result JSONs and listed their top-level keys",
+      "result": "8 of 10 have all three. p2v-finance.json and p2v-hostesses.json have not_verified and blind_spot but no 'assumed' key.",
+      "verdict": "wrong"
+    },
+    {
+      "claim": "ACCEPTANCE TEST question 1, expected answer: '7 ahead of origin/dev, only 1 pushed to the branch's own remote'",
+      "section": "9",
+      "check": "git rev-list --count origin/dev..HEAD ; git rev-list --count origin/dev..a8fd49ca ; git reflog show origin/ishay/module-11-build",
+      "result": "8 ahead, and 3 were pushed at write time (a8fd49ca plus f4c18ab3 and 3d64b0da as its ancestors); all 8 are pushed now. Both numbers in the expected answer are wrong, so the acceptance test would reject a correct answer and accept a false one. This is the most damaging defect in the file, because it is the gate the resumed session grades itself against.",
+      "verdict": "wrong"
+    }
+  ],
+  "q2_missing": [
+    {
+      "what": "Two gate steps the handoff never names: npm run check:iron-rules and npm run audit (scripts/audit-gate.mjs). Section 5 step B describes the gate as 'jscpd 3%, knip, complexity 20, check:declared-counts, check:bidi'.",
+      "where_found": "package.json: gate = verify && dup && deadcode && audit && check:bidi && check:context && check:docs-structure && check:iron-rules && check:declared-counts. Grep of the handoff: 'iron-rules' 0 hits, 'audit-gate' 0, 'npm run audit' 0, 'gitleaks' 0.",
+      "why_it_matters": "The gate agent runs the list it was handed, reports green, and the real npm run gate then fails on a step nobody briefed it about - burning exactly the gate cycle the handoff is trying to protect."
+    },
+    {
+      "what": "npm run deadcode (knip) is RED right now - a second red gate the handoff does not record. Exit 1, four unused exports: medianOf (src/lib/reportsExecutive.js:274), RowCapNote (src/modules/11_reports/tabs/executive/surfaceKit.jsx:177), mapChartLabels and markSortedColumns (src/modules/11_reports/tabs/finance/financePayload.jsx:140 and :216).",
+      "where_found": "npm run deadcode, exit code read from a log file",
+      "why_it_matters": "Section 4 row 19 presents check:bidi as the one red gate and tells the reader to fix it before step B's gate agent runs. knip is red too, in files the P3 builders are writing right now, and it sits in the same gate chain."
+    },
+    {
+      "what": "The Stop hook's ORDERING requirement: docs/CLAUDE_CODE_LOG.md and STATUS.md must carry the NEWEST mtime, and editing any other file after them fails the check. Plus enforcement 0-bet: any change under supabase/migrations/** requires docs/db_roadmap.md to be updated in the same session.",
+      "where_found": ".claude/hooks/check-docs-updated.sh (the comment block and enforcements 0 / 0-bet / 1-3). The handoff contains the word 'mtime' zero times.",
+      "why_it_matters": "Section 5 step D lists about ten documents to write in Phase 4 with STATUS and the LOG in the middle of the list. Written in that order the session is blocked at Stop - and three uncommitted migrations (e3, g2, d2) separately demand a db_roadmap edit."
+    },
+    {
+      "what": "Three active pg_cron jobs mutate tables module 11 reads: module6-event-finished (02:00 daily, updates projects.project_status), module3-quote-expiry (01:00 daily, expires quotes and reads params), module1-login-attempts-cleanup (01:30).",
+      "where_found": "select jobid, schedule, jobname, active from cron.job on yfeovxppnfoafmfbdfvh. The handoff contains 'cron' and 'pg_cron' zero times.",
+      "why_it_matters": "Every acceptance baseline in this build (the 19,253 shekel tile, the mockup's four anchor numbers, the aging snapshot, the Gini figures) was measured against live data, and the session is expected to run past 01:00-02:00. A report whose number moved overnight will read as a regression caused by the code."
+    },
+    {
+      "what": "Row-level triggers on the same tables: trg_recompute_project_status on BOTH assignments and projects, sync_assignments_on_project_date_change, sync_assignment_event_date, enforce_hostess_min_wage, enforce_quote_in_progress_lock.",
+      "where_found": "select from pg_trigger where not tgisinternal, public schema. The handoff contains 'trigger' zero times.",
+      "why_it_matters": "The E2E agent (step B3) and npm run smoke write real rows to the real database. Inserting one assignment silently recomputes a project's status, which changes the population of several report surfaces between the write and the assertion - a flake that will look like a report bug."
+    },
+    {
+      "what": "Step C ('docs/schema.sql: in place, never regenerated') directly contradicts supabase/migrations/CLAUDE.md line 45, which instructs Claude to REGENERATE docs/schema.sql from pg_catalog immediately after applying any migration.",
+      "where_found": "supabase/migrations/CLAUDE.md:45 against handoff section 5 step C. The handoff's own reading list (section 3, amber block) tells the reader to open that file for the DB protocol.",
+      "why_it_matters": "The reader is pointed at the file that says the opposite of the instruction it was just given, with no note about which wins. A regenerating agent silently deletes the curated annotations - exactly the loss step C exists to prevent."
+    },
+    {
+      "what": "Three agent briefs already written and on disk that section 5 step B does not name: tasks/p3-copy-eval.md (08:23), tasks/p3-e2e.md (08:23), tasks/p3-gate-evidence.md (08:24). Only tasks/p3-lens.md is named.",
+      "where_found": "ls -la <scratchpad>/tasks/ compared against section 5 step B items 2-4, which describe the work in prose with no task file",
+      "why_it_matters": "Section 3 row 4 says re-dispatching a phase means handing the agent its task file, not re-writing the brief. For three of the four step-B workstreams the file exists but is unfindable from this document, so the resumed session rewrites three briefs from scratch and loses whatever the originals corrected."
+    },
+    {
+      "what": "Ten micro-guide section 9 rulings the handoff never carries: D-2, D-4, D-5, D-6, D-7, D-10, D-13, D-15, D-18, D-19. The load-bearing ones are D-15 (eight conflicts between cards, mockup, spec and live data - reported and deliberately NOT patched), D-18 (Ruling-33 door targets are the builders' assumed derivation), D-19 (spec.md section 1.4 declares 74 tile labels and m3's 12 are missing from that count), D-10 (rank source is 'ranked' filtered by assignedIds, before sortByAngle), D-13 (tier-2/3 documents still say assignments = 5,674 against 5,741 live).",
+      "where_found": "Diff of the D-numbers present in docs/micro_guides/module-11.md section 9 against every D-number cited anywhere in the handoff",
+      "why_it_matters": "Section 3 row 2 names only D-9, D-14, D-17, D-20, D-22 and D-24 as the ones a resumed session will otherwise get wrong. D-15 is what the closing audit will reopen as eight fresh defects; D-18 is precisely what the 12 lens verifiers are being asked to judge; D-19 sits inside spec.md, one of the five files check:declared-counts polices."
+    },
+    {
+      "what": "src/lib/dates.js is modified in the working tree - a SHARED library outside module 11 - alongside four src/lib/onboardingCopy.m11.*.js files. No row of section 5 step A's owner table claims any of them.",
+      "where_found": "git status --short, taken twice during this review (the set grew between the two)",
+      "why_it_matters": "Step A ends with 'commit Phase-2/3 files by explicit pathspec'. That pathspec has to be derived from git status, not from this document, and an unowned edit to a shared date helper is a cross-module regression that no m11 test would catch. D-22 forbids builders touching components/**; nothing forbids src/lib/**."
+    },
+    {
+      "what": "header_d2.txt sits untracked at the REPO ROOT (mtime 08:34) - an agent's scratch file written outside the scratchpad.",
+      "where_found": "git status --short",
+      "why_it_matters": "It dirties the tree for the Stop hook, is one banned 'git add -A' away from being committed, and nothing in the handoff accounts for it - section 4 row 3's untracked list predates it."
+    },
+    {
+      "what": "The SessionStart hook injects the ACTIVE STEP straight out of STATUS.md, and also prints a rule-16 warning ('another session edited files in the last two hours') based on the mutation markers.",
+      "where_found": ".claude/hooks/session-start-context.sh, registered as SessionStart in .claude/settings.json",
+      "why_it_matters": "Reading-list row 6 says STATUS.md still points at the stage-3 handoff. A genuinely new session therefore opens with a banner naming the wrong step and the wrong handoff, and may additionally be told another session is writing - because of its own agents - which under iron rule 16 pushes it into read-only / Plan mode. The handoff never warns that a banner will contradict it."
+    }
+  ],
+  "counts": {
+    "holds": 43,
+    "wrong": 6,
+    "unverifiable": 5,
+    "stale": 4,
+    "missing": 11
+  }
+}

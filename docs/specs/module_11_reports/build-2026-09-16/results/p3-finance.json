@@ -1,0 +1,494 @@
+{
+  "tab": "finance",
+  "note_on_this_file": "Rewritten in full at 16/09 11:5X after the reconcile round. An earlier in-place update crashed mid-write (Python UnicodeEncodeError on a lone surrogate) and truncated the file to zero bytes — this is the restored and updated version, not a fresh partial one.",
+  "files": [
+    "src/modules/11_reports/tabs/FinanceTab.jsx",
+    "src/modules/11_reports/tabs/finance/FinanceSurface.jsx",
+    "src/modules/11_reports/tabs/finance/financePayload.jsx",
+    "src/modules/11_reports/tabs/FinanceTab.test.jsx",
+    "src/lib/onboardingCopy.m11.finance.js"
+  ],
+  "shape": "ONE generic surface component (FinanceSurface) + a frozen per-surface data table (FINANCE_SURFACE_SPECS). The four surfaces differ only by data: hint ids per slot, the declared sorted column, and two feature flags. jscpd: 0 clones in tabs/finance.",
+  "surfaces": [
+    {
+      "id": "מ7 · מבט-על כספים (finance-overview)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": true,
+        "drill": null,
+        "hints": [
+          "reports.overview.whyAndFirst",
+          "reports.overview.tileBasis",
+          "reports.overview.debtSeriesBasis",
+          "reports.overview.oldestSort"
+        ],
+        "deletion_test": true
+      },
+      "notes": [
+        "4 tiles, each with a 📐1 comparison half, a 📐3 window and (since the shared round) its 📑ב denominator sub-row. open_debt → aging and over_threshold_month → profitability are live ruling-33 doors.",
+        "Row cap declared from meta.open_invoice_count (4 of 35) beside the locked door link, with the pager honestly reading 1–4 מתוך 4 (📐8). Both numbers read from the payload.",
+        "Story ② holds live: the first table row is מועצה מקומית שוהם, 580 days overdue as of 16/09 (the card's 574 was measured as of 10/09). Rendered from the payload, so it tracks the clock.",
+        "📐20 now renders: the 09/2026 column is hollow-and-dashed on screen (verified in the browser)."
+      ],
+      "deviations_from_mockup": [
+        {
+          "what": "The m07 cap note and its door sit BELOW the definitions line and the bad-debt note; the mockup puts them directly under the table.",
+          "why": "renderExtras is the last slot in ReportSurface and there is no slot between the table and the footers.",
+          "rule": "C2 (order ⇐ mockup) vs C6 (shared components only). Seen in the screenshot, reported, not patched."
+        },
+        {
+          "what": "The mockup's table carries a 6th column מדרג; the m07 payload returns 5 columns and no bucket on its rows.",
+          "why": "Columns come from the payload (C8); not invented client-side.",
+          "rule": "C8 — columns are the RPC's declaration."
+        },
+        {
+          "what": "Hint א sits above the population line (renderTop) rather than 'after .so-what, above .tiles'.",
+          "why": "The addendum §2 assigns purpose/whyAndFirst hints to renderTop explicitly.",
+          "rule": "addendum §2 (wins over p3-common)."
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ8 · רווחיות פרויקטים (profitability)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": false,
+        "drill": null,
+        "hints": [
+          "reports.profitability.whyAndFirst",
+          "reports.profitability.tileBasis",
+          "reports.profitability.sortWhy"
+        ],
+        "deletion_test": true
+      },
+      "notes": [
+        "doors=false is correct, not a gap: ruling 33 scopes doors to OVERVIEW tiles, and all five m08 tiles return target:null.",
+        "aria-sort lands on סטייה ₪ — the live rows are sorted by ₪ descending WITHIN each materiality group (below-floor rows sink to the end), exactly as 📑ב#5 + §⑦ describe; the marker only fires because the measured order agrees with the declaration."
+      ],
+      "deviations_from_mockup": [
+        {
+          "what": "The '#onlyOver — מעל הסף בלבד' chip is NOT built.",
+          "why": "Measured live: rows.length = 30 = tiles.over_threshold = 30, i.e. the RPC already returns only the over-threshold projects. A chip that filters nothing is a filter nobody ever saw working.",
+          "rule": "⑧8.5 is 🔵 open on what the default should be; C7 — an open card item is not something to invent an answer for."
+        },
+        {
+          "what": "Below-materiality rows are NOT greyed out.",
+          "why": "rows[].below_materiality is in the payload but ReportTable has no per-row styling hook and components/** is out of scope. The counter survives in meta.notes.",
+          "rule": "כרטיס §⑦ — the counter half lands, the grey half does not."
+        },
+        {
+          "what": "A row opens the PROJECT CARD, not the finance screen named by ⑧8.1.",
+          "why": "FinancePage.jsx reads only `window` and `page` from the URL — there is no project deep-link to navigate to, and adding one would edit module 8.",
+          "rule": "ruling 19 honoured; the destination is the nearest door that actually exists."
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ9 · גיול חובות (aging) — drill surface",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 1,
+        "table_sorted": true,
+        "row_clickable": true,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": true,
+        "drill": true,
+        "hints": [
+          "reports.aging.whyAndFirst",
+          "reports.aging.overdueBasis",
+          "reports.aging.bucketOrder",
+          "reports.aging.currentTile"
+        ],
+        "deletion_test": true
+      },
+      "notes": [
+        "tiles_compare flipped to true this round: the one tile with compare:null (ימים לתשלום) states its reason in tiles[].sub, and the shared KpiTile now renders sub — verified on screen.",
+        "Drill verified against the live RPC at all three levels, including the two tile targets that carry no `kind`: {bucket:'current'} ⇒ level 1 שוטף (8 rows), {bucket:'d90p'} ⇒ level 1 מדרג 90+ (3 rows). A malformed bucket falls back to level 0 rather than erroring.",
+        "The שוטף — עוד לא באיחור tile is built from meta.current_tile (not in tiles[]), rendered beside the chart through KpiTile, clickable, with its 📐1 comparison. Label matches spec §1.4 byte-for-byte.",
+        "chart.label_source = CUSTOMER_TYPE_LABELS honoured: legend and screen-reader table read the four Hebrew customer types, never the DB enum.",
+        "aria-sort is level-aware: days_overdue at levels 0/2, amount at level 1 — both declarations copied from the aria-sort attributes the approved mockup itself draws (lines 672 and 1212)."
+      ],
+      "deviations_from_mockup": [
+        {
+          "what": "The per-bucket interpretation strip under the chart (.barkey: טרם הגיע מועד התשלום · עד חודש איחור · …) is NOT rendered.",
+          "why": "ChartCard gained chart.note this round, but no finance RPC emits it, and the .barkey is a five-line strip rather than one note.",
+          "rule": "⑧9.8 added it precisely because Ishay stared at this chart for five minutes without understanding it. Still the deviation I would fix first — and now it is cheap: the field exists, only the RPC text is missing."
+        },
+        {
+          "what": "The stacked bar carries FOUR customer-type series against a two-colour palette, cycled, with hatch patterns from series 2 onward.",
+          "why": "SERIES_COLORS has exactly two entries by design and inventing a third hue is forbidden (iron rule 8).",
+          "rule": "📐19 'one hue = one meaning' — with 4 series the hue repeats and only the hatch separates series 0 from series 2. Reported, not patched."
+        }
+      ],
+      "labels_changed": []
+    },
+    {
+      "id": "מ12 · צריכת ציוד (equipment)",
+      "checklist": {
+        "population": true,
+        "tiles_compare": true,
+        "charts": 2,
+        "table_sorted": true,
+        "row_clickable": false,
+        "so_what": true,
+        "definitions": true,
+        "export": true,
+        "states": true,
+        "doors": false,
+        "drill": null,
+        "hints": [
+          "reports.equipment.whyAndFirst",
+          "reports.equipment.tileBasis",
+          "reports.equipment.sortWhy",
+          "reports.equipment.orderCeiling"
+        ],
+        "deletion_test": true
+      },
+      "notes": [
+        "tiles_compare flipped to true this round for the same reason as מ9 — the two tiles with compare:null now show their reason through tiles[].sub.",
+        "Both meta.extra_tables render through ReportTable with their own titles and pagers; aria-sort lands on כמות להזמנה in the order table.",
+        "The column עלות מוזמנת (₪) is present verbatim, and the ㉗ tile + meta.notes carry the counter with ₪.",
+        "row_clickable=false is still correct for the sku rows — the shared row-door list deliberately excludes {kind:'sku'} because no such screen exists (⑧12.1 open). The ㉗ extra table's {kind:'project'} rows DO open now, which the card's ①8 asks for."
+      ],
+      "deviations_from_mockup": [
+        {
+          "what": "The chart now cross-filters the table on item_name; the card's interaction table says the bars are לא לחיץ.",
+          "why": "The card's stated reason is 'דוח 11 אינו דוח-דריל (📐13)', which is about DRILL. Ruling 4 puts cross-filter on every page, and the shared layer auto-detected and value-verified the key.",
+          "rule": "ruling 4 vs the card's wording — kept ON and reported, because the card's reasoning does not actually exclude cross-filter."
+        },
+        {
+          "what": "The scale line 'אירוע ממוצע צורך כ-530 יחידות ציוד' is NOT rendered.",
+          "why": "No payload key carries it; typing 530 into the UI would hard-code a data count.",
+          "rule": "onboarding-layer-contract §5ג / C5. A payload gap for a future E-fix — and chart.note is now the field it should travel in."
+        },
+        {
+          "what": "Hint ד (orderCeiling) lands AFTER the extra tables rather than above the 'כמה להזמין' title.",
+          "why": "ReportSurface renders meta.extra_tables itself, between the main table and the footers; there is no slot before them.",
+          "rule": "addendum §2 slot set. Anchor shift reported."
+        }
+      ],
+      "labels_changed": []
+    }
+  ],
+  "label_findings_not_patched": [
+    {
+      "payload": "צפוי להיכנס ב-30 יום",
+      "spec_1_4": "צפוי להיכנס ב-30",
+      "verdict": "documented exception — C8 names this exact string as one the RPC copies from the approved mockup."
+    },
+    {
+      "payload": "חוב במדרג 61–90 יום",
+      "spec_1_4": "חוב במדרג 61–90",
+      "verdict": "same class, NOT documented anywhere. Finding, not patched (labels come from the payload)."
+    },
+    {
+      "payload": "מעל 60 יום",
+      "spec_1_4": "absent from the כספים row",
+      "verdict": "m09 level-0 tile; §1.4 lists כסף שעבר מועדו (a deferred page's tile) but not this one."
+    },
+    {
+      "payload": "מדרג 90+",
+      "spec_1_4": "absent from the כספים row",
+      "verdict": "m09 level-0 tile, same class."
+    },
+    {
+      "checked_ok": "16 further labels are byte-equal to spec §1.4, including שוטף — עוד לא באיחור and עלות מוזמנת (₪)."
+    }
+  ],
+  "payload_changes_reconciled": [
+    "E3 (rounding): m07 hostess-pay August 19,257 ⇒ 19,253 ₪ (the baseline figure). Fixture updated. Regression guard confirmed: open_debt still 236,382 ₪ and n=35 — the invoice rounding order was untouched.",
+    "E3 deliberately did NOT add meta.row_total or columns[].sorted to m09 (its trigger was 'root returns > 50 rows'; live root is 35). Re-measured after E3 AND H2: all 27 columns still have no `sorted`, no payload has meta.sort ⇒ the client-side markSortedColumns stays load-bearing and self-disables the day an RPC declares either.",
+    "E3's blind spot #2 (m07 caps at 4 of 35 and declares the real total through meta.open_invoice_count, NOT meta.row_total) is handled, and the shared cap note's key was measured absent on all four finance payloads ⇒ the two notes cannot both render. Asserted in a test and confirmed in the browser.",
+    "H2 (server sentences): m07/m09 sent_date and due_date moved to format:'date' at the source ⇒ my client-side date patch was deleted as newly-dead code. Screen now shows 14/01/2025.",
+    "Shared layer 11f347a9: KpiTile renders tiles[].sub and falls back to compare.format ?? tile.format ⇒ my compare-format patch deleted; ReportSurface opens rows from any routable drill_key ⇒ my {...surface, drill:true} flag deleted; ReportsPage carries the door router ⇒ my tab-level router deleted; so_what moved above the tiles ⇒ my recorded deviation is closed at the source."
+  ],
+  "reconcile_round_16_09_11_1X": {
+    "removed": [
+      "financePayload.jsx withCompareFormat — GAP 8 moved it into KpiTile. Re-measured: still 0 of 12 finance compare halves carry their own format, and the browser now prints 206,002 ₪ rather than 206002.",
+      "financePayload.jsx withDateFormats + the dateColumns spec key — H2 fixed it at the source; keeping the patch would have been dead code that looks alive.",
+      "FINANCE_SURFACE_SPECS rowsOpenProject + FinanceSurface's {...surface, drill:true} copy — GAP 2 opens rows itself, and the flag is now HARMFUL: surface.drill suppresses the auto cross-filter and would draw crumbs on a two-level payload.",
+      "FinanceTab.jsx's whole door router (resolveTarget, handleDrill, useNavigate, useSearchParams) — the shell's router does the same and more (refuses a masked tab, refuses an off-catalogue target). Two routers for one door are two definitions that will drift.",
+      "FinanceTab.test.jsx's LocationProbe/useLocation — the assertions moved to onDrill receiving the right key; navigation itself is covered by ReportsPage.test.jsx."
+    ],
+    "changed": [
+      "financePayload.jsx: added withBucketLabels + the bucketColumn spec key (the browser-found defect, below).",
+      "financePayload.jsx header + the spec JSDoc now record what was removed and why, so the next reader does not re-add scaffolding the source already carries.",
+      "FinanceSurface.jsx: passes `surface` through untouched and states in a comment that transformPayload must stay stable (ReportSurface memoises on it).",
+      "FinanceTab.jsx: reduced to spec selection + pass-through, with the comment naming the shell as the single door router.",
+      "FinanceTab.test.jsx: 22 tests — fixtures moved to format:'date' and to 19,253; three new tests (m12 cross-filter, bucket labels, no double cap note)."
+    ],
+    "browser_finding_fixed": "🔴 The מדרג column of m09 rendered the raw DB keys d90p / d61_90 / d31_60 / d1_30 / current inside a Hebrew table, while the chart on the same page showed the same buckets as 1–30 / 61–90 / 90+. Two spellings of one thing on one screen. No test had it because my fixture used the key and never asserted the rendered text. Mapped through AGING_BUCKETS (src/lib/reportsFinance.js), whose own comment names itself the SSOT for these labels, en-dash included. Same family as chart.label_source; C8 has no column-level equivalent ⇒ also reported as a field request.",
+    "browser_findings_not_mine": [
+      "🟠 Chart Y-axis ticks have no thousands separators: m07 reads 600000 / 450000 / 300000, m12 reads 240000 / 180000, m09 reads 100000 / 75000 — raw integers on a ₪ axis, beside tiles that print 236,382 ₪. Checkable: grep -n tickFormatter src/modules/11_reports/components/ChartCard.jsx returns 0.",
+      "🟡 The m07 cap note and door sit below the definitions and bad-debt lines (renderExtras is the last slot) — known, and now visible in the screenshot."
+    ]
+  },
+  "browser_pass": {
+    "how": "npx vite --port 5182 --strictPort, then a Playwright (chromium) script at 1280×1400 signed in as CEO. The script read the credentials from .env.local itself — the same channel e2e/permissions.spec.js uses, so the secret never passed through the conversation. Script deleted after the run.",
+    "screens": [
+      "results/finance-shots/m07-finance-overview.png",
+      "results/finance-shots/m08-profitability.png",
+      "results/finance-shots/m09-aging-root.png",
+      "results/finance-shots/m09-aging-level1.png",
+      "results/finance-shots/m12-equipment.png",
+      "results/finance-shots/probe.json — the measured DOM values behind every claim here"
+    ],
+    "measured": {
+      "overflow": "scrollWidth − clientWidth = 0 on all five screens, and 0 elements past the right edge",
+      "console": "0 errors and 0 warnings across the whole session (login + five navigations)",
+      "so_what_above_tiles": "true on all five",
+      "tile_sub_lines": "rendered on every surface (4 · 5 · 4 · 4 · 4) — blind spot #1 CLOSED",
+      "compare_half": "▲ לפני חודש: 206,002 ₪ — formatted, not 206002 — blind spot #1's second half CLOSED",
+      "aria_sort": "exactly one per table, correct column and direction on all five screens",
+      "dates": "14/01/2025 in the table",
+      "dashed_today_bar": "1 dashed bar on m07 (09/2026), visible in the screenshot — blind spot #4 CLOSED: the hint reports.overview.debtSeriesBasis, which tells the reader that column is drawn dashed, is now TRUE on screen",
+      "hebrew_legend": "m09 legend: חברה ממשלתית · עמותה · חברה פרטית · חברת הפקה — no DB enum",
+      "crumbs": "level 1: גיול חובות | מדרג 61–90 יום",
+      "cap_note": "m07 only; pager reads 1–4 מתוך 4",
+      "export_names": "carry the window and the drill level, e.g. גיול-חובות_נכון-להיום_מדרג-61–90-יום.xlsx",
+      "deletion_test_live": "the CEO's onboarding_mode is 0 in the database, so the pass rendered ZERO hint nodes while population / so-what / definitions / tiles / charts / tables / export / the door were all present — the deletion test executed on the real screen, not in jsdom"
+    }
+  },
+  "slots_used": {
+    "finance-overview": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart",
+      "renderBeforeTable",
+      "renderExtras"
+    ],
+    "profitability": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart",
+      "renderBeforeTable"
+    ],
+    "aging": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart"
+    ],
+    "equipment": [
+      "transformPayload",
+      "renderTop",
+      "renderBeforeChart",
+      "renderExtras"
+    ]
+  },
+  "transform_payload_operations": [
+    "① chart.label_source ⇒ Hebrew series labels (CUSTOMER_TYPE_LABELS on m09) — the documented purpose of the C8 field.",
+    "② aging bucket keys ⇒ screen labels in the מדרג column (AGING_BUCKETS) — the browser-found defect; the column-level twin of ①, which C8 has no field for.",
+    "③ columns[].sorted ⇒ aria-sort (📐9). Column AND direction are declared up front from the approved mockup's own aria-sort attributes and the cards; the rendered order is then measured, and a column whose order disagrees is NOT marked. Level-aware on m09. No-ops if the payload declares meta.sort or any columns[].sorted."
+  ],
+  "strings_authored": [
+    {
+      "text": "אלה ⁦N⁩ החשבוניות הישנות ביותר מתוך ⁦M⁩ הפתוחות.",
+      "rule": "Mockup line 680 ('אלה ארבע החשבוניות הישנות ביותר — אין דפדוף כאן.'), with both numbers parameterised from the payload and the clause 'אין דפדוף כאן' dropped because production DOES render a pager. Hidden entirely when shown >= total."
+    },
+    {
+      "text": "כל ⁦M⁩ החשבוניות הפתוחות →",
+      "rule": "Locked house precedent — m11-copy-rules §4.2 keeps this exact form and the → arrow; M from meta.open_invoice_count."
+    },
+    {
+      "text": "נכון להיום",
+      "rule": "Window line of the שוטף side tile — copied verbatim from the same payload's own m09 tiles."
+    },
+    {
+      "text": "לפני חודש",
+      "rule": "Comparison label of the שוטף side tile — copied verbatim from the same payload's open_debt tile."
+    }
+  ],
+  "onboarding_keys_placed": {
+    "count": 15,
+    "verification": "Compared programmatically against the card's §⑩ tables: 15/15 keys present, 0 orphans, 14/15 texts byte-equal to the card (the 15th, reports.aging.whyAndFirst, is byte-equal to the APPROVED MOCKUP per ruling D-29). The 10 keys of the deferred pages (מ10 · מ11 · מ13) were NOT ported.",
+    "keys": [
+      "reports.overview.whyAndFirst",
+      "reports.overview.tileBasis",
+      "reports.overview.debtSeriesBasis",
+      "reports.overview.oldestSort",
+      "reports.profitability.whyAndFirst",
+      "reports.profitability.tileBasis",
+      "reports.profitability.sortWhy",
+      "reports.aging.whyAndFirst",
+      "reports.aging.overdueBasis",
+      "reports.aging.bucketOrder",
+      "reports.aging.currentTile",
+      "reports.equipment.whyAndFirst",
+      "reports.equipment.tileBasis",
+      "reports.equipment.sortWhy",
+      "reports.equipment.orderCeiling"
+    ],
+    "conflict_ruled_and_applied": {
+      "key": "reports.aging.whyAndFirst",
+      "status": "RULED by the orchestrator 16/09 10:2X (§9 D-29) — the approved mockup's sentence wins. Applied.",
+      "before_card_text": "כל חשבונית בדף נמדדת מיום שליחתה ומהתשלום שטרם נכנס — התחילי מהדלי \"מעל שלושה חודשים\", כי שם הסיכוי לגבות הוא הנמוך ביותר וכל שבוע נוסף מוריד אותו; ורק אחריו רדי למדרגים הצעירים, שם עדיין מספיקה תזכורת רגילה.",
+      "after_mockup_text": "הדף מדרג חשבוניות שנשלחו וטרם שולמו לפי כמה זמן עבר מהמועד שסוכם עם הלקוח — ולכן התחילי במדרג שאליו מצביעה שורת-הפעולה שבראש הדף. מדרג ותיק יותר קשה יותר לגבייה, וכל שבוע נוסף מוריד את הסיכוי.",
+      "why": "The card's opening ('נמדדת מיום שליחתה') contradicts the metric's own definition — aging is measured from the DUE date (deriveDaysOverdue), which hint ב and the page's definitions line both state. The card's own §⑩ note records that this implication misled a build session twice on 10/09.",
+      "verification": "Extracted programmatically from the approved mockup and compared back after the edit: byte-equal true, 192 chars, 0 digits, no <span class=\"ltr\"> ⇒ nothing to convert to LRI…PDI (§5ב) and no data count to strip (§5ג)."
+    }
+  },
+  "tests": "src/modules/11_reports/tabs/FinanceTab.test.jsx — 22 tests, all green. Per surface: §1.4 tile labels, formatted values, the comparison half as money/int, the 📐3 window · population line · 'אז מה' · definitions · meta.notes · exactly one aria-sort per table (and the level-1 switch from days_overdue to amount on m09, and m12's second table) · Israeli date format · whole-row door handing {kind:'project', id} to the shell · the ruling-33 tile door and the cap-note door handing {tab, report} to the shell · m09 CUSTOMER_TYPE_LABELS mapping with an explicit 'not private_company' assertion · the מדרג column showing labels not DB keys · the שוטף side tile calling onDrill({bucket:'current'}) · the root crumb calling onDrill(null) · m12's two extra tables with their titles · m12 sku rows NOT drillable · m12 chart→table cross-filter narrowing the main table and the clear chip restoring it · the shared row-cap note NOT rendering alongside mine. States: empty ⇒ blank envelope, network failure ⇒ error envelope with 'נסי שוב' and a retry that re-calls the RPC (plus an explicit assertion that 'אין נתונים עדיין' is NOT shown), 42501 ⇒ the no-permission envelope naming the report with no retry button, missing_params ⇒ 'חסר פרמטר מערכת: תנאי_תשלום_ימים', zero rows ⇒ export disabled with 'אין שורות לייצא'. Onboarding: every hint id the tab places resolves in M11_FINANCE_COPY (15, each carrying only `guided`), all four מ7 hints render at mode 2 at their anchors, and the deletion test at mode 0 asserts zero hint nodes while the base survives.",
+  "gates": {
+    "vitest_tab": "npx vitest run src/modules/11_reports/tabs/FinanceTab.test.jsx - exit 0, 23/23",
+    "vitest_module": "npx vitest run src/modules/11_reports excluding CustomersTab.test.jsx - exit 0, 9 files / 252 tests. The full run is 277/278: the single failure is a Hebrew gender mismatch inside CustomersTab.test.jsx (expects 'pne lamankal', screen says 'pni lamankal') - another agent's file, mid-round.",
+    "eslint": "exit 0 on my 5 files",
+    "prettier": "exit 0 on my 5 files",
+    "dup": "npm run dup - exit 0, 0 clones in tabs/finance/**",
+    "deadcode": "npm run deadcode RAN this time (the OOM crashes of round 2 did not recur) - exit 1 with ONE unused export, DRILL_INTENT in src/modules/11_reports/api.js, which is the shell owner's in-flight chart-drill work and not mine. My five files: every export consumed.",
+    "check_bidi": "npm run check:bidi - exit 0, no findings",
+    "cr": "CR=0 on all five files"
+  },
+  "assumed": [
+    "הנחתי that m12's chart→table cross-filter stays ON even though the card's interaction table says the bars are 'לא לחיץ' — the card's stated reason is about DRILL, and ruling 4 puts cross-filter on every page. One line in my transform (chart.filter_key = false) reverses it if Ishay rules the other way.",
+    "הנחתי that mapping the aging bucket keys to their labels is inside the transform's remit, because the addendum names 'label mapping' as one of its three jobs and AGING_BUCKETS is the existing SSOT for exactly these strings.",
+    "הנחתי that the finance tab must no longer carry its own door router now that the shell has one — the shared report lists the equivalent routers in two other tabs as 'now unnecessary'.",
+    "הנחתי that m12's sku rows stay non-clickable — the shared ROW_DOOR_KINDS deliberately excludes {kind:'sku'} and ⑧12.1 is still 🔵 open."
+  ],
+  "not_verified": [
+    "🔴 MODE 2 WAS NEVER SEEN ON SCREEN. The browser pass ran as the CEO, whose onboarding_mode is 0 in the database, so it proved the deletion test (zero hints, full page) but NOT the guided layer. Flipping the mode is a database write and outside this task's scope. The 15 hints rendering at their anchors is proven only in jsdom, with a mocked AuthContext.",
+    "Keyboard operation was not exercised with a real keyboard — ReportTable carries role/tabIndex/onKeyDown and the cross-filter's keyboard path is ChartCard's sr-only table, but my clicks are fireEvent and the browser pass used programmatic navigation. 📐14ב③ forbids inferring 'works with a keyboard' from tabindex, so I am not claiming it.",
+    "The m12 extra tables' pagers were not exercised past page 1, and the m09 drill was exercised at levels 0 and 1 in the browser but level 2 only through the RPC and the unit fixtures.",
+    "Only the CEO identity was driven in the browser. RECRUIT's 42501 on the finance RPCs was verified at the API level earlier; the masked-tab screen was not re-shot this round.",
+    "npm run verify and npm run gate as wholes were NOT run — several agents are writing in this tree, and a whole-tree gate would measure their work. Targeted gates only, each with its exit code read directly.",
+    "npm run deadcode could not be completed on this machine at the end of the round (see gates).",
+    "The numbers in the test fixtures are an oracle of SHAPE, not of arithmetic — they come from live payloads; whether the RPC computes them correctly is spec.md §🔢 and signoff-baseline's business."
+  ],
+  "blind_spot": [
+    "🟠 ① The aging chart still ships without the two things that were added because it was not understood. ⑧9.8 records Ishay looking at this chart for five minutes without understanding it, and the fix was a per-bucket interpretation line under each column plus the full .barkey legend. ChartCard now HAS chart.note (the shared round added it), and no finance RPC emits it — so the gap moved from 'no mechanism' to 'no text', which is a one-migration fix and nobody currently owns it. Checkable: grep -c barkey on the approved mockup returns hits; grep -n 'note' on the m09 payload returns only meta.notes, which renders at the page footer, not under the chart.",
+    "🟡 ② My aria-sort derivation still has no gate behind it. It can never be WRONG (the declaration is verified against the rendered rows) but it can silently become ABSENT: the day an RPC changes its ORDER BY to a column outside FINANCE_SURFACE_SPECS, the marker stops appearing and no test goes red, because my tests assert against fixtures I wrote to match today's order. Checkable: delete days_overdue from the finance-overview spec and run the suite — only my own two aria-sort tests fail, and nothing notices on live data. The durable fix is the one C8 already specifies: have the RPC emit columns[].sorted.",
+    "🟡 ③ The bucket-label mapping I added today is the same shape of scaffolding I just deleted two of. It lives in the tab because C8 has no column-level label_source; if a second surface ever returns enum values in a column, the next builder will write their own copy rather than find mine. The durable fix is a C8 field (columns[].label_source) — filed here so it is not rediscovered by the next browser pass.",
+    "🟡 ④ Nothing checks that the finance tab and the module-8 salary report agree on the hostess-pay figure for the same month, which is the entire justification for the E3 rounding ruling. That check does not exist in JS or SQL, and a single vitest fixture cannot do it — it needs a signed-in step in the close audit."
+  ],
+  "round_3_16_09_evening": {
+    "verdicts_taken": "all 5 with owner=tab from results/p3r-finance.json (indexes 6, 11, 12, 13, 14), plus the coordinator's ruling on index 4 (m08 sort stays shekel, the two hint sentences corrected).",
+    "fixed": [
+      "#6 MAJOR - the bucket column rendered every range MIRRORED (1-30 as 30-1, 90+ as +90) because format:'text' is a bare String(v) inside an RTL <td> and the en-dash is a neutral between two digit runs. financePayload.jsx now emits isolateLtr(label) from src/lib/reportsFormat.js, isolating each range as ONE unit; the pure-Hebrew label (current bucket) is left bare because it has no neutral between digits. MEASURED FIXED IN A REAL BROWSER with a per-character Range.getBoundingClientRect probe on the live cell: text 61-90, isolated true, logicalDigits 6190, visualLeftToRight 6190, rendersInLogicalOrder TRUE. That is exactly the measurement scripts/check-bidi-glyphs.mjs states it cannot make, and it is now in results/finance-shots/probe-round3.json.",
+      "#11 MINOR - the hint-anchor test promised anchors and asserted only presence. It now measures placement with compareDocumentPosition against the surface's own regions: whyAndFirst above report-population, tileBasis and debtSeriesBasis between report-tiles and the chart card, oldestSort between the chart card and report-table-card. A build that stacked the four hints at the bottom now fails.",
+      "#13 MINOR - the empty-after-filter envelope had no test: the shared fixture hard-codes isFiltered:false, so the Envelope 'empty' branch and the clearFilters door were dead. A case now renders with isFiltered:true and an empty payload, asserts report-finance-overview-empty and that clicking the clear button calls clearFilters once.",
+      "#14 MINOR - the copy file header said the aging key still carried the CARD's wording with the gap 'reported for a ruling', while the body recorded D-29 and holds the MOCKUP's wording. The header now states the post-ruling truth and points at the single detailed block above the key.",
+      "INDEX 4 RULING (coordinator) - the m08 table sort stays shekel and the two sentences were corrected: reports.profitability.whyAndFirst now says 'kee schoom-hastiya shelo hu hagadol beyoter' instead of 'achooz-hastiya', and reports.profitability.sortWhy no longer claims the table is sorted by percent. Both carry a why-comment naming the rule that fired (processes-approved.md 5 in the tier-2 register locks the shekel sort, and the RPC orders budget_deviation desc). The chart's own order was NOT touched - the card locks 'sorted by absolute size' - and sortWhy now explains the real difference, which is two POPULATIONS on one metric (top-15 by absolute value, all fifteen of them savings today, versus the over-budget table; project_id intersection = 0)."
+    ],
+    "not_fixed_and_why": [
+      "#12 MINOR - the jsdom bucket test still cannot see rendering order (no bidi layout in jsdom), which the verdict itself says is unfixable there. Its fix hint asks for a Playwright case in e2e/reports.spec.js, which is outside the files this task names. I ran the equivalent measurement in my own browser pass instead (the per-character probe above) and it is recorded in probe-round3.json - but that is a one-off run, not a standing gate. THE DURABLE e2e CASE IS STILL OWED, and it belongs to whoever owns e2e/reports.spec.js. What I did add inside my file is an assertion that the isolate characters are PRESENT (U+2066 90+ U+2069), which is the part jsdom can prove."
+    ],
+    "shell_slots_checked_not_present": "Measured at HEAD 731969e7 this turn: grep for renderAfterSoWhat / renderChartAside / renderChartFooter in components/ReportSurface.jsx and components/ChartCard.jsx returns NOTHING. So the current anchors stand and are unchanged: purpose hints in renderTop (above the population line), the two in-card hints and the side tile in renderBeforeChart (above the chart card, not inside or beside it). The side tile is visible in m09-aging-root-mode2.png sitting on its own row between the tiles and the chart - which is the placement renderChartAside is meant to correct.",
+    "m9_chart_drill_not_intercepted": "FinanceTab passes onDrill straight through to FinanceSurface and on to ReportSurface; there is no interception anywhere in my three files (the tab-level router was deleted in round 2). Measured at HEAD: the shell's chart drill has not landed either - ReportSurface still has only onSelect for cross-filter, no chart.drill_param path, and the live m09 payloads carry no chart.filter_key or drill_param. knip now reports DRILL_INTENT in api.js as an unused export, which looks like that landing in progress.",
+    "owner_column": "Nothing to do and nothing to render yet: re-fetched this turn, m09 rows carry owner on 35/35 (level 0) and 3/3 (level 1), but columns[] still declares 7/4 keys with no owner entry, and the browser shows no contact header. ReportSurface renders columns generically, so the day the RPC declares it the column appears with no tab change. Verified in the browser probe as ownerColumn:false on all five screens.",
+    "payloads_refetched": {
+      "landed": [
+        "chart.unit changed from the glyph to the FORMAT NAME ('money' / 'int') on all four surfaces - which matters, because ChartCard formats tooltip and screen-reader values with formatByType(value, series.format ?? unit) and the old glyph fell through to text.",
+        "m09 chart.note now carries the whole per-bucket explanation strip (the .barkey text of card item 9.8) and ChartCard renders it under the title. MY ROUND-1 BLIND SPOT #1 IS CLOSED AT THE SOURCE - confirmed on screen in both modes.",
+        "m07 is_today is present (1 datum) and renders as the hollow dashed column."
+      ],
+      "still_open": [
+        "m09 over_60 tile target is STILL {bucket:'d90p'} - verdict #2 (owner rpc) has not landed; the tile still shows 46,038 shekel / 7 invoices and opens the 17,946 / 3 level.",
+        "Tile labels are still not isolated (מדרג 90+ and the like) - the coordinator listed this as expected from the server fixer; not in the payload yet.",
+        "columns[].sorted and meta.sort are still absent on all four surfaces, so the client-side marker in financePayload.jsx stays load-bearing and still self-disables the day the RPC declares either.",
+        "The owner column is still not declared (above)."
+      ]
+    },
+    "fixtures_updated": "chart.unit to the format names on all four fixtures, m09 given a chart.note, and the bucket-label test extended to assert the isolate characters. The 19,253 and date-format updates from round 2 still stand.",
+    "browser_pass_round3": {
+      "how": "npx vite --port 5182 --strictPort, Playwright chromium at 1280x1400, signed in as CEO with credentials the script read from .env.local. Mode 2 was produced the way e2e/reports.spec.js does it - by intercepting the single GET AuthContext sends (select=onboarding_mode) and raising the level in the response, never by writing to the row, so there is no restore step that can fail half-way.",
+      "screens": [
+        "results/finance-shots/m07-finance-overview-mode0.png and -mode2.png",
+        "results/finance-shots/m08-profitability-mode0.png and -mode2.png",
+        "results/finance-shots/m09-aging-root-mode0.png and -mode2.png",
+        "results/finance-shots/m09-aging-level1-mode0.png and -mode2.png",
+        "results/finance-shots/m12-equipment-mode0.png and -mode2.png",
+        "results/finance-shots/probe-round3.json"
+      ],
+      "measured": {
+        "overflow": "scrollWidth - clientWidth = 0 and 0 elements past the right edge on all 10 screens (5 surfaces x 2 modes)",
+        "console": "0 errors and 0 warnings in BOTH modes, across login and five navigations each",
+        "mode_0": "0 hint nodes on all five surfaces, with population / so-what / definitions / tiles / charts / tables / export all present - the deletion test on the real screen",
+        "mode_2": "THE FINANCE GUIDED SCREEN SEEN FOR THE FIRST TIME: 4 / 3 / 4 / 4 / 4 hints, exactly the 15 keys of the spec table and nothing else, each at its anchor",
+        "bucket_labels": "rendersInLogicalOrder TRUE on the live cell (see #6 above), and the column now reads 90+ / 61-90 / 31-60 / 1-30 / current-bucket in the screenshot",
+        "chart_note": "renders on m09 in both modes",
+        "axis_ticks": "my round-2 finding is fixed by the shell: the m09 axis now reads 100,000 / 75,000 / 50,000 / 25,000 with separators"
+      }
+    }
+  },
+  "mini_round_4_16_09_night": {
+    "head": "fb7bcd26",
+    "fixed": [
+      "RE-ANCHORED to the three new shell slots, per the cards and not per convenience. whyAndFirst moved from renderTop (above the population line) to renderAfterSoWhat - which is the anchor all four cards actually name ('after .so-what, above .tiles'). debtSeriesBasis (m07), bucketOrder + currentTile (m09) and sortWhy (m12) moved into renderChartFooter, i.e. INSIDE the chart card under the legend, which is where their card anchors point. The m09 side tile moved into renderChartAside, so it sits beside the chart inside the card instead of on its own row above it.",
+      "The chartFooter anchor is INDEXED, because m12's card anchors its hint in the SECOND chart card ('betoch .chart-card hasheni, mitachat la-.legend'). The spec now carries chartFooter as a map keyed by chart index, and a test asserts the hint is in card 1 and absent from card 0."
+    ],
+    "changed": [
+      "The client-side bucket isolation was NOT deleted, and this is the one instruction I did not follow literally - with the measurement behind it. The migration i2 is ON DISK but NOT APPLIED: a live CEO read of all four RPCs this turn returns bucket:text (not textLtr), no owner column, over_60 still targeting {bucket:'d90p'}, and no isolated tile labels. p2-fixB2.json does not exist. Deleting the isolation today would have put the mirrored labels straight back on the live screen.",
+      "AND the deletion would have been half wrong even after i2 lands: textLtr ISOLATES, it does not TRANSLATE. i2 line 832 still writes the row as ('bucket', bucket_key) - the raw code d90p - while line 804 of the same function writes the chart datum as ('bucket', b.l), the label. So after i2 the column would render an isolated DB code. What I did instead: the isolation is now CONDITIONAL on the column's declared format (skipped when the column says textLtr, so no nested isolation) and the key-to-label mapping stays. Both branches are unit-tested, and the whole thing dies the day the RPC puts b.l in the row like the chart already does.",
+      "Round 3's declared export cost is closed at the right boundary by someone else: reportsExport now strips the isolate characters at the export edge, with a why-comment naming the VLOOKUP breakage. My caveat can come off the list."
+    ],
+    "tests": "25 in FinanceTab.test.jsx, all green. New this round: the whyAndFirst anchor measured between report-so-what and report-tiles (compareDocumentPosition, both directions); debtSeriesBasis asserted INSIDE chart-card-bar and after chart-figure; the m09 side tile asserted inside the chart card's chart-aside; m12's sortWhy asserted in chart card 1 and absent from card 0; and the post-i2 branch (a fixture declaring bucket as textLtr proves the tab still translates, stops isolating, and never double-isolates). The hint-collection helper now walks the indexed chartFooter map, so the '15 keys resolve' test still covers every key.",
+    "gates": "MODULE SUITE FULLY GREEN FOR THE FIRST TIME THIS SESSION: npx vitest run src/modules/11_reports - exit 0, 10 files / 332 tests, no exclusions. eslint 0 - prettier 0 - npm run dup 0 clones in tabs/finance - npm run check:bidi 0 - npm run deadcode exit 0 (DRILL_INTENT is consumed now) - CR=0 on all five files.",
+    "screens": [
+      "results/finance-shots/{m07-finance-overview,m08-profitability,m09-aging-root,m09-aging-level1,m12-equipment}-r4-mode0.png",
+      "results/finance-shots/...-r4-mode2.png (the same five)",
+      "results/finance-shots/probe-round4.json"
+    ],
+    "browser_measured": {
+      "anchors": "mode 2, all five surfaces: whyAndFirst is after report-so-what AND before report-tiles (true/true everywhere). In-card hints measured by querying inside the chart card: m07 debtSeriesBasis, m09 bucketOrder + currentTile, m12 sortWhy - one each, none leaking to another card.",
+      "aside": "asideInsideChartCard true on both m09 levels, in chart-card-stackedBar; visible in the screenshot sitting beside the plot inside the card.",
+      "bucket_column": "reads 90+ / 61-90 / 31-60 / 1-30 / shotef, and the per-character Range probe still returns rendersInLogicalOrder true.",
+      "health": "overflow 0 and 0 elements past the right edge on all 10 screens; 0 console errors and 0 warnings in both modes."
+    },
+    "still_open_upstream": [
+      "i2 is not applied: bucket is still text, the owner column is still undeclared (rows carry owner on 35/35 and 3/3), over_60 still targets {bucket:'d90p'} - the tile shows 46,038 shekel / 7 invoices and opens the 17,946 / 3 level - and tile labels are still not isolated. p2-fixB2.json never appeared.",
+      "columns[].sorted and meta.sort are still absent on all four surfaces, so the client-side aria-sort marker stays load-bearing.",
+      "i2's item 6 treats the bucket column as if its VALUES were ranges; they are codes. The durable fix is one line in the RPC: put b.l in the row as the chart already does."
+    ]
+  },
+  "round_5_i2_live": {
+    "verified_before_deleting": "i2 confirmed live by a CEO read of all three m09 levels this turn, not taken on trust: columns carry bucket:textLtr and owner:text labelled 'ish kesher'; rows[0] has bucket='90+' with bucket_key='d90p' and owner='Lihi Saban'; over_60 target is null; tile and crumb labels isolate the numeric run (madreg <LRI>90+<PDI>, choov bemadreg <LRI>61-90<PDI> yom). m07/m08/m12 are unchanged by i2, as expected.",
+    "removed": [
+      "withBucketLabels and its whole comment block - the code-to-label mapping.",
+      "bucketLabel(), ISOLATE_WHEN_DIGITS and ISOLATING_FORMATS - the conditional isolation added last round.",
+      "The bucketColumn key from FINANCE_SURFACE_SPECS, and the third operation from transformFinancePayload (two left: chart label_source, and the aria-sort marker).",
+      "The imports that existed only for it: AGING_BUCKETS from reportsFinance and isolateLtr from reportsFormat.",
+      "Two tests that described branches which no longer exist (the code-to-label test and the 'when the server declares textLtr' branch test), replaced by one transparency test."
+    ],
+    "changed": [
+      "A grep for d90p / d61_90 / d31_60 / d1_30 / bucket_key / AGING_BUCKETS / bucketColumn over the three tab source files returns NOTHING in code - nothing joins on a bucket code any more. The only surviving mentions are inside one why-comment that records what was removed and why.",
+      "Fixtures re-synced to the live i2 shape: rows carry the label in bucket plus bucket_key plus owner; columns declare owner ('ish kesher') and bucket as textLtr; the over_60 tile has target null and a separate bucket_90p tile carries the door; tile and crumb labels are built with named LRI/PDI constants; level 1 gained the owner and invoices columns.",
+      "The test file no longer contains raw invisible bidi characters in its source: they are built from named LRI/PDI constants and an iso() helper. Measured: 0 lines with invisible bidi controls across all four of my source files. That is the same trap reportsFormat warns about - a literal nobody can grep for."
+    ],
+    "tests": "26 in FinanceTab.test.jsx, green. New/changed: the bucket column is now a TRANSPARENCY test (what the server sent is what reaches the screen - the label renders, bucket_key is present in the payload but never on screen, and the isolation appears exactly once, never doubled); 📐18 has two tests, one per level, asserting the contact header and real contact names at root and at level 1.",
+    "gates": "Module suite 10 files / 335 tests exit 0. eslint 0 - prettier 0 - dup 0 clones in tabs/finance - check:bidi 0 - deadcode exit 0 - CR=0 on all five files.",
+    "screens": [
+      "results/finance-shots/m09-root-i2-mode0.png and -mode2.png",
+      "results/finance-shots/m09-level1-i2-mode0.png and -mode2.png",
+      "results/finance-shots/probe-i2.json"
+    ],
+    "browser_measured": {
+      "bucket_column": "SIX cells measured per character with Range.getBoundingClientRect - three reading 90+ and three reading 61-90, every one logicalOrder true, in both modes. No client-side isolation is involved any more; the formatter does it from the textLtr declaration.",
+      "no_codes": "rawCodeOnScreen false on all four screens - d90p / d61_90 / d31_60 / d1_30 appear nowhere in document.body.textContent.",
+      "contact_column": "root headers read project / customer / ISH KESHER / sent / due / amount / days-overdue / bucket, with real names in the cells (Lihi Saban, Nir Nachum, Liron Tsur). Level 1 reads customer / ISH KESHER / invoices / amount / days-overdue, also filled. 📐18 is on screen at both levels.",
+      "labels": "tiles read 'madreg 90+' and 'choov bemadreg 61-90 yom' in logical order; crumbs read 'gilul chovot | madreg 61-90 yom'.",
+      "health": "overflow 0 and 0 elements past the right edge on all four screens; 0 console errors and 0 warnings in both modes; hints 0 at mode 0 and 4 at mode 2."
+    },
+    "probe_error_caught_and_fixed": "My first run of this probe reported contactValues as three empty strings and bucketCells as empty, and I nearly wrote that up as a finding. The cause was in the probe, not the page: it collected every <th> in the document, which includes ChartCard's screen-reader table (category, the four customer types, the four bucket names), so the column indexes it derived pointed at a different table. Scoped to [data-testid=report-table-card] thead th, the same page returned full contact names and six measurable bucket cells. Recording it because it is the same class as the finding it was hunting - measuring the wrong population and believing the number."
+  }
+}

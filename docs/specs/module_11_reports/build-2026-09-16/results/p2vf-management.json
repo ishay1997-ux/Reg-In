@@ -1,0 +1,391 @@
+{
+  "tab": "management",
+  "findings": [
+    {
+      "surface": "מ6 · report_m06_staffing · scatter",
+      "severity": "blocker",
+      "lens": "5 · contract (C8) / chart renderer",
+      "claim_refuted": "p2-management.json claimed the scatter renders 'אורחים שהוערכו מול אורחים שהגיעו' per 📑ב#10. It returned series=[{key:'actual'}] with xKey='estimated' — one element.",
+      "evidence": "ChartCard.jsx ScatterBody (lines 283-297): `<YAxis dataKey={series[1]?.key ?? 'y'} type='number' ...>`. With one series, series[1] is undefined => YAxis binds dataKey='y'; none of the 717 points has a 'y' field (live payload point: {project_id, estimated, actual, over_estimate, ratio}). Scatter renders with no Y value, no error, no red test. Exact twin of the F2 finding in report_m16 (20260916065642_..._f2_...sql:1244-1252).",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "live CEO call after apply, results/payloads_d2b/report_m06_baseline.json",
+      "result": "series = [{key:'estimated',label:'אורחים שהוערכו'},{key:'actual',label:'אורחים שהגיעו'}], xKey='estimated' — pair present in all three m06 cases (baseline · defaults · customer 401)"
+    },
+    {
+      "surface": "מ3 · report_m03_trends · level-0 chart[0]",
+      "severity": "blocker",
+      "lens": "5 · contract (C8) / chart renderer",
+      "claim_refuted": "The builder returned domain=[0,100] on a chart whose two primary series are ₪ (revenue 1,625,647–2,245,400 · profit 892,706–1,252,346), intending it as the ⑧3.4 percent-axis lock.",
+      "evidence": "ChartCard.jsx BarBody holds ONE `<YAxis domain={valueDomain(domain)}>`; `valueDomain([0,100])` returns [0,100] => bars of 1.9M are clipped to a 0–100 scale. The 0–100 lock of ⑧3.4 / §5.2#15 belongs to the RIGHT axis, which the component fixes itself (ParetoBody hard-codes `<YAxis yAxisId='right' domain={[0,100]}>`), not to the payload.",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/report_m03_baseline.json chart[0]",
+      "result": "domain=null (=> [0,'auto']); series[].format money/money/percent kept, axis right kept on margin. The recorded 0–100 decision is not discarded — it moves to where the component implements it."
+    },
+    {
+      "surface": "מ6 · report_m06_staffing · scatter y=x reference line",
+      "severity": "blocker",
+      "lens": "5 · contract (C8) / 📐6 · 📑ב#10",
+      "claim_refuted": "The builder returned refLines=[{axis:'diagonal', value:1, label:'ההערכה התקיימה בדיוק'}] and reported the y=x line as delivered.",
+      "evidence": "ChartCard.jsx renderRefLines diagonal branch: `segment={[{x: ref.from?.x ?? 0, y: ref.from?.y ?? 0},{x: ref.to?.x ?? 100, y: ref.to?.y ?? 100}]}`. No from/to in the payload => the line is drawn 0,0 -> 100,100 while the live data runs estimated 40–600 / actual 32–599 (measured: select max(eg)=600, max(ag)=599 over the 717 paired events). The card §③ calls this line 'הקו עצמו הוא ההשוואה'.",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/report_m06_baseline.json chart[0].refLines",
+      "result": "{axis:'diagonal', value:1, from:{x:0,y:0}, to:{x:630,y:630}, label:'ההערכה התקיימה בדיוק'} — 630 = ceil(max(estimated,actual)*1.05), computed from the payload; chart.domain=[0,630] so the Y axis matches."
+    },
+    {
+      "surface": "כל ארבע הפונקציות",
+      "severity": "major",
+      "lens": "4 · permission / C5 · C8",
+      "claim_refuted": "p2-management.json reported the four functions as conforming to C5. C5 requires a function comment stating the population exactly as 📐2 states it on screen; E2 and G do it.",
+      "evidence": "select obj_description(oid,'pg_proc') from pg_proc where proname in (...) => NULL for all four, measured 16/09 08:2X.",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "pg_proc query after apply",
+      "result": "has_comment = true 4/4; each comment names the population, the window convention, the profit source and the §7.82 / §📑#10 / §7.83 definitions."
+    },
+    {
+      "surface": "מ2 · מ3 · מ4 · מ6 · aria-sort",
+      "severity": "major",
+      "lens": "5 · contract (C8) · 📐9",
+      "claim_refuted": "The builder relied on `columns[].sorted` ('asc'/'desc') alone for 📐9 aria-sort.",
+      "evidence": "ReportSurface.jsx:297 `sort={payload.meta?.sort ?? sortFromColumns(payload.columns)}`; sortFromColumns (line 107-112) maps `column.sorted === 'ascending' ? 'ascending' : 'descending'`. 'asc' is not 'ascending' => מ3's year column (level 0) and month column (level 1) would announce aria-sort=\"descending\" on an ASCENDING column. F2 measured the same and reported it without fixing (f2 file line 92).",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/*.json meta.sort",
+      "result": "meta.sort present on all four: m02 {revenue,descending} · m03 level0 {year,ascending} level1 {label,ascending} level2 {revenue,descending} · m04 {discount,descending} · m06 {gap,descending}. columns[].sorted left untouched."
+    },
+    {
+      "surface": "מ2 · מ3 · מ4 · מ6 · chart.unit",
+      "severity": "major",
+      "lens": "5 · contract (C8) · 📐4",
+      "claim_refuted": "Charts declared unit as a SIGN ('₪' · '%' · 'אורחים' · 'אירועים').",
+      "evidence": "reportsFormat.js:121 `formatByType(value, format)` looks `format` up in FORMATTERS {money,percent,gini,int,days,ratio,date,text}; '₪' is not a key => falls to text => HebrewTooltip and the sr-only AccessibleDataTable printed `237414.51` and `57.764887800252716` raw, against 📐4 (₪ without agorot · % one decimal).",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/*.json chart[].unit",
+      "result": "m02 money · m03 money/money (both charts) · m04 percent · m06 int/int. Additionally every chart series now carries its own `format` (AccessibleDataTable reads `s.format ?? unit`), so m03's mixed ₪/% chart formats each series correctly."
+    },
+    {
+      "surface": "מ6 · פרמטר-התכנון בטקסט",
+      "severity": "major",
+      "lens": "3 · definition / C4 · card §③ verbatim",
+      "claim_refuted": "The builder reported the planning parameter rendered as '50' per ruling 6 and the card's 'פרמטר-תכנון 50 — לא יעד'.",
+      "evidence": "to_char(50,'FM999,990.99') returns '50.' — FM strips trailing ZEROS but not the decimal point. Live payload before the fix: tiles[0].sub 'מול פרמטר-התכנון ⁦50.⁩', tiles[2].sub 'יותר מ-⁦50.⁩', chart[1].refLines[0].label 'פרמטר-תכנון 50. — לא יעד', so_what twice. 3 hits per payload × 3 cases measured.",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "scan for 'פרמטר' + '50.' across the three m06 payloads",
+      "result": "before=3 after=0 in each of baseline/cust/defaults. Now 'מול פרמטר-התכנון ⁦50⁩' and 'פרמטר-תכנון 50 — לא יעד'. rtrim(rtrim(to_char(x,'FM999,990.00'),'0'),'.') keeps a real fraction (47.5 stays 47.5)."
+    },
+    {
+      "surface": "מ6 · histogram reference line",
+      "severity": "minor",
+      "lens": "5 · contract / ⑧6.2",
+      "claim_refuted": "The builder returned refLines=[{axis:'x', value:50}] on the histogram and reported the planning-parameter line as drawn.",
+      "evidence": "The histogram's xKey is 'label' and the data are 8 string buckets ('מתחת ל-25' … '55 ומעלה'); ChartCard passes it to `categoryAxis(xKey)` => a band scale. `<ReferenceLine x={50}>` is not a member of that scale's domain, so the line is not rendered. ⑧6.2 calls this line the visual answer to the page's headline question.",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/report_m06_baseline.json chart[1].refLines",
+      "result": "{axis:'x', value:'50–55', label:'פרמטר-תכנון 50 — לא יעד'} — the bucket label is derived from the LIVE parameter, not typed; the JS twin `ratioBucketLabelFor` + 5 tests are the oracle. ⚠️ the line now lands at the CENTRE of the 50–55 band, not exactly at 50 — a band scale cannot express a mid-band position."
+    },
+    {
+      "surface": "מ2 · chart x axis",
+      "severity": "minor",
+      "lens": "5 · contract",
+      "claim_refuted": "The monthly chart was reported as 'הכנסה ורווח לפי חודש' with Hebrew month labels.",
+      "evidence": "chart.xKey was 'month' and chart.data[0].month = '2026-01-01' (an ISO date); ChartCard passes xKey straight to `<XAxis dataKey>` => the axis and the sr-only table showed `2026-01-01` instead of «ינואר». The Hebrew name was present in the data as `label` and unused.",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/report_m02_baseline.json chart.xKey",
+      "result": "xKey='label'; the `month` field stays in every row (it is the sort key)."
+    },
+    {
+      "surface": "מ2 · מ3 · population.excluded under the customer filter",
+      "severity": "minor",
+      "lens": "1 · population · 📐2",
+      "claim_refuted": "📐2 requires the population line to say who is in and who is out. The builder's `excluded` counters were global while `n` was customer-scoped.",
+      "evidence": "report_m02_exec_overview(p_to '2026-09-10', p_customer_id 401) returned population.n=50 with excluded {'מחוץ לחלון-התקופה':500, 'אינם באחד מארבעת המצבים':101} and '(מתוך ⁦837⁩ אירועים במערכת)' — a decomposition that does not sum to the population it claims to decompose (customer 401 has 167 finished events in total).",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/report_m02_cust.json · report_m03_cust.json",
+      "result": "m02 cust: excluded {'מחוץ לחלון-התקופה':117, 'אינם באחד מארבעת המצבים':18}, label '(מתוך ⁦185⁩ אירועים של הלקוח)' — 50+117+18 = 185. m03 cust: 18 (was 101). `customers_all` stays global on purpose (it serves only the all-customers top-5 tile, ⑧2.4)."
+    },
+    {
+      "surface": "מ2 · מ3 · מ4 · מ6 · counts inside server sentences",
+      "severity": "minor",
+      "lens": "3 · C5 consistency (coordinator rule, 16/09 09:1X)",
+      "claim_refuted": "Counts were concatenated raw into server-built sentences (`v_lri || v_pop_n || v_pdi`), consistent with m14's bare '1699' that the hostesses re-verifier flagged.",
+      "evidence": "30 concatenation sites across the four functions, measured by grep on the migration body. No count exceeds 999 today (max = 837 approved quotes), so the rendered strings are byte-identical before and after — this is a PROSPECTIVE fix: m3/m4's `v_pop_n` stands at 731 and will cross 1,000 within a year.",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b vs results/payloads — 17 surfaces, tiles/labels/n/row_total/chart lengths all identical",
+      "result": "30 sites now to_char(x,'FM999,999,999'); rendered output unchanged today (0 drift on 17 surfaces)."
+    },
+    {
+      "surface": "מ6 meta.notes · מ4 meta.notes",
+      "severity": "minor",
+      "lens": "3 · C4 / §🚫.4 bidi isolation",
+      "claim_refuted": "The builder reported every number in a server-built sentence as LRI…PDI-isolated.",
+      "evidence": "m06: `v_notes || to_jsonb((v_missing_actual || ' אירועים הוצאו…'))` — the count entered a Hebrew sentence with NO isolate at all (live: '14 אירועים הוצאו…'). m04: `'הטבלה מסוננת למדרג ' || v_tier_labels[...]` put '6–10%' unisolated inside a Hebrew sentence. 🔑 Both escaped MY OWN first two scans: the 4+-digit scan (14 is two digits) and the tiles scan (these live in meta.notes).",
+      "conflict_question": null,
+      "fixed_in_d2": true,
+      "reverified_by": "results/payloads_d2b/report_m06_baseline.json meta.notes[2] · report_m04_tier.json meta.notes[2]",
+      "result": "'⁦14⁩ אירועים הוצאו…' and 'הטבלה מסוננת למדרג ⁦6–10%⁩ —…'"
+    },
+    {
+      "surface": "ChartCard.jsx (foundation) — affects מ2 chart · מ3 level-0 chart[0]",
+      "severity": "blocker",
+      "lens": "5 · contract (C8 amendment)",
+      "claim_refuted": "C8's amendment says `chart.series[].kind` + `.axis` express 'line vs bar in one composed chart; left/right axis' and 'tab builders render them when present'. The executive builder relied on that.",
+      "evidence": "ChartCard.jsx: only ParetoBody uses ComposedChart, and it hard-codes series[0] as the bar and series[1] as the right-axis line. BarBody (`CHART_BODIES.bar`) renders EVERY series through `BarSeries` and ignores `kind`/`axis` entirely. => מ2's profit line and מ3's margin line are drawn as a third BAR, and מ3's margin (a 0–100 percent) is drawn on the ₪ axis.",
+      "conflict_question": null,
+      "fixed_in_d2": false,
+      "reverified_by": "not applicable — ChartCard.jsx is outside this task's write scope (foundation/tab builder owns it)",
+      "result": "REPORTED, not fixed. Prescription: give CHART_BODIES a ComposedBody used when any series has kind==='line' — left `<YAxis domain={valueDomain(domain)}>`, right `<YAxis yAxisId='right' domain={[0,100]}>` exactly as ParetoBody already does, and render each series as Bar or Line by its `kind`."
+    },
+    {
+      "surface": "KpiTile.jsx (foundation) — affects all four surfaces",
+      "severity": "major",
+      "lens": "5 · contract (C8 amendment) · 📑ב",
+      "claim_refuted": "`tiles[].sub` was added to C8 as 'the 📑ב visible-denominator sub-row' and all four executive surfaces populate it.",
+      "evidence": "KpiTile.jsx:65-76 builds StatTile's `sub` prop from `<CompareLine/>` + `tile.window` only; `tile.sub` is never read (grep 'tile.sub' in src/ = 0 hits). Measured fresh 16/09 08:4X — F2 reported the same at 07:0X and it is still true.",
+      "conflict_question": null,
+      "fixed_in_d2": false,
+      "reverified_by": "not applicable — KpiTile.jsx is outside this task's write scope",
+      "result": "REPORTED, not fixed. The '1,121,026 ₪ רווח מתוך 1,922,441 ₪ הכנסה' sub-row and the 15 others the executive payload carries do not reach the screen on ANY of the four tabs."
+    },
+    {
+      "surface": "ReportTable.jsx (foundation) — affects מ2 · מ4 · מ6 · מ3 level 2",
+      "severity": "major",
+      "lens": "5 · contract (C8 amendment) · 📐8",
+      "claim_refuted": "`meta.row_total` was added to C8 so the pager counts what the table represents, and the card pins the pager text (מ2: '1–8 מתוך 236' · מ6: '1–8 מתוך 135' · מ4: '1–8 מתוך 731').",
+      "evidence": "ReportTable.jsx:122/159-160 — `const view = paginate(rows, page)` and the comment 'total הוא rows.length'. `meta.row_total` is not a prop and appears nowhere in the component. The RPC caps rows at 8/50, so the pager will read '1–8 מתוך 8'.",
+      "conflict_question": null,
+      "fixed_in_d2": false,
+      "reverified_by": "not applicable — ReportTable.jsx is outside this task's write scope",
+      "result": "REPORTED, not fixed. Payload already carries the right numbers (m02 row_total 236 with 8 rows · m06 135 with 50 · m04 731/109 with 50)."
+    },
+    {
+      "surface": "spec.md §1.4 vs the approved mockup — tile label 'נתח 5'",
+      "severity": "minor",
+      "lens": "5 · labels",
+      "claim_refuted": "Lens 5 requires tile labels byte-equal to spec.md §1.4. The payload returns 'נתח 5 הלקוחות הגדולים'; §1.4 lists 'נתח 5'.",
+      "evidence": "02_tab_executive_approved.html:401 `<span class=\"lb\">נתח <span class=\"ltr\">5</span> הלקוחות הגדולים</span>` — the mockup carries the full label; §1.4's mechanical extraction stopped at the inner `</span>`. The other 11 executive labels match the mockup byte-for-byte (12/12 checked).",
+      "conflict_question": {
+        "source_a": "spec.md §1.4 — 'נתח 5' (extracted 11/09/2026 from static markup)",
+        "source_b": "docs/mockups/management-report-screen/approved/02_tab_executive_approved.html:401 + cards-management.md §③ ⑥ ⑩ג — 'נתח 5 הלקוחות הגדולים'; and §2ב C8 amendment: 'Tile labels on screen come from the payload (the RPC copies them from the approved mockup where §1.4 and the mockup differ)'"
+      },
+      "fixed_in_d2": false,
+      "reverified_by": "mockup grep + payload label comparison",
+      "result": "NOT a defect — the payload follows the recorded C8 amendment. Same class as D-19 (מ3's 12 labels missing from §1.4): a §1.4 doc reconciliation for Phase 4, not a code change."
+    },
+    {
+      "surface": "src/lib/reportsFinance.js:151",
+      "severity": "minor",
+      "lens": "iron rule 14 (SSOT)",
+      "claim_refuted": "Every lib header in this family claims medianOf is not duplicated ('חציון אחד למודול, לא שניים').",
+      "evidence": "`grep -rn medianOf src/` — `export function medianOf` exists TWICE: reportsHostesses.js (the declared source, imported by reportsCustomers.js and the executive test) and reportsFinance.js:151 (a second full definition).",
+      "conflict_question": null,
+      "fixed_in_d2": false,
+      "reverified_by": "not applicable — reportsFinance.js is the finance builder's file",
+      "result": "REPORTED. The knip-dead re-export in reportsExecutive.js was removed in this task (see payload_changes/lib); the reportsFinance.js duplicate is a second, larger item for its owner."
+    }
+  ],
+  "baseline_table": [
+    {
+      "metric": "מ2 · הכנסות 2026 YTD",
+      "definition_ref": "cards-management.md §③ מ2 · ruling 36 population · closed window 01/01–10/09/2026",
+      "independent_value": "1,922,441 ₪ (n=236)",
+      "rpc_value": "1922441.01 (population.n=236)",
+      "baseline": "1,922,441 ₪ · 236",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ2 · רווח גולמי 2026 YTD",
+      "definition_ref": "finance_project_money().gross_profit, same population",
+      "independent_value": "1,121,026 ₪",
+      "rpc_value": "tiles[1].sub 1,121,026 ₪ (margin 58.31262463548882)",
+      "baseline": "1,121,026 ₪ · 58.3%",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ2 · שולי-רווח",
+      "definition_ref": "Σprofit ÷ Σrevenue on the whole population, not an average of percents",
+      "independent_value": "58.3",
+      "rpc_value": "58.31262463548882",
+      "baseline": "58.3%",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ2 · תקופה קודמת (01/01–10/09/2025)",
+      "definition_ref": "⑥ מ2 — the same day range, one year back",
+      "independent_value": "1,385,815 ₪ · 178 · 55.9%",
+      "rpc_value": "compare 1385815.44 · 178 · 55.89961099004641",
+      "baseline": "1,385,815 · 178 · 55.9%",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ2 · נתח 5 הלקוחות הגדולים",
+      "definition_ref": "§③ מ2 — all time, top-5 revenue ÷ all-customer revenue",
+      "independent_value": "45.5% (2,637,121 / 5,793,488 · 55 customers of 61)",
+      "rpc_value": "45.51871149604638 · sub 2,637,121 / 5,793,488 · 55 (מתוך 61)",
+      "baseline": "45.5% · 47.7% a year ago",
+      "verdict": "match (prev 47.73030414515463 => 47.7)"
+    },
+    {
+      "metric": "מ3 · הכנסה 2024/2025/2026",
+      "definition_ref": "§③ מ3 — event year, ruling 36 population, coalesce(final_profit, gross_profit)",
+      "independent_value": "1,625,647 / 2,245,400 / 1,922,441",
+      "rpc_value": "1625646.64 / 2245400.2 / 1922441.01",
+      "baseline": "1,625,647 / 2,245,400 / 1,922,441",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ3 · מחיר לשעה 24/25/26",
+      "definition_ref": "Σrevenue ÷ Σactual_hours (assignments with actual_hours > 0)",
+      "independent_value": "253.7 / 259.8 / 298.8",
+      "rpc_value": "253.67038152453773 / 259.7790478394169 / 298.81728608067147",
+      "baseline": "253.7 / 259.8 / 298.8",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ3 · עלות לשעה 24/25/26",
+      "definition_ref": "⑧ G6 — (base wage + personal bonuses) ÷ the same hours; travel EXCLUDED",
+      "independent_value": "44.2 / 45.9 / 47.4 (hours 6,408.5 / 8,643.5 / 6,433.5)",
+      "rpc_value": "44.19247873917453 / 45.89529704402152 / 47.37250330302324",
+      "baseline": "44.2 / 45.9 / 47.4",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ4 · ארבעת המדרגים (הכרעה 39)",
+      "definition_ref": "§③ מ4 — applied+manual, upper bound belongs to the lower tier",
+      "independent_value": "0: 353 quotes/305 events/2,396,556 ₪/57.8 · 1-5: 301/267/2,145,884/56.6 · 6-10: 125/109/878,246/54.5 · 10+: 58/50/372,801/50.6",
+      "rpc_value": "identical, digit for digit (chart.data of report_m04_baseline)",
+      "baseline": "57.8 · 56.6 · 54.5 · 50.6, monotonic",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ4 · שיעור אישור הצעות",
+      "definition_ref": "§7.82 — approved ÷ (approved + rejected minus NON_LOSS_REJECTION_REASONS=['נפתחה בטעות'], src/lib/quotes.js:490, read from the code)",
+      "independent_value": "253/(253+102) = 71.27% ; prev 204/(204+73) = 73.65% ; 15 quotes carry 'נפתחה בטעות'",
+      "rpc_value": "71.26760563380282 (sub '253 אושרו מתוך 355') · compare 73.64620938628158 ('204 מתוך 277')",
+      "baseline": "71.3% · 73.6% · the 15 removed quotes",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ4 · 727 הצעות עם הנחה",
+      "definition_ref": "signoff-baseline line 34",
+      "independent_value": "727 = count(quotes where applied+manual > 0), ANY status (measured live)",
+      "rpc_value": "not surfaced — the payload declares 837 approved / 337 lost / 731 events / 106 pending",
+      "baseline": "727",
+      "verdict": "match on reproduction, absent from the payload — the card's §③ never asks for it (its table pager is '1–8 מתוך 731'); flagged, not changed"
+    },
+    {
+      "metric": "מ6 · זוגות ויחס חציוני",
+      "definition_ref": "§📑#10 — actual_guests ÷ finally_approved hostesses, median ACROSS events",
+      "independent_value": "717 pairs of 731 · median 40.80 · 31 above 50 · 135 over estimate · 14 without actual_guests · param 50",
+      "rpc_value": "population.n=717 (מתוך 731) · median 40.8 · above_param 31 · over_estimate 135 · excluded 14 · missing_params []",
+      "baseline": "717 · 40.8 · 31 · 135",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ6 · היסטוגרמת היחס",
+      "definition_ref": "§③ מ6 — buckets of 5, open tails",
+      "independent_value": "32 · 39 · 70 · 171 · 224 · 148 · 28 · 5 (sums to 717)",
+      "rpc_value": "32 · 39 · 70 · 171 · 224 · 148 · 28 · 5",
+      "baseline": "32 · 39 · 70 · 171 · 224 · 148 · 28 · 5",
+      "verdict": "match"
+    },
+    {
+      "metric": "מ6 · שנה אחורה",
+      "definition_ref": "§③ מ6 year_ago row",
+      "independent_value": "prev pop 387 · prev paired 387 · prev over 77 · prev median 41.0 · prev above 20",
+      "rpc_value": "compare values 387 / 77 / 41 / 20",
+      "baseline": "387 · 387 · 77 · 41.0 · 20",
+      "verdict": "match (prev_pop == prev_paired == 387 is real, not a copy — measured separately)"
+    }
+  ],
+  "d2": {
+    "file": "supabase/migrations/20260916083000_module11_d2_rpcs_executive_fixes.sql",
+    "applied_as": [
+      "module11_d2_executive_m02 (20260916053835)",
+      "module11_d2_executive_m03 (20260916054134)",
+      "module11_d2_executive_m04 (20260916054342)",
+      "module11_d2_executive_m06 (20260916054612)",
+      "module11_d2_executive_m02_counts (20260916055325)",
+      "module11_d2_executive_m03_counts (20260916055649)",
+      "module11_d2_executive_m04_counts (20260916055854)",
+      "module11_d2_executive_m06_counts (20260916060121)"
+    ],
+    "md5_match": "4/4",
+    "md5_detail": "report_m02_exec_overview 6e36ac7a572b9adbaca7818d45da6b52 (18659) · report_m03_trends 76ff102aa8a600fcde4235f3f55560be (30718) · report_m04_discounts f3954e3b7267c124c74d44a9eb26a8e6 (17529) · report_m06_staffing e9db5c4dc8fdc1f9b90cd8ed0a8be17d (19567) — live md5(prosrc) == md5 of the file's $function$ body, all four",
+    "note": "Eight registry rows for one file: four chunks, applied in two passes (the second carries the coordinator's thousands-separator rule, which arrived after the first pass). The file header records this so a future session reading eight rows knows it is one file. prosecdef=true · search_path=\"\" · proacl has no anon/PUBLIC · comment present — all 4/4 after the final apply."
+  },
+  "payload_changes": [
+    { "rpc": "report_m06_staffing", "key": "chart[0].series", "change": "🔴 BREAKING FOR A NAIVE READER — scatter series is now a PAIR: [0]={key:'estimated',label:'אורחים שהוערכו'}, [1]={key:'actual',label:'אורחים שהגיעו'}. 'actual' moved from index 0 to index 1. No key was renamed or removed. This is what ScatterBody requires (series[0]=X name, series[1].key=Y column)." },
+    { "rpc": "report_m06_staffing", "key": "chart[0].domain", "change": "null -> [0, 630] (0..ceil(max(estimated,actual)*1.05), computed live)" },
+    { "rpc": "report_m06_staffing", "key": "chart[0].refLines[0]", "change": "added from:{x,y} and to:{x,y}; axis/value/label unchanged" },
+    { "rpc": "report_m06_staffing", "key": "chart[1].refLines[0].value", "change": "50 (number) -> '50–55' (the bucket LABEL) so the line renders on the category axis; may be [] when the param is missing or falls outside every bucket" },
+    { "rpc": "report_m06_staffing", "key": "chart[0].unit / chart[1].unit", "change": "'אורחים' / 'אירועים' -> 'int' (unit is a FORMAT NAME, not a caption)" },
+    { "rpc": "report_m06_staffing", "key": "tiles[].sub · so_what · chart[1].refLines[0].label", "change": "label fix — the planning parameter renders '50', not '50.'" },
+    { "rpc": "report_m06_staffing", "key": "meta.notes[2]", "change": "label fix — the excluded-events count is now LRI…PDI isolated ('⁦14⁩ אירועים הוצאו…')" },
+    { "rpc": "report_m06_staffing", "key": "meta.sort · meta.customer_filter_ignored · meta.drill_echo", "change": "NEW keys: {key:'gap',direction:'descending'} · false · p_drill" },
+    { "rpc": "report_m03_trends", "key": "chart[0].domain", "change": "[0,100] -> null (the money axis must not be capped at 100)" },
+    { "rpc": "report_m03_trends", "key": "chart[].unit", "change": "'₪' -> 'money' on all three charts (level 0 ×2, level 1 ×1)" },
+    { "rpc": "report_m03_trends", "key": "chart[].series[].format", "change": "NEW key per series: money / money / percent — the sr-only table formats each series correctly in the mixed chart" },
+    { "rpc": "report_m03_trends", "key": "population.excluded", "change": "value fix — now scoped by p_customer_id (101 -> 18 for customer 401)" },
+    { "rpc": "report_m03_trends", "key": "meta.sort · meta.customer_filter_ignored · meta.drill_echo", "change": "NEW keys; sort is LEVEL-DEPENDENT: level0 {year,ascending} · level1 {label,ascending} · level2 {revenue,descending}" },
+    { "rpc": "report_m02_exec_overview", "key": "chart.xKey", "change": "'month' -> 'label' (the ISO date was reaching the axis). The `month` field stays in every data row." },
+    { "rpc": "report_m02_exec_overview", "key": "chart.unit", "change": "'₪' -> 'money'; series[].format added (money ×3)" },
+    { "rpc": "report_m02_exec_overview", "key": "population.excluded · population.label", "change": "value+label fix — both counters scoped by p_customer_id; the tail reads 'אירועים של הלקוח' when filtered, 'אירועים במערכת' when not" },
+    { "rpc": "report_m02_exec_overview", "key": "meta.sort · meta.customer_filter_ignored · meta.drill_echo", "change": "NEW keys: {key:'revenue',direction:'descending'} · false · p_drill" },
+    { "rpc": "report_m04_discounts", "key": "chart.unit", "change": "'%' -> 'percent'; series[].format added (percent ×2). domain stays [0,100] — here it IS the true ceiling." },
+    { "rpc": "report_m04_discounts", "key": "meta.notes[2]", "change": "label fix — the tier label is LRI…PDI isolated ('⁦6–10%⁩')" },
+    { "rpc": "report_m04_discounts", "key": "meta.sort · meta.customer_filter_ignored · meta.drill_echo", "change": "NEW keys: {key:'discount',direction:'descending'} · false · p_drill" },
+    { "rpc": "all four", "key": "every count inside population.label / tiles[].sub / compare.note / so_what", "change": "format only — to_char(x,'FM999,999,999'). 30 sites. NO rendered string changes today (no count exceeds 999); prospective." },
+    { "rpc": "all four", "key": "meta.extra_tables", "change": "NOT returned by any executive function (measured on the live payloads) — extra_tables[].sort is not applicable here" },
+    { "rpc": "all four", "key": "columns[].sorted", "change": "UNCHANGED ('asc'/'desc' kept). meta.sort is the reader; columns[].sorted stays as a second, harmless declaration." },
+    { "rpc": "src/lib/reportsExecutive.js", "key": "exports", "change": "REMOVED the dead re-export `medianOf` (knip red; the natural target is ./reportsHostesses, which reportsCustomers and the test already import). ADDED `ratioBucketLabelFor(value)` — the JS twin of m6's histogram reference-line anchor, with 5 tests." }
+  ],
+  "live_calls": [
+    { "rpc": "all four", "identity": "CEO", "http_or_error": "200", "note": "m02 n=241 tiles=4 rows=8 · m03 n=736 tiles=4 rows=3 · m04 n=736 tiles=4 rows=50 · m06 n=717 tiles=4 rows=50" },
+    { "rpc": "all four", "identity": "FINANCE", "http_or_error": "200", "note": "identical payload shape to CEO" },
+    { "rpc": "all four", "identity": "RECRUIT", "http_or_error": "42501 'אין לך הרשאה לבצע פעולה זו במודול כספים'", "note": "a real error, never an empty object" },
+    { "rpc": "all four", "identity": "STAFF", "http_or_error": "42501 'אין לך הרשאה לבצע פעולה זו במודול כספים'", "note": "a real error, never an empty object" },
+    { "rpc": "report_m02_exec_overview", "identity": "CEO", "http_or_error": "200", "note": "defaults (n=241) · baseline 01/01–10/09/2026 (n=236) · p_customer_id=401 (n=50, coherent shrink + meta.notes explains the top-5 tile) · p_drill ignored (n=236, note added)" },
+    { "rpc": "report_m03_trends", "identity": "CEO", "http_or_error": "200", "note": "level 0 (3 year rows) -> drill {kind:'year',year:2025} taken from row.drill_key -> level 1 (12 month rows, crumbs 2) -> drill {kind:'month',year:2025,month:1} from the level-1 row -> level 2 (22 event rows, crumbs 3). Bad drill {year:1999,month:77} falls to level 0 with no error screen." },
+    { "rpc": "report_m04_discounts", "identity": "CEO", "http_or_error": "200", "note": "root (row_total 731) · p_drill {kind:'tier',tier:'6-10'} (row_total 109, tiles unchanged + a note) · customer 401 (n=165)" },
+    { "rpc": "report_m06_staffing", "identity": "CEO", "http_or_error": "200", "note": "baseline n=717 · customer 401 n=162 of 165, 28 rows, both charts shrink to 162 points" }
+  ],
+  "perf": {
+    "m04_ms": "explain(analyze,buffers) of the events CTE with literal params: Execution Time 159.4 ms, shared hit=25,637, read=0. Signed-in round trip 283–345 ms. No index proposed.",
+    "m06_ms": "explain(analyze,buffers) of the base+paired CTEs: Execution Time 11.6 ms, shared hit=5,074, read=0. Signed-in round trip 151–221 ms. No index proposed.",
+    "note": "Both well under the 1 s threshold. The only slow observation was a 1.2–1.6 s FIRST call per session (cold connection/plan), which disappears on the second call."
+  },
+  "tests_pass_but_would_not_catch": [
+    "src/lib/reportsExecutive.test.js (33 green) is a PURE-FUNCTION oracle. It cannot see the payload shape at all: an SQL body that returns the right numbers under the wrong chart contract — exactly blockers B1/B2/B3 — passes every one of these tests. All three were found by reading ChartCard.jsx against the live payload, not by a test.",
+    "No test in the repo asserts the ScatterBody series-pair contract. ChartCard.test.jsx exists but the tab tests mock recharts (§2ב C6), so a scatter with a missing Y column renders 'fine' in jsdom. The same class already shipped once in report_m16 (F2). A real guard would be a lint-style assertion over every payload: type==='scatter' => series.length===2 && data[0] has both keys.",
+    "`discountTierOf` tests lock the tier boundaries, and the SQL repeats them as a `case` expression. Nothing compares the two: a typo in the SQL (`d < 5` instead of `d <= 5`) would keep the JS tests green and move 5%-discount quotes to the wrong tier. Only the baseline comparison (353/301/125/58) catches it — and only while those numbers stay current.",
+    "`buildRatioHistogram` and the SQL `values` list are two independent copies of the same 8 buckets. The new `ratioBucketLabelFor` test pins the JS side; the SQL side is pinned only by the live equality of the 8 counts to the card.",
+    "meta.sort / customer_filter_ignored / drill_echo have no test anywhere — they are contract keys read by ReportSurface, and their absence is silent (the fallback quietly produces the wrong aria-sort)."
+  ],
+  "not_verified": [
+    "🔴 I never opened a browser. Every chart finding (B1 · B2 · B3 · N1 · the ChartCard kind/axis gap) is derived from reading ChartCard.jsx against the live payload, not from a rendered screen. The fixes are correct against the component's source; whether the rendered result is what the card draws is UNVERIFIED.",
+    "The m6 histogram reference line now anchors on the bucket LABEL, so it lands at the CENTRE of the 50–55 band rather than exactly at 50. Whether that reads correctly is a visual judgement I could not make.",
+    "'שני הצירים בקנה-מידה זהה' (§③ מ6): I set the scatter's Y domain to [0,630]. ScatterBody gives its XAxis no domain prop, so the X scale is still recharts' own auto — I could not verify the two axes end up equal, and the component takes no X domain from the payload.",
+    "The refLine label 'פרמטר-תכנון 50 — לא יעד' carries an unisolated number inside the dir=\"ltr\" chart wrapper. I did not change it (F2's hostesses refLines do the same) and I could not measure how it renders.",
+    "`meta.export_blocked_reason` is absent from all four; I did not test the empty-table export path (ExportBar computes its own caption from rows.length).",
+    "The task file cites '§9 D-20' for the one-registry-row-per-chunk convention. `grep D-20 docs/micro_guides/module-11.md` returns ZERO — the row does not exist in the guide as of this turn. I followed the convention and recorded it in the migration header instead of citing a row I could not find.",
+    "I did not run `npm run gate` or the full `npm run test:run` — only the targeted vitest file, eslint, prettier and knip on my own files, per the task's gate list."
+  ],
+  "blind_spot": "The three blockers all live in ONE place: the payload↔ChartCard contract, and I found them by reading ChartCard.jsx — the same file whose gaps I then reported as unfixable. That asymmetry is the risk. Concretely checkable: open report 6 (קהל מול צוות) as CEO and look at the scatter. If ChartCard.BarBody/ScatterBody behave as I read them, you will see 717 points on a real Y axis with a diagonal crossing the cloud — but the histogram beneath it will STILL show its reference line at the centre of the '50–55' bar, and the m3 'הכנסה, רווח ושולי-רווח לפי שנה' chart will STILL draw the margin percentage as a third ₪-scale bar (a 55-unit stub next to 1.9M bars), because `BarBody` ignores series[].kind. If instead the scatter is empty, my reading of ScatterBody was wrong and the D2 series-pair change was based on a misread — in which case re-check the F2 finding it was modelled on, because the two stand or fall together. Second, narrower: `report_m06_staffing`'s `v_param_bucket` query uses split_part on the bucket key; feed it a param of 55 or 24 and confirm the line moves to '55 ומעלה' / 'מתחת ל-25' — the JS twin `ratioBucketLabelFor` asserts exactly that, and the two are only equal by my hand.",
+  "assumed": [
+    "Recharts renders `<ReferenceLine x={50}>` as nothing on a band (category) scale, and `<ReferenceLine x=\"50–55\">` at that band's centre. Read from ChartCard's usage and recharts' scale model, NOT measured in a browser. If this is wrong, the histogram line was fine before and my change moved it.",
+    "`unit` on a chart is a FORMAT NAME. Grounded: reportsFormat.js:121-123 and F2's `'unit','money'` in report_m16. Not a guess, but it means every previous '₪'/'%' unit in this tab was silently text-formatted.",
+    "`meta.sort` takes priority over `columns[].sorted`. Read at ReportSurface.jsx:297 this turn.",
+    "Scoping `population.excluded` to the customer filter is the right reading of 📐2 ('who is in · who is out · n'). The card does not state it for the filtered case; I chose internal coherence (the parts now sum to the declared total) and declared it in the migration's why-comment.",
+    "Setting m3's chart[0] `domain` to null does not discard the recorded ⑧3.4 decision, because that decision is about the RIGHT (percent) axis and ParetoBody shows the component owns that lock. If the tab builder instead implements the right axis FROM `domain`, this change must be revisited together with that code.",
+    "The thousands-separator pass is prospective: no executive count exceeds 999 today, so I could not observe the defect it prevents — only the 30 sites where it would appear."
+  ]
+}

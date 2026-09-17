@@ -1,0 +1,20 @@
+{
+  "note": "E2E worktree agent (Sonnet), run on bce81cdd = the tree BEFORE the closing-audit fix round (B-1/B-2 not yet fixed). Superseded as the final evidence by the orchestrator's own run on 4ac2704a (e2e-final-4ac2704a.log.txt: 186 passed, reports+accessibility green). Kept because it corroborates: the five foreign failures and smoke/m4 green.",
+  "worktree_sha": "bce81cdd",
+  "runs": {
+    "test_e2e": {
+      "exit": 1,
+      "totals": { "total": 198, "passed": 186, "failed": 5, "skipped": 7, "duration": "16.7m" },
+      "failed": [
+        { "spec_line": "e2e/customer-page.spec.js:130", "known_pre_existing": true },
+        { "spec_line": "e2e/dashboard.spec.js:82", "known_pre_existing": true },
+        { "spec_line": "e2e/finance.spec.js:141", "known_pre_existing": true },
+        { "spec_line": "e2e/prices.spec.js:218", "known_pre_existing": true },
+        { "spec_line": "e2e/projects.spec.js:235", "known_pre_existing": true }
+      ]
+    },
+    "smoke": { "exit": 0, "totals": { "total": 1, "passed": 1 } },
+    "m4": { "exit": 0, "totals": { "total": 32, "passed": 32 } }
+  },
+  "blind_spot": "cron placement inferred from wall-clock only; `select * from cron.job_run_details where end_time > 'today 03:00'` not run"
+}

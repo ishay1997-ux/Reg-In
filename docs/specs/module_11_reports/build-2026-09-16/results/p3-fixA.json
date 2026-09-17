@@ -1,0 +1,102 @@
+{
+ "agent": "P3-FIX-A (shared shell defects 1-7 + shell item 8)",
+ "finished_at": "2026-09-16 18:0X",
+ "committed": false,
+ "head_at_start": "a1f92741 (guide) on top of af4ef4b9 (code); branch ishay/module-11-build",
+ "changes": [
+  {
+   "file": "src/lib/reportsFormat.js",
+   "what": "NEW export formatAxisTick(value, format) - axis-tick formatting: money/int/days => he-IL grouped whole ('600,000', no glyph), percent => '50%' (no trailing .0), gini/ratio/score keep decimals, text/date pass through, missing => '' (never the '-' NO_VALUE, which on an axis reads as a measured value). All numeric ticks bidi-isolated (LRI...PDI) like every other flat-text number in the module. DEFECT 1.",
+   "test": "src/lib/reportsFormat.test.js - describe 'formatAxisTick - 4 on an axis' (6 cases: money grouping, percent sign + no .0, int grouping, gini/ratio decimals, missing => empty not dash, category/date pass-through)"
+  },
+  {
+   "file": "src/modules/11_reports/components/ChartCard.jsx",
+   "what": "DEFECT 1: every value axis now carries tickFormatter via new helpers valueFormat(series, unit, side) + valueAxisProps(format). Bar/composed/line/lorenz/scatter all covered; the composed right axis (locked 0-100) is always 'percent'; the category axis deliberately gets none. DEFECT 4: chart.layout==='horizontal' now really swaps the axes - new <BarAxes> renders a category YAxis (dataKey=xKey, type='category', width sized from the longest label, clamped 64-190px) plus a numeric XAxis; bar radius flips to the right edge and the grid lines flip to vertical (commonGrid(horizontalBars)). The sr-only table and the cross-filter are untouched. DEFECT 6: new isEmptyDatum(row, series) + guardedSelect() - a datum whose series values are all 0/null gets cursor='not-allowed' on its <Cell>, no onClick on the bar/line, and a disabled button in the accessible table; one predicate feeds all three call sites.",
+   "test": "src/modules/11_reports/components/ChartCard.test.jsx - 3 new describes (12 tests): '4: value axis carries tickFormatter' (4), \"chart.layout: 'horizontal'\" (4), 'a 0-count column is not clickable' (5, incl. the stacked-bar rule: a category is empty only when every stack is 0). The recharts mock gained a data-ticks attribute that RUNS the tickFormatter on [50, 600000] - data-props still filters functions, so nothing existing changed."
+  },
+  {
+   "file": "src/modules/11_reports/components/KpiTile.jsx",
+   "what": "DEFECT 2: tiles[].compare.note is rendered right under the compare line (data-testid='kpi-compare-note', 10.5px slate-500); it lives inside CompareLine, so a masked tile (compare=null) drops it with no extra branch. DEFECT 3: the tile reads canOpenTarget from ReportsShellContext - a tile whose target tab is masked renders as a plain tile (no <button>, no 'open the report' aria-label). No context (a tab unit test, a bare render) => unchanged behaviour.",
+   "test": "src/modules/11_reports/components/KpiTile.test.jsx - 'tiles[].compare.note' (4 tests incl. order sub=>compare=>note=>window and masked) and 3 new door tests (masked target => value stays and the door is gone; open target => still a door; outside the shell => unchanged)"
+  },
+  {
+   "file": "src/modules/11_reports/components/reportsShellContext.js (NEW)",
+   "what": "DEFECT 3: one context, one value - { canOpenTarget(target) }. A .js file with a SINGLE export on purpose: react-refresh/only-export-components rejects a file exporting both a component and a function (measured - the first version was a .jsx with a Provider component and eslint failed). ReportsPage renders the Provider; KpiTile calls useContext. Default null => every target counts as open (the context only removes doors, never adds one).",
+   "test": "covered through KpiTile.test.jsx (provider true/false/absent) and ReportsPage.test.jsx (live permissions)"
+  },
+  {
+   "file": "src/modules/11_reports/ReportsPage.jsx",
+   "what": "DEFECT 3: new canOpenTarget useCallback (locateDoor + canOpenTab) provided to the whole tab subtree through ReportsShellContext.Provider with a memoised value. Deliberately narrow: a target that is NOT in the catalog still renders as a door, because openDoor already blocks it and the existing 'a target outside the catalog writes no drill state' test is what catches a payload contract break - hiding the door there would swallow it. ITEM 8: the period now falls back to the ACTIVE TAB's defaultPeriod (catalog) when ?period= is absent, and the pill writes undefined only when it equals that tab default.",
+   "test": "src/modules/11_reports/ReportsPage.test.jsx - the old 'a target in a masked tab opens nothing' test now asserts the new behaviour (value stays, button gone) plus a new CEO counter-test; new describe 'per-tab default period' (4 tests)"
+  },
+  {
+   "file": "src/modules/11_reports/components/ReportSurface.jsx",
+   "what": "DEFECT 7: RowCapNote is hidden while a cross-filter selection is active and returns on clear. It was fed payload.rows.length above a table showing selectedRows, i.e. 'showing 50 of 731 rows' over a 1-row table. The live aria-live announcement already says how many rows are shown, so a second counter is the duplication D-25 removed.",
+   "test": "src/modules/11_reports/components/ReportSurface.test.jsx - new test 'the row-cap line disappears during a selection and returns on clear'; the existing 'a selection with no rows' fixture was changed from n:0 to n:3 (a 0-count datum is no longer selectable by design - the case that test guards, a chart datum with no matching rows, is unchanged)"
+  },
+  {
+   "file": "src/modules/11_reports/reportsPeriod.js",
+   "what": "ITEM 8: new '12m' preset ('12 חודשים'), rolling half-open (today-12m, today] per D-17, computed from the server's today via Date.UTC(y-1, m-1, d) so 29 Feb normalises instead of producing a non-existent date. parsePeriodParam(value, fallback) gained the fallback argument (the URL always wins; the tab default only applies when ?period= is absent).",
+   "test": "src/modules/11_reports/reportsPeriod.test.js (NEW, 14 tests): calendar presets, the rolling window shape, the 29-Feb normalisation, the pill label, and the URL-vs-tab-default precedence both ways"
+  },
+  {
+   "file": "src/modules/11_reports/reportsCatalog.js",
+   "what": "ITEM 8: defaultPeriod: '12m' on the hostesses tab only (its four cards are defined on a rolling 12-month window while the tab opened on the calendar year). The other three tabs declare nothing and keep DEFAULT_PERIOD.",
+   "test": "src/modules/11_reports/ReportsPage.test.jsx 'per-tab default period' + browser proof"
+  },
+  {
+   "file": "src/modules/11_reports/components/FiltersBar.jsx",
+   "what": "ITEM 8: comment only - the file maps over PERIOD_OPTIONS and never counts pills, so the fifth preset needed no code. The old why-comment claimed four labels identical to WindowChips; corrected, because '12 חודשים' has no WindowChips counterpart (rolling, not calendar).",
+   "test": "n/a (no behaviour change); the pill is asserted in reportsPeriod.test.js and seen in the browser proof"
+  }
+ ],
+ "not_applied": [
+  {
+   "item": "DEFECT 5 - rename data-testid 'report-notes' to 'report-meta-notes'",
+   "why": "NOT APPLIED, and this is the one item I stopped on. The collision is real and confirmed this turn: m22's slug IS 'notes' (reportsCatalog.js:190), so on that surface the wrapper data-testid='report-notes' and the meta.notes paragraph are two matches for one query. But the paragraph testid has TWO consumers in tab tests I am forbidden to touch - src/modules/11_reports/tabs/FinanceTab.test.jsx:440 and src/modules/11_reports/tabs/HostessesTab.test.jsx:673 - and renaming turns both red. The brief says the suite must stay green, tab tests included, and to STOP and report rather than edit a tab; there is no additive middle (fixing the collision requires the string to appear exactly once).",
+   "fix_for_the_owner": "One word per file. ReportSurface.jsx:99 data-testid 'report-notes' => 'report-meta-notes', FinanceTab.test.jsx:440 and HostessesTab.test.jsx:673 same string. No other consumer exists (grepped src/ and e2e/ this turn)."
+  }
+ ],
+ "tab_tests_impacted": [
+  "NONE went red. The full module suite is 248/248 (was 208/208 at af4ef4b9) and no file under tabs/** was edited.",
+  "Defect 3 does not touch tab tests: they render a tab directly with no shell provider, so canOpenTarget is absent and every door stays (asserted explicitly in KpiTile.test.jsx 'outside the shell nothing changes').",
+  "Defect 5 WOULD have broken FinanceTab.test.jsx:440 and HostessesTab.test.jsx:673 - see not_applied."
+ ],
+ "screens": [
+  "<scratchpad>/results/fixA/m07-chart-0.png - DEFECT 1 proven: m07's y-axis reads 0 / 150,000 / 300,000 / 450,000 / 600,000 (the reported raw 600000 / 450000). No stray glyphs from the bidi isolates.",
+  "<scratchpad>/results/fixA/m09-chart-0.png - DEFECT 1 on the aging chart: 0 / 25,000 / 50,000 / 75,000 / 100,000 (reported raw 100000).",
+  "<scratchpad>/results/fixA/m20-chart-0..3.png - m20's four charts. DEFECT 4: the live payload declares NO layout, so they are still drawn vertically with the Hebrew reason labels cramped on the x-axis; the renderer is ready and covered by fixtures.",
+  "<scratchpad>/results/fixA/m19-projects-tiles.png + proof.log - DEFECT 3 proven as מנהלת-פרויקטים: tiles 1-3 are doors, tile 4 (קצב-התשלום תלוי בסוג הלקוח, target = כספים, masked) is NOT a door and carries no aria-label; the same page as CEO shows 4 doors.",
+  "<scratchpad>/results/fixA/m14-12m-default.png - ITEM 8 proven: the hostesses tab opens with the '12 חודשים' pill aria-pressed=true and the subtitle reading 16/09/2025-16/09/2026.",
+  "<scratchpad>/results/fixA/zeroprobe.log - DEFECT 6 proven live on m20's negative-reason chart (the only live cross-filterable chart with a 0 category): the sr-table button for 'איחור דיילות' is disabled, the other four are enabled.",
+  "<scratchpad>/results/fixA/m12-rowcap-hidden.png + proof.log - the m12 cross-filter still works end to end (announcement 'מסונן ל...; שורה אחת'), but m12 carries no meta.row_total, so this shot does NOT prove defect 7 - see not_verified."
+ ],
+ "gates": {
+  "vitest_module": "exit=0 - 10 files, 248/248 (baseline at HEAD was 208/208). Log: <scratchpad>/results/vt-fixA.log",
+  "vitest_module_plus_reportsFormat": "exit=0 - 11 files, 280/280. Log: <scratchpad>/results/vt-fixA-final.log",
+  "eslint": "exit=0 on src/modules/11_reports + src/lib/reportsFormat.js (no function over the cognitive-complexity 20). Log: <scratchpad>/results/eslint-final.log",
+  "prettier_check": "exit=0 on the same paths. Log: <scratchpad>/results/prettier-check2.log",
+  "dup": "npm run dup exit=0 - total 0.81% (threshold 3%). One clone touches the module: ReportsPage.jsx writeParams/resolveNext vs ProjectsPage.jsx - pre-existing and documented in the file's own why-comment; my edits only shifted its line range.",
+  "deadcode": "npm run deadcode (knip) exit=0 - no unused file or export; the new reportsShellContext.js is imported by ReportsPage and KpiTile.",
+  "check_bidi": "npm run check:bidi exit=0",
+  "check_declared_counts": "npm run check:declared-counts exit=0 (6 declared numbers verified) - run because the fifth period pill could have contradicted a declared count; it does not.",
+  "CR": "CR=0 on all 15 touched files, measured with perl -ne '$n+=tr/\\r//; END{print}'",
+  "not_run": "npm run gate / verify / build as wholes - other sessions are writing in this tree (see concurrency below) and a whole-tree gate would measure their work."
+ },
+ "not_verified": [
+  "DEFECT 7 COULD NOT BE PROVEN IN A BROWSER, only in jsdom. It needs one surface that has BOTH meta.row_total AND a live cross-filter, and today none does: row_total is emitted by m02/m03/m04/m06/m16 and the only surface with a live cross-filter is m12 (m04/m06/m16 were switched off by declaration in the reconcile round). Checkable the day an RPC gives a row_total surface a chart.filter_key. The code path itself is covered by the new ReportSurface test.",
+  "DEFECT 4 IS RENDERER-ONLY UNTIL THE RPC DECLARES IT. Measured this turn on the live payload (report_m20_satisfaction_g3_post_baseline.json): none of m20's four charts carries a layout key, so the screen still draws vertical bars. The RPC owner adds layout: 'horizontal' to the two reason charts and nothing else changes. My horizontal path is covered by fixtures only - it has never rendered in a real browser, so the measured 6.6px-per-character axis width is an ESTIMATE (jsdom cannot measure text) and should be eyeballed once a real payload declares it.",
+  "THE AXIS FORMATTER IS ONLY AS GOOD AS WHAT THE PAYLOAD DECLARES, and most live payloads declare a display string, not a C8 format enum. Measured over 126 payload files: chart.unit is '₪' x51, 'משובים' x42, '%' x18, 'הערות' x14, 'ציון' x8 ... against 'money' x15 / 'percent' x15 / 'int' x4; series[].format is null in 296 of 342 series. Consequence seen live: m20's 'satisfied share by year' axis reads 0/25/50/75/100 with NO % sign, because its unit is the literal '%' rather than 'percent'. The defect as reported (raw 600000) is fixed either way - the fallback groups digits - but the unit suffix needs a one-word RPC change (chart.unit: 'percent', or declare series[].format). I did NOT map '%'/'₪' to formats in the client: that would be a second convention beside the C8 enum, i.e. exactly the two-mechanisms-for-one-behaviour class the reconcile round removed. Conflict question, not a patch (C7).",
+  "The bidi isolates I put in the axis ticks were verified visually on m07/m09 only (Chromium, 1280px, CEO). They render as zero-width there. Other engines were not tested.",
+  "Keyboard operation of the new disabled sr-table button was proven structurally (button.disabled in the live DOM and in jsdom), not by pressing Tab/Enter in a real browser. 14ב3 says structure is not evidence, so I am not claiming it.",
+  "Only CEO and PROJECTS identities were driven in the browser. FINANCE/RECRUIT/STAFF were not opened this round.",
+  "The horizontal-bar grid flip (commonGrid(horizontal)) and the flipped bar radius are visual choices verified in fixtures only, for the same reason as the layout path.",
+  "I did not re-run the four tab suites' browser evidence; only the module unit suite was run against the tab code."
+ ],
+ "concurrency_warning": [
+  "ANOTHER SESSION IS WRITING IN THIS TREE AT THE SAME TIME, including a file I own. Between my first git status at 17:3X and the last at 18:0X, ReportsPage.jsx gained a change I did not make (DOOR_PATHS.hostess became /hostesses?hostess=<id>) along with edits to src/modules/04_hostesses/HostessesPage.jsx, e2e/accessibility.spec.js, e2e/smoke.spec.js, e2e/smoke-anchors.json, a new e2e/reports.spec.js and a new migration supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql.",
+  "Nothing of mine was lost and the suite is green with both sets of edits on disk - but iron rule 16 says one writing session at a time, and whoever commits must review the interleaved diff of ReportsPage.jsx rather than assume it is all mine.",
+  "I never committed anything (per the brief)."
+ ],
+ "blind_spot": "The 0-count rule (defect 6) is a GUESS ABOUT THE ROWS made from the CHART, and nothing checks the guess. ChartCard cannot see payload.rows, so 'this column would filter to nothing' is approximated by 'every series value on this datum is 0'. The two are not the same set. Concretely checkable in one step: open /reports?tab=finance&report=equipment as CEO and click the shortest bar of 'הוזמן מול הגיע' - if a datum with a NON-zero chart value still filters the table to zero rows, the user gets an enabled bar, a pointer cursor and an empty table, which is precisely the state the card wanted marked not-allowed; and the mirror case is a datum whose chart value is 0 for the plotted series while rows for that category do exist (a stacked chart whose plotted series is not the one the rows count), where my rule now DISABLES a filter that would have worked. Neither case exists in today's payloads - m12's bars are all non-zero and m20's single 0 category has no rows - which is exactly why no test of mine catches it. The durable fix is for ReportSurface (which holds both sides) to compute selectability from the rows and pass it to ChartCard, instead of ChartCard inferring it from the bar height; I did not do that because it changes the ChartCard prop contract that four tab owners are building against, and the brief said every change additive."
+}

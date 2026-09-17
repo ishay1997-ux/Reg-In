@@ -1,0 +1,114 @@
+{
+  "model": {
+    "id": "gemini-3.5-flash-lite",
+    "why": "gemini-3.8-flash's free-tier request quota is limit:20 and the 429 persisted past 5.5 minutes of silence — because 20 is a DAILY quota (RPD), not per-minute: Google's own public forum thread is titled 'Gemini 3.8 Flash Free Tier 20 RPD Is Too Limited for Practical Evaluation', and the rate-limits page states RPD resets at midnight Pacific. No amount of [המשך] could have finished the seeding that day on that model. The quota metric named in the 429 body is generate_content_free_tier_requests WITH THE MODEL ID INSIDE IT, so it is per-model ⇒ a different model draws a fresh bucket. gemini-3.5-flash-lite is the newest stable flash-lite (release notes: GA 21/07/2026, newer than gemini-3.1-flash-lite at 07/05/2026), the pricing page lists it as free-tier eligible, and the models page positions it as 'low-latency, highly cost-effective subagent option designed for high-volume automation'. Structured output: the structured-output page names no supported-model list and its only model restriction is 'This feature is available only to Gemini 3 series models' — flash-lite 3.5 is series 3. PROVEN LIVE: 386 notes, 13 requests, 0 refusals.",
+    "doc_url": [
+      "https://ai.google.dev/gemini-api/docs/models",
+      "https://ai.google.dev/gemini-api/docs/changelog",
+      "https://ai.google.dev/gemini-api/docs/rate-limits",
+      "https://ai.google.dev/gemini-api/docs/pricing",
+      "https://ai.google.dev/gemini-api/docs/thinking",
+      "https://ai.google.dev/gemini-api/docs/structured-output",
+      "https://ai.google.dev/api/interactions-api-v1"
+    ],
+    "thinking_level": "minimal — set, and set as a PER-MODEL MAP (THINKING_LEVEL_BY_MODEL), not a constant. The thinking page's per-model table gives gemini-3.5-flash-lite default 'minimal' and allows minimal|low|medium|high, but gives gemini-3.8-flash only low|medium|high — a hard-coded 'minimal' would have 400'd every batch the moment anyone set GEMINI_MODEL back to the old default. A model absent from the map is sent with no thinking_level at all."
+  },
+  "batch_size": 30,
+  "deployed_version": 6,
+  "deployed_verify_jwt": true,
+  "run6": {
+    "run_id": 6,
+    "status": "done",
+    "sent": 386,
+    "ok": 386,
+    "failed": 0,
+    "continues": 1,
+    "quota_events": 0,
+    "model_recorded_in_db": "gemini-3.5-flash-lite",
+    "timing": "start call 100.5 s (9 batches, closed itself partial on the 90 s budget), continue call 41.1 s (4 batches) ⇒ ~10 s per 30-note batch"
+  },
+  "totals": {
+    "insights": 426,
+    "rows_run5": 40,
+    "rows_run6": 386,
+    "still_unclassified": 0,
+    "unclassifiable": 0,
+    "verbatim_quotes": "425 of 426 by position(quote in feedback_notes) > 0; the 1 miss is project 1249 — a Hebrew YOD (U+05D9) replaced by an Arabic YEH (U+064A) inside an otherwise identical sentence",
+    "quote_null": 0,
+    "sentiment_null": 0,
+    "negative_topics": {
+      "ניהול לקוי": 54,
+      "איחור דיילות": 39,
+      "תפקוד דיילות": 36,
+      "איכות תגים": 29,
+      "אחר": 17,
+      "rows_with_no_negative_topic": 262
+    },
+    "positive_topics": {
+      "מקצועיות הדיילות": 165,
+      "עמידה בזמנים": 96,
+      "ניהול ותקשורת": 59,
+      "איכות תגים וציוד": 18,
+      "אחר": 1,
+      "rows_with_no_positive_topic": 161
+    },
+    "sentiment": { "5": 186, "4": 93, "3": 80, "2": 53, "1": 14 },
+    "free_topic_non_null": 34,
+    "red_flags": 25,
+    "other_33_model_view": "The human 'אחר' population reproduces exactly: 33 rows, all 33 classified. The model gave every one of them a negative topic; on 28 of the 33 it named a REAL topic instead of 'אחר' (ניהול לקוי / איחור דיילות / תפקוד דיילות / איכות תגים) and kept 'אחר' on only 5. 11 of the 33 carry a free_topic. That is the 'model read what the tag missed' claim, measured: the biggest negative bucket in the system loses 28/33 of its opacity.",
+    "card_20_7": {
+      "population": "The card's own denominator reproduces EXACTLY: 104 completed-with-note rows carrying no negative tag, final_event_date 2026-01-01..2026-09-10. Its keyword filter (10 phrases, quoted verbatim from the card) returns 16 rows / 13 distinct texts today, where the card recorded 20 rows / 17 texts. Since the 104 reproduces to the row, the 4-row gap is in the keyword list as transcribed into the card's prose, not in the population — REPORTED, NOT RECONCILED. Over all dates the same filter returns 38.",
+      "topiced": "16 of 16 (100%) of the keyword-filter rows received a model negative topic; 37 of 38 over all dates. And the number that actually matters is wider than the filter: of the full 104-row no-negative-tag window, the model found a complaint in 27 — 12 of them on feedback scored 5 — which is above the card's own hand-read estimate of ~21 and is exactly the argument the card makes ('סינון-מילים מפספס, מודל לא').",
+      "card_named_examples_all_land": "1541 (score 5, no tag) ⇒ ניהול לקוי, quote 'לא היה ברור מי אחראית בשטח.' · 1536 (score 4, no tag) ⇒ תפקוד דיילות, quote 'הדיילות היו על הטלפון בזמן שאורחים חיכו.' · 1445 (score 5, no tag) ⇒ איחור דיילות, red_flag TRUE, quote 'נאלצנו לפתוח את הדלתות בלי דיילת אחת (אחת הבנות איחרה 21 דק').'"
+    },
+    "sample": [
+      { "project_id": 12, "sentiment": 5, "negative": [], "positive": ["עמידה בזמנים", "מקצועיות הדיילות"], "red_flag": false, "quote": "הצוות הגיע מוקדם והעמדה הייתה מוכנה לפני שנכנס האורח הראשון." },
+      { "project_id": 815, "sentiment": 5, "negative": [], "positive": ["איכות תגים וציוד"], "red_flag": false, "quote": "תגים מדויקים ואפס תיקונים ביד." },
+      { "project_id": 1445, "sentiment": 2, "negative": ["איחור דיילות"], "positive": [], "red_flag": true, "quote": "נאלצנו לפתוח את הדלתות בלי דיילת אחת (אחת הבנות איחרה 21 דק')." },
+      { "project_id": 1536, "sentiment": 2, "negative": ["תפקוד דיילות"], "positive": [], "red_flag": false, "quote": "הדיילות היו על הטלפון בזמן שאורחים חיכו." },
+      { "project_id": 1541, "sentiment": 3, "negative": ["ניהול לקוי"], "positive": [], "red_flag": false, "quote": "לא היה ברור מי אחראית בשטח." }
+    ]
+  },
+  "approvals": [
+    { "run_id": 5, "result": "{ok:true}", "approved_at": "2026-09-16 04:28:26.411478+00" },
+    { "run_id": 6, "result": "{ok:true}", "approved_at": "2026-09-16 04:28:26.605176+00" },
+    { "case": "RECRUIT (view) approves run 6", "refused": true, "code": "42501", "message": "אין לך הרשאה לבצע פעולה זו במודול דו\"חות" },
+    { "case": "CEO approves run 6 a second time", "refused": true, "code": "P0001", "message": "ריצת-הניתוח כבר אושרה להצגה." }
+  ],
+  "runs_table_final": [
+    { "run_id": 1, "status": "failed", "ok_count": 0, "failed_count": 0, "approved_at": null },
+    { "run_id": 2, "status": "failed", "ok_count": 0, "failed_count": 0, "approved_at": null },
+    { "run_id": 3, "status": "failed", "ok_count": 0, "failed_count": 0, "approved_at": null },
+    { "run_id": 4, "status": "failed", "ok_count": 0, "failed_count": 0, "approved_at": null },
+    { "run_id": 5, "status": "partial", "ok_count": 40, "failed_count": 0, "approved_at": "2026-09-16 04:28:26.411478+00" },
+    { "run_id": 6, "status": "done", "ok_count": 386, "failed_count": 0, "approved_at": "2026-09-16 04:28:26.605176+00" }
+  ],
+  "h1_index": "feedback_ai_runs_one_running_idx present: CREATE UNIQUE INDEX ... USING btree ((true)) WHERE (status = 'running')",
+  "gates": {
+    "deno_check": "PASS (exit 0)",
+    "prettier_check": "PASS (exit 0, both files)",
+    "cr_bytes": "CR=0 on index.ts and README.md",
+    "check_docs_structure": "PASS (114 files, 0 findings) — run to prove nothing else regressed; this README is not in its scan scope",
+    "committed": "NO — nothing committed, as instructed. Both files remain untracked."
+  },
+  "story_4_true_now": true,
+  "not_verified": [
+    "The numeric free-tier quota of gemini-3.5-flash-lite. Google removed the per-model free-tier RPM/TPM/RPD table from the docs; rate-limits now says limits 'can be viewed in Google AI Studio' and links aistudio.google.com/rate-limit, which needs a signed-in account I do not have. So 'a LARGER quota' as the task worded it is NOT something I verified — what I verified is that the bucket is per-model and that flash-lite is the class Google positions for high-volume automation, and then that the actual run needed 13 requests and hit zero refusals. A much larger future corpus could still find a ceiling nobody has read.",
+    "Byte-level equality between the deployed function and the repo file. The Supabase CLI could not be used (the SUPABASE_ACCESS_TOKEN in .env.local returns 401 Unauthorized from the Management API — a separate, real problem worth fixing), so the deploy went through the MCP tool with the source passed inline. Fidelity is evidenced behaviourally, not by diff: the function booted, feedback_ai_runs.model records gemini-3.5-flash-lite, 386 rows were written, and 13 requests covered 386 notes (= batches of 30). A drift confined to a Hebrew comment would not be caught by any of those. index.ts is unchanged at 896 lines since the deploy (prettier was a no-op on the second pass), so disk is what was sent.",
+    "Whether gemini-3.5-flash-lite and gemini-3.8-flash agree. Run 5's 40 rows and run 6's 386 rows were classified by DIFFERENT MODELS and are now both approved, so report 20 mixes two classifiers. feedback_ai_runs.model keeps that honest and the 40 are only 9.4% of the corpus, but no cross-model agreement check was run and the aggregate topic counts silently blend the two.",
+    "The prompt-injection defence is still untested against an actual adversarial note.",
+    "I did not run npm run gate / test:run / build — nothing here is under src/, and the task scoped me to deno check + prettier + CR. I did add check:docs-structure and it passes."
+  ],
+  "blind_spot": [
+    "CONCRETE AND CHECKABLE — quote verbatimness is not what it looks like. 425/426 quotes are exact substrings of feedback_notes; project 1249 is not, and the reason is a single homoglyph: the model emitted ממוינים with an Arabic YEH (U+064A) where the note has a Hebrew YOD (U+05D9). It renders nearly identically and no CHECK constraint can see it. If report 20 presents quote as 'the customer's own words', that claim is 99.8% true and nobody would ever find the 0.2% by eye. Verify today: select project_id from feedback_ai_insights i join projects p using (project_id) where position(i.quote in p.feedback_notes) = 0. The fix is to make that test a guard at write time, not an audit.",
+    "CONCRETE AND CHECKABLE — the card-20.7 keyword filter no longer reproduces the card's own number. The card's 104 denominator reproduces to the row, but its 10-phrase filter yields 16/13, where the card records 20/17. Either the phrase list quoted in the card's prose is not the list that was actually run on 10/09, or the notes changed after it (item 20.3 rewrote all 63 NEGATIVE notes on 10/09 — these 104 rows have no negative tag, so that is not an obvious explanation). The card is a source of truth other work cites. Verifiable: docs/specs/module_11_reports/stage2-cards/cards-customers.md line 343 holds the phrase list; re-run it against projects and compare to 20.",
+    "CONCRETE AND CHECKABLE — approving run 5 froze 40 rows classified by a model nobody will use again. feedback_ai_insights.project_id is UNIQUE GLOBALLY, so those 40 can only ever be re-classified by DELETING them first; there is no 'reclassify with the current model' path in the function (loadCandidates skips anything already in the table). If uniform classification across the 426 ever matters — and for an agreement matrix it does — the operation is a delete of run 5's 40 rows plus a fresh run, and nothing in the code or the guide says so today. Check: select run_id, count(*) from feedback_ai_insights group by 1 ⇒ 5:40, 6:386."
+  ],
+  "assumed": [
+    "הנחתי BATCH_SIZE 30 over the card's '~20 הערות לקריאה', per the orchestrator's ruling, and recorded the deviation with its reason in the index.ts header: the '~' makes it approximate, no CHECK/schema/screen derives from it, and the resource that actually ran out is measured in REQUESTS, not in notes.",
+    "הנחתי that thinking_level belongs in a per-model map rather than as a constant. The task said 'set it to the lowest documented value if the API accepts it for that model; if the field is not documented for the chosen model, leave it out.' A bare constant satisfies that sentence for TODAY's model and breaks the GEMINI_MODEL escape hatch the file was built around, because the thinking page allows minimal for gemini-3.5-flash-lite and forbids it for gemini-3.8-flash. The map is the same ruling, held for every model.",
+    "הנחתי that approving run 5 as well as run 6 is what the task meant and what the data supports: its 40 rows are real, non-unclassifiable, and would otherwise be invisible to report 20 while sitting in the table and blocking those 40 projects from ever being candidates again. Flagged above as a blind spot rather than treated as free.",
+    "הנחתי final_event_date as the date column for card 20.7's '2026 (01/01–10/09)' window. Not stated in the card — but it is the only date column that reproduces the card's 104 exactly, which is the check that chose it."
+  ],
+  "open_item_outside_my_write_scope": "docs/specs/module_11_reports/HANDOFF-stage3-2026-09-10-02.md line 117 still carries the ⚠️ row for conference story ④ ('המודל קורא מה שהתגית פספסה … צעד 2ב.4 הופך אותו לנכון, ומחליף את השורה הזו ל-✅'). The step has now landed and the story is true and demonstrable, but the task limited me to index.ts and README.md, so the row is untouched. Micro-guide step 2ב.4 calls this flip 'the last action of this step' — it needs an owner."
+}

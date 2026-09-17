@@ -1,0 +1,225 @@
+{
+  "tab": "hostesses",
+  "lenses": "A + B + C (one verifier, per D-33 pacing rule)",
+  "measured_against": {
+    "head": "b199fa22 (m11 guide: D-33)",
+    "tab_files_mtime": "HostessesTab.jsx 10:19:29 · hostesses/payloadTransforms.jsx 10:12:23 · hostesses/ChipRow.jsx 09:06:31 · hostesses/HintBlock.jsx 08:35:02 · onboardingCopy.m11.hostesses.js 08:46:45 (unchanged during my run)",
+    "shell_in_flux": "The shell fixer wrote components/** DURING my run: ReportsPage.jsx 17:50:25 · KpiTile.jsx 17:49:54 · FiltersBar.jsx 17:44:09 · ChartCard.jsx 11:04:58 · ReportSurface.jsx 17:39:51, plus an UNCOMMITTED src/modules/04_hostesses/HostessesPage.jsx. `git diff | sha1sum` = d3bec753213a535c0c92246308f45655bd1f8f5a before the main probe run and 05c9675fae51c7ed2d07dd74370c307746a5dddf after it. Every shell-owned finding below is stamped with that window (17:39–18:05).",
+    "server": "vite --port 5183 --strictPort (reused the instance left by the killed predecessor; stopped at the end)",
+    "identity": "E2E_CEO (all four surfaces), E2E_FINANCE + E2E_STAFF (masking). Credentials read from .env.local by the script, never printed."
+  },
+  "findings": [
+    {
+      "lens": "B",
+      "surface": "מ14 (and any surface whose chart returns zero data)",
+      "severity": "major",
+      "claim": "One click on the 'החודש' period chip leaves an empty 260px chart frame — title, legend and a bare axis box — with no empty-state text. 📐10's 'empty after filter' is not honoured for the chart at all.",
+      "evidence": "Live: /reports?tab=hostesses&report=hostess-overview&period=month as CEO — screenshot results/lensV-hostesses/m14-period-month.png (the chart card between the tiles and the table is blank). The sr-only data table under it carries only its header row. Code: src/modules/11_reports/components/ChartCard.jsx:784-820 destructures `data = []` and renders the card, <ChartLegend> and the ResponsiveContainer unconditionally — there is no `data.length === 0` branch anywhere in the file. The only explanation on screen is in report-notes, below the table: 'החודש 09/2026 אינו בגרף: 87 שיבוצים ... ואין מה למדוד'.",
+      "owner": "shell",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ15 · אמינות והתייצבות",
+      "severity": "major",
+      "claim": "The page never says, in any mode, what 'אדומה' and 'ענבר' mean in numbers — although both words appear on it three times. The approved mockup's `div.datanote` carries the two thresholds as BASE content, and card §⑩ ב says that paragraph stays at level 0.",
+      "evidence": "Mockup 04_tab_hostesses_approved.html:703-718 (base, level 0): 'ממוצע החברה בחלון: 0.9588 · אדום מתחת ל-87% ממנו, כלומר 0.834 · ענבר מתחת ל-95% ממנו, כלומר 0.911'. Live m15 definitions line (CEO, 12-month window) defines ציון אמינות (with the formula and C=0.9584), איחור by grade, the two no-show columns, הבריזה, ביטלה-אחרי-אישור and החלון — and stops; measured text in results/lensV-hostesses/mode0.json. Meanwhile the same screen shows the chip 'אדומות וענבר בלבד' and the tile sub '6 אדומות · 5 ענבר מתוך 87'. The numbers DO exist one surface away, in מ14's definitions line ('מתחת ל-0.833771 ... 0.910440'). Not listed in the builder's deviations_from_mockup.",
+      "owner": "rpc",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ15 · אמינות והתייצבות",
+      "severity": "minor",
+      "claim": "Ruling 38 ('the reliability component in Smart Match stays on — the same score, two screens') is on no מ15 surface at level 0. The mockup's datanote carries it as a 🔗 block with the weight 0.35; the built page carries nothing.",
+      "evidence": "Mockup 04_tab_hostesses_approved.html:703-718: '🔗 אותו ציון מזין גם את השיבוץ האוטומטי. מרכיב-האמינות ב-Smart Match דלוק (במשקל 0.35) ⇒ דיילת שיורדת כאן יורדת גם בדירוג-ההמלצה'. Live definitions + notes + so_what on m15 contain no 'Smart Match' (measured, mode0.json). The nearest thing is the mode-2 term hint `reports.reliability.term.scoreVisibility`, which is about where the score is VISIBLE, not about the component being on.",
+      "owner": "doc",
+      "conflict_question": "The tab task file lists 38 under 'Rulings to make visible' for this tab; micro-guide §3.3(ג) maps ruling 38 to 'phase 2, the reliability RPC' — i.e. not a phase-3 screen item. Two sources, one tab."
+    },
+    {
+      "lens": "B",
+      "surface": "מ16 · איכות מול עלות",
+      "severity": "minor",
+      "claim": "The shared row-cap note fires on a CLIENT chip filter and reads as a server cap: 'מוצגות ⁦17⁩ מתוך ⁦50⁩ שורות' sits above a pager that reads '1–17 מתוך 17', on a payload whose 50 rows were all returned.",
+      "evidence": "Live m16 (CEO, default chip ON): report-row-cap = 'מוצגות ⁦17⁩ מתוך ⁦50⁩ שורות'; report-pager-range = '1–17 מתוך 17'; meta.row_total = 50 with 50 rows in the payload (results/payloads/report_m16_quality_cost__hostesses_defaults.json). The note exists only because HostessesTab's transform shrinks payload.rows (tabs/hostesses/payloadTransforms.jsx:41-43 `filterRows`) and ReportSurface's RowCapNote compares meta.row_total to the POST-transform rows.length. The shell already hides that note under a cross-filter selection for exactly this reason — its own why-comment says the line 'היה שקר על המסך' — but the chip path was not covered: `{!selection && <RowCapNote rowTotal={payload.meta?.row_total} shown={payload.rows.length} />}` (ReportSurface.jsx, ~line 487, measured 17:39).",
+      "owner": "shell",
+      "conflict_question": null
+    },
+    {
+      "lens": "B",
+      "surface": "all four (the shell chip vs the tab chip)",
+      "severity": "minor",
+      "claim": "Two spellings of the same control ship in one module: the tab's weekday clear chip says '× נקי בחירה' and the shell's cross-filter clear chip says '× נקה בחירה'.",
+      "evidence": "Measured in one browser session: /reports?tab=hostesses&report=reliability after selecting a weekday → the chip row's clear button reads '× נקי בחירה' (HostessesTab.jsx:189-193, comment cites spec §1.5); /reports?tab=finance&report=equipment after clicking a chart column → report-clear-crossfilter reads '× נקה בחירה' (ReportSurface.jsx, recorded as ruling 15-ד in §9 D-30 ②). Raw capture: results/lensV-hostesses/probes3.json `clearChips`.",
+      "owner": "ishay",
+      "conflict_question": "spec.md §1.5 ('ציווי אמיתי, בנקבה' — `נקי מסננים · נקי בחירה · נקי חיפוש`, 4/4 live call sites) vs ruling 15-ד as recorded in §9 D-30 ② ('× נקה בחירה'). `נקה` is the masculine imperative, which §1.5 rules out; the shell follows the ruling, the tab follows §1.5, and both are on screen."
+    },
+    {
+      "lens": "B",
+      "surface": "מ15 · אמינות והתייצבות",
+      "severity": "minor",
+      "claim": "Selecting a weekday changes the whole table silently for a screen reader: the aria-live region next to the weekday chips exists but is never given text, and the table's own announcer is empty too.",
+      "evidence": "Live: after clicking 'שני' the pager went '1–50 מתוך 87' → '1–50 מתוך 79' and the on-time/score cells became '—', while `reports-chips-dow-announce` = '' and both `report-table-announce` regions = '' (results/lensV-hostesses/probes.json `probe_m15.afterDow`, and `detail.reliability.ariaLive`). Cause: HostessesTab.jsx:232-235 builds the weekday ChipRow with no `announcement` prop, while the page-filters ChipRow above it does pass one (line 229) and works (measured 'מוצגות ⁦11⁩ שורות'). Same row: its label 'יום בשבוע' is a bare <span> (ChipRow.jsx:28) with no role=\"group\"/aria-labelledby, so the six buttons are announced unlabelled. 📐9④.",
+      "owner": "tab",
+      "conflict_question": null
+    },
+    {
+      "lens": "B",
+      "surface": "מ15 · אמינות והתייצבות (mode 2)",
+      "severity": "minor",
+      "claim": "Two מ15 hints land at the very bottom of a 4,261px page, below the definitions line and the notes, far from the blocks the card anchors them to.",
+      "evidence": "Measured document order at onboarding mode 2 (prefs GET intercepted, no DB write): … report-definitions → report-notes → hint-reports.reliability.scoreBasis → hint-reports.reliability.queuePopulation → the six term hints (results/lensV-hostesses/probes.json `mode2.reliability.order`; screenshot m2-reliability.png). Card §⑩ anchors: ב `scoreBasis` ⇒ the 'כך נקבע התג, במספרים' paragraph, which in the mockup sits ABOVE the chart (04_tab_hostesses_approved.html:703); ד `queuePopulation` ⇒ the 'N דיילות אינן בדוח' note under the table (mockup:829). onboarding-layer-contract §4ב: the hint is a standalone line BENEATH the block it explains. The builder's own `assumed` rule covers only 'definitions-anchored and term blocks ⇒ renderExtras'; neither of these two is definitions-anchored.",
+      "owner": "tab",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ15 · אמינות והתייצבות",
+      "severity": "minor",
+      "claim": "`reports.reliability.absenceColumns` is not the card's §⑩ sentence, and the change is not in the builder's declared deviation list.",
+      "evidence": "Mechanical diff of all 38 guided strings against cards-hostesses.md (script at <scratchpad>/v/diffcopy.py). Card line 244/273: '… השמאלי אומר \"כמה זה פוגע בציון שלה\", והימני אומר \"כמה פעמים בכלל לא הגיעה\". דיילת שהייתה חולה שלוש פעמים תיראה גבוהה בימני ולא תיפגע בשמאלי'. Built (onboardingCopy.m11.hostesses.js:102): '… האחד אומר כמה זה פוגע בציון שלה, והשני כמה פעמים בכלל לא הגיעה. דיילת שהייתה חולה שלוש פעמים תיראה גבוהה ב\"אי-פעם\" ולא תיפגע בציון'. The builder's `copy_deviations_from_card_section_10` lists 10 keys; this one is not among them. (The substitution is probably RIGHT — 'שמאלי/ימני' is direction-bound in an RTL table — but C3 requires the change to be logged with the rule that fired.)",
+      "owner": "tab",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ16 · איכות מול עלות (mode 2)",
+      "severity": "minor",
+      "claim": "`reports.qualityCost.term.quadrants` drops the card's identification of WHICH quadrant is which — undeclared — so at mode 2 the hint can no longer be matched to the scatter above it.",
+      "evidence": "Same diff. Card line 345 ('שני הריבועים'): 'הימני-תחתון = …' / 'והשמאלי-עליון = …'. Built (onboardingCopy.m11.hostesses.js:164): 'האחד אומר לך על מי את משלמת יותר ממה שקיבלת, והשני אומר לך את מי את עלולה לאבד למתחרה'. The live scatter (dir=\"ltr\", x = hourly rate 0–60, y = rating 1–5, two median reference lines) makes the card's directions correct as drawn; the built text names no direction at all. Not in `copy_deviations_from_card_section_10`.",
+      "owner": "tab",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ14 · מבט-על דיילות (mode 2)",
+      "severity": "minor",
+      "claim": "`reports.hostessOverview.gini` still carries the workaround wording whose reason the reconcile round itself measured away: the sub-row it was rewritten to stop pointing at is now rendered.",
+      "evidence": "Card §⑩ ג: 'התת-שורה מדברת ברבעים…'. Built (onboardingCopy.m11.hostesses.js:59): 'הוא מדבר ברבעים…', declared in copy_deviations_from_card_section_10[3] with the reason 'tiles[].sub is not rendered — see defects[1]'. Re-measured live now: report-tile-gini carries a kpi-sub line 'מדד ג\\'יני · רבע הדיילות העמוסות ביותר מקבלות 55.8% מהמשמרות; מחצית המאגר מקבלת 16.3%' (results/lensV-hostesses/probes.json `detail.hostess-overview.tiles`), and the builder's own reconcile_round records 'H-2 tiles[].sub: CLOSED. Live kpi-sub count = 5 · 4 · 4 · 6'. The copy was not reverted with the workaround.",
+      "owner": "tab",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ14 · מבט-על דיילות",
+      "severity": "minor",
+      "claim": "Ruling 33 is only three-fifths honoured: 2 of מ14's 5 overview tiles carry no `target` and render as plain DIVs — including 'הגעה בזמן', whose natural target (מ15 אמינות והתייצבות) exists and is already the target of another tile.",
+      "evidence": "Live: tileDoors = report-tile-link-red_hostesses · -gini · -active_hostesses, all BUTTON; 'הגעה בזמן' and 'אירועים עם חוסר' are DIV with no link child (results/lensV-hostesses/probes.json `detail.hostess-overview.tileDoors` + `tiles[].tag`). Payload confirms `target: null` on both.",
+      "owner": "rpc",
+      "conflict_question": "Ruling 33 ('every overview tile is a door to a page, including across tabs') vs §9 D-18, which records door targets as the builders' derivation and names the only deliberate `target: null` pair (finance's two, whose pages are deferred). מ14's two are recorded nowhere, and unlike finance's, one of them has a built target page."
+    },
+    {
+      "lens": "A",
+      "surface": "מ17 · הוגנות השיבוץ",
+      "severity": "minor",
+      "claim": "The Smart-Match adoption tile prints 'נמדד מ-—' — a preposition followed by an em dash — in the sub-line of the tile the step was told to make declare its absence in words.",
+      "evidence": "On screen: 'דרג ⁦1⁩ = הדיילת שהמערכת דירגה ראשונה · נמדד מ-— · אין עדיין נתון: …' (results/lensV-hostesses/probes.json `detail.fairness.tiles`). Source is the RPC, not the tab: supabase/migrations/20260916065642_module11_f2_rpcs_hostesses_fixes.sql:1631 emits the literal 'נמדד מ-— · אין עדיין נתון: …' on the zero-rows branch, while line 1633 emits the intended 'נמדד מ-<תאריך>; N שיבוצים' on the data branch. The required behaviour (never 0%, value '—', window 'טרם נמדד') is all correct; only the dangling 'מ-' is not.",
+      "owner": "rpc",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ17 · הוגנות השיבוץ (mode 2)",
+      "severity": "minor",
+      "claim": "At mode 2 the page contradicts itself about whether the system records the recommended rank: the base note says it has started, the hint says it has not.",
+      "evidence": "Base (meta.notes, level 0): 'אימוץ המלצת Smart Match — אין עדיין נתון: המערכת התחילה לרשום את הדרג שהמליצה רק מעכשיו…'. Hint (level 2, `reports.fairness.term.rank1`, copied verbatim from card §⑥ line 441): 'המדד הזה עוד לא נמדד: המערכת עדיין לא רושמת איזה דרג היא המליצה בזימון.' The write exists: src/modules/04_hostesses/api.js:447 `const RANK_COLUMN = 'recommended_rank'`, with its own tests at api.test.js:879-915. The copy is not at fault (C3 says copy verbatim from the card) — the card's §⑥ row went stale when step 1.5 landed.",
+      "owner": "doc",
+      "conflict_question": null
+    },
+    {
+      "lens": "A",
+      "surface": "מ14 / מ15 (the red queue)",
+      "severity": "minor",
+      "claim": "A signoff-baseline mismatch that no drift record carries: the screen says 5 ענבר, the baseline says 4.",
+      "evidence": "docs/specs/module_11_reports/stage2-review/signoff-baseline-2026-09-10.md:40 — 'תור: 6 אדומות · 4 ענבר מתוך 87'. Live (both surfaces): 'דיילות אדומות' sub = '6 מתוך 87 דיילות עם 3 משמרות ומעלה · 5 בענבר', and מ15's 'דיילות מסומנות' tile = 11 with sub '6 אדומות · 5 ענבר מתוך 87'. The rolling-window drifts that WERE recorded (§9 D-17, and p2fix-hostesses.json: gini 0.4559→0.4581, shares 55.3/16.2/26.0→55.8/16.3/26.4, max 48→49) do not mention the amber count. Per §2ב C5 the baseline is the acceptance oracle and a mismatch is a finding, not a number to fix.",
+      "owner": "doc",
+      "conflict_question": null
+    },
+    {
+      "lens": "C",
+      "surface": "מ14 · HostessesTab.test.jsx",
+      "severity": "minor",
+      "claim": "The test that exists to prove the table heading's count is DERIVED and not typed cannot fail if it is typed.",
+      "evidence": "HostessesTab.test.jsx:511-518 — `expect(screen.getByTestId('report-table-title').textContent).toMatch(/1/)`. The m14 fixture holds exactly ONE row (test file lines 197-206), so the heading is '⁦1⁩ הדיילות האדומות…'. Mutation: replace `${isolateLtr(payload.rows.length)}` in HostessesTab.jsx:118 with the literal `'1'` — this test stays green, and so does the rows:[] test at 520 (that path returns the other branch string regardless).",
+      "owner": "tab",
+      "conflict_question": null
+    },
+    {
+      "lens": "C",
+      "surface": "מ15 · מ16 · מ17",
+      "severity": "minor",
+      "claim": "The per-surface test floor the brief names (labels · population · so-what · row click · empty · error+retry · missing params · export) is met for מ14 only; the other three surfaces are covered only for their own bespoke behaviours.",
+      "evidence": "HostessesTab.test.jsx: the §1.4-labels / population / so-what / definitions assertions live in one test (469-489) and it renders SURFACES.m14. Rows-door (491), date+score formats (502), empty heading (520), error+retry (687), missing_params (699), export-disabled (710), blank (717) and the deletion test (723) all render m14 too. מ15 has 5 tests (weekday mapping, absent label_source, chip filter, p_drill round-trip, two no-show columns + extra table), מ16 one (default chip), מ17 two (adoption tile, response unit). Mutation that survives: an RPC that renames a מ16 or מ17 tile label away from spec §1.4, or a transform that dropped `so_what` on any surface but מ14, breaks no test.",
+      "owner": "tab",
+      "conflict_question": null
+    },
+    {
+      "lens": "C",
+      "surface": "all four (mode 2)",
+      "severity": "minor",
+      "claim": "The mode-2 test asserts that hints EXIST, never where they are — so the placement drift measured live cannot be caught by the suite.",
+      "evidence": "HostessesTab.test.jsx:735-747 checks five of מ14's ten hint testids with `toBeInTheDocument()`. Mutation: collapse HINTS so every id lands in `renderExtras` (the bottom slot) — all four structural key tests (761-793) and this one stay green, while the screen becomes the bottom-of-page wall that the B-lens finding above already measures on מ15.",
+      "owner": "tab",
+      "conflict_question": null
+    }
+  ],
+  "checked_and_correct": [
+    "38 onboarding keys, three ways: `HINTS` in HostessesTab.jsx (10+10+9+9) ⇔ 38 entries in onboardingCopy.m11.hostesses.js ⇔ the four §⑩ tables of cards-hostesses.md. Every key resolves LIVE at mode 2 (38 `hint-<id>` nodes rendered across the four surfaces; 0 at mode 0). Every entry is `guided`-only; no `pointer`.",
+    "All 17 §1.4 tile labels and all 4 page titles render byte-identical to spec.md §1.4, from the payload (re-derived from the screen, not from the builder's claim).",
+    "📐2 population · 📐23 'אז מה' · 📐16 definitions render on all four surfaces at mode 0 (the deletion test, live) — plus 📐17's period in the subtitle ('⁦16/09/2025–16/09/2026⁩ · כל הלקוחות').",
+    "📐1 comparison halves are formatted and carry an uncoloured ▲/▼: 87.2% vs 88.7% · 0.46 vs 0.44 · 43 ₪ vs 44 ₪ · 'n=⁦97⁩ מול n=⁦106⁩ היום'. `kpi-compare-note` renders on the two מ17 tiles that carry one.",
+    "tiles[].sub renders on all 19 tiles (5·4·4·6).",
+    "Ruling 19 row doors: 6 · 50 · 17 · 100 `report-row-drillable` rows, each role=button tabindex=0; Tab reaches them and Enter opens `/hostesses?hostess=449` — and the hostess CARD opens there (module 4's uncommitted HostessesPage.jsx:77 reads the param and the row's name 'רותם עמר' is on the screen after the click). The D-30 ④ 'lands on the list' debt is closed in the working tree.",
+    "Ruling 33 tile doors work: clicking 'דיילות אדומות' lands on /reports?tab=hostesses&report=reliability with <h1>אמינות והתייצבות</h1>.",
+    "Ruling 37: both no-show columns are on מ15 and named in full — 'הבריזה · ב-12 חודשים' and 'אי-הגעה · אי-פעם' — and `meta.extra_tables[0]` ('אי-הגעה לפי דירוג') is rendered exactly once.",
+    "Cross-filter OFF everywhere on this tab, measured not assumed: 0 `chart-select-*` buttons on all four surfaces (מ16's scatter is turned off by the tab's `disableCrossFilter`; month/dow/x are not row keys on the other three).",
+    "📐7/📐9: exactly one column per table carries aria-sort — ציון אמינות▲ (מ14, מ15), משמרות▼ (מ16, מ17), דירוג▼ and זמן-תגובה חציוני▼ on the extra tables. Numeric columns compute textAlign:left (= `end` in RTL); name/status columns right.",
+    "📐8: the pager counts what is shown. מ16 chip on → '1–17 מתוך 17', off → '1–50 מתוך 50', heading swaps with it. מ15 'אדומות וענבר בלבד' → '1–11 מתוך 11' with the live announcement 'מוצגות ⁦11⁩ שורות'.",
+    "The weekday selector travels in the URL: ?drill=%7B%22dow%22%3A1%7D, pager 87 → 79, and the RPC adds the day-scope note; a second click clears it.",
+    "Envelope states: error → 'לא ניתן לטעון את הנתונים.' + 'נסי שוב', tiles absent (never rendered as 'no data'), retry re-calls the RPC (screenshot state-error.png); loading → 4 skeleton blocks; missing_params → 'חסר פרמטר מערכת: סף_דיילת_אדומה'; noPermission → FINANCE sees '🔒דיילות · לא זמין בתפקידך' with role=tab aria-selected=false aria-disabled=true, STAFF sees all four masked plus 'אין דוחות זמינים בתפקידך — פנה למנכ\"ל'.",
+    "RTL/bidi: documentElement.scrollWidth − clientWidth = 0 on all eight screens (four surfaces × two modes); zero console errors and zero page errors in both modes; ₪ and % sit right of the digits inside LRI…PDI (zoom-m16-money.png, zoom-m14-tiles.png); every chart sits inside dir=\"ltr\" with the Hebrew <h3> outside it; tiles in a row share a top edge and a height (measured: all tops 492, heights 169/168).",
+    "מ14 opens on the 12-month window now, not the calendar year — the '12 חודשים' period chip exists and is aria-pressed=true by default (H-8 / card ⑧H2 closed since the builder's report).",
+    "Gates on the tab's six files: eslint exit 0 (no warnings) · prettier exit 0 · check:bidi exit 0 · CR=0 on each (perl tr/\\r//) · jscpd exit 0 with zero clones under modules/11_reports/tabs · `npx vitest run src/modules/11_reports` exit 0, 248/248 in 10 files.",
+    "Code shape: no `supabase.from` in any tab file (only the test's vi.mock) · no logical Tailwind utilities (ms-/me-/ps-/pe-/start-/end-) · no invented colours (zero purple/orange/amber/violet/pink/indigo classes) · every `payloadTransforms` function spreads and never deletes a key · `transformPayload` is a useCallback and `chips` a useMemo, so the shell's memoisation holds."
+  ],
+  "not_verified": [
+    "Export was never clicked and no .xlsx was opened — 'the file contains exactly the visible rows' and `rightToLeft: true` remain unverified for this tab (only the caption lines and the disabled state were read).",
+    "The chart tooltip was not seen rendered: my hover landed outside a bar and `.recharts-tooltip-wrapper` stayed empty. `HebrewTooltip` does carry dir=\"rtl\" on the box itself (ChartCard.jsx:147-151) with a why-comment about not inheriting from the LTR wrapper — read, not seen.",
+    "On the day-selected מ15 table I read only the FIRST row ('רותם עמר … ⁦3⁩ … —'). Whether EVERY cell of the ציון-אמינות column becomes '—' while the header still claims aria-sort=\"ascending\" (📐7: sorted by the displayed metric) is a one-query check I did not run.",
+    "RECRUIT — the only non-CEO role with דיילות edit — was not opened in a browser; only FINANCE and STAFF masking were measured.",
+    "No axe scan; the accessibility evidence is structural (roles, aria-sort, aria-pressed, aria-live, tab order) plus the tab-order traversal I measured.",
+    "Mode 2 was produced by rewriting the one PostgREST GET that carries onboarding_mode (no DB write, same method as the builder) — it proves the render path, not that saveOnboardingMode persists.",
+    "`npm run gate` / knip were not run: they are whole-repo gates and two other agents were editing src/modules/11_reports/components/** and src/modules/04_hostesses/** while I measured.",
+    "The four surfaces were opened at 1280×800 only, and always with the customer filter at 'כל הלקוחות'."
+  ],
+  "blind_spot": [
+    "🔴 The global customer filter was never exercised on this tab. Three of the four hostess reports are not customer-filterable by definition, and C8 says a surface that ignores `p_customer_id` must say so in `meta.notes` — but I measured `meta.notes` only at `customer = null`, so I cannot tell a surface that DECLARES the filter is ignored from one that silently drops it. Checkable in one step: open /reports?tab=hostesses&report=quality-cost&customer=401 as CEO and diff the population line and the four tile values against the unfiltered page. Identical numbers with no note saying the filter was ignored is a silent lie of exactly the class §4.3 of the micro-guide exists to prevent.",
+    "🔴 Everything I measured about the SHELL is stamped inside a 25-minute window in which the shell was being rewritten under me. ReportsPage.jsx (17:50:25), KpiTile.jsx (17:49:54) and FiltersBar.jsx (17:44:09) were written during my run, plus an uncommitted src/modules/04_hostesses/HostessesPage.jsx; `git diff | sha1sum` was d3bec753 before the main probe run and 05c9675f after it, and one earlier run died mid-way when HMR reloaded the login screen. The two shell-owned findings (the empty chart frame, the row-cap note under a chip) should be re-checked against the tree as committed, not against mine.",
+    "⚠️ What I could not judge at all: whether the מ17 page reads as ONE report or as two. The approved mockup draws two labelled zones (הוגנות · מהירות-איוש), each with its own tiles and table; the built page is six tiles in one wrapping strip, and I measured that the population line declares both n values. Whether that substitution actually prevents the confusion the zones existed to prevent is Ishay's call on a screen, not something a testid can answer."
+  ],
+  "screenshots": [
+    "results/lensV-hostesses/m0-hostess-overview.png",
+    "results/lensV-hostesses/m0-reliability.png",
+    "results/lensV-hostesses/m0-quality-cost.png",
+    "results/lensV-hostesses/m0-fairness.png",
+    "results/lensV-hostesses/m2-hostess-overview.png",
+    "results/lensV-hostesses/m2-reliability.png",
+    "results/lensV-hostesses/m2-quality-cost.png",
+    "results/lensV-hostesses/m2-fairness.png",
+    "results/lensV-hostesses/m14-period-month.png",
+    "results/lensV-hostesses/state-error.png",
+    "results/lensV-hostesses/state-loading.png",
+    "results/lensV-hostesses/role-FINANCE.png",
+    "results/lensV-hostesses/role-STAFF.png",
+    "results/lensV-hostesses/zoom-m14-tiles.png",
+    "results/lensV-hostesses/zoom-m16-money.png",
+    "results/lensV-hostesses/door-hostess-card.png"
+  ],
+  "raw_measurements": [
+    "results/lensV-hostesses/mode0.json",
+    "results/lensV-hostesses/probes.json",
+    "results/lensV-hostesses/probes3.json",
+    "results/lensV-hostesses/probes4.json",
+    "results/lensV-hostesses/probes5.json"
+  ]
+}

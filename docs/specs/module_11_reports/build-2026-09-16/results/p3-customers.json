@@ -1,0 +1,68 @@
+{
+  "tab": "customers",
+  "round": "mini-round 4 (16/09 20:2X) — the three shell slots + the i2 payload round, against HEAD fb7bcd26",
+
+  "files": [
+    "src/modules/11_reports/tabs/CustomersTab.jsx",
+    "src/modules/11_reports/tabs/customers/CustomerSurface.jsx",
+    "src/modules/11_reports/tabs/customers/payload.jsx",
+    "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx",
+    "src/modules/11_reports/tabs/CustomersTab.test.jsx",
+    "src/lib/onboardingCopy.m11.customers.js"
+  ],
+
+  "fixed": [
+    {
+      "what": "The four `why` hints moved from renderTop to renderAfterSoWhat — the card anchor, satisfied end to end for the first time.",
+      "why": "All four cards anchor ⑩א 'מתחת לשורת-אז-מה, מעל האריחים'. renderTop renders ABOVE the population line, i.e. before both things the hint refers to; it was the one open anchor gap in this tab and was reported as 'waiting for the slot' in two rounds. The slot now exists, so the workaround is gone.",
+      "proof": "Unit test asserts both halves with compareDocumentPosition (so-what → hint → tiles), and the browser pass reports anchor=true on all four surfaces at mode 2 — it was structurally impossible before."
+    },
+    {
+      "what": "The מ25 run bar travelled with it.",
+      "why": "The מ22 mockup orders so-what → hint א → runbar → hint ב → tiles. Moving only the hint would have split a block the mockup draws together.",
+      "proof": "New test asserts the bar sits after the so-what line and before the tiles, with the runGate hint after it."
+    },
+    {
+      "what": "maskMoney now also filters a STRING compare.value.",
+      "why": "i2 made compare.value a string where the split is the story ('⁦2024⁩: ⁦4⁩ · ⁦2025⁩: ⁦19⁩'), and the shell passes a string through unformatted. Today none of those strings carries ₪ — measured on all four payloads — which is exactly why it was worth closing while it is still free. It also closes half of the blind spot I declared last round.",
+      "proof": "payload.jsx maskTile; the PROJECTS browser pass still measures 0 shekel amounts on all four surfaces."
+    }
+  ],
+
+  "changed": [
+    "Fixtures re-synced to what i2 actually returns (measured live, not read from the migration): m19 — the payment-cadence compare now declares format:'int'; the year-split compare carries the three years as a STRING value with direction:'flat'; the ratio column avg_feedback became the server-built avg_feedback_pair ('⁦4.63⁩ (⁦n=129⁩)'); the chart x axis is Hebrew month labels ('ינואר ⁦2026⁩') instead of 2026-01. m20 — the two reason charts carry the independent-scale chart.note. m21 — score_pair now '⁦2⁩ · ⁦2.90⁩ (⁦n=10⁩)', and the money tile's compare is a label with a null value. m22 — the year split as a string value, and red_flags now has NO compare at all.",
+    "The m19 fixture gained its third tile (biggest_negative_is_other) — it is one of the four live tiles and the one i2 changed most visibly; with two tiles the fixture could not exercise the year split.",
+    "Two new tests lock the i2 fixes AS RENDERED, not as payload shape: the payment-cadence compare shows 'על ⁦675⁩ חשבוניות ששולמו' and never matches /675.{0,3}ימים/ (the inherited-format bug), the year split shows all three years with no invented ▲, and the table shows ⁦4.63⁩ · n=129 rather than the flattened ⁦4.6⁩.",
+    "Nothing was needed for the ExportBar move: the shell portals it into the filters row when a shell context exists and renders it inline when there is none, so the standalone tab tests still find it."
+  ],
+
+  "not_used_slots": "renderChartAside and renderChartFooter are deliberately unused here: no customers card draws a side tile next to a chart, and the chart notes the מ20 card requires arrive from chart.note (i2) — a second source for the same note would print it twice.",
+
+  "tests": "30 in CustomersTab.test.jsx, all green. Whole module: 10 files / 332 tests green (last round it was 276/279 with three failures owned by others; those are gone). Gates: eslint 0 · prettier 0 · CR=0 on all six files · npm run dup exit 0 (1.01%, zero clones in this tab) · npm run check:bidi exit 0 · npm run deadcode exit 0 with no findings at all.",
+
+  "screens": [
+    "results/customers-shots/r4-ceo-mode0-{customers-overview,satisfaction,drifting,notes}.png",
+    "results/customers-shots/r4-ceo-mode2-{customers-overview,satisfaction,drifting,notes}.png",
+    "results/customers-shots/r4-projects-{customers-overview,satisfaction,drifting,notes}.png",
+    "results/customers-shots/browser-pass4.json — the measurements behind all twelve"
+  ],
+
+  "browser_pass": {
+    "how": "npx vite --port 5184 --strictPort + standalone Playwright (credentials read from .env.local by the script, never through the transcript), chromium 1280x900, three identities, onboarding level forced through the PostgREST intercept on notification_preferences.",
+    "measured": "Twelve screens. Horizontal overflow 0/0 on every one; ZERO console and page errors across all three identities. מ20 draws four charts, none outside the viewport, and two of them now carry the i2 independent-scale note. The hint anchor (so-what → why → tiles) reads true on all four surfaces at mode 2 and the hints are absent at mode 0. PROJECTS: zero shekel amounts on all four surfaces (מ19 8⇒0, מ21 16⇒0) with 10 and 17 masked markers. The m19 table row now reads '⁦4.63⁩ · ⁦n=129⁩' and the month axis reads ינואר ⁦2026⁩…אוגוסט ⁦2026⁩."
+  },
+
+  "not_verified": [
+    "p2-fixB2.json never appeared — only p2-fixB.json is in results/. I did not wait on it because the live payloads are the authority (addendum §3) and they show i2 applied: payment compare.format='int', the avg_feedback_pair column, and Hebrew month labels are all live. If fixB2 lands with something i2 did NOT do, my fixtures will need one more sync.",
+    "🔴 One i2 item is fixed only halfway, and it is visible: the m19 payment-cadence tile now reads 'על ⁦675⁩ חשבוניות ששולמו: ⁦675⁩' — the unit bug is gone but the count is printed twice, because the label is self-contained and compare.value repeats it. The verifier's own second option covers it ('or drop compare.value once the shell's null-value branch lands' — it has landed). One-word RPC fix: value null on that compare. Not mine to patch.",
+    "The cross-filter keys from G3 are live on מ20's מה-מכעיס chart and on מ22's matrix, and I still never clicked a bar in the browser; the shell's suite covers the mechanism, not this tab's data.",
+    "Bar states 2–4 remain fixture-only (no classification run started — provider quota); the live meta.run_in_progress is still run 4 with status failed, which the bar ignores by design.",
+    "Enter/Space on a table row still never pressed in a real browser.",
+    "The ₪ mask remains a text filter: it catches a digit run glued to ₪, not a sum written in words nor a money figure with no sign. I extended it to compare.value this round; the remaining sweep (digit runs in server sentences that are money without the sign) is still unrun."
+  ],
+
+  "blind_spot": [
+    "I re-synced the fixtures from the LIVE payload, which is the right source — but that also means my fixtures now encode i2's choices, including the double-printed 675. A test that mirrors a defect keeps it alive: if the RPC later nulls that compare.value, my fixture will still assert the old shape and go green while the screen changes. The checkable guard I did NOT build: a test that diffs the fixture against a stored snapshot of the live payload shape.",
+    "The two slots I declined to use (renderChartAside / renderChartFooter) were declined on my reading of four cards. If any customers card does anchor a note inside a chart card and I read it as a page-level note, the hint is now one block too high and no test would say so — the placement tests only cover the three hints I did place. Checkable: grep the four §⑩ tables for an anchor naming a chart card rather than the tiles strip or the table."
+  ]
+}

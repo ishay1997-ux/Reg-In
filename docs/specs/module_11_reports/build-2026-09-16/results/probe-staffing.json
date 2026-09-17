@@ -1,0 +1,114 @@
+{
+  "runs": [
+    {
+      "mode": 2,
+      "slug": "staffing",
+      "state": "rendered",
+      "console_errors": 0,
+      "charts": [
+        {
+          "type": "chart-card-scatter",
+          "title": "אורחים שהוערכו מול אורחים שהגיעו",
+          "scatter_symbols": 717,
+          "bar_rects": 0,
+          "line_dots": 0,
+          "paths_total": 717,
+          "svg_w": "958",
+          "svg_h": "260",
+          "sr_rows": 717,
+          "empty_note": null,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\probe-staffing\\m2-staffing-chart0.png"
+        },
+        {
+          "type": "chart-card-histogram",
+          "title": "התפלגות היחס — אורחים לדיילת",
+          "scatter_symbols": 0,
+          "bar_rects": 8,
+          "line_dots": 0,
+          "paths_total": 8,
+          "svg_w": "958",
+          "svg_h": "260",
+          "sr_rows": 8,
+          "empty_note": null,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\probe-staffing\\m2-staffing-chart1.png"
+        }
+      ]
+    },
+    {
+      "mode": 2,
+      "slug": "exec-overview",
+      "state": "rendered",
+      "console_errors": 0,
+      "charts": [
+        {
+          "type": "chart-card-bar",
+          "title": "הכנסה ורווח לפי חודש · ⁦2026 מול 2025⁩",
+          "scatter_symbols": 0,
+          "bar_rects": 18,
+          "line_dots": 9,
+          "paths_total": 19,
+          "svg_w": "958",
+          "svg_h": "260",
+          "sr_rows": 9,
+          "empty_note": null,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\probe-staffing\\m2-exec-overview-chart0.png"
+        }
+      ]
+    },
+    {
+      "mode": 0,
+      "slug": "staffing",
+      "state": "rendered",
+      "console_errors": 0,
+      "charts": [
+        {
+          "type": "chart-card-scatter",
+          "title": "אורחים שהוערכו מול אורחים שהגיעו",
+          "scatter_symbols": 717,
+          "bar_rects": 0,
+          "line_dots": 0,
+          "paths_total": 717,
+          "svg_w": "958",
+          "svg_h": "260",
+          "sr_rows": 717,
+          "empty_note": null,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\probe-staffing\\m0-staffing-chart0.png"
+        },
+        {
+          "type": "chart-card-histogram",
+          "title": "התפלגות היחס — אורחים לדיילת",
+          "scatter_symbols": 0,
+          "bar_rects": 8,
+          "line_dots": 0,
+          "paths_total": 8,
+          "svg_w": "958",
+          "svg_h": "260",
+          "sr_rows": 8,
+          "empty_note": null,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\probe-staffing\\m0-staffing-chart1.png"
+        }
+      ]
+    },
+    {
+      "mode": 0,
+      "slug": "exec-overview",
+      "state": "rendered",
+      "console_errors": 0,
+      "charts": [
+        {
+          "type": "chart-card-bar",
+          "title": "הכנסה ורווח לפי חודש · ⁦2026 מול 2025⁩",
+          "scatter_symbols": 0,
+          "bar_rects": 18,
+          "line_dots": 9,
+          "paths_total": 19,
+          "svg_w": "958",
+          "svg_h": "260",
+          "sr_rows": 9,
+          "empty_note": null,
+          "png": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\probe-staffing\\m0-exec-overview-chart0.png"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "tab": "דיילות",
+  "apply": {
+    "migration": "supabase/migrations/20260916052359_module11_f_rpcs_hostesses.sql",
+    "result": "PARTIAL — 3 of 4 functions created. report_m14_hostess_overview, report_m15_reliability, report_m16_quality_cost are live. report_m17_fairness FAILED TO COMPILE and does not exist.",
+    "error": "ERROR: 42601: unexpected end of function definition at end of input — raised on the body of report_m17_fairness. Root cause pinned to line 1367 (see finding F1). Not patched, per the task instruction.",
+    "deviation_1": "The whole-file single apply_migration call was truncated in transport at ~90,849 chars and was rejected. Nothing was applied (transactional rollback, verified: pg_proc had none of the four). The file was then applied as three per-function apply_migration calls, so the ledger carries three rows — module11_f_rpcs_hostesses_m14 / _m15 / _m16 (versions 20260916031804 / 032033 / 032149) — instead of one row named module11_f_rpcs_hostesses. This is the file-name-vs-DB-name trap that supabase/migrations/CLAUDE.md §3 warns about, and it needs an orchestrator decision (re-apply as one row after the m17 fix, or record the split).",
+    "deviation_2": "In the m14 part only, the Hebrew in-body why-comments were trimmed to control transport size (the m15/m16 parts carry theirs). SQL semantics are byte-identical; `pg_get_functiondef('public.report_m14_hostess_overview(...)')` will not match the file's commented body. Matters only for the migrations-CLAUDE.md rule 'pull the live body before CREATE OR REPLACE'.",
+    "no_repo_file_was_edited": true
+  },
+  "live_calls": [
+    { "rpc": "report_m14_hostess_overview", "identity": "CEO (allowed)", "http_or_error": "200", "n": 1725, "tiles": 5, "rows": 6 },
+    { "rpc": "report_m15_reliability", "identity": "CEO (allowed)", "http_or_error": "200", "n": 87, "tiles": 4, "rows": 87 },
+    { "rpc": "report_m16_quality_cost", "identity": "CEO (allowed)", "http_or_error": "200", "n": 50, "tiles": 4, "rows": 17 },
+    { "rpc": "report_m17_fairness", "identity": "CEO (allowed)", "http_or_error": "PGRST202 — function not found in schema cache (never created)", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "report_m14_hostess_overview", "identity": "RECRUIT (allowed)", "http_or_error": "200", "n": 1725, "tiles": 5, "rows": 6 },
+    { "rpc": "report_m15_reliability", "identity": "RECRUIT (allowed)", "http_or_error": "200", "n": 87, "tiles": 4, "rows": 87 },
+    { "rpc": "report_m16_quality_cost", "identity": "RECRUIT (allowed)", "http_or_error": "200", "n": 50, "tiles": 4, "rows": 17 },
+    { "rpc": "report_m14_hostess_overview", "identity": "FINANCE (blocked)", "http_or_error": "42501 — 'אין לך הרשאה לבצע פעולה זו במודול דיילות' (a real error, not an empty object)", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "report_m15_reliability", "identity": "FINANCE (blocked)", "http_or_error": "42501", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "report_m16_quality_cost", "identity": "FINANCE (blocked)", "http_or_error": "42501", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "report_m14_hostess_overview", "identity": "STAFF/logistics (blocked)", "http_or_error": "42501", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "report_m15_reliability", "identity": "STAFF/logistics (blocked)", "http_or_error": "42501", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "report_m16_quality_cost", "identity": "STAFF/logistics (blocked)", "http_or_error": "42501", "n": null, "tiles": 0, "rows": 0 }
+  ],
+  "payloads_saved": [
+    "<scratchpad>/results/payloads/report_m14_hostess_overview.json",
+    "<scratchpad>/results/payloads/report_m14_hostess_overview__defaults.json",
+    "<scratchpad>/results/payloads/report_m15_reliability.json",
+    "<scratchpad>/results/payloads/report_m15_reliability__dow5.json",
+    "<scratchpad>/results/payloads/report_m16_quality_cost.json"
+  ],
+  "findings": [
+    {
+      "surface": "מ17 · הוגנות השיבוץ",
+      "severity": "blocker",
+      "lens": "apply / compile",
+      "claim_refuted": "Builder report: `report_m17_fairness` … `columns_verified_live: true`, plus a full 11-row baseline table for מ17. The function has never existed and still does not — the whole מ17 table was produced by running hand-extracted fragments, not the function.",
+      "evidence": "apply_migration → `ERROR: 42601: unexpected end of function definition at end of input`; the body Postgres echoes ends at `end;` with no `$function$`. Cause, pinned: the `speed_rows` CTE opens `coalesce(jsonb_agg(jsonb_build_object(` at line 1359 and closes only jsonb_build_object (1366) and jsonb_agg (1367) — `... order by s.med_hours desc, h.full_name) j`. The `coalesce(` is never closed. Its twin `fairness_rows` does it correctly at line 1356: `... order by b.rn), '[]'::jsonb) j`. Mechanical proof: comment-and-string-stripped m17 body (lines 1184–1485) has 238 `(` and 237 `)`; a running depth trace returns to 0 at line 1269 and never again — depth is 1 at line 1371, so the CTE swallows the entire `return jsonb_build_object(...)`. Fix is one token pair on line 1367: `... h.full_name), '[]'::jsonb) j`. NOT PATCHED, per instruction. Why it survived the builder: their own scratchpad `report_m17_fairness.stmts.txt` contains a single `coalesce(jsonb_agg(` and no `speed_rows` at all — the defective CTE was never in anything they executed.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ14 · מבט-על דיילות",
+      "severity": "blocker",
+      "lens": "window / definition",
+      "claim_refuted": "Builder: '6 אדומות · 4 ענבר · 87 … זהה בשתי קונבנציות-החלון — ההחלטה אינה זזה, רק המונים'. The decision does move, and the tile lies about why it can't.",
+      "evidence": "Card `cards-hostesses.md` ③ מ14 row 106 fixes this tile's window as **'חלון קפוא 12 חודשים (📑ב#13)'**. The migration computes it from the caller's window: lines 184–187 set `v_from/v_to := coalesce(p_from/p_to, …)` and the queue CTE (309–357) filters on them — while line 458 hard-codes `'window', 'חלון קפוא · 12 חודשים'`. Measured live as CEO: p_from/p_to = (2025-09-10, 2026-09-10] → value 6, detail '6 מתוך 87 … 4 בענבר'; (2026-06-16, 2026-09-16] → value 4, detail '4 מתוך 33 … 3 בענבר'; (2026-08-16, 2026-09-16] → **value 0, detail '0 מתוך 4 דיילות עם 3 משמרות ומעלה · 0 בענבר'** — label still 'חלון קפוא · 12 חודשים' in all three. `report_m15_reliability`, which really is frozen, returns flagged=11 (6 red · 5 amber) for every one of those three calls. So on the 'חודש אחרון' preset the overview says 'אין דיילות אדומות בחלון — אין תור לטפל בו החודש' (its `so_what`) while the page its own ruling-33 `target` opens shows six red, and the sample-threshold population collapses to 4 hostesses — exactly what 📐12 + the frozen window exist to prevent.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ16 · איכות מול עלות",
+      "severity": "blocker",
+      "lens": "contract (C8) / chart",
+      "claim_refuted": "Builder: 'columns_verified_live: true' for מ16 and the scatter treated as delivered. The scatter — which card ⑥ calls *'שני הריבועים … הם כל הדוח'* — has no Y dataKey.",
+      "evidence": "Producer (migration line 1096): `'series', jsonb_build_array(jsonb_build_object('key','hourly_rate','label','תעריף שעתי'))` with `'xKey','hourly_rate'`. Consumer `src/modules/11_reports/components/ChartCard.jsx:283-297` (`ScatterBody`): `<XAxis dataKey={xKey} … name={series[0]?.label}/>` and `<YAxis dataKey={series[1]?.key ?? 'y'} …/>`. `series` has ONE element ⇒ `series[1]` is undefined ⇒ the Y axis binds `dataKey=\"y\"`, and none of the 50 live data points carries a `y` key (they carry hostess_id, hostess_name, hourly_rate, rating, blocked, shifts — verified in the saved payload). The `series` entry also duplicates `xKey` rather than naming the Y column. Required shape for this renderer: `series[0]` = the X name, `series[1] = {key:'rating', label:'דירוג'}`. Note `domain [1,5]` IS correct — line 384/292 applies `domain` to the Y axis. ⚠️ Evidence is producer+consumer code read, NOT a browser render (no UI run in this session). Cross-tab note the orchestrator should check: `20260916052600_module11_d_rpcs_executive.sql:1555` has the mirror-image mistake (its single series names the Y column, `actual`, at index 0), so the same renderer contract is unmet there too.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ15 · אמינות והתייצבות",
+      "severity": "major",
+      "lens": "baseline / definition",
+      "claim_refuted": "Builder baseline_checks for מ15: '6 אדומות · 4 ענבר מתוך 87 — live 6·4·87, match: true' and 'מתחת לסף המדגם 13 דיילות · 18 שיבוצים — live 13·18, match: true'. Neither is what the function returns.",
+      "evidence": "Live CEO call: `flagged` tile = **11**, detail '6 אדומות · **5** ענבר מתוך 87 · 6 מהאדומות פעילות'; population label '… n=87 דיילות, **1683** שיבוצים · הוצאו: **11** דיילות … (**16** שיבוצים)'; `meta.company_average` **0.958358**. My independent re-derivation of the score from the card's §③ definition over three window conventions: closed [10/09/2025,10/09/2026] → C=0.958815, 87, 6 red, 4 amber, 13 below, 18/1712 shifts (every card anchor, digit for digit); half-open (10/09/2025,10/09/2026] → 0.958696, 87, 6, 4, 13, 18/1707; half-open anchored on today (2025-09-16,2026-09-16] → 0.958358, 87, 6, **5**, **11**, **16**/1683. The RPC hard-codes `v_to := v_today` (migration line 602) and ignores p_from/p_to by design (📑ב#13), so it can only ever produce the third row. This is drift, not a formula error — the formula is right — but every מ15 'live' value in the builder's table was measured with their own SQL on the baseline window and reported as the function's output. Same cause: card ③220's '170 איחור / 20 רב' → live 167/19, and the by-day chart's רביעי 3.3 → live 3.4.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ15 · אמינות והתייצבות",
+      "severity": "major",
+      "lens": "contract (C8) / rulings — ruling 37",
+      "claim_refuted": "Builder: 'אי-הגעה לפי דירוג · 12 חודשים (הכרעה 37) baseline 6.5/2.8/0.5 — live 6.5/2.8/0.5, match: true' and the same for 14.6/4.9/1.2. Both numbers are correct — and neither is in the payload.",
+      "evidence": "Card ③ מ15 row 225 lists them as a required number of the surface ('🆕 שני שיעורי אי-ההגעה לפי דירוג (הכרעה 37)'), and ⑧15.4 records them as the closure of ruling 37. I reproduce both exactly from the card's definitions: 12m/ghosted-only with the attendanceCounts exclusions → 6.5 / 2.8 / 0.5 for ratings 3/4/5; ever/all-reasons → 14.6 / 4.9 / 1.2. The live m15 payload has no by-rating aggregate anywhere — `tiles` (4: on_time, late, no_show, flagged), `chart` (by dow), `meta` (run, notes, measured_at, frozen_count, selected_dow, red_threshold, missing_params, amber_threshold, company_average, customer_filter_ignored) — and `columns`/`rows` carry no `rating` key, so the UI cannot derive it either. The two per-hostess columns of ruling 37 ARE present and correct; the two rating-split rates are not.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ16 · איכות מול עלות",
+      "severity": "major",
+      "lens": "contract (C8) / rows",
+      "claim_refuted": "Builder assumed-list: '`rows` מחזיר את **כל** השורות הכשירות … מ16: 17 חסרות-הדירוג … ‏📐8 מחייב שהפאג'ר יספור את מה שהטבלה מציגה ⇒ הדפדוף בצד-הלקוח'. For מ16 the server applied the client's default filter and discarded the rest, which breaks the chip.",
+      "evidence": "Migration line 1038: the rows aggregate carries `filter (where h.rating is null)`. Live `rows.length` = 17 of the 50 active. Card ① מ16 row 7 defines chip `#onlyNoRating` as **דלוק כברירת-מחדל** whose job is 'מחליף בין 17 חסרות-הדירוג ל-50 הפעילות'; card ③ row 326 describes the table as '8 מתוך 17' in the default state and ⑩ anchor ג says 'היא נפתחת מסוננת לפעילות שאין להן דירוג'. The other 33 active hostesses are never returned and there is no parameter to request them, so turning the chip off yields an empty table. Consequence inside the returned set: the declared `rating` column is null on all 17 rows.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ15 · אמינות והתייצבות",
+      "severity": "major",
+      "lens": "contract (C8) / chart",
+      "claim_refuted": "Builder listed this under not_verified ('לא נגעתי בו'). Confirmed as a live defect this turn, not an open question.",
+      "evidence": "`src/lib/dates.js:97` — `const WEEKDAY_NAMES_HE = ['ראשון', …]`, declared `const`, **not exported**; grep across `src/` (js+jsx) returns only lines 97 and 108, both inside dates.js. The live m15 payload returns `chart.xKey: 'dow'` with numeric 0–6 and `chart.label_source: 'WEEKDAY_NAMES_HE'`. Nothing can import that constant, so the day-of-week axis renders as 0–5. One-line fix in a file outside this migration's scope (add `export`), owned by nobody today.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ14 · מבט-על דיילות",
+      "severity": "minor",
+      "lens": "definition",
+      "claim_refuted": null,
+      "evidence": "Downstream of the מ14 frozen-window defect: m14's `definitions` line prints 'מממוצע החברה (0.9587)' (its own caller-window C = 0.958696) while m15's `meta.company_average` is 0.958358 and card ③217 pins C = 0.958815. The same term carries three different values across one tab. Resolves itself if m14's queue is moved onto the frozen window.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ14 / מ17 · ג'יני של החלון הקודם",
+      "severity": "minor",
+      "lens": "baseline",
+      "claim_refuted": "Builder conflict #2: '`0.4329` אינו משתחזר באף אחת משתי הקונבנציות … גם השערה (ב) נשללת, והפער נשאר בלי הסבר.' There is an explanation, and it closes the item.",
+      "evidence": "The register anchor is recorded with a shift count the builder never compared: `data-set.md:1066` and `stage1-review/m11-live-anchors.md:41` both give **n=95, 1,455 משמרות, 0.4329** — and 1,455 is neither the half-open 1,446 nor the closed 1,465, which is why no boundary convention can produce it. `processes-approved.md §📑#14א` says the anchor was **'נמדד 06/09'**. Measured: the previous-12-months window as of 06/09/2026, i.e. (2024-09-06, 2025-09-06], returns **n=95, total=1455, Gini=0.4329** — exact. The card re-measured on 10/09/2026 and got n=95, 1,446, 0.4299. Four days of rolling window, nothing else. For completeness I verified the current window with two independent formulas (sorted form and the brute double-difference form of `spec.md §🔢 3.3`): both give 0.455870 on n=106 / 1,862 ⇒ 0.4559, matching the baseline and the RPC. (Caution recorded: my first attempt returned 0.4653 because `(n+1)/n` on bigints is integer division — the migration's `max(n)::numeric` is what avoids it. The RPC is right; my reconstruction was wrong.)",
+      "conflict_question": {
+        "source_a": "`processes-approved.md` §ח8-1 (654) and §📑#14א (848) + §📑ב#14א (878): previous-window Gini = 0.4329 on n=95 — and §📑#14א dates the measurement 06/09. `data-set.md:1066` / `m11-live-anchors.md:41` add the shift count: 1,455.",
+        "source_b": "`cards-hostesses.md` ③107 / 413 / ⑧17.3 / §ד#6 and the live RPC: 0.4299 on n=95 / 1,446, measured 10/09. Both are correct measurements of the same definition on two different days; the registers hold a 06/09 value and the card a 10/09 value. Record correction for Ishay (which day the arrow's comparison anchor is pinned to), not a code change."
+      }
+    },
+    {
+      "surface": "מ14 · אריח 'אירועים עם חוסר'",
+      "severity": "minor",
+      "lens": "definition",
+      "claim_refuted": null,
+      "evidence": "Builder conflict #4 confirmed and sharpened. `src/lib/projects.js:203` (read this turn): `overviewHasGap` = `status==='event_finished' ? true : active && (confirmed < required || !logisticsComplete(project))`, and it reads `project.hostesses_confirmed`. Two gaps the builder named (event_finished, logisticsComplete) plus one they did not: **`hostesses_confirmed` is not a column of `public.projects`** — information_schema returns only final_event_date, project_status, required_hostess_count of the four I queried — so it is an API-layer derived field and the card's identity claim cannot hold in SQL at all. The builder implemented the card's own formula (future projects, staffing half), which is the right call under C2; the live tile reads 4 מתוך 23 · 14 מקומות · 6 ממתינים vs the card's 10/09 measurement of 11 מתוך 24 · 39 · 8 (date-dependent, not a finding).",
+      "conflict_question": {
+        "source_a": "`cards-hostesses.md` ③ מ14 row 109: 'פרויקט ב-not_started/in_progress/ready ב-30 הימים הקרובים שבו finally_approved < required_hostess_count — **בדיוק ההגדרה של `overviewHasGap`** (`src/lib/projects.js`), לא הגדרה חמישית'.",
+        "source_b": "`src/lib/projects.js:203` — a strictly wider predicate (event_finished always true; logistics incompleteness also counts; sourced from a derived `hostesses_confirmed` field, not from `assignments`). The card's own formula and the card's own identity claim cannot both be satisfied; which one the tile should mean is Ishay's product decision."
+      }
+    },
+    {
+      "surface": "tab-wide",
+      "severity": "minor",
+      "lens": "contract (C8)",
+      "claim_refuted": null,
+      "evidence": "`meta` shape is uneven across the tab: m14 and m16 return `meta.drill_echo`, m15 does not (it consumes `p_drill.dow` and returns `meta.selected_dow` instead). All five C8-mandated meta keys (measured_at, missing_params, frozen_count, notes, run) are present in all three, so this is not a contract break — noted only because the guide's C8 amendments push the tabs toward one shape.",
+      "conflict_question": null
+    }
+  ],
+  "passes": [
+    "C8 top-level keys: all 10 (population, window, tiles, chart, columns, rows, so_what, definitions, drill, meta) present in all three live payloads, none absent.",
+    "Tile labels: all 13 live labels are byte-equal to `spec.md §1.4`; the 6 מ17 labels in the migration text are byte-equal too. 17/17 accounted for.",
+    "`compare` present on every tile that has a real comparison basis; `target` present on the ruling-33 doors (m14 red→אמינות, gini→הוגנות, active→איכות מול עלות; m16 expensive→אמינות). `target: null` where the card says the tile is not a door (m14 gap_events, per card ① row 8).",
+    "Permission (lens 4): first statement is `assert_module_permission('דיילות', array['edit','view'])` in all four; `prosecdef=true`, `proconfig={search_path=\"\"}`, `proacl` = postgres/service_role/authenticated only — no PUBLIC, no anon. Live: CEO and RECRUIT 200; FINANCE and STAFF **42501 with a Hebrew message**, not an empty object.",
+    "Ruling 38 verified numerically, not by assertion: `reliabilityScore(records,C,m)` = `attendanceCounts` → `responsivenessScore({answered:count,confirmed:total},C,m)` = `(Σvalue + m·C)/(n + m)`; `hostessReliabilityScore` delegates to the same primitive with the same mapping; the SQL computes `(sum_val + v_m*v_c)/(n_shifts + v_m)`. Three expressions, one number. Company average: smartMatch sums-then-divides, SQL uses `avg(val)` over observations — identical.",
+    "attendanceCounts exclusions honoured on both sides of the fraction: sick/approved_absence map to `val is null` and are excluded from numerator and denominator; `approval_withdrawn` is tested before the attendance columns and scores 0.5. Verified by reproducing 6.5/2.8/0.5 (which collapses to ~5.8 without the exclusion).",
+    "Gini: population variant, 0.455870 → 0.4559 on n=106 / 1,862 — reproduced by two independent formulas. The unit test pins 0.40 on 1·2·3·4·10 and explicitly rejects 0.50.",
+    "Concentration: top quarter 55.3% (27 hostesses), bottom half 16.2%, top decile 26.0% — all three reproduce exactly.",
+    "מ16 every baseline reproduces exactly: 50/186 active, 17 unrated, median active 43.27 ₪, median all 44.00 ₪ on 186, rating median 4, by-rating 41.71/43.97/46.92 (+17 unrated at 42.26), expensive-and-low 2, cheap-and-5 2, blocked 12.",
+    "מ14 by-month chart: all six values the card lists reproduce exactly (11/25 2.8 · 12/25 2.6 · 01/26 2.0 · 03/26 0.6 · 06/26 5.3 · 07/26 10.8); September 2026 is absent from the series and declared in `meta.notes` in words, not as an empty column.",
+    "מ15 by-dow chart: שבת absent, שישי n=26, ראשון 3.4, שלישי 1.9 — only רביעי differs (3.4 vs 3.3), same frozen-window drift as F-מ15.",
+    "`p_customer_id`: accepted and ignored by all three, `meta.customer_filter_ignored: true` and a Hebrew sentence in `meta.notes` — C8 permits this and requires the declaration. Verified with a real customer_id (401): n and rows unchanged.",
+    "`p_drill.dow` cross-filter works: dow=5 → 24 rows, `meta.selected_dow: 5`, window-columns replaced by day-counts (`shifts: 2`, `on_time_pct: null`, `reliability: null`) per card ⑧15.1, and `no_show_ever`/`no_show_ever_denominator` unchanged per ⑧15.6. Out-of-range dow=9 is ignored (`selected_dow: null`).",
+    "`meta.missing_params`: no silent defaults. All four param reads use `nullif(btrim(...),'')::numeric` with an explicit null check; a missing coefficient sets `v_bands_on=false` and turns colouring off rather than inverting it; m17's speed table disappears rather than inventing a threshold. Reasoned from the SQL — live `missing_params` is `[]` because all four params exist (params=47).",
+    "Param-order guard present in both m14 (207–212) and m15 (633–639) and mirrored in `reliabilityParamOrderNote` with three unit tests.",
+    "`recommended_rank` absence: 0 of 5,741 rows non-null, confirmed live. The m17 tile logic (migration 1399–1410) returns `value: null`, `window: 'טרם נמדד'` and an absence sentence — never 0%. Correct as written; cannot be exercised because the function does not exist.",
+    "Unit tests: `npx vitest run src/lib/reportsHostesses.test.js` → **exit 0, 32/32 passed** (builder's claim confirmed).",
+    "Builder's own blind spot closed: `percentile_cont` vs `percentile_disc` on the response-time population return **identical** values today — median 9.9 both ways, p90 20.7 both ways. No definition ruling is needed at present data.",
+    "Regression: the neighbouring tabs' RPCs and the module-7 dashboard all still respond as CEO after the apply — report_m02_exec_overview, report_m03_trends, report_m07_finance_overview, report_m09_aging, report_m19_customers_overview, get_dashboard_summary. 15 `report_m*` functions present; nothing was dropped or replaced. No repo file was edited."
+  ],
+  "baseline_table": [
+    { "metric": "הגעה בזמן % (מ14)", "definition_ref": "cards-hostesses ③105", "independent_value": "87.2% (1505/1725) half-open · 87.3% (1510/1730) closed", "rpc_value": "87.2% (1505/1725)", "baseline": "87.3% (1510/1730)", "verdict": "mismatch — window convention; builder conflict #1 CONFIRMED" },
+    { "metric": "ממוצע-החברה C", "definition_ref": "cards-hostesses ③217", "independent_value": "0.958815 closed · 0.958696 half-open · 0.958358 today", "rpc_value": "m14 defs 0.9587 · m15 meta 0.958358", "baseline": "0.958815", "verdict": "mismatch — convention + frozen-window drift" },
+    { "metric": "אדומות · ענבר · בדוח (מ15)", "definition_ref": "cards-hostesses ③219", "independent_value": "6 · 4 · 87 (baseline window) · 6 · 5 · 87 (today)", "rpc_value": "6 · 5 · 87 (flagged tile = 11)", "baseline": "6 · 4 · 87", "verdict": "mismatch — builder's 'match: true' REFUTED" },
+    { "metric": "מתחת לסף המדגם", "definition_ref": "cards-hostesses ③219 · 📐12", "independent_value": "13 דיילות / 18 שיבוצים (baseline) · 11 / 16 (today)", "rpc_value": "11 דיילות / 16 שיבוצים", "baseline": "13 / 18", "verdict": "mismatch — builder's 'match: true' REFUTED" },
+    { "metric": "שיבוצים באוכלוסיית-הדוח", "definition_ref": "cards-hostesses ③219", "independent_value": "1712 closed · 1707 half-open · 1683 today", "rpc_value": "1683", "baseline": "1712", "verdict": "mismatch — same cause" },
+    { "metric": "כל האדומות פעילות (ruling 32)", "definition_ref": "cards-hostesses ③226", "independent_value": "6 of 6 active", "rpc_value": "6 of 6 (m14 detail + m15 detail + rows[].status)", "baseline": "6 of 6", "verdict": "match" },
+    { "metric": "ג'יני · n · משמרות", "definition_ref": "cards-hostesses 413 · spec §🔢 3.3", "independent_value": "0.455870 (two formulas) · n=106 · 1862", "rpc_value": "0.4559 · n=106 (m14 tile + definitions)", "baseline": "0.4559 · 106 · 1862", "verdict": "match" },
+    { "metric": "ג'יני החלון הקודם", "definition_ref": "cards ③107 · ⑧17.3 · §ח8-1", "independent_value": "0.429876 half-open · 0.429531 closed · 0.4329 on (06/09/2024,06/09/2025] with 1455 shifts", "rpc_value": "0.4299 on n=95", "baseline": "0.4299 (card) / 0.4329 (register)", "verdict": "match to the card; the register's 0.4329 is now EXPLAINED — see finding F7" },
+    { "metric": "רבע עליון / מחצית תחתונה / עשירון", "definition_ref": "cards 413ff · 📑ב#14א", "independent_value": "55.3% / 16.2% / 26.0% (27 hostesses in the top quarter)", "rpc_value": "55.3% / 16.2% (m14 detail; decile lives in m17 only)", "baseline": "55.3 / 16.2 / 26.0", "verdict": "match" },
+    { "metric": "פעילות / רשומות / עבדו", "definition_ref": "cards-hostesses ③108", "independent_value": "50 / 186 / 106", "rpc_value": "50 / 186 / 106", "baseline": "50 / 186 / 106", "verdict": "match" },
+    { "metric": "איחור · מהם רב (מ15)", "definition_ref": "cards-hostesses ③220", "independent_value": "170 / 20 baseline · 167 / 19 today", "rpc_value": "167 / 19", "baseline": "170 / 20", "verdict": "mismatch — frozen-window drift" },
+    { "metric": "אי-הגעה · ביטול-אחרי-אישור", "definition_ref": "cards-hostesses ③220", "independent_value": "43 / 7", "rpc_value": "43 / 7", "baseline": "43 / 7", "verdict": "match" },
+    { "metric": "אי-הגעה לפי דירוג · 12 חודשים (ruling 37)", "definition_ref": "cards-hostesses ③225 · ⑧15.4", "independent_value": "6.5 / 2.8 / 0.5", "rpc_value": "ABSENT from the payload", "baseline": "6.5 / 2.8 / 0.5", "verdict": "mismatch — metric not returned; builder's 'match: true' REFUTED" },
+    { "metric": "אי-הגעה לפי דירוג · אי-פעם (ruling 37)", "definition_ref": "cards-hostesses ③225 · ⑧15.4", "independent_value": "14.6 / 4.9 / 1.2", "rpc_value": "ABSENT from the payload", "baseline": "14.6 / 4.9 / 1.2", "verdict": "mismatch — metric not returned" },
+    { "metric": "גרף חודשי — ששת הערכים שהכרטיס נוקב", "definition_ref": "cards-hostesses ③110", "independent_value": "2.8 · 2.6 · 2.0 · 0.6 · 5.3 · 10.8", "rpc_value": "identical, 12 months", "baseline": "same", "verdict": "match" },
+    { "metric": "גרף יום-בשבוע", "definition_ref": "cards-hostesses ③221", "independent_value": "שבת absent · שישי n=26 · 3.4 / 1.9 / 3.3", "rpc_value": "שבת absent · שישי n=26 · 3.4 / 1.9 / 3.4", "baseline": "3.4 / 1.9 / 3.3", "verdict": "mismatch on רביעי only — frozen-window drift" },
+    { "metric": "תעריף חציוני (פעילות)", "definition_ref": "cards-hostesses ③320", "independent_value": "43.27 ₪", "rpc_value": "43.27 ₪", "baseline": "43.27 ₪", "verdict": "match" },
+    { "metric": "תעריף ממוצע לפי דירוג 3/4/5", "definition_ref": "cards-hostesses ③320", "independent_value": "41.71 / 43.97 / 46.92 (+17 unrated @ 42.26)", "rpc_value": "meta.rate_by_rating identical", "baseline": "41.7 / 44.0 / 46.9", "verdict": "match" },
+    { "metric": "יקרות ומדורגות נמוך / זולות ומדורגות 5", "definition_ref": "cards-hostesses ③321–322", "independent_value": "2 / 2", "rpc_value": "2 (tile) / 2 (meta.cheap_top_rated)", "baseline": "2 / 2", "verdict": "match" },
+    { "metric": "מסומנות 'לא לשלוח' · חציון כלל-המאגר · חציון-דירוג", "definition_ref": "cards-hostesses ③323 · ③320 · ③325", "independent_value": "12 · 44.00 ₪ on 186 · 4", "rpc_value": "12 · 44 on 186 · refLine y=4", "baseline": "12 · 44.00 · 4", "verdict": "match" },
+    { "metric": "זמן-תגובה חציוני / אחוזון 90 (מ17)", "definition_ref": "cards-hostesses §מ17 ③", "independent_value": "9.9 / 20.7 (percentile_cont AND percentile_disc identical)", "rpc_value": "n/a — function absent", "baseline": "9.9 / 20.7", "verdict": "baseline reproduced independently; NOT verifiable through the RPC" },
+    { "metric": "אחוז היענות (מ17)", "definition_ref": "cards-hostesses §מ17 ③ · §ח8-6", "independent_value": "92.6% (2,299 / 2,483)", "rpc_value": "n/a — function absent", "baseline": "92.6% (2,299 / 2,483)", "verdict": "baseline reproduced; NOT verifiable through the RPC" },
+    { "metric": "מקסימום / חציון / ממוצע משמרות (מ17)", "definition_ref": "cards-hostesses §מ17 ③", "independent_value": "48 / 13.5 / 17.6", "rpc_value": "n/a — function absent", "baseline": "48 / 13.5 / 17.6", "verdict": "baseline reproduced; NOT verifiable through the RPC" },
+    { "metric": "אימוץ המלצת Smart Match (מ17)", "definition_ref": "spec.md §🎯 · 📑ב#14א", "independent_value": "0 of 5,741 rows have recommended_rank ⇒ the tile must declare absence, never 0%", "rpc_value": "n/a — function absent", "baseline": "'—' + 'נמדד מ-<date>'", "verdict": "SQL reads correct on inspection; NOT verifiable through the RPC" },
+    { "metric": "אירועים עם חוסר (מ14)", "definition_ref": "cards-hostesses ③109", "independent_value": "date-dependent (anchored to today, not to p_from/p_to)", "rpc_value": "4 מתוך 23 · 14 מקומות · 6 ממתינים", "baseline": "11 מתוך 24 · 39 · 8 (measured 10/09)", "verdict": "not a finding — 📐22 date-dependence; mechanism verified (triple-fold, same statuses)" }
+  ],
+  "tests_pass_but_would_not_catch": [
+    "🔴 The headline: **all 32 tests were green while `report_m17_fairness` could not be created at all.** `reportsHostesses.js` shares no code path with the RPCs — it is a parallel re-implementation in JS. Any SQL defect whatsoever (this one, the frozen-window defect, the missing rating split, the empty scatter series) leaves the suite green. The file's own header says 'כשהשניים נחלקים, ה-SQL הוא החשוד' — but nothing ever makes them differ, because nothing executes the SQL.",
+    "`reliabilityBand`: the RED boundary is pinned (`reliabilityBand(0.8342, 0.8342, …)` ⇒ 'amber', so `<` vs `<=` on red would fail). The AMBER boundary is not — no test calls `reliabilityBand(0.9109, 0.8342, 0.9109)`. A mutant using `score <= amber` still passes all 32, and would silently flag one extra hostess on the exact threshold.",
+    "`hostessReliabilityScore`: the describe block is titled 'אותה נוסחה של Smart Match, **לא עותק שלה** (הכרעה 38)' but every assertion is numeric. A mutant that deletes the `import { responsivenessScore } from './smartMatch'` and inlines `(total + m*C)/(count + m)` passes all four tests — i.e. the test suite asserts the number and not the one thing its own title claims (iron rule 14 / ruling 38). Pinning it needs a spy or a module mock.",
+    "`reliabilityParamOrderNote`: asserted with `toContain('0.87')` and `toContain('0.95')`. A mutant that swaps the two values in the sentence (naming 0.95 as מקדם_אמינות_אדום) passes — both substrings are still present. The attribution, which is the whole point of the note, is unpinned.",
+    "`concentrationShares`: tested only on n=5 and an equal split. `topDecileShare` has NO test that distinguishes `ceil(n/10)` from `round(n/10)` or `max(1, floor(n/10))` — on n=5 and n=106 all three agree. The 26.0% baseline is asserted nowhere in the suite; only my live query covers it.",
+    "`sortedCounts` silently drops negative and non-finite values, and every consumer (`giniPopulation`, `lorenzPoints`, `concentrationShares`, `medianOf`) inherits that. No test passes a `null`, a `NaN` or a negative through `medianOf`. A mutant that coerced null to 0 would shift the median (a 0 ₪ rate) and pass all 32 — and 0 ₪ is a price, not an absence, which is the exact class of bug the file's own comments warn about.",
+    "`lorenzPoints`: tested on n=5 and an equal split. The baseline's first vertex on the real population — (0.9434, 0.0537), which `cards-hostesses.md` §ד specifically flagged as missing — is not asserted anywhere.",
+    "Nothing in the suite touches `rateByRatingBands` ordering when two bands tie, or when `rows` is null/undefined (`rows ?? []` is untested)."
+  ],
+  "not_verified": [
+    "🔴 מ17 entirely — the function does not exist. Unverified: the C8 payload shape, all six tiles, the Lorenz series (107 vertices), `meta.extra_tables` (the speed table), `meta.shift_stats`/`top_decile_pct`/`previous`, the `rank1_adoption` absence tile, `p_drill` echo, and — separately — that `assert_module_permission('דיילות', …)` actually fires on it (it is present in the source text; it has never run). Its metrics ARE reproduced independently in the baseline table above, so the orchestrator knows the logic's targets even though the function is absent.",
+    "No browser render. The מ16 scatter finding is proven at the producer/consumer code level (`series[1]` undefined ⇒ `dataKey=\"y\"` ⇒ no such field in the data) but was not seen on screen; likewise the RTL/contrast/📐10 envelope states, which are the UI phase's, not the RPC's.",
+    "No `EXPLAIN`, no runtime measurement, no index added. The tables are small (assignments 5,741 · hostesses 186) but 'small' is not a measurement, and m14 now scans `assignments` four times (attendance ×2, gini, gap-fold with a correlated `max(assignment_number)` subquery per row).",
+    "`docs/schema.sql` was not refreshed and `docs/db_roadmap.md` was not touched — this is a read-only verification role and I edited no repo file. The apply did add three function objects to the live DB, so that refresh is owed by whoever fixes m17.",
+    "The three applied bodies were not diffed against the file with `pg_get_functiondef` (the m14 part is knowingly comment-trimmed — see apply.deviation_2).",
+    "`npm run gate` / `check:docs-structure` / jscpd / knip were not run — I changed no repo file, so there is nothing new for them to judge; the builder reports them green on the lib files.",
+    "Whether the frozen-window drift (F-מ15) should be resolved by re-measuring the signoff baseline or by pinning the report's 'today' is a product question I did not answer — I only measured that the three conventions differ and by how much."
+  ],
+  "blind_spot": "🔴 **I verified the numbers a tile carries far better than the words around it, and that is where this tab's remaining risk sits.** The מ14 frozen-window defect was caught only because a hard-coded label happened to contradict the SQL two lines above it — a coincidence, not a method. I did NOT systematically diff the other prose fields against what they describe: `population.label` (📐2) on all three, every `tile.detail`, the `definitions` line (📐16) and `so_what` (📐23) are Hebrew strings concatenated from variables, and a wrong variable inside one of them reads perfectly and is invisible to every gate. **The concrete, checkable instance I can name and did not resolve:** m14's `population.label` says *'הוצאו: … **180** זימונים שלא נענו'*, counted as `assignment_status='pending'` over the same `obs` CTE — but `obs` joins `projects` and keeps rows whose event date is in the window, so a *pending* invite for an event that has already passed is counted as an exclusion from an attendance population it was never eligible for, while a pending invite for a future event inside the window is counted too. The card's ③ does not give a number for that exclusion, so I had nothing to compare it against and I did not derive one. Someone should run `select count(*) from assignments a join projects p using(project_id) where p.project_status<>'cancelled' and a.event_date > '2025-09-10' and a.event_date <= '2026-09-10' and a.assignment_status='pending'` split by `event_date <= today` and decide which half belongs in that sentence — the same question applies to the '72 שיבוצים שנוכחותם טרם סומנה' clause beside it. **Second, smaller:** I treated the 42501 result as proof of the permission model, but all four identities were tested only on the three functions that exist; if the orchestrator's matrix in `p3-common.md` is itself wrong about דיילות (CEO/RECRUIT allowed, FINANCE/STAFF blocked) my check would have confirmed the wrong expectation — I verified the gate fires, not that it fires for the right roles."
+}

@@ -1,0 +1,177 @@
+{
+  "sweep": "3b Silent-Failure Sweep - module 11 closing audit",
+  "head": "fc3cb2317118ea8519b6a951e24139e176b28280",
+  "branch": "ishay/module-11-build",
+  "diff_base": "origin/dev...HEAD -- src/ supabase/functions/",
+  "scanned_file_count": 78,
+  "scanned_note": "78 files in the diff (the brief said 85; the measured count this turn is 78, of which 21 are *.test.js/jsx). Opened and read this turn: 11_reports/api.js, components/ReportSurface.jsx, components/ExportBar.jsx, components/Envelope.jsx, components/FiltersBar.jsx, components/ChartCard.jsx (empty-state + nullish sites), ReportsPage.jsx, tabs/customers/AnalysisRunBar.jsx, tabs/* (grep pass-through), lib/reportsExport.js, lib/reportsParams.js, lib/reportsHostesses.js (params section), lib/apiError.js, 04_hostesses/api.js (diff + writeInviteToken), 04_hostesses/HostessesPage.jsx + SmartMatchPage.jsx (diff), 09_settings/ParamsTab.jsx (diff), lib/dates.js (diff), supabase/functions/classify-feedback/index.ts.",
+  "findings": [
+    {
+      "id": "S3B-1",
+      "severity": "blocker",
+      "file": "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx",
+      "line": "232 (with 110-118 and supabase/functions/classify-feedback/index.ts:825-828)",
+      "what": "A 409 'a classification run is already in progress' is rendered to the user as 'the run FAILED and saved nothing', with an active button that will 409 again.",
+      "why_it_is_silent": "startRun returns json({ error: 'ritzat-nituach kvar poelet.', run_id, status: 'running' }, 409) at index.ts:825-828. classify() tests `if (result?.status) setLocal(result)` BEFORE looking at result.error, so status:'running' wins and the error string is discarded. localState() has branches for 'partial' (line 91), 'done' (101) and 'noop' (110) only; 'running' falls through to the final branch, which paints the Hebrew sentence for a FAILED run plus the sub-line 'a failed run cannot be continued' plus an ACTIVE 'run analysis' button. The truth is the opposite: a run IS alive and IS writing rows (writeInsight upserts per batch, index.ts:472-479). The screen lies and does not fail - the module's own 4.3 sentence. serverRunState() DOES handle 'running' correctly (line 137), but only for meta.run_in_progress, which is a payload snapshot; it cannot see a run that started after the payload loaded - which is exactly the scenario the file header (lines 19-25) says was the blind spot it closed.",
+      "how_observed": "Read AnalysisRunBar.jsx lines 74-120 and 225-239 and index.ts lines 808-834 this turn; traced the branch by hand. No test covers it: grep for '409' in CustomersTab.test.jsx and e2e/reports.spec.js returns nothing; CustomersTab.test.jsx:847 asserts the already-running sentence via the meta.run_in_progress path only.",
+      "provenance": "verified - code read this turn, both sides. Not executed."
+    },
+    {
+      "id": "S3B-2",
+      "severity": "blocker",
+      "file": "src/modules/11_reports/components/ExportBar.jsx",
+      "line": "28-34 (with src/lib/reportsExport.js:191-201)",
+      "what": "The Excel export's only realistic failure is an unhandled promise rejection: the click does nothing, nothing is shown, nothing is logged.",
+      "why_it_is_silent": "exportReportRows() ends with `return writeXlsxFile(...)` (reportsExport.js:195). Every overload of writeXlsxFile is declared Promise<void>/Promise<Blob> (node_modules/write-excel-file/index.d.ts:184-195). handleExport() calls it WITHOUT await inside try{} (ExportBar.jsx:28-31), so a library/Blob/download failure rejects outside the try and never reaches setError - no alert, no console, no clue. The two synchronous throws the catch CAN see (EXPORT_NO_TABLE, EXPORT_NO_ROWS at reportsExport.js:192-193) are already prevented from firing, because exportCaption() sets disabled:true for both cases (reportsExport.js:97-102) and the Button is disabled={caption.disabled} (ExportBar.jsx:41). So the whole handler guards a path that cannot happen, while the path that can happen is unguarded.",
+      "how_observed": "Read ExportBar.jsx, reportsExport.js and node_modules/write-excel-file/index.d.ts this turn. ExportBar.test.jsx is 67 lines / 4 tests (captions and disabled state only); grep for throw|rejects|mockRejected|await returns nothing.",
+      "provenance": "verified - three files read this turn. Not executed."
+    },
+    {
+      "id": "S3B-3",
+      "severity": "debt",
+      "file": "src/modules/11_reports/components/ExportBar.jsx",
+      "line": "32",
+      "what": "`const known = [caption.file, err?.message].includes(err?.message)` is a tautology - always true.",
+      "why_it_is_silent": "The array literally contains err?.message, so .includes(err?.message) can never be false (strings and undefined both match). Consequences: (a) the generic Hebrew fallback on line 33 is unreachable, and the intent stated in the comment on line 31 - do not leak technical text to the screen - never fires, so raw English library text would print verbatim into a Hebrew screen; (b) a throw with no message sets error=undefined, which is falsy, so the {error && ...} alert renders NOTHING - a caught error with nothing on screen. Same handler as S3B-2, separate defect.",
+      "how_observed": "Read ExportBar.jsx:26-36 this turn and evaluated the expression by hand.",
+      "provenance": "verified - code read this turn."
+    },
+    {
+      "id": "S3B-4",
+      "severity": "blocker",
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "line": "607 (the early return) vs 640 (the banner)",
+      "what": "A payload that declares meta.missing_params AND has zero rows never shows the 'missing system parameter' line - it shows the empty envelope instead.",
+      "why_it_is_silent": "`if (isEmptyPage) return <EmptyPage .../>` at line 607 returns before <MissingParamsBanner names={payload.meta?.missing_params}/> at line 640 is reached. isEmptyAfterLoad (line 380) fires when rows.length===0 && (population.n===0 || customerId). So the user reads 'no data yet' / 'no data for the selected customer' when the truth is 'a params row is missing and this page could not compute'. That is the exact failure 7.83 / C5 forbid (a missing params row must surface, never a silent default), and it is the same lie the module's 4.3 doctrine names - the screen does not fail, it reports emptiness. The same gap exists on the error and noPermission branches (lines 549-566), which is defensible there because no payload is in hand - but NOT on the empty branch, where a payload carrying a declared missing param IS in hand and is discarded.",
+      "how_observed": "Read ReportSurface.jsx lines 80-95, 370-410, 540-612, 636-642 this turn and traced the render order.",
+      "provenance": "verified for the code path (read this turn). NEEDS CHECKING for reachability: I did NOT query the database, so I cannot say whether any live report_m* function returns missing_params non-empty together with rows:[]. The code path is real; the frequency is unmeasured."
+    },
+    {
+      "id": "S3B-5",
+      "severity": "debt",
+      "file": "src/lib/reportsParams.js",
+      "line": "54 (consumer check) vs src/modules/11_reports/components/ReportSurface.jsx:92",
+      "what": "The 7.83-compliant missing-param sentence exists, is tested, and is wired to nothing. The screen prints a weaker one.",
+      "why_it_is_silent": "missingReportParamsMessage() builds the full sentence the pattern demands - label + names + per-param consequence + action ('no red marking in the hostess reliability report. Add the row in system settings.'). Measured this turn: its ONLY importer in the repo is src/lib/reportsParams.test.js:2 - zero production consumers. What actually renders is ReportSurface.jsx:92, the param name joined by a separator and nothing else: no consequence, no action, and the name is a DB identifier with underscores on a Hebrew screen. src/lib/reportsHostesses.js:146 states in a why-comment that the screen says it via missingReportParamsMessage - the comment names a mechanism that is not connected. A future session reading that comment will believe the user is being told what stopped working.",
+      "how_observed": "`grep -rn reportsParams src/ e2e/` this turn returned exactly one hit (the test). Read reportsParams.js in full, ReportSurface.jsx:80-95, reportsHostesses.js:137-148.",
+      "provenance": "verified - measured by grep this turn."
+    },
+    {
+      "id": "S3B-6",
+      "severity": "debt",
+      "file": "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx",
+      "line": "77-82",
+      "what": "The module's only edge-function call discards the original error with no log of any kind.",
+      "why_it_is_silent": "`try { return await error.context.json() } catch { return { error: GENERIC_ERROR } }` - the bare catch drops both the parse error AND the outer supabase error object (FunctionsFetchError / FunctionsRelayError / FunctionsHttpError). A CORS failure, a gateway 502, a DNS failure and a malformed body all collapse into the identical Hebrew sentence with nothing written anywhere. Measured contrast in the same module: ReportSurface.jsx:514 logs console.error with the RPC name, ReportsPage.jsx:241 logs console.warn. A full grep for console. across src/modules/11_reports/ and src/lib/reports*.js returns exactly those two lines - this call site is the only network path in m11 with zero diagnostic trace. Six months from now there is nothing to debug from.",
+      "how_observed": "Read AnalysisRunBar.jsx:67-83 this turn; grep for console. across src/modules/11_reports/ and src/lib/reports*.js (non-test) returns 2 lines, neither here.",
+      "provenance": "verified - code read + grep this turn."
+    },
+    {
+      "id": "S3B-7",
+      "severity": "debt",
+      "file": "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx",
+      "line": "235 (and the same shape at 250)",
+      "what": "setError(err?.message ?? GENERIC_ERROR) - the nullish operator does not catch an empty-string message, so an error can clear pending and say nothing.",
+      "why_it_is_silent": "'' ?? X is '', not X. error='' is falsy, so the {error && <p role=alert>} block (lines 279-283) renders nothing, while finally{setPending(false)} re-enables the button. The user sees the button come back and no message: the click looks like it did nothing. Low probability today (invokeClassify swallows rather than throws, and toError always sets a message), but it is the classic nullish-instead-of-or trap sitting on the one write path in the module. || would be correct here precisely because an empty message is not a usable message.",
+      "how_observed": "Read AnalysisRunBar.jsx:225-254 and 264-284 this turn.",
+      "provenance": "verified - code read this turn. Not reproduced at runtime."
+    },
+    {
+      "id": "S3B-8",
+      "severity": "debt",
+      "file": "src/modules/11_reports/ReportsPage.jsx",
+      "line": "419 (with the recorded reasoning at 385-396)",
+      "what": "A door whose target is not in the catalog is a dead click - no navigation, no message, no log. Two sources side by side, not a patch instruction.",
+      "why_it_is_silent": "`if (!door || !canOpenTab(door.tab, permissions)) return`. SOURCE A (the code's own recorded reasoning, ReportsPage.jsx:385-396): a target that is not in the catalog deliberately STAYS a visible door, because openDoor stops it without navigating, and hiding it would swallow a payload defect into a screen that looks fine. SOURCE B (this module's own doctrine, quoted in api.js:36-38, rule 14b-3): a row that looks clickable and leads nowhere is a dead marker, which is the whole reason ROW_DOOR_KINDS exists. The recorded decision settles 'do not hide the door'; it does not say the user should get zero feedback and no console trace when the payload has drifted. The permission half is separately handled and is fine: canOpenTarget (line 396) keeps a permission-blocked TILE door from rendering as a door at all, and a permission-blocked ROW door navigates into ProtectedRoute, which states the block.",
+      "how_observed": "Read ReportsPage.jsx:383-432 and api.js:33-52 this turn.",
+      "provenance": "verified - both sources read this turn. Reported as a conflict question, not a fix."
+    },
+    {
+      "id": "S3B-9",
+      "severity": "debt",
+      "file": "src/modules/04_hostesses/HostessesPage.jsx",
+      "line": "the ?hostess= parse block added by this module's diff (rawCardHostessId / parsedCardHostessId / cardHostessId)",
+      "what": "?hostess= with an empty value opens the hostess card for id 0.",
+      "why_it_is_silent": "searchParams.get('hostess') returns '' for ?hostess=; Number('') is 0; Number.isFinite(0) is true, so cardHostessId = 0, which is !== null, so <HostessViewCard hostessId={0}/> mounts for a hostess that cannot exist. The guard was written to reject garbage ('abc' -> NaN -> null, which works), but the empty string slips through the hole Number() always has. The m11 door never produces this URL - it is only reachable from a hand-edited or truncated link - but the failure mode is a card that asks the DB for id 0 rather than a URL that is ignored.",
+      "how_observed": "Read the diff hunk of HostessesPage.jsx this turn (git diff origin/dev...HEAD) and evaluated Number('') by hand.",
+      "provenance": "verified for the parse; ASSUMED for what HostessViewCard then renders - I did not open HostessViewCard.jsx (it is not in this module's diff)."
+    }
+  ],
+  "confirmed_by_design": [
+    {
+      "what": "42501 / RLS denial reaches a dedicated permission envelope and is NEVER painted as an empty report. This is the highest-value item in the brief and it is done right on every one of the 16 surfaces.",
+      "file": "src/modules/11_reports/components/ReportSurface.jsx",
+      "line": "40-46 (toScreenError), 497-518 (the fetch), 549-566 (the branches)",
+      "ruling": "toScreenError maps err.code==='42501' to {kind:'noPermission'} and the branch order puts noPermission BEFORE error (Envelope.jsx:54-56: merging a permission block into 'error' would hide it behind a retry button that can never help). Failure keeps payload:null - never {} or [] - so section 4.3 of the root CLAUDE.md holds. Blind spot CLOSED by measurement this turn: grep -rn callReport over src/ (non-test) returns exactly two lines - api.js:152 (the definition) and ReportSurface.jsx:497 (the only call site) - and reportsCatalog.js declares 16 rpc: entries, so no surface bypasses this mapping."
+    },
+    {
+      "what": "listCustomers() returns [] with error:null for RECRUIT/STAFF and the picker degrades to 'all customers' only - a RECORDED decision, not a defect.",
+      "file": "src/modules/11_reports/ReportsPage.jsx",
+      "line": "226-247 (the read + the why-comment), src/modules/11_reports/components/FiltersBar.jsx:18-21 and 49-56",
+      "ruling": "docs/micro_guides/module-11.md:706 D-16 - the customer filter list is a second RLS-gated read, RECRUIT/STAFF get [] with error:null, the foundation degrades honestly, and the right fix (a gated customer list from a report RPC) is a decision registered as m11 debt in Phase 4, not patched. Confirmed in code: the empty list does not hide the picker, does not raise an error, and the reports still run. One honest measurement beside it, for the record and NOT as a fix instruction: the honesty is the ABSENCE of options - there is no sentence on screen saying the filter is unavailable in this role, because customerDisabledReason is driven only by meta.customer_filter_ignored (ReportsPage.jsx:136, 345), never by an empty list. The .catch on line 239 also logs console.warn and sets [] - correct here, because this list is an aid and not the report."
+    },
+    {
+      "what": "The report shape gate throws loudly instead of rendering a half-payload.",
+      "file": "src/modules/11_reports/api.js",
+      "line": "101-119 (assertReportShape), 152-161 (callReport)",
+      "ruling": "The gate does not 'repair' and does not fill defaults - a missing answer is a broken contract, and a screen that invents a missing structure shows empty tiles as if they had been measured. A missing key throws REPORT_SHAPE_DRIFT with a Hebrew message; all four params are always sent even when null, so a renamed signature errors loudly instead of silently answering for the wrong period."
+    },
+    {
+      "what": "The one write RPC checks the answer, not the absence of an error.",
+      "file": "src/modules/11_reports/api.js",
+      "line": "170-181 (approveFeedbackAiRun)",
+      "ruling": "`if (data?.ok !== true) throw` - the row-count-equivalent check section 4.3 demands. AnalysisRunBar.jsx:248-250 then shows the P0001 Hebrew message from the DB as-is."
+    },
+    {
+      "what": "Both halves of the failed-run contract verified - the function records failure honestly and the UI branches on body.status, never on res.ok.",
+      "file": "supabase/functions/classify-feedback/index.ts",
+      "line": "638-679 (finishRun), 682-719 (executeRun), and src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx:74-83 + 230-233",
+      "ruling": "finishRun writes the run row BEFORE returning on every path, because a run left 'running' after the function returned would block every future run with nobody to release it. nothingSaved means 'failed', a partial save means 'partial' - never 'partial' with zero rows, which approve_feedback_ai_run would have let through. executeRun closes the run row and re-throws rather than swallowing. On the UI side invokeClassify reads error.context.json() so a non-2xx body still reaches the branch, and classify() tests result.status. ONE DIVERGENCE FROM THE BRIEF'S WORDING, measured not assumed: the fatal path returns HTTP 502 with status:'failed' (index.ts:656-660), not HTTP 200; only the non-fatal nothing-saved path returns 200 + status:'failed' (index.ts:667, 674-678). The UI is robust to both, so the contract holds in effect - but 'HTTP 200 with status:failed' is true of one of the two failed exits, not both."
+    },
+    {
+      "what": "Every write in the edge function checks row count, exactly as section 4.3 requires.",
+      "file": "supabase/functions/classify-feedback/index.ts",
+      "line": "467-492 (writeInsight, updateRun), 838-849 (the run insert), 814-822 (the double-run gate)",
+      "ruling": "The header comment states the rule verbatim: a blocked write returns {data:null, error:null} on all three verbs, and .select() plus a length check is the difference between 'saved' and 'the screen lied'. Each write does .select() and throws on !data || data.length === 0. The double-run gate deliberately runs as service-role and says why: an RLS-blocked read returns zero rows with error:null, and zero rows there reads as 'no active run' - so the very check meant to prevent a double run would have been the one permitting it. loadCandidates even enforces an explicit row cap because PostgREST truncates at 1,000 rows without an error. This is the best error handling in the module."
+    },
+    {
+      "what": "The m4 invite insert does check row count, in effect - a blocked write is counted as a failure, not as a success.",
+      "file": "src/modules/04_hostesses/api.js",
+      "line": "636-662 (insertInviteRow), 676-678 (writeAssignmentRow), 463-472 (writeInviteToken)",
+      "ruling": "writeAssignmentRow is .insert(row).select().maybeSingle(); an RLS-blocked insert yields {data:null,error:null}, and `return error ? null : data` returns null, which the caller reads as !inserted so outcome.failed += 1. writeInviteToken - untouched by m11 - is .select() plus Boolean(updated?.length). Both honour the 4.3 addendum."
+    },
+    {
+      "what": "The recommended_rank write falls back to NULL on failure - a documented, spec-quoted fallback, not a silent one.",
+      "file": "src/modules/04_hostesses/api.js",
+      "line": "665-690 (insertWithRank, isRankWriteFailure)",
+      "ruling": "Card t5, quoted verbatim in the why-comment: if the write fails the invite does NOT fail because of it - NULL is recorded and a console.warn is emitted. The code warns with the hostess id and the project id, and isRankWriteFailure deliberately EXCLUDES 23505 so the triple-key race retry is not swallowed. Residual worth naming once, not a fix: the user is never told, so report 14a (adoption-of-recommendation) under-counts by exactly the number of warned rows, and the only trace is a browser console line nobody reads. That consequence is the price the recorded ruling chose."
+    },
+    {
+      "what": "A chart that came back with no data says so in words instead of drawing an empty frame.",
+      "file": "src/modules/11_reports/components/ChartCard.jsx",
+      "line": "927-935",
+      "ruling": "Recorded and measured 16/09/2026: one click on the 'this month' pill in m14 left a 260px frame completely empty, with no word, no legend and no screen-reader table. Legend, LTR wrapper and the screen-reader twin table are all suppressed when data.length === 0, because all three describe data that is not there."
+    },
+    {
+      "what": "parseDrill's bare catch returning null is deliberate URL robustness, not a swallowed error.",
+      "file": "src/modules/11_reports/ReportsPage.jsx",
+      "line": "556-566",
+      "ruling": "A malformed address does not bring down a screen - it is read as the root, exactly like a foreign tab value falling to the first tab (S-18). A malformed ?drill= is user-supplied input, not a system failure, and falling back to the root level shows real root data."
+    }
+  ],
+  "not_verified": [
+    "Nothing was executed. I ran no unit tests, no build, no lint, no E2E, no smoke and no Playwright spec (another agent holds the E2E suite).",
+    "No database query. S3B-4's reachability - whether any live report_m* function can return meta.missing_params non-empty together with rows:[] - is therefore UNMEASURED. The code path is proven; the frequency is not.",
+    "supabase/migrations/**.sql was not audited (outside the named file set). I read only the grep hits for missing_params to see how the key is populated, not the RPC bodies.",
+    "ChartCard.jsx (1,001 lines) was not read in full - only the empty-state block, the nullish-coalescing sites and the numeric-fallback grep.",
+    "The 21 *.test.js/jsx files in the diff were inspected only where a specific claim needed them (ExportBar.test.jsx in full, CustomersTab.test.jsx by grep). I did not audit test quality - that is another sweep's job.",
+    "src/lib/onboardingCopy.m11.*.js (4 files) and reportsCatalog.js were grepped, not read line by line; they are copy/table data with no error-handling surface.",
+    "HostessViewCard.jsx was not opened, so what id 0 actually renders (S3B-9) is unverified."
+  ],
+  "blind_spot": "The one that would have broken this sweep, now CLOSED by measurement rather than left as a hedge: my entire permission-denial conclusion rests on the claim that all 16 surfaces fetch through ReportSurface, so a surface wired straight to callReport would bypass toScreenError and I would never have seen it. Checkable, and checked this turn: grep -rn callReport over src/ excluding tests returns exactly two lines - api.js:152 (the definition) and ReportSurface.jsx:497 (the only call site) - and reportsCatalog.js declares 16 rpc: entries. Anyone can re-run those two commands. WHAT REMAINS GENUINELY OPEN, one level down and the same shape: I verified by grep that the four tab files pass onDrill through unwrapped, but I did NOT verify that no tab's transformPayload drops or rewrites meta.missing_params before ReportSurface reads it at line 640 - tabs/customers/payload.jsx:129 rebuilds meta with a spread plus a mapped notes array, which is the one place a key could be lost. The check is one command: read the meta: construction in each of tabs/customers/payload.jsx, tabs/finance/financePayload.jsx, tabs/hostesses/payloadTransforms.jsx and tabs/executive/chartShape.js and confirm each spreads the whole meta.",
+  "assumed": [
+    "ASSUMED: Vite resolves write-excel-file to the browser ESM entry (package.json exports '.' -> ./index.js), not the ./node entry. If that is wrong, S3B-2 still stands - every declared overload in index.d.ts returns a Promise either way.",
+    "ASSUMED: supabase.functions.invoke populates error.context with the Response for a 409 (this is @supabase/functions-js FunctionsHttpError behaviour, and AnalysisRunBar.jsx:67-73 documents it as measured). S3B-1 depends on this being true; if invoke instead threw, the UI would land on the generic error - less wrong, but still not 'a run is in progress'.",
+    "ASSUMED: outcome.failed on a blocked m4 invite insert is surfaced to the manager by reportMail(outcome, ...) in SmartMatchPage. I read the counter increment but did not read reportMail."
+  ]
+}

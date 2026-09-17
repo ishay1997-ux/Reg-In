@@ -1,0 +1,38 @@
+# P2-VF customers · Adversarial verification of the four לקוחות RPCs (already applied) + ONE fix-forward migration G2 + specific re-verification
+
+**Repo:** `C:\Users\ishay\Reg-In`, branch `ishay/module-11-build`. **Never commit.** Report in English.
+**Your write scope:** ONE new migration file `supabase/migrations/20260916<HHMMSS>_module11_g2_rpcs_customers_fixes.sql` (append-only; do NOT edit the applied G file) · `src/lib/reportsCustomers.js` + `.test.js` (yours) · the migration apply through MCP `apply_migration` (Ishay's typed-echo waiver, `module-11.md §9 D-9`) · a temporary signed-in Node script in `<scratchpad>` (deleted after; never print credentials). Nothing else.
+
+## State you inherit (measured by the orchestrator 16/09 08:0X — re-check, do not trust)
+- `20260916052511_module11_g_rpcs_customers.sql` IS applied (registry row `module11_g_rpcs_customers`); md5(prosrc) of `report_m19_customers_overview` · `report_m20_satisfaction` · `report_m21_drifting` · `report_m22_notes` equals the file's `$function$` bodies (4/4). The previous verifier was killed by a quota limit right after the apply — **nothing about G has been verified beyond the builder's own report** `<scratchpad>/results/p2-customers.json`.
+- **The AI classification is DONE and APPROVED** (16/09 07:3X): `feedback_ai_runs` 5 (40 rows, model `gemini-3.8-flash`) and 6 (386 rows, `gemini-3.5-flash-lite`) are both `done` + `approved_at` set; `feedback_ai_insights` = 426 rows, 0 unclassifiable, `red_flags` 25, `free_topic` non-null 34. Runs 1–4 are `failed` with 0 rows. So מ22 must now render the approved insights (not the "טרם אושרה" gate) — verify the RPC reads ONLY approved runs, unions both approved runs, and states the model(s) in `meta` (two models are mixed — `feedback_ai_runs.model`).
+- `npm run check:bidi` FAILS on `src/lib/reportsCustomers.js:98` (reported by two agents) — yours to fix (the file must pass `check:bidi`; the LRI/PDI characters belong in runtime strings via `\u2066`/`\u2069` escapes or `reportsFormat`, never as raw bidi characters in source).
+- A tab builder is building `CustomersTab.jsx` **in parallel, against the live payloads** — every change you make is **ADDITIVE ONLY** (new keys, fixed values, fixed labels; never rename/remove a key or a tile key). List every payload change under `payload_changes`.
+
+## Read first
+1. `docs/micro_guides/module-11.md` §2ב — C1–C8 **with all amendments** (`tiles[].sub` · `drill_key {kind,…}` incl. `sku` · `meta.extra_tables` · `chart.label_source` · `meta.row_total` · `columns[].sorted` · **window rule D-17: calendar presets closed `[from,to]`, rolling half-open `(from,to]`**) · §3.3 · §9 (D-10…D-19, D-16 customer list is RLS-gated — not yours).
+2. `<scratchpad>/tasks/p2-verify-lens.md` (lenses + the conflict-question rule) · `<scratchpad>/tasks/p2-apply-and-verify.md` steps 1–5 (skip the apply; DO the live calls).
+3. `<scratchpad>/tasks/p2-tab-customers.md` + `<scratchpad>/results/p2-customers.json` — the claims to refute. `<scratchpad>/results/p2b-finish.json` — the classification facts (totals, the card-20.7 population 104 / keyword filter 16 vs the card's 20, the homoglyph quote of project 1249, the 33 "אחר").
+4. **Pattern to copy for the fix file:** `20260916063400_module11_e2_rpcs_finance_fixes.sql` (header · LRI/PDI money `to_char(round(x),'FM999,999,999') || ' ₪'` inside `chr(8294)…chr(8297)` · `tiles[].sub` · `compare.count/note` · `drill_key {kind,…}` · `comment on function` with the declared population) and `20260916065642_module11_f2_rpcs_hostesses_fixes.sql`. Pull live bodies with `pg_get_functiondef` before `create or replace`.
+5. `src/modules/11_reports/components/ChartCard.jsx` (chart contracts) · `ReportSurface.jsx` (rendering, slots, `meta.extra_tables`, `columns[].sorted`) · `supabase/functions/classify-feedback/README.md` (what מ22 consumes).
+6. `stage2-cards/cards-customers.md` — מ19 (163) · מ20 (271) · מ21 (367) · מ22 (471): §③ §⑤ §⑧ in full, and the appendix `### 🔴 ממצא 1 — 13 מספרי-.ltr` (761) · `### 🔵 שני פריטים לעינך` (789) · `spec.md §1.4` לקוחות row · `spec.md §🔢` · `signoff-baseline-2026-09-10.md` · `processes-approved.md §📐` (772–810) · §🔒 (688–700: *מתרחק* on the row · *מתרחקים* only as the count tile) · §📑ב rows for לקוחות.
+
+## Known suspects (check each; fix in G2 if confirmed)
+- מ22: reads approved runs only · both approved runs · `meta.models` (or `meta.model`) names both · tiles "הערות חופשיות שנכתבו" = 426 · "מהן שייכות למשוב שתויג 'אחר'" = 33 · "גודל 'אחר' מול הקטגוריות" · "דגלים אדומים" = 25 · with NO approved run the payload says *"טרם אושרה ריצת-ניתוח"* and `meta.export_blocked_reason` = *"אין שורות לייצא — טרם אושרה ריצת-ניתוח"* (reason it from the SQL: what does the function return when `approved_at is null` everywhere? — do NOT un-approve anything to test).
+- מ21: all **12** drifting rows (story ③) · 📐11 · the §🔒 wording rule · `sub` on the tiles · the ranking column `sorted`.
+- מ20: "שיעור המרוצים (4–5)" · "שיעור המענה למשוב" · "ממוצע הציון (1–5)" · "משובים שסימנו סיבה שלילית" — populations from §③, precision, `nullif` denominators, 📐12 minimum sample.
+- מ19: the four sentence-tiles (spec §1.4 note — copied as written; 🔵 open for Ishay — a conflict question, not a fix) · doors (ruling 33 `tiles[].target`).
+- Cross-cutting: LRI…PDI + thousands separators in every server-built sentence (scan payloads for 4+ digit runs, excluding years) · `drill_key {kind,…}` (no drill surfaces here — rows may still carry `{kind:'customer', id}` as a door, or none; be consistent) · `tiles[].compare` on every tile (or `sub` explaining the absence) · `meta.drill_echo` (null) · `meta.customer_filter_ignored` · `meta.missing_params` reasoning · window rule D-17 · Israel time.
+- `comment on function` exists on all four (measured: yes) — verify the declared population in each comment equals the SQL `where`.
+
+## Live calls (signed-in Node script, `@supabase/supabase-js`, identities from `.env.local` `E2E_*`)
+CEO and FINANCE ⇒ 200 on all four; RECRUIT and STAFF ⇒ `42501` (never an empty object). Default window and the baseline window (the card's 10/09 window) — save payloads to `<scratchpad>/results/payloads/report_m<NN>_<case>.json`. One call with a real `p_customer_id` (401 is used elsewhere) — coherent shrink or `meta.customer_filter_ignored: true`.
+
+## G2 rules
+- Apply in chunks < 60 KB — one registry row per chunk is ACCEPTED (§9 D-20): `module11_g2_customers_m19`, … listed in the file header.
+- After apply: `md5(prosrc)` per live body == md5 of the file's `$function$` body (`<scratchpad>/fn_md5.py` runs over all module11 d–g files; adapt the glob if your file name differs).
+- `npx vitest run src/lib/reportsCustomers.test.js` green · `npx eslint` + `npx prettier --check` on the lib files · `npm run check:bidi` exit 0 · CR = 0 via `perl -ne '$n+=tr/\r//; END{print "CR=$n\n"}' <file>`.
+
+## Output (final message = data, also `<scratchpad>/results/p2vf-customers.json`)
+`{ "tab": "customers", "findings": [ { "surface", "severity", "lens", "claim_refuted", "evidence", "conflict_question": null|{...}, "fixed_in_g2": bool, "reverified_by", "result" } ], "baseline_table": [...], "g2": { "file", "applied_as": [...], "md5_match": "4/4" }, "payload_changes": [ { "rpc", "key", "change" } ], "m22_now": { "insights_read", "runs_read", "models" }, "bidi_fix": "...", "live_calls": [...], "tests_pass_but_would_not_catch": [...], "not_verified": [...], "blind_spot": "...", "assumed": [...] }`
+Empty `findings` is a legitimate answer — say so with what you measured. A finding that contradicts a recorded ruling (§9) is a **conflict question**, not a fix.

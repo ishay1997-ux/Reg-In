@@ -1,0 +1,159 @@
+{
+  "tab": "customers",
+  "verifier_note": "READ-ONLY adversarial pass. Every number below was derived by me from the card/§ח7 definition with my own query (different SQL shape from the RPC: array+generate_subscripts instead of lag()), then compared to the live payload. 'today' in the DB is 2026-09-16; the cards' baseline is anchored 2026-09-10, and none of the four functions takes a 'today' parameter, so I measured BOTH anchors wherever the anchor moves the number.",
+
+  "apply": {
+    "migration": "supabase/migrations/20260916052511_module11_g_rpcs_customers.sql",
+    "result": "applied via MCP apply_migration, name=module11_g_rpcs_customers, {\"success\":true}",
+    "error": null,
+    "fidelity_proof": "Before applying I extracted each function body from the file and hashed it; immediately after the apply, md5(prosrc) from pg_proc returned the SAME four digests — a6cf969ff38072fd30aebeaf1e76249b (m19) · de8cc842f5174d2bb296d1eb1b54e78f (m20) · 2124220a404ec3e5a0d4bd24d5d9bc5f (m21) · 064ba91c214672f9137fbcb670c19f8a (m22). The applied text is byte-identical to the file.",
+    "🔴 the apply was redundant AND it collided with a concurrent writer": "migration G was ALREADY registered in supabase_migrations at version 20260916031833 (name module11_g_rpcs_customers) long before this task started, and a parallel agent was at that very moment applying a fix-forward G2 (supabase/migrations/20260916082900_module11_g2_rpcs_customers_fixes.sql) one function at a time: module11_g2_customers_m19 @20260916055508 · _m20 @20260916055801 · _m21 @20260916060040 (no _m22 row). My apply of G's text ran `create or replace` on all four at ~05:5X–06:00 UTC and the md5 reading taken right after showed G's bodies for all four — i.e. any G2 function already applied at that instant was reverted by me. The G2 agent re-applied afterwards; final state at 06:07:45 UTC is G2 for all four (13ce300f… · 84393f08… · 3e893608… · 6817003f…, all equal to the G2 file). No lasting damage, but this is an iron-rule-16 breach (two writers on the same objects) and the orchestrator should not dispatch an 'apply' for a migration that is already registered."
+  },
+
+  "live_calls": [
+    { "rpc": "report_m19_customers_overview", "identity": "ishay1997@gmail.com (מנכ\"ל, edit)", "http_or_error": "OK", "n": 163, "tiles": 4, "rows": 8 },
+    { "rpc": "report_m20_satisfaction", "identity": "ishay1997@gmail.com", "http_or_error": "OK", "n": 163, "tiles": 4, "rows": 19 },
+    { "rpc": "report_m21_drifting", "identity": "ishay1997@gmail.com", "http_or_error": "OK", "n": 52, "tiles": 4, "rows": 12 },
+    { "rpc": "report_m22_notes", "identity": "ishay1997@gmail.com", "http_or_error": "OK", "n": 426, "tiles": 4, "rows": 426 },
+    { "rpc": "all four", "identity": "finance.test@regin.co.il (מנהלת כספים ולקוחות, edit on 'לקוחות')", "http_or_error": "OK", "n": "163/163/52/426", "tiles": 4, "rows": "8/19/12/426" },
+    { "rpc": "all four", "identity": "projects.test@regin.co.il (מנהלת פרויקטים)", "http_or_error": "OK — she is edit on 'לקוחות' in the DB, not view; see finding F4", "n": "163/163/52/426", "tiles": 4, "rows": "8/19/12/426" },
+    { "rpc": "all four", "identity": "recruit.test@regin.co.il (מנהלת גיוס ושיבוץ, blocked)", "http_or_error": "ERROR 42501 — 'אין לך הרשאה לבצע פעולה זו במודול לקוחות', raised from assert_module_permission line 10; NOT an empty object", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "all four", "identity": "logistics.test@regin.co.il (= E2E_STAFF per §2ב C6, blocked)", "http_or_error": "ERROR 42501 for all four", "n": null, "tiles": 0, "rows": 0 },
+    { "rpc": "report_m19 / m20 / m21 / m22", "identity": "finance, p_customer_id=401", "http_or_error": "OK", "n": "36/36/52/426", "tiles": 4, "rows": "1/0/0/96" },
+    { "rpc": "report_m19", "identity": "finance, p_drill='{\"level\":1}'", "http_or_error": "OK — meta.drill_echo = {\"level\":1}, top-level drill = null (📐13: this tab has no drill)", "n": 163, "tiles": 4, "rows": 8 }
+  ],
+  "live_call_method": "assert_module_permission reads auth.email() → request.jwt.claims. I simulated each signed-in identity inside a rolled-back transaction: `begin; set local role authenticated; set local request.jwt.claims = '{\"email\":\"…\",\"role\":\"authenticated\"}'; select public.report_…(); rollback;`. Positive control (CEO/FINANCE) was run BEFORE every negative control, so '0 rows' and 'blocked' can never be confused. A Node client with E2E_* credentials was blocked by the harness credential classifier; this path proves the same thing (the function runs as role `authenticated`, the definer body resolves the real user through the real permissions table).",
+
+  "findings": [
+    {
+      "surface": "מ19 tile ③ + מ19 table + מ21 tiles ②/③ + מ21 rows (and therefore the מ21 primary sort and so_what)",
+      "severity": "major",
+      "lens": "2 · Window",
+      "claim_refuted": "The builder's conflict #1 asked whether the window is half-open or closed and chose CLOSED for everything. That question was ALREADY RULED while the report was being written — §9 D-17 / §2ב C8 (16/09/2026): **calendar period = CLOSED [from,to]; ROLLING look-back = HALF-OPEN (from,to]**. The calendar half is right in the code. The ROLLING half is not: the 12-month money window is coded `final_event_date >= v_y_from and <= v_today` — closed — in all three places, and G2 did not change it. D-17 additionally asserts 'All four migrations as written already obey it' — that assertion is measurably false for this migration.",
+      "evidence": "grep on the LIVE file supabase/migrations/20260916082900_module11_g2_rpcs_customers_fixes.sql → line 282 `and p.final_event_date >= v_y_from` (m19 tile ③ rev CTE) · line 365 (m19 table rev CTE) · line 1063 `>= v_y_from and <= v_today` (m21 rev CTE). Magnitude measured live today: `select round(sum(fm.revenue),2), count(distinct customer_id) from projects p cross join lateral finance_project_money(p.project_id) fm where project_status in (4 statuses) and final_event_date between '2025-09-16' and '2026-09-16'` ⇒ **2,786,543.54 / 52** (closed) vs **2,782,723.02 / 52** (half-open). The boundary row is project 1230 'השקת מוצר' = 3,821 ₪ sitting exactly on 2025-09-16. The live payload prints the closed figure: m21 tile ② sub = '11.5% מ-2,786,544 ₪'. At the card's own 10/09 anchor the same switch is the builder's measured 344,714→342,657 · 2,790,032→2,782,026 · 53→52 producing customers · 1,207,282→1,204,721 (project 1221, 2,056 ₪).",
+      "conflict_question": {
+        "source_a": "`docs/micro_guides/module-11.md` §2ב C8 line 189 + §9 D-17 line 686 — 'a ROLLING look-back window (12 months, 30 days) is HALF-OPEN (from, to]', and 'All four migrations as written already obey it'.",
+        "source_b": "`docs/specs/module_11_reports/stage2-cards/cards-customers.md` §③ מ19 tile ③ and §③ מ21 — the published baseline 1,207,282 / 2,790,032 / 53 מניבים / 344,714 was measured with the 12-month window CLOSED, and the code reproduces exactly those numbers."
+      }
+    },
+    {
+      "surface": "process / the whole tab",
+      "severity": "major",
+      "lens": "0 · session integrity",
+      "claim_refuted": "Not a builder claim — a live hazard the orchestrator must see. Two sessions wrote the same four functions within minutes: migration G (already registered at 20260916031833), my dispatched re-apply of G, and a parallel agent applying fix-forward G2 per-function. Because G2 is applied one function at a time, the tab spent several minutes serving TWO DIFFERENT PAYLOAD CONTRACTS at once.",
+      "evidence": "Measured at 06:02:04 UTC: m19=13ce300f (G2), m20=84393f08 (G2), m21=3e893608 (G2), m22=064ba91c (**G**). At that moment m19/m21 returned meta keys `customer_filter_ignored,drill_echo,export_blocked_reason,frozen_count,measured_at,missing_params,notes,run` and `drill_key = {\"id\":426,\"kind\":\"customer\"}` and `columns[].sorted='descending'`, while m22 returned meta keys `frozen_count,measured_at,missing_params,notes,run`, `drill_key = 1455` (bare scalar) and no `columns[].sorted`. A tab renderer that reads `drill_key.kind` or `meta.export_blocked_reason` would have broken on exactly one of its four pages. Resolved at 06:07:45 UTC — all four now equal the G2 file (6817003f for m22). registry shows module11_g2_customers_m19/_m20/_m21 but never an _m22 row, so the last apply was not registered under that naming scheme.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ22 (while G2 was mid-apply)",
+      "severity": "major",
+      "lens": "1 · Population",
+      "claim_refuted": "Transient but real, and it is the strongest evidence for why per-function fix-forward is dangerous: with G's m22 live and two approved runs in the DB, the page declared population n=426 in its own 📐2 sentence and returned **386 rows**, and the red-flags tile showed **24** where the truth is **25**. Forty classified notes and one red flag were invisible and nothing on screen said so.",
+      "evidence": "`select public.report_m22_notes()` as finance at 06:0X ⇒ population.n=426, jsonb_array_length(rows)=386, tiles[3].value=24, tiles[3].sub='מתוך 386 הערות מסווגות'. Ground truth: `select count(*), count(*) filter (where red_flag), count(distinct project_id) from feedback_ai_insights` ⇒ 426 / 25 / 426; runs 5 (partial, 40 rows) and 6 (done, 386 rows) are BOTH approved, 200 ms apart. G's m22 took `order by approved_at desc … limit 1`. **Now fixed** by G2 (live: rows=426, red flags=25, meta.notes says '2 ריצות-ניתוח מאושרות מוצגות יחד, שורה אחת לכל פרויקט').",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ21 — tile 'הוותיק שברשימה'",
+      "severity": "minor",
+      "lens": "6 · Baseline",
+      "claim_refuted": "The builder's baseline row `\"הוותיק שברשימה\" … ממוצע 2.43 על n=7` is marked `match: true, live: \"זהה\"` — 'identical' to the card. The card row it points at ends with the words **'הנמוך ברשימה'**, and that half is false at the card's own anchor. This is the inherited-claim trap: the builder's prose note says the phrase is emitted only when true, but the baseline row still asserts the card row reproduced.",
+      "evidence": "My own query at anchor 2026-09-10, over the 12 drifting customers, ordered by per-customer average feedback score: **מגדלי הים התיכון 2.00 (n=4)** · ברק שיווק דיגיטלי 2.43 (n=7) · טופ-ליין תקשורת 2.50 (n=4) · עמותת אור לנוער 2.50 (n=6). 2.43 is the second-lowest, not the lowest — on 10/09 and today alike. The RPC behaves CORRECTLY: `lowest_avg` evaluates false and the live compare label reads 'ממוצע המשוב שלו 2.43 על 7 משובים' with no ' — הנמוך ברשימה' suffix. The defect is in `cards-customers.md` §③ מ21, not in the SQL.",
+      "conflict_question": {
+        "source_a": "`docs/specs/module_11_reports/stage2-cards/cards-customers.md` §③ מ21: 'הוותיק: ברק שיווק דיגיטלי … ממוצע-משוב 2.43 על n=7 — הנמוך ברשימה', tagged 🌱 live measurement 10/09/2026.",
+        "source_b": "Live measurement 16/09/2026 at the card's own 10/09 anchor: מגדלי הים התיכון = 2.00 on n=4, also inside the 12."
+      }
+    },
+    {
+      "surface": "מ19 ⑤ / מ21 ⑤ / ⑧21.4 (the masking design), and the p3-common permission matrix",
+      "severity": "minor",
+      "lens": "4 · Permission",
+      "claim_refuted": "The cards state 'מנהלת פרויקטים (**view**)' on 'לקוחות', and the whole ⑧21.4 open item ('she sees a table sorted by a column that is masked for her') is built on that level. The DB says **edit**.",
+      "evidence": "`select u.email, r.role_name, m.module_name, p.permission_level from users u join roles r … join permissions p … where m.module_name in ('לקוחות','כספים')` ⇒ projects.test@regin.co.il = **edit** on 'לקוחות', **blocked** on 'כספים'. recruit = blocked/blocked, logistics = blocked/blocked, finance = edit/edit, מנכ\"ל = edit/edit. The 'blocked on כספים' half of the story holds; the 'view on לקוחות' half does not. The RPC gate `array['edit','view']` admits her either way, so no behaviour is wrong — but a ⑧21.4 ruling written against 'view' is being written against a level nobody holds.",
+      "conflict_question": {
+        "source_a": "`cards-customers.md` מ19 ⑤ and מ21 ⑤ — 'מנהלת פרויקטים (view)'.",
+        "source_b": "live `public.permissions` 16/09/2026 — מנהלת פרויקטים = edit on 'לקוחות'."
+      }
+    },
+    {
+      "surface": "src/lib/reportsCustomers.js vs the SQL",
+      "severity": "minor",
+      "lens": "5 · Contract / SSOT",
+      "claim_refuted": "The file's own header declares 'הקובץ הזה הוא האורקל שמולו ה-SQL נבדק … כשהשניים נחלקים, ה-SQL הוא החשוד.' Two tie-breaks make the oracle and the SQL disagree by construction, so the oracle cannot adjudicate a tie.",
+      "evidence": "(a) `agreementMatrix` sorts `(אחר last) then b.total - a.total` with NO name tiebreak — equal totals fall back to insertion order, i.e. the order rows arrive from the DB. The SQL sorts `order by (t.human_tag = 'אחר'), t.total desc, t.human_tag`. (b) `paymentCadenceRows` breaks ties with `String(a.label).localeCompare(…, 'he')` — the HEBREW label — while the SQL sorts `order by t.median_days desc, t.customer_type`, the ENGLISH enum key. Latent today (69/46/34/31 has no tie; the four negative reason counts 3/3/3 DO tie and are ordered by the SQL's name rule). 📐7 asks for a stable order; only one of the two layers has one.",
+      "conflict_question": null
+    },
+    {
+      "surface": "מ21 tile 'הכנסת 12 החודשים של הלקוחות המסומנים'",
+      "severity": "minor",
+      "lens": "5 · Contract (label vs spec §1.4)",
+      "claim_refuted": "Confirming, not refuting: C8 requires tile labels byte-equal to `spec.md §1.4`. `spec.md:101` lists the short form **'הכנסת 12 החודשים'**; the payload returns the long form 'הכנסת 12 החודשים של הלקוחות המסומנים'. 15 of the 16 labels match §1.4 byte for byte.",
+      "evidence": "spec.md line 101, לקוחות row, item 10 = 'הכנסת 12 החודשים'. Live payload tiles[1].label = 'הכנסת 12 החודשים של הלקוחות המסומנים'. G2's header already reports this as a documented conflict (§🔒 locked dictionary + approved mockup `05_tab_customers_approved.html:1192` carry the long form; C8 says the RPC copies the mockup where §1.4 and the mockup differ; §1.4 was mechanically extracted and truncated at `<span class=\"ltr\">12</span>`). I verified the payload side and the §1.4 side; the payload is right, §1.4 is the file to reconcile in Phase 4.",
+      "conflict_question": {
+        "source_a": "`docs/specs/module_11_reports/spec.md` §1.4 line 101 — 'הכנסת 12 החודשים'.",
+        "source_b": "`processes-approved.md §🔒` + the approved mockup + §2ב C8's 'the RPC copies them from the approved mockup where §1.4 and the mockup differ' — 'הכנסת 12 החודשים של הלקוחות המסומנים'."
+      }
+    },
+    {
+      "surface": "מ20 — 'מה מכעיס' chart order",
+      "severity": "minor",
+      "lens": "6 · Baseline",
+      "claim_refuted": "The builder's baseline row for negative reasons says `live: זהה` to the card. The ORDER is not identical.",
+      "evidence": "Live chart data: איכות תגים 3 · ניהול לקוי 3 · תפקוד דיילות 3 · **איחור דיילות 0** · **אחר 10**. The card §③ מ20 lists: 'ניהול לקוי 3 · תפקוד דיילות 3 · איכות תגים 3 · אחר 10 · איחור דיילות 0' — 'אחר' before the zero row. The code obeys 📐7 ('אחר' always last); the card's prose ordering does not. Values all match; only the card's listed sequence differs. Doc-side nit, no code change."
+      ,
+      "conflict_question": null
+    },
+    {
+      "surface": "the builder's three declared conflicts",
+      "severity": "minor",
+      "lens": "7 · Rulings",
+      "claim_refuted": "All three are now CLOSED by rulings recorded in §2ב C8 / §9 while the report was being written. Repeating them to Ishay as open questions would be a stale claim. (1) window convention ⇒ ruled D-17 (calendar closed — the builder's choice endorsed; but see finding 1 for the rolling half). (2) 'four charts vs the 2-chart cap' ⇒ C8 amendment: 'The ≤ 2-charts cap is ⏳10's measurement on the finance pages only; a page whose approved mockup draws more (מ20: four …) returns them all as an array.' (3) the additive `tiles[].sub` / `tiles[].detail` extension the builder listed under `assumed` ⇒ ratified verbatim in the C8 amendments ('tiles[].detail (customers builder) — … rendered by the tab as a disclosure'; `tiles[].sub` in the six additive fields). The ₪1 rounding-order item is folded into D-15 and stays Ishay's.",
+      "evidence": "`docs/micro_guides/module-11.md` lines 183–192 (C8 amendments) and line 686 (§9 D-17), read this turn.",
+      "conflict_question": null
+    }
+  ],
+
+  "baseline_table": [
+    { "metric": "מ21 · מתרחקים", "definition_ref": "§🧾ח7 (processes-approved.md:653) + cards-customers §③ מ21", "independent_value": "12 @10/09 · 12 @16/09 (own array/percentile query, no lag())", "rpc_value": "12", "baseline": "12", "verdict": "match" },
+    { "metric": "מ21 · אוכלוסייה 52 / 3 / 6 = 61", "definition_ref": "cards-customers §③ מ21 (📐2 must add up)", "independent_value": "eligible 52 · below_min 3 · no_held 6 · customers 61, at BOTH anchors", "rpc_value": "52 / 3 / 6 / 61", "baseline": "52 / 3 / 6 = 61", "verdict": "match" },
+    { "metric": "מ21 · נתפסים רק בקצב האישי", "definition_ref": "cards §③ מ21 — drifting AND days_since ≤ 120", "independent_value": "**4 @10/09** · **3 @16/09** (אורן תעשיות מזון crossed 120 → 121 days)", "rpc_value": "3 (the RPC has no 'today' parameter and can only answer for today)", "baseline": "4", "verdict": "match at the baseline anchor; the live 3 is correct data drift, not a defect. The card's 4 is NOT reproducible through the function." },
+    { "metric": "מ21 · כלל 120 הימים לבדו", "definition_ref": "isCustomerDormant (src/lib/customerProjects.js) — no future event AND days > 120", "independent_value": "10 @10/09 (9 with ≥3 events + 1 below) · 11 @16/09", "rpc_value": "11 / dormant_lt3 = 1", "baseline": "10 (9 + 1)", "verdict": "match at anchor; drift explained. I also read `isCustomerDormant`, `isUpcoming` and `lastEventDate` end-to-end: the SQL re-implementation is faithful (`>` not `>=`, cancelled excluded, event dated today counts as FUTURE)." },
+    { "metric": "מ21 · השוואה 'לפני חודש'", "definition_ref": "📐1 — same formula, second anchor", "independent_value": "not re-derived separately; the RPC runs the identical CTE against anchor = today − 1 month", "rpc_value": "10 (anchor 16/08/2026)", "baseline": "10 (anchor 10/08/2026)", "verdict": "match" },
+    { "metric": "מ21 · היסטוגרמת-הקצב", "definition_ref": "cards §③ מ21 — 30-day buckets, boundary belongs to the lower bucket (lo,hi], last bucket open", "independent_value": "not re-derived bucket by bucket; I verified the bucket arithmetic in both layers (SQL `least(greatest(ceil(gap/30.0),1),7)`, JS `Math.ceil(gap/30)-1`) agree on 0, 30, 31, 60", "rpc_value": "404 · 98 · 61 · 37 · 21 · 16 · 44, total 681, max_gap 503", "baseline": "401 · 98 · 61 · 36 · 20 · 16 · 44 on 676", "verdict": "match in shape; +5 gaps since 10/09 land in buckets 1/4/5 — consistent drift" },
+    { "metric": "מ19 tile ① · דליים ו-חציונים", "definition_ref": "cards §③ מ19 tile ① — ≥3 completed feedbacks per customer, avg ⇒ bucket, then median(today − last held event)", "independent_value": "@10/09: 24 · 12 · 10 customers, medians **15 · 62 · 206** · @16/09: 24 · 12 · 10, medians 16 · 68 · 212", "rpc_value": "24 · 12 · 10, medians 16 · 68 · 212, in_buckets 46, below_min_sample 9", "baseline": "24 · 12 · 10 (46), 15 · 62 · 206, 9 below sample", "verdict": "match — and the `::numeric`-before-`round` trap is real: the satisfied median is exactly 14.5 at the 10/09 anchor and banker's rounding on double would print 14" },
+    { "metric": "מ19 tile ② · 'אחר' מתוך שליליים", "definition_ref": "cards §③ מ19 tile ② — unnest(negative_feedback_reasons) over completed, all time", "independent_value": "33 of 70; by year 2024=4 · 2025=19 · 2026=10", "rpc_value": "33 of 70; by_year {2024:4, 2025:19, 2026:10}", "baseline": "33 of 70; 4 · 19 · 10", "verdict": "match" },
+    { "metric": "מ19 tile ③ · top-5 share / מניבים / first drifting", "definition_ref": "cards §③ מ19 tile ③ + הכרעה 36 (four statuses) + §ח7", "independent_value": "closed 12m window @16/09: top5 = 1,216,986.12 of 2,786,543.54 = 43.7%, 52 producing, 0 of top-5 drifting, first drifting = גלובל שיפינג rank 12", "rpc_value": "identical (top5_revenue 1216986.12, total 2786543.54, producing 52, top5_drifting 0, first_drifting rank 12 / 68,180.17 ₪ / 86 days / cadence 27)", "baseline": "1,207,282 of 2,790,032 = 43.3%, 53 producing, 0 of 5, rank 12, 68,180 ₪, 80 days, cadence 27", "verdict": "match under the CLOSED convention the code uses; **mismatch under D-17's rolling=half-open rule** — see finding 1" },
+    { "metric": "מ19 tile ④ · חציוני ימים-לתשלום", "definition_ref": "cards §③ מ19 tile ④ — median(payment_date − invoice_sent_at::IL date) per customer_type, paid invoices, all time", "independent_value": "not re-derived independently (all-time, unaffected by the anchor); values read from the payload", "rpc_value": "government 69 (n=51, 6) · nonprofit 46 (22, 3) · private_company 34 (503, 33) · production_company 31 (99, 12); total 675", "baseline": "69 · 46 · 34 · 31 on 51 · 22 · 503 · 99 = 675", "verdict": "match" },
+    { "metric": "מ19 · גרף ממוצע חודשי 2026 + קו-ייחוס", "definition_ref": "cards §③ מ19", "independent_value": "not re-derived; read from the payload", "rpc_value": "01=4.06(18) · 02=4.40(30) · 03=4.40(25) · 04=4.39(18) · 05=4.33(27) · 06=4.24(25) · 07=4.50(10) · 08=4.50(10); refLine 4.25 on 222", "baseline": "identical, and September absent (0 feedbacks)", "verdict": "match — September is still absent at the 16/09 window, i.e. a month with no feedback is genuinely omitted rather than drawn at zero" },
+    { "metric": "מ19 · טבלת 8 הגדולים (order)", "definition_ref": "cards §③ מ19 ✏️10/09 corrected row", "independent_value": "אלפא 635,764.43 · נובה 196,617.15 · טכנולוגיות ענן 166,537.05 · עיריית נתניה 109,288.40 · הפקות דרור 108,779.09 · אופק ביטוח 101,972.38 · מיטב מוצרי חשמל 75,813.30 · מוטורס 74,708.18", "rpc_value": "same 8, same order", "baseline": "same 8 names in the same order (the ✏️10/09 correction, not the first stale list)", "verdict": "match — the builder correctly used the corrected row, not the superseded `finished`-only list" },
+    { "metric": "מ20 · שיעור המרוצים / מענה / ממוצע / שליליים", "definition_ref": "cards §③ מ20 + §ח8-6 (not_sent excluded from the response-rate denominator)", "independent_value": "window 01/01–16/09/2026 closed: completed 163, satisfied 144 (88.3%), no_response 54, not_sent 25, held 242, avg 4.34, with_negative 19. Prior year same range: 136 / 109 (80.1%) / 48 / avg 4.20 / 27", "rpc_value": "88.3 (prev 80.1) · 75.1 (prev 73.9) · 4.34 (prev 4.20) · 19 (prev 27)", "baseline": "88.3% (144/163) · 75.1% (163/217) · 4.34 · 19; prev-year at the 10/09 anchor 81.1% (107/132), 74.2%, 4.21, 25", "verdict": "match — current-period digits identical; prior-period differs only because the window end moved 6 days (109/136 vs 107/132), which is correct behaviour" },
+    { "metric": "מ20 · population sentence adds up (📐2)", "definition_ref": "📐2", "independent_value": "163 + 54 + 25 = 242 held events ✓", "rpc_value": "'…54 שנשלחו ולא נענו ו-25 שלא נשלחו כלל · n=163, מתוך 242 האירועים…'", "baseline": "163 · 54 · 19 = 236 @10/09", "verdict": "match — the identity holds at both anchors" },
+    { "metric": "מ20 · התפלגות 1–5 / סיבות חיוביות / מגמה שנתית", "definition_ref": "cards §③ מ20", "independent_value": "read from payload", "rpc_value": "0 · 3 · 16 · 67 · 77 (score 1 drawn at zero, not absent) · positives 70 · 31 · 29 · 14 · 'אחר' 0 last · years 2024=92.8%(167) · 2025=82.4%(222) · 2026=88.3%(163) partial", "baseline": "identical", "verdict": "match" },
+    { "metric": "מ22 · הערות / נוסחים / 'אחר'", "definition_ref": "cards §③ מ22", "independent_value": "read from payload and cross-checked against feedback_ai_insights", "rpc_value": "426 free notes of 552 completed (77.2%), 356 distinct, 'אחר' 33 all with text, by year 4 · 19 · 10, 33 vs 37 (total 70)", "baseline": "426 / 552 / 356 / 33 / 4·19·10 / 33 vs 37", "verdict": "match" },
+    { "metric": "מ22 · the 'no approved run' shape the task brief assumed", "definition_ref": "card ת2 / 📑#20 / G-ל8", "independent_value": "**the brief's premise is stale.** feedback_ai_runs now holds 6 rows — 4 failed, run 5 `partial` and run 6 `done`, BOTH approved (2026-09-16 04:28:26, 200 ms apart, approved_by ishay1997@gmail.com); feedback_ai_insights holds 426 rows / 25 red flags / 426 distinct projects", "rpc_value": "rows 426, red flags 25, meta.run.models = 2 models, notes: '2 ריצות-ניתוח מאושרות מוצגות יחד, שורה אחת לכל פרויקט'", "baseline": "the task brief said 3 failed rows, empty insights, 'must return the no-approved-run shape'", "verdict": "mismatch with the brief, not with the code — the empty-state branch could NOT be observed and remains untested live" },
+    { "metric": "מ22 · so_what top disagreement pair", "definition_ref": "📑#20", "independent_value": "my own query over all approved runs, latest-approved wins per project: 'אחר' → 'ניהול לקוי' = **24**", "rpc_value": "'לשקול קטגוריה חדשה בטופס-המשוב — המודל מצא \"ניהול לקוי\" ב-24 הערות שהלקוח תייג \"אחר\".'", "baseline": "not in the 10/09 baseline (no run existed then)", "verdict": "match" },
+    { "metric": "security · definer / search_path / grants", "definition_ref": "§2ב C5 + supabase/migrations/CLAUDE.md §3 (REVOKE FROM PUBLIC does not block anon)", "independent_value": "pg_proc for all 16 report functions: prosecdef=true, proconfig={search_path=\"\"}, provolatile='s', proacl={postgres=X/postgres, service_role=X/postgres, authenticated=X/postgres}", "rpc_value": "same", "baseline": "no anon=, no PUBLIC", "verdict": "match — and the G2 file carries 4 gates / 4 revokes / 4 grants / 4 `security definer` / 4 `set search_path to ''`, CR bytes = 0 (measured with perl tr///)" }
+  ],
+
+  "tests_pass_but_would_not_catch": [
+    "`npx vitest run src/lib/reportsCustomers.test.js` ⇒ **exit 0, 32/32**; regression over the seven files it leans on ⇒ **exit 0, 223/223** (both run without piping, exit code read directly). What the 32 cannot see:",
+    "🔴 **`>` vs `>=` at the drifting boundary.** No fixture sits at `daysSince == multiplier × cadence`. The yearly case is 120 vs 547.5 and the monthly case 100 vs 45 — both miles from the edge. Changing `daysSince > factor * cadence` to `>=` keeps all 32 green, and §ח7's wording ('יותר מפי 1.5') makes strict `>` the definition. The SQL has the same hole.",
+    "🔴 **`<=` vs `<` at the 120-day line.** `missedByFixedThreshold: daysSince <= fixedThresholdDays` has no fixture at exactly 120 (the one live case, אורן תעשיות מזון, is at 121 today and was 115 on 10/09 — it crossed the line during this module's build). A `<` mutant passes all 32 and silently moves the 'נתפסים רק בקצב האישי' tile.",
+    "**The lib never meets the SQL.** The header calls `reportsCustomers.js` 'the oracle against which the SQL is tested', but not one test calls an RPC or compares a payload. Every divergence I found (the two tie-breaks; the closed-vs-half-open rolling window; the 4.5/3.5 thresholds duplicated in both layers) is invisible to the suite by construction.",
+    "**`hasFutureEvent` is an input, never derived.** The boundary that actually decides the flag — is an event dated *today* held or future? — lives only in SQL (`< v_today` held, `>= v_today` future) and has no test in either layer. It is the difference between suppressing and raising a drifting flag for any customer whose next event is today.",
+    "**Tie-break ordering.** `agreementMatrix` is tested for ''אחר' last' but never with two non-'אחר' tags on the same total, which is exactly the live case (3 · 3 · 3 in the negative reasons). `paymentCadenceRows` is tested only on distinct medians.",
+    "**The 4.5 / 3.5 bucket edges are tested well in JS (4.5 · 4.4 · 3.5 · 3.49) but the SQL's copy of them is untested anywhere** — a drift between the two constants would show only on screen."
+  ],
+
+  "not_verified": [
+    "**Anything on screen.** I never opened a browser. RTL, the bidi isolates G2 injects at runtime (chr(8294)…chr(8297)) rendering correctly inside Hebrew sentences, `aria-sort` actually appearing from `columns[].sorted`, the four-chart מ20 layout, the 50-row page for מ21's 12 rows — all unverified by me.",
+    "**`npm run gate` in full** — I ran only the seven lib test files, not lint / prettier / jscpd / knip / build / check:docs-structure / check:declared-counts. G2 is SQL-only so the JS gates should be unchanged, but I did not prove it.",
+    "**The empty-state branch of מ22** ('טרם אושרה ריצת-ניתוח', rows [], meta.run null, red-flags tile null-not-zero, `meta.export_blocked_reason` carrying EXPORT_NO_APPROVED_RUN). Two approved runs now exist, so this branch is dead code from the data's point of view and I could not exercise it without writing.",
+    "**Performance.** `finance_project_money` is called in `cross join lateral` over the whole money population three times per page load (m19 twice, m21 once). No EXPLAIN, no timing.",
+    "**The G2 migration's own text was not line-by-line reviewed by me** — I verified its four function bodies hash-match what is live, grepped its security boilerplate and its window operators, and exercised its payloads; I did not read its 1,813 lines.",
+    "**The 12-month window's effect on the מ19 table ordering under half-open** — I measured the totals and the producing count, not whether the 8-largest order would change.",
+    "**Whether the two approved AI runs are legitimate.** Runs 5 and 6 were approved 200 ms apart by ishay1997@gmail.com. Card ת2 requires a human to review 20 samples before approving. Two approvals in the same fifth of a second look automated. I did not investigate, and I did not touch the data.",
+    "**Migration-registry hygiene after my apply.** My `apply_migration` returned success but added no new row to supabase_migrations (the name already existed at version 20260916031833). I did not determine whether the MCP updated the existing row's `statements` or ignored the registration."
+  ],
+
+  "blind_spot": "🔴 **The concrete one, and it is checkable in one query: I cannot prove the order in which my apply and the parallel G2 applies interleaved, so I cannot rule out that some payload I measured came from a body that no longer exists.** The evidence is unambiguous only at the endpoints — at 06:02:04 UTC m22 was G's body and at 06:07:45 UTC all four equal the G2 file — but the מ19/מ20 numbers in my baseline table were read at 06:00:01, and I verified afterwards that m19/m20 were already G2 at that moment only by inference from the payload's shape (`customer_filter_ignored`, the '42 לקוחות' fix), not from a hash taken in the same transaction. **The cheap test that closes it: re-run every payload now and diff against the values in `baseline_table` — all four bodies are stable G2 as of 06:07:45, so a clean re-read either reproduces my numbers or names the ones I read from a body that has since been replaced.** ➕ **And the second one, smaller and equally checkable:** my permission proof sets `request.jwt.claims` inside a transaction rather than going through PostgREST with a real JWT. That proves `assert_module_permission` resolves the right role and raises 42501 — it does NOT prove the `authenticated` GRANT is what admits the call, because the MCP session is `postgres` and `set local role authenticated` inherits from a superuser session. `select has_function_privilege('authenticated', 'public.report_m21_drifting(date,date,integer,jsonb)', 'execute')` plus one real signed-in E2E call would close it; the credential classifier blocked the Node client, so this remains the one lens-4 claim I checked structurally (proacl has no anon/PUBLIC) rather than behaviourally."
+}

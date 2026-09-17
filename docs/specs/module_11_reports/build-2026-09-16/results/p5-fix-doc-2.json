@@ -1,0 +1,135 @@
+{
+ "report_file": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\p5-fix-doc-2.json",
+ "status": "done",
+ "files_touched": [
+  "C:\\Users\\ishay\\Reg-In\\docs\\guides\\modules\\module_11_reports.md",
+  "C:\\Users\\ishay\\Reg-In\\docs\\specs\\module_11_reports\\stage2-cards\\cards-finance.md",
+  "C:\\Users\\ishay\\Reg-In\\docs\\PROJECT_MASTER.md",
+  "C:\\Users\\ishay\\Reg-In\\docs\\micro_guides\\module-11.md"
+ ],
+ "fixes": [
+  {
+   "item": "[1] step guide — one number in two copies",
+   "files": [
+    "docs/guides/modules/module_11_reports.md:75",
+    "docs/guides/modules/module_11_reports.md:208-212"
+   ],
+   "what_changed": "both copies of the label count removed; the guide now points at spec.md §1.4 and at `npm run check:declared-counts`.",
+   "live_check": "sed -n '75p' + 208-212 before/after; grep '74 תוויות|79 תוויות' now ONE hit, inside the dated history note"
+  },
+  {
+   "item": "[2] cards-finance.md row ג — two overturned claims",
+   "files": [
+    "docs/specs/module_11_reports/stage2-cards/cards-finance.md:297",
+    "docs/specs/module_11_reports/stage2-cards/cards-finance.md:299-304"
+   ],
+   "what_changed": "⑩ג guided sentence rewritten (both chart and table ranked by ₪; a below-floor project is out of the ranking, the population line counts them) + last cell's 'aria-sort על עמודת-ה-%' corrected to the ₪ deviation column; dated ✏️ note keeps the old wording and the source of each half.",
+   "probe": "processes-approved.md:869 §📑ב#5 · micro-guide §9 D-34 ⑧ · migration 20260917005500:194 and :203-204 · financePayload.jsx:76-79"
+  },
+  {
+   "item": "[4] PROJECT_MASTER §6 — five cross-module debt lines, one per pre-existing E2E failure",
+   "files": [
+    "docs/PROJECT_MASTER.md:874-878"
+   ],
+   "what_changed": "🚧 מ2 ← מ11 (customer-page.spec.js:130) · 🚧 מ7 (dashboard.spec.js:82) · 🚧 מ8 (finance.spec.js:141) · 🚧 מ9 (prices.spec.js:218) · 🚧 מ6 (projects.spec.js:235), in the register's own shape, each with the failing assertion's file:line, the baseline evidence and the honest note that all five modules are closed so the trigger is the next E2E run, not a module opening.",
+   "probe": "assertion lines re-read this turn: customer-page.spec.js:166 · dashboard.spec.js:94 · finance.spec.js:172 · prices.spec.js:239-240 · projects.spec.js:263"
+  },
+  {
+   "item": "[3] micro-guide §9 D-37 — sections (א)(א2)(ד)(ה) + the doc delta column",
+   "files": [
+    "docs/micro_guides/module-11.md:724"
+   ],
+   "what_changed": "one new 3-cell row dated 17/09/2026: round-1 shell (11 items, file each) · round-1 RPC J1 (8 functions) · four morning-table questions · the baseline verdict. (ב)/(ג) written as טעון בדיקה pending the two sibling agents.",
+   "live_check": "row parses as 3 cells, 4 pipes, zero unescaped | in the text; check:docs-structure exit=0"
+  },
+  {
+   "item": "[3ג] D-37 section (ג) from p5-fix-shell-2.json + the card realigned to the shipped hint",
+   "files": [
+    "docs/micro_guides/module-11.md:724",
+    "docs/specs/module_11_reports/stage2-cards/cards-finance.md:297,303"
+   ],
+   "what_changed": "section (ג) written with the 6 round-2 shell items, the 3 things it left open (ExecutiveTab.test.jsx:463 root patch · cards-customers.md:357 · ChartCard.jsx:930) and one corrected measurement; cards-finance ⑩ג replaced by the shipped hint string.",
+   "md5_equal": true,
+   "probe": "byte-compare: the 463-char guided string of reports.profitability.sortWhy in src/lib/onboardingCopy.m11.finance.js is contained verbatim in cards-finance.md — True",
+   "live_check": "measured myself: 8 of 80 `guided` strings across the three onboardingCopy.m11.*.js files DO carry digits (all in hostesses, all through ltr() at :58) — the shell-2 report's '0 of the guided strings contain a digit' does not survive the re-count; recorded in both the card note and D-37 (ג)"
+  },
+  {
+   "item": "[3ב] D-37 section (ב) — J2 never reported inside the window",
+   "files": [
+    "docs/micro_guides/module-11.md:724"
+   ],
+   "what_changed": "written as טעון בדיקה with the measurement that produced it (polled every 45s from 02:00 to 02:44; p5-fix-rpc-j2.json stayed at status 'in progress — built, applying per function' with zero functions), plus the only J2 fact I could measure myself: the migration file exists (405,075 bytes, mtime 02:08) and already declares format:'id' on m4's quote_id at line 707 — the declaration round-2's shell fix leans on. It explicitly does NOT claim the migration was applied or md5-equal.",
+   "probe": "ls + grep on supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:707"
+  },
+  {
+   "item": "[3ג-fix] a stale inherited claim caught before it was published",
+   "files": [
+    "docs/micro_guides/module-11.md:724"
+   ],
+   "what_changed": "shell-2's report said ExecutiveTab.test.jsx is failing and named line 463 as the root patch. Re-checked this turn instead of quoted: the patch is already in the tree (the m4 fixture reads format:'id' with a dated comment) and the suite is green. D-37 now records both the report and the re-check, with the citation lesson.",
+   "live_check": "npx vitest run src/modules/11_reports/tabs/ExecutiveTab.test.jsx => Test Files 1 passed, Tests 27 passed, exit=0 (logs2/vt-exec.log, 02:46)"
+  }
+ ],
+ "gates": {
+  "npm run check:docs-structure": "exit=0 (logs2/final-ds2.log) — 164 files, zero findings",
+  "npm run check:declared-counts": "exit=0 (logs2/final-dc.log) — 6 declared numbers match their source",
+  "npm run check:iron-rules": "exit=0 (logs2/final-ir.log) — 17 rules, every cited number resolves",
+  "npm run check:context": "exit=0 (logs2/final-ctx.log)",
+  "npm run check:bidi": "exit=0 (logs2/final-bidi.log) — not in the brief; run because I inserted Hebrew prose carrying ₪ and LTR runs",
+  "npx vitest ExecutiveTab.test.jsx": "exit=0, 27/27 (logs2/vt-exec.log) — run only to settle an inherited claim",
+  "CR": "CR=0 on all four files (perl tr count)",
+  "git diff --stat (my four files)": "PROJECT_MASTER.md +5 · guides/modules/module_11_reports.md +9/-3 · micro_guides/module-11.md +1 · stage2-cards/cards-finance.md +10/-1. The modified src/** files are shell-2's and the modified build-2026-09-16/scripts/merge_evidence.py is the orchestrator's — untouched by me."
+ },
+ "not_done": [
+  {
+   "item": "docs/specs/module_11_reports/stage2-cards/cards-customers.md:357 still quotes the OLD reports.satisfaction.reasonsBasis word for word, while src/lib/onboardingCopy.m11.customers.js now carries the rewritten string (round-2 shell item 3) — card and code disagree on a §⑩ key, and C3 makes the card the source the code is copied from.",
+   "why": "cards-customers.md is outside my named set (my brief names cards-finance.md only) and outside every other agent's set. Verified this turn with sed -n '357p'. The fix is one table cell plus the same dated block I wrote at cards-finance.md:299; the string to copy is the 'reports.satisfaction.reasonsBasis' guided value in src/lib/onboardingCopy.m11.customers.js."
+  },
+  {
+   "item": "src/modules/11_reports/tabs/finance/financePayload.jsx:73-79 still carries sort.groupKey = 'below_materiality' plus a comment describing the pre-J1 behaviour (below-floor rows sink to the end of the list). After J1 no returned row has below_materiality:true, so the grouping is inert and the comment describes a world that was removed.",
+   "why": "src/** is outside my set. Verified this turn (grep groupKey). Recorded in D-37 (ד)③ and in the cards-finance note; it is a stale declaration, not a screen defect."
+  },
+  {
+   "item": "src/modules/11_reports/components/ChartCard.jsx:930 renders EMPTY_AFTER_FILTER directly, so an empty CHART under a customer filter still names the period while the table envelope now names the customer.",
+   "why": "src/** is outside my set; it is shell-2's own blind spot and I re-verified the line this turn. Carried into D-37 (ג)(3)."
+  },
+  {
+   "item": "docs/specs/module_11_reports/spec.md §1.4 — not touched at all this round.",
+   "why": "My brief allows it only if J2 has NOT renamed a label I must mirror. J2 never reported (see section ב), so I could not tell which labels it renames; editing §1.4 blind would have raced its own file. Left alone as the brief instructs."
+  },
+  {
+   "item": "cards-finance.md item 8.8 (the open counter question) still describes project 12 as 'אפור בסוף הרשימה', which J1 made impossible.",
+   "why": "8.8 is a 🔵 item awaiting Ishay's ruling; changing its state is a ruling, not a doc repair. Recorded as morning-table question D-37 (ד)① and named inside the card's own dated note."
+  }
+ ],
+ "not_verified": [
+  "I did not run E2E and did not run the dev baseline myself. What I DID measure: the two baseline logs differ by exactly one line (32 passed, 3.9m vs 3.6m); their five failures are byte-identical to each other and to this tree's rerun log; their stack traces point inside C:/Users/ishay/Reg-In/.claude/worktrees/wf_256b7ec8-ebb-4; and `git worktree list` + `git rev-parse origin/dev` show that worktree is 9b5ea534 = origin/dev. The run itself is the orchestrator's.",
+  "The five §6 debts diagnose only one of the five (prices: the copy is generated by paramsRegistry.js:292-299). For the other four I state the failing assertion and stop — no cause, no owner-fix.",
+  "I opened no PNG this round. Every claim about what a screen shows comes from an RPC body, a payload declaration or another agent's measurement, and is named as such in the text.",
+  "Whether the J2 migration was applied, and whether its live function bodies are md5-equal to the file: not measured, and deliberately not claimed in D-37 (ב).",
+  "The '19 כותרות-דף' half of spec.md §1.4's declared line is still not machine-checked (check-declared-counts counts only the labels column). My guide edit removed the second copy of the number; it did not add a check for that half."
+ ],
+ "assumed": [
+  {
+   "what": "The debt for prices.spec.js:218 belongs to מ9, not to מ1, although the spec file is module 1's 'מחירים' suite.",
+   "tag": "הכרעה שלי, מדווחת — diverges from the brief's 'מ1/params'",
+   "source_checked": "the failing alert text is produced by src/lib/paramsRegistry.js:292-299 (יחס_אורחים_לדיילת, min 1, sanity cap 150) and rendered by src/modules/09_settings/components/ParamRow.jsx. Both addresses are written into the §6 line so a reader can disagree with one command."
+  },
+  {
+   "what": "The customer-page debt belongs to מ2.",
+   "tag": "הכרעה שלי, מדווחת",
+   "source_checked": "e2e/customer-page.spec.js:3 — 'נבנה בצעד 3.5 של מודול 3 על משטח מודול 2'. The screen is module 2's; the test was built inside module 3's step. Both are named in the line."
+  },
+  {
+   "what": "Writing five 🚧 lines against CLOSED modules is still worth doing.",
+   "tag": "הכרעה שלי, הפיכה",
+   "source_checked": "each micro-guide's 'Active step' row says closed/merged for 2, 6, 7, 8, 9 (read this turn), and §6's own header warns the grep trigger leans on 'module N will open'. Each line therefore says in its own text that the real trigger is the next E2E run and מ11's closing audit."
+  },
+  {
+   "what": "cards-finance ⑩ג should carry the SHIPPED hint string rather than the wording I wrote first.",
+   "tag": "הכרעה שלי, הפיכה",
+   "source_checked": "C3 makes §⑩ the source the code copies from, so the two must be identical. I aligned the card to the code and byte-compared (463 chars, contained verbatim). The note records that the only difference was digits, and corrects the reason that was given for dropping them (8 of 80 guided strings DO carry digits, through ltr() at onboardingCopy.m11.hostesses.js:58)."
+  }
+ ],
+ "blind_spot": "The five §6 lines and D-37 (ה) declare the five E2E failures 'pre-existing' on the strength of a baseline I did not run, and the one thing that would make that verdict wrong is invisible in the logs I did read: both baseline runs were served by a single long-lived preview (the orchestrator's own reported blind spot). A stale or wrongly-built dist/ served to both runs would reproduce the same five failures byte-identically and would look exactly like what I measured — same locators, same expected/received, same order. Checkable true-or-false in one command pair that nobody has run: inside .claude/worktrees/wf_256b7ec8-ebb-4, `npm run build`, then `npx playwright test --config=playwright.e2e.config.js e2e/prices.spec.js` against a preview started AFTER that build. prices.spec.js is the decisive one: its failure claims the screen prints 'ערך חוקי: מספר שלם בין 1 ל-150', which src/lib/paramsRegistry.js:292-299 generates. If the fresh preview prints the same string, the baseline is real; if it prints 'מספר שלם חיובי', the preview was serving an old bundle and that debt line — and the confidence of the other four — is wrong."
+}

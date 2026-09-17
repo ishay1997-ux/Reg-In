@@ -1,0 +1,124 @@
+{
+  "status": "done",
+  "fixes": [
+    {
+      "item": "[1] remove the `_id` key heuristic; `format:'id'` is the only source",
+      "files": [
+        "src/modules/11_reports/components/ReportTable.jsx",
+        "src/modules/11_reports/components/ReportTable.test.jsx"
+      ],
+      "what_changed": "ID_KEY_SUFFIX (/_id$/) and formatOf() deleted; Cell formats with column.format alone. NUMERIC_FORMATS keeps 'id' (alignment only) and FORMATTERS.id in reportsFormat.js is untouched. The test fixture moved to format:'id' (the J2 contract) and gained a LOCK case: a key ending in _id declared 'int' must keep the thousands separator — if the suffix rule ever comes back, that case fails.",
+      "test_added": "ReportTable.test.jsx, 4 cases: id declared / id on a non-_id key / _id declared int stays int / alignment unchanged",
+      "live_check": "not re-shot (see not_verified) — but COVERAGE was measured, not assumed: every function in the repo that declares a `_id` table column (m4 quote_id · m7 · m8 · m9 ×2 · m12 project_id) is redefined in J2's file `supabase/migrations/20260917021500_module11_j2_rpc_round5.sql` with `'format','id'` (6 declarations, one per site). Nothing the deleted suffix rule used to catch falls through. Command: grep the `'key','<x>_id'` declarations per migration and take the newest per function."
+    },
+    {
+      "item": "[2] reports.profitability.sortWhy contradicted the table after J1",
+      "files": ["src/lib/onboardingCopy.m11.finance.js"],
+      "what_changed": "The tail that said a below-floor row 'sinks to the end of the table' now says what the screen does: such a project is not ranked at all, the population line counts how many there are, and the footnote under the table names the amount and the floor values. Claim aligned with what the doc agent wrote into the card this round (cards-finance.md:297, row ג: 'ושורת-האוכלוסייה סופרת כמה כאלה יש') after reading the RPC's own strings — report_m08_profitability population.label ('N מהם מתחת לרצפת-המהותיות — בתוך האוכלוסייה, מחוץ לדירוג') and meta.notes[0]. The hint stays digit-free — see assumed[], the divergence from the card is deliberate and measured.",
+      "test_added": "none — no test asserts this string; it resolves through the Hint id, which the finance suite already covers and which stayed green",
+      "live_check": "not read out of a PNG (see not_verified). The definition was read this turn from the J1 migration body, not reconstructed."
+    },
+    {
+      "item": "[3] reports.satisfaction.reasonsBasis restated the base note (R27)",
+      "files": ["src/lib/onboardingCopy.m11.customers.js"],
+      "what_changed": "J1 added two base notes to report_m20_satisfaction — the multi-reason caveat ('הטופס מאפשר יותר מסיבה אחת; בפועל, בכל המשובים בתקופה נבחרה בדיוק אחת') and 'הספירות מוצגות כ\"כמה מתוך כמה\" ולא באחוזים' — which the hint repeated almost verbatim, including the caveat. The hint now carries only what the base does not: WHY the form allows more than one reason (an event that went wrong usually went wrong in more than one place), that a reason count answers 'which topic recurs' and not 'how many customers complained', that reasons must not be added to each other, and where to go next (the table below, one row per feedback).",
+      "test_added": "none — no test asserts the string; CustomersTab.test.jsx asserts the hint id renders and stayed green",
+      "live_check": "not read out of a PNG (see not_verified). Both base notes were read this turn out of the J1 migration body."
+    },
+    {
+      "item": "[4] the מ22 run bar said 'הריצה' (one run) while two approved runs are shown",
+      "files": [
+        "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx",
+        "src/modules/11_reports/tabs/CustomersTab.test.jsx"
+      ],
+      "what_changed": "New approvedState(run): count = run.run_count ?? runs.length ?? 1. count>1 gives 'מציג ⁦N⁩ ריצות-ניתוח מאושרות, האחרונה מ-⁦DD/MM/YYYY⁩ · אושרה ע\"י <name>'; count<=1 keeps the card's locked singular sentence (⑧22.4) word for word. The count is isolated with isolateLtr. Number agreement per כ12 / §2.7 of m11-copy-rules — '1 ריצות' is the exact failure that rule was born from, which is why the branch is on the count and not on a cosmetic plural. The test fixture's approved_by moved from the login address to the NAME J1 now returns (users.full_name), with approved_by_email beside it.",
+      "test_added": "CustomersTab.test.jsx: 3 new cases — two runs / exactly one run keeps the locked sentence and never contains 'ריצות' / a payload with no run_count falls back to runs.length=3. The existing settled-run case now asserts the name AND that the e-mail address is absent from the bar.",
+      "live_check": "TWO measurements. (a) payload, CEO over the running preview: meta.run.run_count=2, approved_by='ישי אטיאס', approved_at=2026-09-16, runs[] length 2 — scratchpad/results/probe-m22-run.json. (b) ON SCREEN after rebuilding: scratchpad/results-fix2/evidence/crop-notes-runbar.png reads 'מציג 2 ריצות-ניתוח מאושרות, האחרונה מ-16/09/2026 · אושרה ע\"י ישי אטיאס', in the white (plain) bar, with no e-mail address."
+    },
+    {
+      "item": "[5] state-2 envelope named the period when a CUSTOMER filter emptied the table",
+      "files": [
+        "src/modules/11_reports/components/reportsCopy.js",
+        "src/modules/11_reports/components/Envelope.jsx",
+        "src/modules/11_reports/components/ReportSurface.jsx",
+        "src/modules/11_reports/ReportsPage.test.jsx"
+      ],
+      "what_changed": "New locked string EMPTY_AFTER_CUSTOMER_FILTER = 'אין נתונים ללקוח שנבחר'. Copy rule כ17 rules this exact class ('נוסח-הריק חייב לתאר את המסנן שקיים באמת בדף הזה') with the same substitution, 'בתקופה שנבחרה' ⇒ 'ללקוח שנבחר'. Envelope's empty branch now forwards `title` with `?? EMPTY_AFTER_FILTER`, so any caller that does not name a sentence keeps ruling 15(ו) unchanged. ReportSurface.EmptyPage picks: a selected customer gives the customer sentence, otherwise the period sentence. 'נקי מסננים' stays on both. Customer wins when both filters are on — the period is ALWAYS filtered (the default is not 'all'), so 'both active' is the normal case and not an edge, and the filter the reader just moved is the customer. ⚠️ Envelope.jsx is OUTSIDE my named file set — see assumed[] for why I edited it anyway and how to check the collision risk.",
+      "test_added": "ReportsPage.test.jsx: the customer-empty case now asserts the customer sentence AND the absence of the period one; a new period-only case locks 15(ו) with its clear button; the מ21 large-population case re-aimed to the customer sentence",
+      "live_check": "scratchpad/results-fix2/evidence/CEO-m2-drifting-empty-filter.png — מ21 with customer 411 (אופק ביטוח ופיננסים) now reads 'אין נתונים ללקוח שנבחר' with 'נקי מסננים' under it, and the disabled 'אין שורות לייצא' caption still above. Runner extras.empty: state=empty, rows=0, export_disabled=true."
+    },
+    {
+      "item": "[6] loading/error with ?customer= on a surface that ignores the customer",
+      "files": [
+        "src/modules/11_reports/ReportsPage.jsx",
+        "src/modules/11_reports/ReportsPage.test.jsx"
+      ],
+      "what_changed": "WHAT I CHOSE, and it is deliberately not the brief's literal form: while no payload has loaded for the active surface (scope == null) the header drops the SELECTED CUSTOMER'S NAME only — it does not drop the customer clause. 'כל הלקוחות' is a statement about the POPULATION, not about the filter, and it is true on all sixteen surfaces (a surface that ignores the filter does show all customers); a specific NAME is a statement about the filter, and that is the only claim that cannot be verified before the payload returns. Dropping the whole clause would also have undone round 1's item [27], whose measured error line is '12 חודשים · כל הלקוחות'. The selector stays ENABLED and carries no disabled reason (nothing is known yet — disabling a control out of doubt removes an ability for no reason). An error AFTER a successful load is untouched: surfaceScope survives a failed reload on the same rpc, so round 1's behaviour holds there exactly.",
+      "test_added": "ReportsPage.test.jsx: 2 new cases — an RPC that never resolves with ?customer=414 (no name in the header, '12 חודשים' and 'כל הלקוחות' both present, selector enabled, no disabled reason) and the other half, that the name returns as soon as a payload arrives. The first case was proven to BITE: with the new condition forced to false the case fails (vt-bite.log, exit 1), then restored and re-verified green.",
+      "live_check": "scratchpad/results-fix2/probe-item6.json — m14 hostess-overview with ?customer=411 and its RPC aborted: window_label '12 חודשים · כל הלקוחות' (the name 'אופק ביטוח ופיננסים' is NOT echoed), selector enabled, no disabled reason. Same page after the abort is lifted: window_label '⁦17/09/2025–17/09/2026⁩', selector disabled with 'הדף הזה אינו מושפע ממסנן הלקוח' — round 1's behaviour, intact. PNGs: evidence/item6-hostess-overview-aborted-customer.png and -loaded-customer.png."
+    }
+  ],
+  "assumed": [
+    {
+      "what": "I edited `src/modules/11_reports/components/Envelope.jsx`, which my brief does NOT name, because item 5 is impossible without it: Envelope's `empty` branch hard-coded EMPTY_AFTER_FILTER and ignored `title`, so reportsCopy.js + ReportSurface.jsx alone could only have produced an unused export. The change is 3 lines and additive (`title` with `?? EMPTY_AFTER_FILTER`). Revert that hunk and item 5 reverts cleanly with it.",
+      "tag": "הנחתי",
+      "source_checked": "the collision the rule protects against is provably absent here: my brief enumerates the other two agents' full sets (rpc-J2 = supabase/migrations + docs/schema.sql + docs/db_roadmap.md + spec.md §1.4 · doc-2 = the step guide, cards-finance.md, micro-guide §9, PROJECT_MASTER §6). Neither contains any src/ file. `git status` at the end of my run confirms it: the only src/ files modified in the tree are the eleven I touched."
+    },
+    {
+      "what": "The wording 'אין נתונים ללקוח שנבחר'. Product wording is Ishay's ruling.",
+      "tag": "הנחתי",
+      "source_checked": "m11-copy-rules §כ17 locks the phrase 'ללקוח שנבחר' for exactly this substitution, and the doc agent records it as D-36. If Ishay rules otherwise it is one string in reportsCopy.js and two test lines."
+    },
+    {
+      "what": "When BOTH a customer and a period are filtered and the table empties, the CUSTOMER sentence wins.",
+      "tag": "הכרעה שלי, הפיכה",
+      "source_checked": "the period is filtered on every default load (period !== 'all' is the default), so 'both active' is the ordinary state and not an edge case — a period-first rule would mean the customer sentence never appeared. Consequence, stated: on a surface where the period genuinely emptied the table while a customer happened to be selected, the sentence names the customer."
+    },
+    {
+      "what": "Item 6: the customer NAME is suppressed before a payload, not the whole customer clause — a deliberate divergence from the brief's literal 'NO customer clause'.",
+      "tag": "הכרעה שלי, מדווחת",
+      "source_checked": "formatWindowLabel (src/lib/reportsFormat.js:255-274) builds the clause as `hideCustomer ? null : customerName || 'כל הלקוחות'`; hiding the clause outright is the same switch, and it would have turned round 1's measured error line '12 חודשים · כל הלקוחות' into '12 חודשים'. Both PNGs from probe-item6 show the chosen behaviour."
+    },
+    {
+      "what": "The profitability hint stays digit-free, so it does NOT quote the floor values (4 hours / 1,000 ₪) the card names.",
+      "tag": "הכרעה שלי — divergence from the card, deliberate",
+      "source_checked": "measured this turn: 0 of the `guided` strings in all three onboardingCopy.m11.*.js files contain a digit, and the aging hint's own comment states the reason ('אין בו ולו ספרה אחת ⇒ אין מה לבודד', §5ב). The Hint renderer has no LRI/PDI mechanism, while the server footnote wraps those same values (`v_lri || '1,000' || ' ₪' || v_pdi`). ⇒ the hint points at the population line and the footnote; the footnote names the values. The CLAIM matches the card; the numbers do not travel."
+    }
+  ],
+  "gates": {
+    "vitest": "npx vitest run src/modules/11_reports src/lib ⇒ 2041 passed | 1 failed (54 files), exit 1. The single failure is src/modules/11_reports/tabs/ExecutiveTab.test.jsx (מ4, 'שורה פותחת את הצעת-המחיר…'), a file OUTSIDE my set — it is item [1]'s collateral and the exact one-line patch is in not_done. Everything I own is green. Log: scratchpad/vt-final2.log",
+    "eslint": "exit 0 on all 11 touched files (scratchpad/eslint.log)",
+    "prettier": "--check exit 0 on all 11 touched files (scratchpad/prettier.log), re-run on onboardingCopy.m11.finance.js after the last edit",
+    "dup": "npm run dup exit 0 (scratchpad/dup2.log)",
+    "bidi": "npm run check:bidi exit 0 (scratchpad/bidi2.log)",
+    "build": "npm run build exit 0 (scratchpad/build2.log). The preview on 5189 serves dist/; it was neither started nor stopped by me.",
+    "cr": "CR=0 on every one of the 11 files (perl -ne '$n+=tr/\\r//')",
+    "live": "evidence-run.mjs --tab customers --identities CEO --modes 2 --surfaces notes,drifting --extras empty ⇒ failures=0, 3 PNGs in scratchpad/results-fix2/evidence; plus two read-only probes (probe-m22-run.mjs, probe-item6.mjs). No DB write in any of them."
+  },
+  "not_done": [
+    {
+      "item": "[1] collateral — src/modules/11_reports/tabs/ExecutiveTab.test.jsx fails, and it is outside my set",
+      "why": "Round 1's ID heuristic made the m4 fixture render ⁦1907⁩, and the orchestrator adjusted line 776 to `isolateLtr('1907')`. Removing the heuristic sends that fixture back to ⁦1,907⁩ because the fixture at line 463 still declares `format: 'int'`. THE ROOT PATCH IS AT LINE 463, NOT 776: `{ key: 'quote_id', label: 'הצעה', format: 'int', align: 'start', sorted: null }` ⇒ `format: 'id'`, leaving line 776 exactly as it is. That mirrors the live contract — J2's file declares m4's quote_id as `'format','id'` at 20260917021500_module11_j2_rpc_round5.sql:705, read this turn. I did not apply or run it (out of set); what I did run is the same formatter path in my own ReportTable.test.jsx, where `format:'id'` renders ⁦1907⁩ and `format:'int'` renders ⁦1,907⁩."
+    },
+    {
+      "item": "cards-customers.md:357 still quotes the OLD satisfaction hint, word for word",
+      "why": "C3 makes the card the source the hint is copied from, so the card and the code now disagree on reports.satisfaction.reasonsBasis. docs/** belongs to the doc agent this round and cards-customers.md is in nobody's named set — checked this turn: the line still reads 'ספירות הסיבות נקראות מתוך שדה שמאפשר ללקוח לסמן יותר מסיבה אחת…'. One row edit, plus the same ✏️ correction block the doc agent wrote for cards-finance.md:299."
+    },
+    {
+      "item": "ChartCard's empty chart still says 'אין נתונים בתקופה שנבחרה' under a customer filter",
+      "why": "src/modules/11_reports/components/ChartCard.jsx:930 renders EMPTY_AFTER_FILTER directly; it did not get item 5's branch, and ChartCard.jsx is outside my set. Same fix shape: accept the sentence from the surface. See blind_spot for the scenario that puts both sentences on one screen."
+    },
+    {
+      "item": "[C8] remainder and [C7] from the RPC round-1 report",
+      "why": "'דלי' inside m9's chart-note paragraph and the four year-ago comparison wordings are SQL text, not shell text — they are the RPC agent's, and both wait on an Ishay ruling."
+    }
+  ],
+  "not_verified": [
+    "[2] and [3] as RENDERED text: both hints are mode-2 strings and I read them out of the source and out of the RPC bodies, not out of a PNG. The customers run confirms hints render on that tab (hints=2 on מ22, 3 on מ21) but I did not crop the hint lines themselves.",
+    "[1] on m4's own screen: my dispatch was customers-only, and until J2 is applied the live m4 payload still declares quote_id as 'int', so a shot now would show ⁦1,907⁩ by design. The orchestrator's post-J2 re-shoot is the real check; the coverage argument above is static (the migration file), not a live payload read.",
+    "npm run gate as a whole (knip, gitleaks, audit, check:context, check:docs-structure): not run. The doc and rpc agents are editing docs/ and supabase/migrations/ in parallel — git status shows 5 of their files already modified — so a full gate now would measure their tree, not mine.",
+    "e2e: not run this round. Item [5] changes the sentence that e2e/reports.spec.js's 'משטח שהסינון רוקן' test walks past — I checked that the test asserts the disabled export caption and the clear button and not the sentence text, but I did not execute it.",
+    "Item [6] on a LOADED-then-failed reload with ?customer= (the branch I claim is unchanged): I verified the never-loaded branch live and the loaded branch live, but not the middle one — a successful load followed by an aborted reload."
+  ],
+  "blind_spot": "src/modules/11_reports/components/ChartCard.jsx:930 renders EMPTY_AFTER_FILTER for a chart that came back with no data, and item 5 did not reach it — so one screen can now print two different sentences about the same customer filter. Concrete, checkable scenario: a surface whose TABLE still has rows under a chosen customer while the CHART's series empties — the table area keeps its rows, the chart frame says 'אין נתונים בתקופה שנבחרה', and the moment the table also empties the envelope says 'אין נתונים ללקוח שנבחר'. One runner call settles it: `evidence-run.mjs --tab customers --modes 2 --surfaces satisfaction --extras empty` while stepping the customer selector through the customers that leave rows>0 and charts=0 (the runner already reports `rows` and `charts` per surface, so the combination is visible in evidence-run-customers.json without opening a PNG). The fix, if wanted, is the same three lines as Envelope's: ChartCard takes the sentence from the surface instead of importing the constant."
+}
