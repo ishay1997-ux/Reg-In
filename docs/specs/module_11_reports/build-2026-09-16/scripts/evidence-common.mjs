@@ -12,7 +12,10 @@ const require = createRequire(path.resolve(process.cwd(), 'package.json'))
 const { chromium, expect } = require('@playwright/test')
 
 export const BASE_URL = process.env.EVIDENCE_BASE_URL || 'http://localhost:5189'
-export const VIEWPORT = { width: 1280, height: 800 }
+// ✏️ 17/09/2026 — הרוחב נעשה ניתן-לדריסה דרך EVIDENCE_WIDTH, בלי לשנות התנהגות קיימת.
+// 🔴 למה: התוכנית §8 של פזה-הטיפוגרפיה מסמנת את **1024px** כסיכון שהוא היחיד שבאמת יכול
+// לשבור פריסה אחרי הגדלת הכתב — והכלי הזה ידע לצלם 1280 בלבד, כלומר בדיוק לא שם.
+export const VIEWPORT = { width: Number(process.env.EVIDENCE_WIDTH || 1280), height: 800 }
 export const IDENTITIES = ['CEO', 'FINANCE', 'RECRUIT', 'STAFF']
 
 // Slugs copied from src/modules/11_reports/reportsCatalog.js (display order per tab).
