@@ -48,7 +48,11 @@
 
 ### 17/09/2026 (20:0X-20:5X) — m11 export dialog, slice 5: the E2E contract flipped to T4b, measured red-before/green-after
 
-**Branch `ishay/export-build` (worktree `C:\Users\ishay\Reg-In-export-wt`), not pushed.** Slices 1–4 were built by the previous session; this one did the acceptance test in the handoff §3, ran the full gate for the first time, and flipped `e2e/reports.spec.js`.
+**Branch `ishay/export-build` (worktree `C:\Users\ishay\Reg-In-export-wt`), pushed on Ishay's explicit word.** Slices 1–4 were built by the previous session; this one did the acceptance test in the handoff §3, ran the full gate for the first time, flipped `e2e/reports.spec.js`, and fixed three layout bugs found by the eyes pass.
+
+📄 **The two files a new session reads first** — pointers created 18/09 00:0X, because `grep -rln "HANDOFF-export-dialog"` across the whole repo had returned **only the file itself**: a handoff nobody points to is a file, not a handoff.
+- `docs/specs/module_11_reports/HANDOFF-export-dialog-2026-09-17.md` — where we stand, the acceptance test, the traps, the next step. Signed 18/09 00:00.
+- `C:\Users\ishay\.claude\plans\breezy-wibbling-sloth.md` — **outside the repo, so not in git**: why it was built this way, what was rejected and why, the full six-screen scope.
 
 **`npm run gate` had never been run whole in this work** — only its parts. Run twice here, **`GATE_EXIT=0`** both times, all 12 sub-stages verified present in the log one by one (not inferred): `lint` 0 errors / 1 pre-existing warning · `test:run` **3,100 in 120 files (193s)** · `check:docs-structure` 166 files 0 findings · `check:iron-rules` 17/17 · `check:declared-counts` 6/6. **~6 min wall clock** — recorded as a §1 candidate in `docs/guides/01_estimation_log.md` (`a84fbf4a`), because the existing `src/lib/**` row still prices the suite at "3.5 min for 2,399 tests" and it grew 29%.
 
