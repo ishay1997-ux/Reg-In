@@ -60,5 +60,10 @@ export function missingReportParamsMessage(paramsMap, names = ALL_REPORT_PARAM_N
   // התאמת מין ומספר — תווית שאומרת "השורות" על שורה אחת נקראת כמו טקסט מתורגם.
   const label = missing.length === 1 ? 'חסר פרמטר מערכת' : 'חסרים פרמטרי מערכת'
   const action = missing.length === 1 ? 'יש להוסיף את השורה' : 'יש להוסיף את השורות'
-  return `${label}: ${missing.join(', ')} — ${effects.join(', ')}. ${action} בהגדרות המערכת.`
+  // 🔴 **סעיף-ההשלכה נאמר רק כשיש לו תוכן** (‏T10, 17/09/2026): מאז שהמסך מזין לכאן את
+  // `meta.missing_params` של ה-RPC, השמות אינם עוד ארבעת אלה בלבד — ‏`יחס_אורחים_לדיילת`
+  // ו-`תנאי_תשלום_ימים` מגיעים משם בלי שורה ב-`MISSING_EFFECTS`. בלי הענף הזה המשפט היה
+  // יוצא *"…: X — . יש להוסיף…"*: מקף תלוי שאין אחריו דבר, על באנר-אזהרה.
+  const effectPart = effects.length > 0 ? ` — ${effects.join(', ')}` : ''
+  return `${label}: ${missing.join(', ')}${effectPart}. ${action} בהגדרות המערכת.`
 }

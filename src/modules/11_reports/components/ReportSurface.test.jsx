@@ -521,6 +521,64 @@ describe('ReportSurface — 📐10: ריקות נמדדת באוכלוסייה',
     await screen.findByTestId('report-reliability-blank')
     expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
   })
+
+  // 🔴 **‏T3 (אודיט-הסגירה 17/09/2026, ממצא F-13) — פרמטר חסר אינו "אין נתונים".**
+  // החזרת-הריק המוקדמת קדמה ל-`MissingParamsBanner`, ולכן מטען עם אפס שורות **וגם**
+  // `missing_params` הציג *"אין נתונים"* ולעולם לא את משפט §7.83 — בדיוק ברירת-המחדל
+  // השקטה שההכרעה אוסרת, ובמצב שבו הדף הכי משכנע שהוא יודע ואינו יודע.
+  it('אפס שורות עם `missing_params` ⇒ הבאנר נאמר, ולא רק "אין נתונים"', async () => {
+    callReport.mockResolvedValueOnce(
+      payload({
+        rows: [],
+        population: { label: 'אין', n: 0 },
+        meta: { missing_params: ['מקדם_אמינות_אדום'] },
+      }),
+    )
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
+      'חסר פרמטר מערכת: מקדם_אמינות_אדום',
+    )
+    // ⚠️ ומצב-הריק **נשאר** — הבאנר מתווסף לו ואינו מחליף אותו.
+    expect(screen.getByTestId('report-reliability-blank')).toBeInTheDocument()
+  })
+})
+
+// 🔴 **‏T10 (אודיט-הסגירה 17/09/2026, ממצא F-15) — המנגנון המתועד לא היה זה שרץ.**
+// ‏`missingReportParamsMessage` (`src/lib/reportsParams.js`) נכתבה בדיוק בשביל המשפט הזה,
+// ‏**ולא היה לה ולו צרכן-ייצור אחד** — המסך הדפיס את שם-הפרמטר החשוף. ההבדל אינו נוסחי:
+// המשתמשת צריכה לדעת **מה לא עובד עכשיו** ומה לעשות, לא רק ששורה חסרה.
+describe('ReportSurface — משפט-הפרמטר-החסר הוא זה של `reportsParams`', () => {
+  it('שם מוכר ⇒ ההשלכה והפעולה נאמרות, לא רק השם', async () => {
+    callReport.mockResolvedValueOnce(payload({ meta: { missing_params: ['מקדם_אמינות_אדום'] } }))
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
+      'חסר פרמטר מערכת: מקדם_אמינות_אדום — אין סימון אדום בדוח אמינות הדיילות. ' +
+        'יש להוסיף את השורה בהגדרות המערכת.',
+    )
+  })
+
+  // 🪤 **ה-RPCs נוקבים גם בשמות שאינם ברשימת-ההשלכות** (`יחס_אורחים_לדיילת` ·
+  // `תנאי_תשלום_ימים` · `קבוע_ריסון_m`) — ואז המשפט נאמר **בלי** סעיף-ההשלכה, ולא עם
+  // מקף תלוי שאין אחריו דבר.
+  it('שם בלי השלכה כתובה ⇒ משפט שלם בלי מקף ריק', async () => {
+    callReport.mockResolvedValueOnce(payload({ meta: { missing_params: ['יחס_אורחים_לדיילת'] } }))
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    const banner = await screen.findByTestId('report-missing-params')
+    expect(banner).toHaveTextContent(
+      'חסר פרמטר מערכת: יחס_אורחים_לדיילת. יש להוסיף את השורה בהגדרות המערכת.',
+    )
+    expect(banner.textContent).not.toContain('— .')
+  })
+
+  it('שני שמות ⇒ לשון-רבים בתווית ובפעולה', async () => {
+    callReport.mockResolvedValueOnce(
+      payload({ meta: { missing_params: ['מקדם_אמינות_אדום', 'מקדם_אמינות_ענבר'] } }),
+    )
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    const banner = await screen.findByTestId('report-missing-params')
+    expect(banner).toHaveTextContent('חסרים פרמטרי מערכת: מקדם_אמינות_אדום, מקדם_אמינות_ענבר')
+    expect(banner).toHaveTextContent('יש להוסיף את השורות בהגדרות המערכת.')
+  })
 })
 
 // ── ✏️ שלוש נקודות-ההרחבה החדשות ───────────────────────────────────────────

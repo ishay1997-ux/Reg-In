@@ -76,8 +76,13 @@ async function invokeClassify(body) {
   if (!error) return data
   try {
     return await error.context.json()
-  } catch {
+  } catch (bodyError) {
     // כשל-רשת אמיתי (אין תשובה כלל) — אין גוף לקרוא, ולכן הנוסח הכללי.
+    // 🔴 **והשגיאה עצמה נרשמת, ולא נבלעת** (אודיט-הסגירה 17/09/2026, ‏T11): זה היה
+    // מסלול-הרשת היחיד במודול שלא השאיר עקבה, ובלי השורה הזו אי-אפשר להבחין בין
+    // *"הפונקציה לא ענתה כלל"* לבין *"ענתה בגוף שאינו JSON"* — שני כשלים שונים לגמרי
+    // שנראים על המסך אותו דבר. הצורה מועתקת מ-`ReportSurface.jsx:514`.
+    console.error(`${FUNCTION_NAME} נכשלה ואין גוף-תשובה לקרוא:`, error, bodyError)
     return { error: GENERIC_ERROR }
   }
 }
@@ -88,6 +93,21 @@ const classifiedCount = (result) => (result?.ok ?? 0) + (result?.failed ?? 0)
 
 function localState(local) {
   const done = classifiedCount(local)
+  // 🔴 **`running` — התשובה של 409, והענף שהיעדרו היה ‏B-2** (אודיט-הסגירה 17/09/2026):
+  // ריצה שכבר פועלת נפלה עד כאן לענף האחרון והוכרזה *"נכשלה ולא נשמרו בה סיווגים"* עם
+  // כפתור פעיל — **טענה עובדתית שקרית בזמן שהשורות נכתבות.**
+  // 🔑 **הרינדור מועתק מ-`serverRunState` ואינו נוסח שני:** אותו *"מסווג…"*, אותו
+  // ‏`ALREADY_RUNNING` בשורת-המשנה, ואותו כפתור **מנוטרל** (⑤ · מצב 2 של מ25).
+  // 🚫 **ומה שלא הועתק, במכוון: המונה.** תשובת ה-409 נושאת `error` · `run_id` · `status`
+  // בלבד (‏`index.ts:825–828`) — אין בה `ok_count`/`sent_count`, ו-`⁦0/0⁩` היה מספר שקרי.
+  if (local.status === 'running') {
+    return {
+      text: 'מסווג…',
+      sub: ALREADY_RUNNING,
+      action: null,
+      disabledAction: RUN_LABEL,
+    }
+  }
   if (local.status === 'partial') {
     const progress = isolateLtr(`${done}/${done + (local.remaining ?? 0)}`)
     return {
@@ -229,8 +249,17 @@ export default function AnalysisRunBar({ payload, canEdit, onChanged }) {
       const result = await invokeClassify(body)
       // 🔴 **הענף על `body.status` ולא על `res.ok`** (§2ב C8 · README של הפונקציה):
       // ריצה שנכשלה כולה מחזירה גוף עם `status:'failed'`, ותשובת-שגיאה מחזירה `error`.
-      if (result?.status) setLocal(result)
-      else setError(result?.error ?? GENERIC_ERROR)
+      // 🪤 **ותשובת ה-409 נושאת את שניהם** — `error` **וגם** `status:'running'`
+      // (‏`index.ts:825–828`). ‏**ריצה שפועלת אינה תקלה**, ולכן היא נאמרת בפס עצמו
+      // (הנוסח של השרת, `ALREADY_RUNNING`) ולא כמשבצת-שגיאה אדומה; והענף כתוב במפורש
+      // כדי שהמקרה ייקרא בקוד ולא יישען על "יש `status` ⇒ בטח הצלחה" (‏B-2).
+      if (result?.status === 'running') {
+        setLocal({ status: 'running', run_id: result.run_id ?? null })
+      } else if (result?.status) {
+        setLocal(result)
+      } else {
+        setError(result?.error ?? GENERIC_ERROR)
+      }
     } catch (err) {
       setError(err?.message ?? GENERIC_ERROR)
     } finally {

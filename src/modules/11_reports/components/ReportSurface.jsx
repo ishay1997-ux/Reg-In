@@ -18,6 +18,7 @@ import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import FilterPill from '@/components/FilterPill'
 import { formatByType } from '@/lib/reportsFormat'
+import { missingReportParamsMessage } from '@/lib/reportsParams'
 import { DRILL_INTENT, ROW_DOOR_KINDS, callReport, normalizeCharts } from '../api'
 import ChartCard from './ChartCard'
 import DrillCrumbs from './DrillCrumbs'
@@ -82,6 +83,11 @@ function Tiles({ tiles, onOpenTarget }) {
 function MissingParamsBanner({ names }) {
   // 🔴 §7.83 — שורת-`params` חסרה **מוצהרת על המסך** ולעולם אינה מקבלת ברירת-מחדל שקטה.
   // הצורה מועתקת מ-`missingDashboardParamsMessage` (מ7), כולל ה-`role="alert"`.
+  // ✏️ **והמשפט עצמו הוא של `missingReportParamsMessage` (‏T10, 17/09/2026):** הפונקציה
+  // נכתבה בדיוק בשבילו ולא היה לה ולו צרכן-ייצור אחד, בזמן שכאן הודפס **שם-הפרמטר
+  // החשוף**. ההבדל אינו נוסחי — היא אומרת גם **מה לא עובד עכשיו** וגם **מה לעשות**.
+  // 🔑 **המפה ריקה בכוונה:** ה-RPC כבר הכריע מי חסר (`meta.missing_params`), והמסך אינו
+  // קורא `params` בעצמו — מפה ריקה + הרשימה המפורשת מייצרת בדיוק את המשפט לאותם שמות.
   if (!names?.length) return null
   return (
     <p
@@ -89,7 +95,7 @@ function MissingParamsBanner({ names }) {
       role="alert"
       data-testid="report-missing-params"
     >
-      חסר פרמטר מערכת: {names.join(' · ')}
+      {missingReportParamsMessage({}, names)}
     </p>
   )
 }
@@ -390,10 +396,24 @@ const isEmptyAfterLoad = (payload, customerId) =>
  * מסכים. ‏`e2e/reports.spec.js` (*"משטח שהסינון רוקן"*) בודק בדיוק את הצירוף: כפתור מנוטרל
  * **ועליו** הנוסח הנעול.
  */
-function EmptyPage({ surface, isFiltered, clearFilters, customerId, exportSlot, exportBar }) {
+function EmptyPage({
+  surface,
+  isFiltered,
+  clearFilters,
+  customerId,
+  exportSlot,
+  exportBar,
+  missingParams,
+}) {
   return (
     <>
       {exportSlot ? createPortal(exportBar, exportSlot) : null}
+      {/* 🔴 **הבאנר קודם למצב-הריק, ואינו נבלע בו** (‏T3 · ממצא F-13, 17/09/2026):
+          החזרת-הריק המוקדמת דילגה על `MissingParamsBanner` לגמרי, ולכן מטען עם אפס
+          שורות **וגם** `missing_params` אמר *"אין נתונים"* — כלומר **טענה על הדאטה**
+          במקום ההודאה שחסרה שורת-מערכת. זו בדיוק ברירת-המחדל השקטה ש-§7.83 אוסר,
+          והמצב הזה הוא המסוכן שבהם: המסך נראה תקין לחלוטין. */}
+      <MissingParamsBanner names={missingParams} />
       <Envelope
         state={isFiltered ? 'empty' : 'blank'}
         testId={`report-${surface.slug}`}
@@ -612,6 +632,7 @@ export default function ReportSurface({
         customerId={customerId}
         exportSlot={shell?.exportSlot}
         exportBar={exportBar}
+        missingParams={payload.meta?.missing_params}
       />
     )
   }

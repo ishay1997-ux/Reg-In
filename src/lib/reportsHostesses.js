@@ -13,18 +13,10 @@
 // `./smartMatch` (הכרעה 38: אותו ציון בדיוק בשני המסכים; כלל-ברזל 14). שכפול היה
 // מייצר שני מספרים שנקראים "ציון-אמינות" ונפרדים ביום שהנוסחה משתנה.
 
+import { finiteNumber } from './reportsFormat'
 import { responsivenessScore } from './smartMatch'
 
 // ── עזר פנימי ────────────────────────────────────────────────────────────────
-
-// why: `Number(null)`/`Number('')`/`Number('  ')` הם כולם 0 — ולכן הפסילה קודמת להמרה.
-// ערך שאינו מספר סופי הוא **חוסר**, ואסור שייקרא כאפס.
-function finiteNumber(value) {
-  if (value === null || value === undefined) return null
-  if (typeof value === 'string' && value.trim() === '') return null
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
-}
 
 // why: כל מדדי-הריכוזיות כאן עובדים על אותה סדרה — ספירת-המשמרות פר-דיילת —
 // ולכן הניקוי נעשה פעם אחת ובאותה צורה: ערכים סופיים ולא-שליליים, ממוינים בעלייה.

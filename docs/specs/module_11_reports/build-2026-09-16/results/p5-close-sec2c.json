@@ -1,0 +1,288 @@
+{
+  "scan": "§2c General Security Scan — REG-IN module 11",
+  "head": "fc3cb2317118ea8519b6a951e24139e176b28280",
+  "branch": "ishay/module-11-build",
+  "scanned_file_count": 103,
+  "scope_note": "git diff --name-only origin/dev...HEAD -- src/ e2e/ supabase/functions/ = 83 paths (one of them, src/components/UnderConstruction.jsx, is DELETED by this branch, so 82 exist on disk) + 20 supabase/migrations/ = 103 paths in scope.",
+  "categories": {
+    "injection": {
+      "status": "clean",
+      "findings": 0,
+      "evidence": "אומת-על-ידי. Client: the only DB entry points in the changed non-test client files are 7 calls (grep -nE 'supabase\\.(from|rpc)\\(' over the changed set) — all Supabase query-builder / named-RPC-arg form, zero string-concatenated SQL and zero raw PostgREST filter strings. callReport (src/modules/11_reports/api.js:153) passes p_from/p_to/p_customer_id/p_drill as named args; rpcName comes from reportsCatalog, not a template. Migrations: the ONLY dynamic SQL in all 20 files is supabase/migrations/20260916045200_module11_h0_harden_backup_tables.sql:28-30, which uses format() with %I/%L over a hardcoded 6-element literal array — no user input reaches it. All 17 definer functions carry set search_path to '' and every from/join target was checked: the 3 apparent bare relations ('from customers' x2, 'join users' x1) are all inside comment lines."
+    },
+    "xss": {
+      "status": "clean",
+      "findings": 0,
+      "evidence": "אומת-על-ידי. Uncapped grep for dangerouslySetInnerHTML|innerHTML|outerHTML|eval(|new Function|document.write|insertAdjacentHTML|createObjectURL|srcdoc|javascript: over the entire in-scope set returned ZERO hits. All report text (including customer free-text in m22) renders as React children."
+    },
+    "secrets": {
+      "status": "clean",
+      "findings": 0,
+      "evidence": "אומת-על-ידי. Uncapped grep for service_role|sk-|AIza|eyJhbGciOi|api_key=|password=|secret=|bearer over the in-scope set. Every hit is an env-var read or a doc placeholder: classify-feedback/index.ts:729 (GEMINI_API_KEY), :736 (SUPABASE_ANON_KEY), :785-786 (SUPABASE_SERVICE_ROLE_KEY) are all Deno.env.get; README lines are <JWT>/<user JWT> placeholders. e2e/settings.spec.js:316 Bearer ${token} reads the LIVE token out of sessionStorage at runtime (:317-318) — no literal. No key material committed."
+    },
+    "client_only_authz": {
+      "status": "findings",
+      "findings": 1,
+      "evidence": "אומת-על-ידי. All 17 RPCs gate server-side (see rpc_gate_table): 17/17 have assert_module_permission as the FIRST executable statement after begin, security definer, set search_path to '', and an exact-signature revoke-from-public,anon,authenticated + grant-to-authenticated. Tab-to-module mapping matches the assignment exactly: כספים x8 (m02/m03/m04/m06/m07/m08/m09/m12) · דיילות x4 (m14/m15/m16/m17) · לקוחות x4 (m19/m20/m21/m22) · דו\"חות edit x1 (approve_feedback_ai_run). Signature-change trap checked: m07 and m09 gained a 5th arg (p_asof date) in the e2 round — the 4-arg originals are explicitly dropped (e2:63, e2:777) and the new 5-arg signatures re-revoked+granted (e2:480-481, e2:1272-1273), so no orphaned function was left at Postgres's default EXECUTE-TO-PUBLIC. The one finding is SEC2C-01 (money masking)."
+    },
+    "unsafe_input": {
+      "status": "findings",
+      "findings": 1,
+      "evidence": "אומת-על-ידי. No file uploads in scope (uncapped grep FormData|type=\"file\"|.upload(|multipart|readAsDataURL: zero hits). No mailto construction, no redirect built from user input — DOOR_PATHS (ReportsPage.jsx:101-106) builds only internal react-router paths with a leading slash, so no open redirect. Filename: buildExportFileName (src/lib/reportsExport.js) strips control chars and [<>:\"/\\|?*], so no path/traversal injection. Excel formula injection: MEASURED NOT EXPLOITABLE — see SEC2C-04 for the mechanism and the fragility note."
+    },
+    "error_leakage": {
+      "status": "findings",
+      "findings": 2,
+      "evidence": "אומת-על-ידי. The shared wrapper toError (src/lib/apiError.js:10-15) sets the user-facing Error message to a curated Hebrew fallback and buries the raw Supabase error in .cause, so callReport (api.js:159) leaks nothing. Two sites deviate: SEC2C-02 and SEC2C-03. console.* calls (ParamsTab.jsx:114, ReportsPage.jsx:241, ReportSurface.jsx:514, 04_hostesses/api.js:680) go to the devtools console only, not to the screen, and the edge function logs err.message without the request body (index.ts:708, :796)."
+    },
+    "dependency_risk": {
+      "status": "clean",
+      "findings": 0,
+      "evidence": "אומת-על-ידי. npm run audit exit 0: '✓ אין חולשות חמורות ללא פטור. (0 ממצאים בסך הכול, 0 מפוטרים)'. AND this module introduced no packages at all — git diff origin/dev...HEAD -- package.json is EMPTY. write-excel-file@2.3.10 (used by reportsExport.js) was already a dependency, consumed by src/lib/salaryReport.js."
+    }
+  },
+  "findings": [
+    {
+      "id": "SEC2C-01",
+      "category": "client_only_authz",
+      "severity": "debt",
+      "file": "src/modules/11_reports/tabs/customers/payload.jsx",
+      "line": 105,
+      "what": "Money on the customers tab is hidden by a CLIENT-SIDE transform over a payload that already contains it. CustomersTab.jsx:28 computes canSeeMoney = OPEN_LEVELS.has(permissions?['כספים']) and, when false, payload.jsx:105 maskMoney() overwrites money cells with MASKED_TEXT, blanks money tiles, and regexes out ₪ runs from so_what/definitions/notes — all in the browser. But report_m19_customers_overview and report_m21_drifting gate ONLY on assert_module_permission('לקוחות', ...) and never consult 'כספים', so the real revenue figures (revenue_12m per customer, money tiles, ₪ amounts inside the sentences) are transmitted to any user who can open the tab and are readable in the network tab, or by calling the RPC directly with that user's own JWT. THIS IS THE OPPOSITE OF THE PRECEDENT THE MODULE'S OWN MICRO-GUIDE NAMES: docs/micro_guides/module-11.md:136 says 'Precedent to copy: supabase/migrations/20260903182735_module7_dashboard_summary_rpc.sql' — and that RPC gates the same 'כספים' concern SERVER-SIDE (:112-116 computes v_can_finance from public.permissions, and :140 wraps the profit query in `if v_can_finance then`, so the number is never computed and never leaves the database for a user without the permission). NOT CLASSIFIED AS A BLOCKER, and the reason is measured rather than assumed: the five roles are מנכ\"ל · מנהלת כספים ולקוחות · מנהלת פרויקטים · מנהלת גיוס ושיבוץ · מנהלת לוגיסטיקה, and the four test identities the micro-guide mandates (module-11.md:90-91) contain nobody holding 'לקוחות' WITHOUT 'כספים' — the one role with לקוחות bundles כספים into its very name. So the canSeeMoney===false branch appears unreachable with today's role set and I could not demonstrate a live exploit. ESCALATION CONDITION, one click away and checkable: permissions are runtime-editable by the CEO via src/modules/01_auth/PermissionsMatrixPage.jsx:100 (.update({permission_level: next})). The moment ANY role is granted 'לקוחות' view/edit while 'כספים' is blocked, this becomes live information disclosure with no code change. Reported as the two sources side by side, not patched.",
+      "evidence_command": "sed -n '105,131p' src/modules/11_reports/tabs/customers/payload.jsx; sed -n '26,36p' src/modules/11_reports/tabs/CustomersTab.jsx; sed -n '105,147p' supabase/migrations/20260903182735_module7_dashboard_summary_rpc.sql; sed -n '90,91p;136p' docs/micro_guides/module-11.md; grep -n 'permission_level' src/modules/01_auth/PermissionsMatrixPage.jsx",
+      "provenance": "אומת-על-ידי"
+    },
+    {
+      "id": "SEC2C-02",
+      "category": "error_leakage",
+      "severity": "debt",
+      "file": "src/modules/11_reports/components/ExportBar.jsx",
+      "line": 33,
+      "what": "The guard meant to stop library error text reaching the screen is a TAUTOLOGY — always true, so it never guards anything. Line 33 reads: const known = [caption.file, err?.message].includes(err?.message). The array it searches literally contains err?.message, so .includes(err?.message) returns true for every possible value (including undefined). Line 34 then does setError(known ? err.message : 'הייצוא לא הושלם.'), meaning the generic Hebrew fallback is DEAD CODE and any raw throw from write-excel-file — e.g. 'Invalid cell value: 5. Expected a string' or 'Unknown schema type: X' — renders verbatim in the red role=alert span at line 70. This directly contradicts the why-comment two lines above it (:31-32): 'תקלת-ספרייה אמיתית נופלת לנוסח הכללי — לא מדליפים טקסט טכני למסך'. The intended predicate was almost certainly membership in the three locked strings EXPORT_NO_TABLE / EXPORT_NO_ROWS / EXPORT_NO_APPROVED_RUN (src/lib/reportsExport.js). Leaked content is low-sensitivity English library text, not credentials or DB internals — hence debt, not blocker — but the mechanism is measurably broken, which is a real defect regardless of the intent recorded beside it.",
+      "evidence_command": "sed -n '26,36p' src/modules/11_reports/components/ExportBar.jsx; node -e \"const c={file:'x'};for(const m of ['Unknown schema type: X',undefined]){const e={message:m};console.log(JSON.stringify(m),[c.file,e?.message].includes(e?.message))}\"",
+      "provenance": "אומת-על-ידי"
+    },
+    {
+      "id": "SEC2C-03",
+      "category": "error_leakage",
+      "severity": "debt",
+      "file": "src/modules/11_reports/api.js",
+      "line": 173,
+      "what": "approveFeedbackAiRun surfaces the raw server error message to the user: `if (error) throw toError(error, error.message?.trim() || fallback)`. This is SAFE FOR THE DESIGNED PATHS, which is why it is only debt: every raise exception inside approve_feedback_ai_run is a deliberate Hebrew user-facing sentence (migration a:253 'לא זוהתה משתמשת מחוברת…', :262 'ריצת-הניתוח המבוקשת אינה קיימת.', :266 'כבר אושרה להצגה.', :270 'עדיין פועלת…', :274 'נכשלה ואין בה סיווגים לאישור.'), and assert_module_permission raises 'אין לך הרשאה לבצע פעולה זו במודול %' with errcode 42501. The gap is the UNDESIGNED paths: any other Postgres error on this call (lock timeout, serialization failure, a type or signature mismatch after a future migration) surfaces its raw English text — potentially including constraint, column or function names — verbatim to the CEO. Every OTHER RPC in the module uses the safe form (callReport, :159, passes a fixed Hebrew fallback and keeps the raw error in .cause). Suggested hardening: allow-list the deliberate codes (42501 / P0001) and fall back to the Hebrew string otherwise.",
+      "evidence_command": "sed -n '165,180p' src/modules/11_reports/api.js; sed -n '245,280p' supabase/migrations/20260916043300_module11_a_feedback_ai_tables.sql; sed -n '10,15p' src/lib/apiError.js",
+      "provenance": "אומת-על-ידי"
+    },
+    {
+      "id": "SEC2C-04",
+      "category": "unsafe_input",
+      "severity": "debt",
+      "file": "src/lib/reportsExport.js",
+      "line": 0,
+      "what": "Excel formula injection: MEASURED NOT EXPLOITABLE TODAY — reported only as a fragility, with no live exploit path. The rubric's concern is real in principle because m22 exports customer-authored free text, so a customer could type a cell beginning with = + - or @. Measured from the library's own source rather than assumed: write-excel-file@2.3.10 serializes a cell as a formula only when its type is the literal string 'Formula' (node_modules/write-excel-file/modules/write/files/sheet.xml/cell.js — getOpeningTags returns '<f>' ONLY for case 'Formula', everything else returns '<v>'; getXlsxType returns 's' for String), and the package's own unit test asserts generateCell(1,0,'Test',String,…) === '<c r=\"A1\" t=\"s\"><v>0</v></c>'. A t=\"s\" shared-string cell has no formula semantics in OOXML, so a leading = stays literal text in Excel. reportsExport.js passes type: String for the text branch (cellFor default) and type: Number for numerics, and an uncapped grep for 'Formula' across the whole in-scope set returns only an unrelated i18n key (src/lib/onboardingCopy.js:100 'scope.discountFormula'). THE FRAGILITY: the protection is an incidental property of the output format and the library, not an explicit sanitizer in REG-IN, and NO TEST LOCKS IT. It would evaporate silently if the export were ever switched to CSV, or if any cell were ever given type 'Formula'. Cheap durable guard: a unit test in reportsExport.test.js asserting a row value of '=1+1' round-trips as literal text.",
+      "evidence_command": "grep -rn \"case 'Formula'\" node_modules/write-excel-file/modules/write/files/sheet.xml/cell.js; grep -n 'Formula' $(git diff --name-only origin/dev...HEAD -- src/ e2e/ supabase/functions/ | grep -v UnderConstruction)",
+      "provenance": "אומת-על-ידי"
+    }
+  ],
+  "clean_categories": [
+    "injection",
+    "xss",
+    "secrets",
+    "dependency_risk"
+  ],
+  "rpc_gate_table": [
+    {
+      "function": "approve_feedback_ai_run",
+      "assert_module_permission": "דו\"חות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260916043300_module11_a_feedback_ai_tables.sql:235"
+    },
+    {
+      "function": "report_m02_exec_overview",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:49"
+    },
+    {
+      "function": "report_m03_trends",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260916194500_module11_i2_rpc_round3.sql:72"
+    },
+    {
+      "function": "report_m04_discounts",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:413"
+    },
+    {
+      "function": "report_m06_staffing",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:741"
+    },
+    {
+      "function": "report_m07_finance_overview",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:1094"
+    },
+    {
+      "function": "report_m08_profitability",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:1537"
+    },
+    {
+      "function": "report_m09_aging",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:1838"
+    },
+    {
+      "function": "report_m12_equipment",
+      "assert_module_permission": "כספים",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:2420"
+    },
+    {
+      "function": "report_m14_hostess_overview",
+      "assert_module_permission": "דיילות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:2720"
+    },
+    {
+      "function": "report_m15_reliability",
+      "assert_module_permission": "דיילות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:3236"
+    },
+    {
+      "function": "report_m16_quality_cost",
+      "assert_module_permission": "דיילות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917005500_module11_j1_rpc_round4.sql:1929"
+    },
+    {
+      "function": "report_m17_fairness",
+      "assert_module_permission": "דיילות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:3717"
+    },
+    {
+      "function": "report_m19_customers_overview",
+      "assert_module_permission": "לקוחות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:4148"
+    },
+    {
+      "function": "report_m20_satisfaction",
+      "assert_module_permission": "לקוחות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:4701"
+    },
+    {
+      "function": "report_m21_drifting",
+      "assert_module_permission": "לקוחות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917005500_module11_j1_rpc_round4.sql:2633"
+    },
+    {
+      "function": "report_m22_notes",
+      "assert_module_permission": "לקוחות",
+      "revoke_ok": true,
+      "grant_ok": true,
+      "search_path_empty": true,
+      "security_definer": true,
+      "assert_is_first_statement": true,
+      "file": "supabase/migrations/20260917021500_module11_j2_rpc_round5.sql:5131"
+    }
+  ],
+  "rpc_gate_summary": "17/17 pass all four checks (assert_module_permission as first statement with the correct owning module · revoke from public,anon,authenticated on the exact final signature · grant to authenticated · set search_path to '' + security definer). 0 functions missing either half.",
+  "npm_audit": {
+    "exit": 0,
+    "high": 0,
+    "critical": 0,
+    "new_from_this_module": 0,
+    "note": "npm run audit (scripts/audit-gate.mjs) printed '0 ממצאים בסך הכול, 0 מפוטרים'. package.json is byte-unchanged vs origin/dev, so this module added no packages and cannot have introduced a dependency vulnerability. Pre-existing items in STATUS.md not re-litigated.",
+    "log": "<scratchpad>/npm-audit-sec2c.log"
+  },
+  "positive_note": "supabase/migrations/20260916045200_module11_h0_harden_backup_tables.sql is itself a security FIX shipped by this module: six bak_* seed-backup tables (full copies of projects/assignments/hostesses incl. ת\"ז, phone, email, address, and project_finance) had no RLS and carried default anon+authenticated SELECT/INSERT/UPDATE/DELETE, i.e. were reachable through the public anon key. The migration revokes all privileges from both roles and enables RLS with no policies (deliberate deny-all).",
+  "not_verified": [
+    "THE LIVE public.permissions ROWS — the single check that decides whether SEC2C-01 is debt or a blocker. I could not read them: the Supabase MCP server is unauthenticated in this session, and the repo seeds no permission rows (grep for 'insert into public.permissions' across all migrations: 0 hits), so the matrix exists only in the live DB. The concrete query that settles it: select r.role_name, m.module_name, p.permission_level from permissions p join roles r using(role_id) join modules m using(module_id) where m.module_name in ('לקוחות','כספים') order by r.role_name; — if ANY role shows לקוחות view/edit while כספים is blocked or absent, SEC2C-01 is a live blocker.",
+    "I did not execute any RPC or run the app. The gate table is read from the migration FILES at HEAD, not from live pg_proc/proacl. A migration applied only in part, or a later out-of-band change in the SQL editor, would not show here. The commit message claims an md5(prosrc) file-vs-live match 16/16; I did NOT re-derive that claim — it is דווח-לי.",
+    "public.assert_module_permission itself is out of my scope (defined in module-6 migrations, 20260814142439:66). I read it to confirm it fails closed on a bad module name and raises 42501, but I did not audit it.",
+    "I did not verify that the module name 'דו\"חות' exists in public.modules. If it does not, assert_module_permission fails CLOSED (the subquery is NULL), so that would be a functional risk, not a security one.",
+    "The 5 pre-existing E2E failures and STATUS.md's pre-existing audit exemptions were out of scope and not re-litigated."
+  ],
+  "blind_spot": "My strongest check was mechanical and file-based, and that is exactly where it is weakest: I proved all 17 RPCs carry the gate IN THE MIGRATION TEXT AT HEAD, which is not the same as proving the database is in that state. Concrete and checkable: run `select p.proname, p.proacl, p.prosecdef, p.proconfig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'report_m%' or p.proname='approve_feedback_ai_run');` — any row whose proacl contains 'anon=X' or is NULL (NULL proacl = the Postgres default, EXECUTE TO PUBLIC), or whose proconfig lacks search_path=, is a live hole my file-based pass cannot see. Second, narrower: I reasoned about m07/m09's 5-arg overload from the drop+revoke statements in the migration file; if the e2 migration was ever applied out of order or partially, a 4-arg report_m09_aging could still exist in the database with default PUBLIC execute, and `select proname, pronargs from pg_proc where proname in ('report_m07_finance_overview','report_m09_aging');` returning more than one row per name would prove it. Third: I scanned only the 103 changed paths as instructed, so a pre-existing RLS policy on a table these RPCs read (projects, project_finance, customers, assignments, feedback_ai_insights) was never examined — the definer functions bypass RLS by design, which means their assert_module_permission line IS the entire wall, and I verified that line's presence but not that 'כספים' is the correct owning module for every field each one returns (SEC2C-01 is one instance of exactly that question surfacing).",
+  "assumed": [
+    "הנחתי that an XLSX shared-string cell (t=\"s\") is not evaluated as a formula by Excel. This is the OOXML spec's behavior and is consistent with the library's own test, but I did not open the generated .xlsx in Excel to confirm it empirically.",
+    "הנחתי that 'first executable statement' is correctly measured by taking the first non-blank, non-comment line after the function's `begin`. Declarations in the `declare` block run before it; none of the 17 declare blocks contains a query (they are plain variable declarations), so no data is touched before the gate.",
+    "הנחתי that `create or replace function` preserves existing grants when the signature is unchanged (standard Postgres behavior), which is why a revoke/grant appearing in an earlier round still covers a later re-definition of the same signature.",
+    "הנחתי that the four test identities named in docs/micro_guides/module-11.md:90-91 reflect the real role set. This is the basis for grading SEC2C-01 as debt rather than blocker, and it is superseded by the live-permissions query listed in not_verified."
+  ]
+}

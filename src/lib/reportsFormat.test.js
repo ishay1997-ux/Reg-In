@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   NO_VALUE,
+  finiteNumber,
   formatAxisTick,
   formatByType,
   formatDelta,
@@ -15,6 +16,7 @@ import {
   formatWindowLabel,
   isolateLtr,
 } from '@/lib/reportsFormat'
+import { toFiniteNumber } from '@/lib/pricing'
 
 const LRI = '⁦'
 const PDI = '⁩'
@@ -100,6 +102,41 @@ describe('formatGini — 📐4: שתי ספרות', () => {
 
   it('חסר ⇒ מקף', () => {
     expect(formatGini(null)).toBe(NO_VALUE)
+  })
+})
+
+// 🔴 **‏T1 (אודיט-הסגירה 17/09/2026, ממצא F-05) — בית אחד לאינווריאנט אחד.**
+// ‏`finiteNumber` ישבה בשלושה עותקים (`reportsCustomers` · `reportsExecutive` ·
+// ‏`reportsHostesses`), **ואחד מהם כבר סטה טקסטואלית** (‏executive גזר את המחרוזת לפני
+// ההמרה, השניים האחרים בדקו את הערך והמירו ללא גזירה). ההתנהגות הייתה שקולה — ודווקא לכן
+// זה מסוכן: שלושתם מקודדים **כלל אחד** (*"ערך שאינו מספר סופי הוא חוסר, לעולם לא אפס"*)
+// והיו חייבים להשתנות יחד. הבדיקות כאן נועלות את מחלקות-הקלט שבהן הם היו יכולים להיפרד.
+describe('finiteNumber — "לא נמדד" אינו אפס (T1: עותק אחד לשלושה צרכנים)', () => {
+  it('ריק וחוסר ⇒ null, ולא 0', () => {
+    expect(finiteNumber(null)).toBeNull()
+    expect(finiteNumber(undefined)).toBeNull()
+    expect(finiteNumber('')).toBeNull()
+  })
+
+  // 🪤 **מחלקת-הקלט שבה שלושת העותקים נכתבו אחרת** — ובדיוק זו שמפרידה אותם מ-
+  // ‏`toFiniteNumber` של `pricing.js`, שהיה הבית המתבקש ו**אינו מתאים**: הוא פוסל `''`
+  // בלבד, ולכן `Number('  ')` שלו הוא **0**. שורת-`params` שערכה רווחים היא שורה חסרה,
+  // לא סף אפס — וזה ההבדל שבגללו הפונקציה הזו קיימת בנפרד.
+  it('מחרוזת-רווחים היא חוסר, ולא סף אפס — וזה ההבדל מ-toFiniteNumber', () => {
+    expect(finiteNumber('  ')).toBeNull()
+    expect(toFiniteNumber('  ')).toBe(0)
+  })
+
+  it('מחרוזת-מספר עם רווחים משני הצדדים ⇒ המספר עצמו', () => {
+    expect(finiteNumber(' 5 ')).toBe(5)
+    expect(finiteNumber('0.87')).toBe(0.87)
+    expect(finiteNumber(0)).toBe(0)
+  })
+
+  it('ערך שאינו מספר סופי ⇒ null', () => {
+    expect(finiteNumber('אבג')).toBeNull()
+    expect(finiteNumber(Number.POSITIVE_INFINITY)).toBeNull()
+    expect(finiteNumber(Number.NaN)).toBeNull()
   })
 })
 

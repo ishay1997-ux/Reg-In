@@ -1,0 +1,133 @@
+{
+  "report_file": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad\\results\\p5-fix-code-3.json",
+  "fixes": [
+    {
+      "item": "B-1 - the Excel export swallows its only real failure",
+      "files": [
+        "src/modules/11_reports/components/ExportBar.jsx",
+        "src/modules/11_reports/components/ExportBar.test.jsx",
+        "src/lib/reportsExport.js"
+      ],
+      "what_changed": "handleExport is now async and awaits exportReportRows, so a rejection of writeXlsxFile reaches the catch (the two synchronous throws still reach the same catch - reportsExport.js keeps its documented synchronous-throw contract and its two sync tests are untouched). The tautological guard [caption.file, err?.message].includes(err?.message) is replaced by EXPORT_LOCKED_MESSAGES, a new Set in reportsExport.js holding exactly the three locked Hebrew strings; the locked strings themselves (lines 19-23) are byte-identical.",
+      "test_added": "ExportBar.test.jsx - describe 'ExportBar - כשל-הייצוא נאמר על המסך (B-1)', 3 cases: a real rejection renders 'הייצוא לא הושלם.'; a locked message (EXPORT_NO_ROWS) renders verbatim; an error object with message undefined renders the generic sentence and not an empty span (textContent equality).",
+      "red_before_green_after": "RED (untouched tree, red-b1.log): 'src/modules/11_reports/components/ExportBar.jsx (7 tests | 3 failed)' - failing assertion 'TestingLibraryElementError: Unable to find role=\"alert\"' at ExportBar.test.jsx:93 'expect(await screen.findByRole('alert')).toHaveTextContent('הייצוא...' - all three new cases failed. GREEN (green-b1.log, exit=0): 'Test Files 2 passed (2) / Tests 32 passed (32)' over ExportBar.test.jsx + src/lib/reportsExport.test.js."
+    },
+    {
+      "item": "B-2 - a running analysis run is reported as a failed one (+ T11, same file, same round)",
+      "files": [
+        "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx",
+        "src/modules/11_reports/tabs/CustomersTab.test.jsx"
+      ],
+      "what_changed": "localState() gained a 'running' branch that copies serverRunState's precedent exactly - text 'מסווג…', sub = the ALREADY_RUNNING constant (the server's own 409 wording, already in the file), action null, disabledAction RUN_LABEL - so the bar shows the running sentence and the run button is rendered DISABLED. Deliberately no progress fraction: the 409 body carries only {error, run_id, status} (index.ts:825-828), so '0/0' would be an invented number. classify() now branches explicitly on status==='running' before the generic status branch and sets a normalized local {status,run_id}, so the 409's error string is never rendered as a red failure alert. T11: the bare catch in invokeClassify now logs console.error(`${FUNCTION_NAME} נכשלה ואין גוף-תשובה לקרוא:`, error, bodyError) - shape copied from ReportSurface.jsx:514 - and the on-screen generic sentence is unchanged.",
+      "test_added": "CustomersTab.test.jsx (same describe as the other מ25 cases, real path through invokeClassify -> error.context.json()): '409 \"ריצת-ניתוח כבר פועלת\" מציג את מצב-הריצה, ולא ריצה שנכשלה' (asserts the running sentence, absence of 'הריצה נכשלה', a DISABLED 'הרץ ניתוח' button, and no role=alert) and 'כשל-רשת בלי גוף-תשובה — הנוסח הכללי על המסך, והשגיאה נרשמת לקונסול' (T11).",
+      "red_before_green_after": "RED (untouched tree, red-b2.log): 'CustomersTab.test.jsx (35 tests | 2 failed)'. B-2 failing assertion: expect(element).toHaveTextContent() - Expected 'ריצת-ניתוח כבר פועלת.' / Received 'הריצה נכשלה ולא נשמרו בה סיווגים.אפשר להריץ שוב; ריצה שנכשלה אינה ניתנת להמשכה.הרץ ניתוח' (CustomersTab.test.jsx:983). T11 failing assertion: 'AssertionError: expected \"error\" to be called at least once'. GREEN (green-b2.log, exit=0): 'Test Files 1 passed (1) / Tests 35 passed (35)'.",
+      "live_check": "unit only - the two-browser-context fault injection against the live edge function is NOT run (it calls the paid model); see not_verified."
+    },
+    {
+      "item": "T1 - finiteNumber lived in three copies, one already drifted",
+      "files": [
+        "src/lib/reportsFormat.js",
+        "src/lib/reportsFormat.test.js",
+        "src/lib/reportsCustomers.js",
+        "src/lib/reportsExecutive.js",
+        "src/lib/reportsHostesses.js"
+      ],
+      "what_changed": "One implementation, exported from src/lib/reportsFormat.js; reportsCustomers.js, reportsExecutive.js and reportsHostesses.js now import it and their local copies are deleted (the executive file keeps a why-comment pointing at the new home). CHECKED FIRST whether an existing shared helper fits: toFiniteNumber in src/lib/pricing.js does NOT - it rejects '' only, so Number('  ') is 0 for it, while the reports invariant treats a whitespace-only params value as a MISSING row, not a zero threshold (reportsParams.js:38-39 states the same rule). That difference is now a locked test rather than a comment.",
+      "test_added": "src/lib/reportsFormat.test.js - describe 'finiteNumber — \"לא נמדד\" אינו אפס (T1...)', 4 cases: null/undefined/'' -> null; the drifted class '  ' -> null asserted SIDE BY SIDE with toFiniteNumber('  ') === 0; ' 5 '/'0.87'/0 -> the number (the executive variant trimmed before Number, the other two did not); non-finite -> null.",
+      "red_before_green_after": "RED (red-t1.log): 'src/lib/reportsFormat.test.js (51 tests | 4 failed)' - failing assertion 'TypeError: finiteNumber is not a function' at reportsFormat.test.js:116. GREEN (green-t1.log, exit=0): 'Test Files 42 passed (42) / Tests 1686 passed (1686)' over all of src/lib.",
+      "live_check": "npm run dup exit=0 - Total 419 duplicated lines (0.79%) of a 3% cap, 31 clones (was 32; the javascript-format clone count dropped to 3). dup-fix3.log."
+    },
+    {
+      "item": "T3 - a missing system parameter could read as 'no data'",
+      "files": [
+        "src/modules/11_reports/components/ReportSurface.jsx",
+        "src/modules/11_reports/components/ReportSurface.test.jsx"
+      ],
+      "what_changed": "EmptyPage now takes missingParams and renders <MissingParamsBanner> above the Envelope, and the early return passes payload.meta?.missing_params into it. The banner therefore renders regardless of the empty-page branch, and the empty state itself is unchanged (it is added to, not replaced).",
+      "test_added": "ReportSurface.test.jsx, in describe '📐10: ריקות נמדדת באוכלוסייה': 'אפס שורות עם `missing_params` ⇒ הבאנר נאמר, ולא רק \"אין נתונים\"' - rows [], population n=0, meta.missing_params ['מקדם_אמינות_אדום']; asserts the banner sentence AND that report-reliability-blank is still in the document.",
+      "red_before_green_after": "RED (red-t3-t10.log): 'ReportSurface.test.jsx (44 tests | 4 failed)' - failing assertion 'TestingLibraryElementError: Unable to find an element by: [data-testid=\"report-missing-params\"]', with the printed DOM showing only 'אין נתונים עדיין'. GREEN (vt.log, exit=0): 'Test Files 54 passed (54) / Tests 2056 passed (2056)' over src/modules/11_reports + src/lib."
+    },
+    {
+      "item": "T10 - missingReportParamsMessage had zero production importers while the screen printed the bare param name",
+      "files": [
+        "src/modules/11_reports/components/ReportSurface.jsx",
+        "src/lib/reportsParams.js",
+        "src/modules/11_reports/components/ReportSurface.test.jsx"
+      ],
+      "what_changed": "MissingParamsBanner now renders missingReportParamsMessage({}, names) instead of 'חסר פרמטר מערכת: ' + names.join(' · '): the RPC already decided who is missing (meta.missing_params), so an empty map plus the explicit name list yields exactly the locked sentence for those names - label, per-param effect, and the action. Second, necessary change in reportsParams.js: the effects clause is now emitted only when at least one effect is known. The live RPCs name params outside MISSING_EFFECTS (יחס_אורחים_לדיילת, תנאי_תשלום_ימים, קבוע_ריסון_m), and without that branch the banner would have read '...: X — . יש להוסיף...' - a dangling dash. No existing behaviour changed (all four names in the map have effects), and reportsParams.test.js stayed green.",
+      "test_added": "ReportSurface.test.jsx - new describe 'משפט-הפרמטר-החסר הוא זה של `reportsParams`', 3 cases: a known name renders effect+action verbatim; an unknown name renders a whole sentence and the banner text does not contain '— .'; two names switch label and action to the plural forms.",
+      "red_before_green_after": "RED (red-t3-t10.log): failing assertion expect(element).toHaveTextContent() - Expected 'חסר פרמטר מערכת: מקדם_אמינות_אדום — אין סימון אדום בדוח אמינות הדיילות. יש להוסיף את השורה בהגדרות המערכת.' / Received 'חסר פרמטר מערכת: מקדם_אמינות_אדום'. GREEN (vt.log, exit=0): 2,056 tests green, including the four pre-existing tab tests that assert the bare 'חסר פרמטר מערכת: X' substring - it is still a prefix of the fuller sentence."
+    }
+  ],
+  "gates": {
+    "scratchpad": "C:\\Users\\ishay\\AppData\\Local\\Temp\\claude\\C--Users-ishay-Reg-In\\ae84cb05-7ca4-4a75-80cd-6e6b13995904\\scratchpad",
+    "vitest_module_and_lib": "exit=0 - 'Test Files 54 passed (54) / Tests 2056 passed (2056)' (<scratchpad>/vt.log)",
+    "vitest_full_suite_regression": "exit=0 - 'Test Files 117 passed (117) / Tests 3048 passed (3048)' (<scratchpad>/test-run-fix3.log). The audited head measured 3,035; +13 = exactly the 13 tests added this round (3 B-1 + 2 B-2/T11 + 4 T1 + 1 T3 + 3 T10). Not requested - run as the regression check.",
+    "eslint_touched_files": "exit=0 on all 13 files, empty log (<scratchpad>/eslint-fix3.log)",
+    "prettier_check_touched_files": "exit=0 on all 13 files (<scratchpad>/prettier-fix3.log)",
+    "npm_run_dup": "exit=0 - Total 419 duplicated lines = 0.79% against a 3% cap, 31 clones (<scratchpad>/dup-fix3.log)",
+    "npm_run_check_bidi": "exit=0 (<scratchpad>/bidi-fix3.log)",
+    "npm_run_build": "exit=0 - 'built in 3.01s', only the pre-existing chunk-size warning (<scratchpad>/build-fix3.log)",
+    "npm_run_deadcode_knip": "exit=0 - run because this round adds two exports (EXPORT_LOCKED_MESSAGES, finiteNumber); both have production importers (<scratchpad>/knip-fix3.log)",
+    "live_check_B1": "evidence-run.mjs --tab exec --identities CEO --modes 2 --surfaces exec-overview --extras export, exit=0, failures=[] - 'CEO m2 exec-overview: rendered - rows=8/8 - hints=4 - charts=1 - overflow=0 - console=0'. The caption block still renders BOTH locked lines: 'יירד: מבט-על-הנהלה_2026-(01-01-17-09)-·-כל-הלקוחות.xlsx' and 'עמודות: אירוע · לקוח · תאריך · הכנסה · רווח · שולי-רווח', export button enabled. PNG opened and looked at: <scratchpad>/results-fix3/evidence/CEO-m2-exec-overview-export-caption-block.png",
+    "CR_zero": "perl tr/\r// on each of the 13 touched files = CR=0",
+    "locked_strings_untouched": "byte comparison against git HEAD: the first 2,094 bytes of src/lib/reportsExport.js (through EXPORT_NO_APPROVED_RUN) are byte-identical; the new EXPORT_LOCKED_MESSAGES block is appended after them"
+  },
+  "not_done": [
+    {
+      "item": "PROJECT_MASTER §6 rows for T1-T13, the module CLAUDE.md §4c refresh (T7), module-11.md write-backs",
+      "why": "owned by the parallel DOC fixer; docs/** and src/modules/11_reports/CLAUDE.md are not mine this round (that file changed on disk mid-round, by that agent)"
+    },
+    {
+      "item": "T2 (revoke anon/authenticated grants on the four deny-all tables), T4/T5/T12 (Ishay's rulings), T6/T7 (docs), T8/T9 (post-conference), T13 (log compaction)",
+      "why": "not assigned to this round"
+    },
+    {
+      "item": "AnalysisRunBar.jsx:235,250 - `??` does not catch `''` (F-15 debt, same file I touched)",
+      "why": "not in my item list; a separate registered debt, and I did not widen scope into it"
+    },
+    {
+      "item": "Effect sentences for the five params that can reach meta.missing_params without a row in MISSING_EFFECTS",
+      "why": "product copy - Ishay's to word, not mine to invent. See blind_spot; the sentence is well-formed without it (label + name + action)."
+    }
+  ],
+  "not_verified": [
+    "B-2 fault-injection half: two browser contexts on /reports?tab=customers&report=notes, start a run in the first and press 'הרץ ניתוח' in the second; evidence = the second bar's text + the 409 in the network log + `select count(*) from feedback_ai_runs where status='running'` staying at 1. NOT RUN - it calls the paid model (excluded by the brief). The unit half drives the identical path (invokeClassify -> error.context.json() -> classify -> localState) with the exact 409 body of index.ts:825-828, but a real HTTP 409 was not observed by me.",
+    "B-1 against a genuine write-excel-file failure: the new tests mock exportReportRows, so what is proven is 'a rejection reaches the catch and renders a Hebrew sentence'. A real writeXlsxFile rejection in a browser was not induced, and the live run does not click Export.",
+    "T3 on a live screen: F-13 measured the state as latent (all five params exist live, ParamsTab has no delete/insert path), so meta.missing_params cannot be made non-empty from the UI. The banner-in-empty-page path is verified in jsdom only.",
+    "Playwright E2E (e2e/reports.spec.js) was not re-run this round; its export assertions ('שמו הוא זה שהובטח על המסך', the disabled-button + locked-caption pair) are untouched by these changes but unverified by me."
+  ],
+  "blind_spot": "MISSING_EFFECTS in src/lib/reportsParams.js has rows for FOUR param names, but NINE distinct names can reach meta.missing_params from the m11 RPCs - measured this turn by pulling every quoted Hebrew literal next to v_missing across supabase/migrations/*module11*.sql plus the v_param_name constants. Covered: מכפיל_מרווח_מתרחק, סף_סטיית_תקציב_אחוז, מקדם_אמינות_אדום, מקדם_אמינות_ענבר. NOT covered: מינימום_תשובות_להצגת_ציון, סף_לקוח_רדום_ימים, קבוע_ריסון_m, תנאי_תשלום_ימים, יחס_אורחים_לדיילת. For those five the banner now says the label, the name and the action but NOT the per-param consequence - which is the exact property reportsParams.js's own header claims for itself ('השלכה פר-פרמטר ולא משפט כללי'). Checkable true-or-false by comparing Object.keys(MISSING_EFFECTS) with that grep. It is strictly better than the bare name that shipped, and the sentence is well formed (I added the branch that drops the dangling dash), but T10 is only fully closed once five effect sentences are worded - and the wording is Ishay's, not mine.",
+  "files_touched": [
+    "src/modules/11_reports/components/ExportBar.jsx",
+    "src/modules/11_reports/components/ExportBar.test.jsx",
+    "src/lib/reportsExport.js",
+    "src/modules/11_reports/tabs/customers/AnalysisRunBar.jsx",
+    "src/modules/11_reports/tabs/CustomersTab.test.jsx",
+    "src/lib/reportsFormat.js",
+    "src/lib/reportsFormat.test.js",
+    "src/lib/reportsCustomers.js",
+    "src/lib/reportsExecutive.js",
+    "src/lib/reportsHostesses.js",
+    "src/lib/reportsParams.js",
+    "src/modules/11_reports/components/ReportSurface.jsx",
+    "src/modules/11_reports/components/ReportSurface.test.jsx"
+  ],
+  "assumed": [
+    {
+      "what": "The preview on port 5189 serves the dist/ I had just rebuilt, so the live export check ran against the fixed code",
+      "source_checked": "npm run build exit=0 immediately before the evidence run; curl http://localhost:5189/ returned 200; I neither started nor stopped that server",
+      "tag": "measured-indirectly"
+    },
+    {
+      "what": "exportReportRows stays synchronous-throwing - I did NOT make it async although the brief allowed it",
+      "source_checked": "src/lib/reportsExport.test.js:166-180 carries a why-comment stating the synchronous throw is deliberate ('אתר-הקריאה בודק את המצב לפני שהוא מציג כפתור פעיל') and two tests assert expect(() => ...).toThrow(). await at the call site catches both channels, so the blocker closes without breaking that documented contract.",
+      "tag": "deliberate-deviation"
+    },
+    {
+      "what": "missingReportParamsMessage({}, names) is the right call shape for the banner",
+      "source_checked": "reportsParams.js:46-56 read to the end - paramsMap is only consulted as values[name], so an empty map makes exactly the listed names missing; the RPC has already decided the list and the screen never reads params itself",
+      "tag": "read-the-definition"
+    }
+  ]
+}

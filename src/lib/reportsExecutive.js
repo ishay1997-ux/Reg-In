@@ -22,18 +22,13 @@
 //   · **פורמט אינו כאן** — 📐4 חי ב-`./reportsFormat`. הפונקציות כאן מחזירות מספרים
 //     גולמיים לא-מעוגלים, והעיגול קורה במקום אחד.
 
+import { finiteNumber } from './reportsFormat'
+
 // ── עזר פנימי ────────────────────────────────────────────────────────────────
 
-// why: `Number(null)`/`Number('')`/`Number('  ')` הם כולם 0 — ולכן הפסילה קודמת להמרה.
-// ערך שלא נמדד חייב להישאר `null` ולא להפוך לאפס שנראה כמו מדידה (📐1: *"— מותר רק
-// כשאין שינוי, לא כשלא נמדד"*).
-function finiteNumber(value) {
-  if (value === null || value === undefined) return null
-  const trimmed = typeof value === 'string' ? value.trim() : value
-  if (trimmed === '') return null
-  const parsed = Number(trimmed)
-  return Number.isFinite(parsed) ? parsed : null
-}
+// why: ערך שלא נמדד חייב להישאר `null` ולא להפוך לאפס שנראה כמו מדידה (📐1: *"— מותר
+// רק כשאין שינוי, לא כשלא נמדד"*). הכלל עצמו חי ב-`reportsFormat.finiteNumber` — **בית
+// אחד לשלושת הצרכנים**, אחרי שהעותק כאן כבר סטה טקסטואלית משני האחרים (T1).
 
 // why: כל מכנה בקובץ הזה נופל באותה צורה — 0 או חסר ⇒ `null`. זה `nullif(denom, 0)`
 // של ה-SQL, ושמירת הזהות בין השניים היא מה שמאפשר להשוות אותם.

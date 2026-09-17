@@ -954,6 +954,69 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     fireEvent.click(await screen.findByTestId('m25-run-button'))
     expect(await screen.findByRole('alert')).toHaveTextContent('מפתח ה-AI לא הוגדר במערכת')
   })
+
+  // 🔴 **B-2 (אודיט-הסגירה 17/09/2026, ממצא F-11) — ריצה שפועלת דווחה כריצה שנכשלה.**
+  // ‏`index.ts:825–828` עונה על "כבר פועלת" ב-HTTP **409** עם גוף שנושא **גם** `error`
+  // **וגם** `status:'running'`. ‏`classify()` בדקה `status` תחילה ⇒ המצב נכנס ל-`local`,
+  // ו-`localState` לא הכירה `running` ⇒ נפילה לענף האחרון: *"הריצה נכשלה ולא נשמרו בה
+  // סיווגים"* עם כפתור **פעיל** שיחזיר 409 שוב. **טענה עובדתית שקרית על הדאטה של
+  // המשתמשת, בזמן שהשורות נכתבות.**
+  it('409 "ריצת-ניתוח כבר פועלת" מציג את מצב-הריצה, ולא ריצה שנכשלה', async () => {
+    callReport.mockResolvedValue(notesPayload({ run: null }))
+    renderTab(SURFACES.מ22)
+    invoke.mockResolvedValueOnce({
+      data: null,
+      error: {
+        message: 'Edge Function returned a non-2xx status code',
+        context: {
+          json: async () => ({ error: 'ריצת-ניתוח כבר פועלת.', run_id: 1, status: 'running' }),
+        },
+      },
+    })
+    fireEvent.click(await screen.findByTestId('m25-run-button'))
+
+    // 🔤 **ההמתנה היא על נוסח-השרת ולא על "מסווג…"** — אותו קבוע ש-`serverRunState` כבר
+    // משתמש בו, ולא ניסוח שני. ⚠️ ובכוונה: *"מסווג…"* מופיע גם במצב-הביניים `pending`
+    // (עם שורת-משנה אחרת), ולכן המתנה עליו הייתה נתפסת על מצב חולף ולא על התוצאה.
+    await waitFor(() =>
+      expect(screen.getByTestId('m25-run-bar')).toHaveTextContent('ריצת-ניתוח כבר פועלת.'),
+    )
+    expect(screen.getByTestId('m25-run-text')).toHaveTextContent('מסווג…')
+    expect(screen.getByTestId('m25-run-text')).not.toHaveTextContent('הריצה נכשלה')
+    // ⚠️ **מנוטרל ואינו נעדר** (מצב 2 של מ25) — והלחיצה השנייה אינה אפשרית.
+    expect(screen.getByTestId('m25-run-button')).toBeDisabled()
+    expect(screen.getByTestId('m25-run-button')).toHaveTextContent('הרץ ניתוח')
+    // 🚫 וריצה שפועלת אינה תקלה: אין משבצת-שגיאה אדומה.
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  // 🔴 **T11 — מסלול-הרשת היחיד במודול שלא השאיר עקבה.** כשאין גוף-תשובה לקרוא, המסך
+  // מקבל את הנוסח הכללי (וזה נכון) — אבל שגיאת-ה-supabase עצמה נבלעה ב-`catch` ריק,
+  // ואי-אפשר היה לדעת אם הפונקציה לא ענתה כלל או ענתה בגוף שאינו JSON.
+  it('כשל-רשת בלי גוף-תשובה — הנוסח הכללי על המסך, והשגיאה נרשמת לקונסול', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    callReport.mockResolvedValue(notesPayload({ run: null }))
+    renderTab(SURFACES.מ22)
+    invoke.mockResolvedValueOnce({
+      data: null,
+      error: {
+        message: 'Failed to fetch',
+        context: {
+          json: async () => {
+            throw new SyntaxError('Unexpected end of JSON input')
+          },
+        },
+      },
+    })
+    fireEvent.click(await screen.findByTestId('m25-run-button'))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'הניתוח נכשל. נסי שוב, ואם זה חוזר — פני למנכ"ל.',
+    )
+    expect(consoleError).toHaveBeenCalled()
+    expect(String(consoleError.mock.calls[0][0])).toContain('classify-feedback')
+    consoleError.mockRestore()
+  })
 })
 
 describe('מצבי-מעטפת ושכבת-ההטמעה', () => {

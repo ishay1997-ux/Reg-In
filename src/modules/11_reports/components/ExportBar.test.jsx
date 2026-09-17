@@ -10,11 +10,20 @@
 // ⇒ **הרכיב לא שונה, והבדיקות כאן נועלות את מה שנמדד תקין** — כדי שהתיקון-שאינו-תיקון לא
 // ייכנס בסבב הבא בלי מדידה חדשה.
 
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 // ⚠️ מלכודת `.env.local` מול CI — בלי המוק כל בדיקת-רכיב שנוגעת בשרשרת-ה-api קורסת ב-CI.
 vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
+
+// 🧪 **רק ההורדה עצמה ממוקמת — שלוש המחרוזות הנעולות ובניית-השם נשארות אמיתיות.**
+// ‏`exportReportRows` היא הגבול שמעברו יושבת ספריית-הצד-השלישי, וכשל שלה הוא הכישלון
+// היחיד שיכול לקרות בייצור (שני המצבים הריקים חסומים מראש ע"י כפתור מנוטרל).
+const exportRows = vi.fn()
+vi.mock('@/lib/reportsExport', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, exportReportRows: (...args) => exportRows(...args) }
+})
 
 import ExportBar from './ExportBar'
 import { EXPORT_NO_ROWS } from '@/lib/reportsExport'
@@ -63,5 +72,40 @@ describe('ExportBar — כיתוב-ההבטחה (ת4)', () => {
     render(<ExportBar {...PROPS} rows={[]} />)
     expect(screen.getByTestId('reports-export-file')).toHaveTextContent(EXPORT_NO_ROWS)
     expect(screen.getByTestId('reports-export-button')).toBeDisabled()
+  })
+})
+
+// 🔴 **B-1 (אודיט-הסגירה 17/09/2026, ממצא F-10) — "המסך משקר; הוא אינו נכשל" על מסלול חי.**
+// ‏`exportReportRows` מחזירה **הבטחה** (‏`writeXlsxFile` הוא a-סינכרוני), והיא נקראה בלי
+// ‏`await` בתוך `try` — כלומר **דחייה חמקה מה-catch לגמרי**: בלי `setError`, בלי שורת-קונסול,
+// בלי דבר על המסך. המשתמשת לוחצת, קובץ אינו יורד, והמוצר שותק.
+// 🧪 שלוש הבדיקות כאן מכסות את שלושת המצבים שהמדידה מצאה: דחייה אמיתית · נוסח נעול ·
+// שגיאה חסרת-`message` (שקודם רינדרה `span` **ריק**, כי המשמר היה טאוטולוגי).
+describe('ExportBar — כשל-הייצוא נאמר על המסך (B-1)', () => {
+  beforeEach(() => {
+    exportRows.mockReset()
+  })
+
+  it('דחייה של ההורדה מגיעה ל-catch ומוצגת, ואינה נעלמת בשקט', async () => {
+    exportRows.mockRejectedValueOnce(new Error('write failed'))
+    render(<ExportBar {...PROPS} />)
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    expect(await screen.findByRole('alert')).toHaveTextContent('הייצוא לא הושלם.')
+  })
+
+  // 🔤 נוסח נעול שזרקנו בעצמנו — מוצג כמות שהוא; רק תקלת-ספרייה נופלת לנוסח הכללי.
+  it('נוסח נעול מוצג מילה-במילה', async () => {
+    exportRows.mockRejectedValueOnce(new Error(EXPORT_NO_ROWS))
+    render(<ExportBar {...PROPS} />)
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    expect(await screen.findByRole('alert')).toHaveTextContent(EXPORT_NO_ROWS)
+  })
+
+  it('שגיאה בלי `message` מרנדרת את הנוסח הכללי ולא משבצת ריקה', async () => {
+    exportRows.mockRejectedValueOnce({})
+    render(<ExportBar {...PROPS} />)
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toBe('הייצוא לא הושלם.')
   })
 })

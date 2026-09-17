@@ -18,20 +18,12 @@
 // · `isCustomerDormant` — כלל-120-הימים חי ב-`./customerProjects` ועובד על שורות-פרויקט
 //   מלאות; כאן הדגל מגיע מוכן מה-RPC, והקובץ הזה רק מנסח אותו.
 
+import { finiteNumber } from './reportsFormat'
 import { medianOf } from './reportsHostesses'
 import { CUSTOMER_TYPE_LABELS } from './customers'
 import { FEEDBACK_NEGATIVE_REASONS, FEEDBACK_POSITIVE_REASONS } from './feedback'
 
 // ── עזר פנימי ────────────────────────────────────────────────────────────────
-
-// why: `Number(null)`/`Number('')`/`Number('  ')` הם כולם 0, ולכן הפסילה קודמת להמרה.
-// ערך שאינו מספר סופי הוא **חוסר**, ואסור שייקרא כאפס.
-function finiteNumber(value) {
-  if (value === null || value === undefined) return null
-  if (typeof value === 'string' && value.trim() === '') return null
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
-}
 
 // why: `new Date('YYYY-MM-DD')` נקרא כחצות UTC, ולכן הפרש שני תאריכים כאלה הוא מספר
 // שלם של ימים בלי מלכודת-שעון-קיץ. **לא** `new Date(y, m, d)`, שהוא זמן מקומי.

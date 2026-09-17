@@ -10,7 +10,12 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { buildExportFileName, exportCaption, exportReportRows } from '@/lib/reportsExport'
+import {
+  EXPORT_LOCKED_MESSAGES,
+  buildExportFileName,
+  exportCaption,
+  exportReportRows,
+} from '@/lib/reportsExport'
 
 export default function ExportBar({
   reportName,
@@ -24,14 +29,22 @@ export default function ExportBar({
   const fileName = buildExportFileName({ reportName, windowLabel, drillLabel })
   const caption = exportCaption({ fileName, columns, rowCount: rows.length, blockedReason })
 
-  function handleExport() {
+  // 🔴 **`async` + `await` — וזה התיקון עצמו, לא סגנון** (אודיט-הסגירה 17/09/2026, ‏B-1):
+  // ‏`exportReportRows` מסתיימת ב-`return writeXlsxFile(...)`, כלומר מחזירה **הבטחה**. בלי
+  // ‏`await` הדחייה שלה חומקת מה-`try` לגמרי — אין `setError`, אין שורת-קונסול, **אין דבר
+  // על המסך**: המשתמשת לוחצת, קובץ אינו יורד, והמוצר שותק (§4.3 — *"המסך משקר, הוא אינו
+  // נכשל"*). 🔑 **ושתי הזריקות הסינכרוניות נשארות סינכרוניות** — הן נתפסות באותו `try`
+  // בדיוק, ולכן חוזה-הזריקה של `reportsExport.js` לא השתנה.
+  async function handleExport() {
     try {
       setError(null)
-      exportReportRows({ fileName, sheetName: reportName, columns, rows })
+      await exportReportRows({ fileName, sheetName: reportName, columns, rows })
     } catch (err) {
       // ⚠️ הודעת-הזריקה היא **מחרוזת עברית שכתבנו** (שלושת המצבים הנעולים), ולכן ראויה
       // להצגה. תקלת-ספרייה אמיתית נופלת לנוסח הכללי — לא מדליפים טקסט טכני למסך.
-      const known = [caption.file, err?.message].includes(err?.message)
+      // 🔴 **והמבחן הוא מול הרשימה הסגורה** ולא מול השגיאה עצמה: המשמר הקודם השווה את
+      // ‏`err?.message` למערך שהכיל אותו, ולכן היה תמיד אמת (`EXPORT_LOCKED_MESSAGES`).
+      const known = EXPORT_LOCKED_MESSAGES.has(err?.message)
       setError(known ? err.message : 'הייצוא לא הושלם.')
     }
   }

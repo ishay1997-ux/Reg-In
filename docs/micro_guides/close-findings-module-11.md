@@ -468,6 +468,12 @@ change independently. Everything else stands alone.
 
 ## 2. Routing and verdict — 17/09/2026, branch head `fc3cb231`
 
+> ✏️ **17/09/2026 · הוספה של סבב-התיקון שאחרי האודיט ("closing-audit fix round ⑦") — שורה אחת, בלי לגעת בטקסט של האודיט.**
+> **נסגרו בסבב:** ‏**B-1** ו-**B-2** *(קוד, עם בדיקות אדום-לפני/ירוק-אחרי — ‏`ExportBar.test.jsx` ו-`CustomersTab.test.jsx`)* · ‏**T1** *(‏`finiteNumber` ⇒ בית אחד, `src/lib/reportsFormat.js:40`)* · ‏**T3** · ‏**T10** · ‏**T11** *(קוד)* · ‏**T6** *(‏`module-11.md §3.3` — 39 = 17+10+10+1+1)* · ‏**T7** *(‏`src/modules/11_reports/CLAUDE.md` — ‏502 במקום 200, ‏+ רענון §4c שהאודיט הותיר כחוב)*.
+> **נשארו פתוחים, וכל אחד קיבל שורת-`PROJECT_MASTER §6` מתוארכת:** ‏**T2 · T4 · T5 · T8 · T9 · T12 · T13** — ‏**החוב ש-§7 כאן הכריז כ-OWED שולם.** ⚠️ **חריג אחד:** שאלת-הסתירה של **T4** טעונה גם רישום ב-`PROJECT_MASTER_sec7.md`, וסבב-התיקון לא הורשה לכתוב שם.
+> **הפירוט המלא:** ‏`module-11.md` §9 **D-39**.
+
+
 ### §1 Definition-of-Done walkthrough (`module-11.md §8`)
 | # | Gate | Verdict | Evidence, this turn |
 |:-:|---|:-:|---|
