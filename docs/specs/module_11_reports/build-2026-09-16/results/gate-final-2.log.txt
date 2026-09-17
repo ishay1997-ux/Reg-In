@@ -1,0 +1,233 @@
+
+> reg-in@0.0.0 gate
+> npm run verify && npm run dup && npm run deadcode && npm run audit && npm run check:bidi && npm run check:context && npm run check:docs-structure && npm run check:iron-rules && npm run check:declared-counts
+
+
+> reg-in@0.0.0 verify
+> npm run lint && npm run format:check && npm run test:run && npm run build
+
+
+> reg-in@0.0.0 lint
+> eslint .
+
+
+C:\Users\ishay\Reg-In\.claude\worktrees\agent-a139b16e9cb4dd422\src\modules\01_auth\UsersManagementPage.jsx
+  76:6  warning  React Hook useEffect has a missing dependency: 'loadUsersAndRoles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ishay\Reg-In\.claude\worktrees\wf_256b7ec8-ebb-4\src\modules\01_auth\UsersManagementPage.jsx
+  76:6  warning  React Hook useEffect has a missing dependency: 'loadUsersAndRoles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ishay\Reg-In\src\modules\01_auth\UsersManagementPage.jsx
+  76:6  warning  React Hook useEffect has a missing dependency: 'loadUsersAndRoles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 3 problems (0 errors, 3 warnings)
+
+
+> reg-in@0.0.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> reg-in@0.0.0 test:run
+> vitest run
+
+[33m(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.[39m
+
+ RUN  v4.1.10 C:/Users/ishay/Reg-In
+
+Not implemented: Window's scrollTo() method
+Not implemented: Window's scrollTo() method
+
+ Test Files  117 passed (117)
+      Tests  3035 passed (3035)
+   Start at  03:05:12
+   Duration  101.22s (transform 9.01s, setup 26.66s, import 36.54s, tests 67.73s, environment 141.87s)
+
+
+> reg-in@0.0.0 build
+> vite build
+
+[33m(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vite.config.js:11:25). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.[39m
+[36mvite v8.2.1 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 2840 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                0.46 kB │ gzip:     0.30 kB
+dist/assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2      7.42 kB
+dist/assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2        8.00 kB
+dist/assets/geist-cyrillic-wght-normal-BEAKL7Jp.woff2         15.08 kB
+dist/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2        16.51 kB
+dist/assets/reg-in-logo-D9KN6nV8.png                          17.47 kB
+dist/assets/geist-latin-wght-normal-BgDaEnEv.woff2            29.40 kB
+dist/assets/index-hYtgHDsy.css                                68.56 kB │ gzip:    13.32 kB
+dist/assets/index-Brg6DMd0.js                              3,555.55 kB │ gzip: 1,128.65 kB
+
+[32m✓ built in 1.72s[39m
+[33m[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+
+> reg-in@0.0.0 dup
+> jscpd src
+
+Using config from .jscpd.json
+[1mClone found (javascript)[22m
+ - [1m[32mlib\dashboard.js[39m[22m [258:5 - 263:12] (6 lines, 72 tokens)
+   lib\dashboard.js [287:6 - 292:12]
+[1mClone found (javascript)[22m
+ - [1m[32mlib\paramsRegistry.js[39m[22m [67:1 - 72:2] (6 lines, 52 tokens)
+   lib\smartMatch.js [84:1 - 89:2]
+[1mClone found (javascript)[22m
+ - [1m[32mlib\reportsCustomers.js[39m[22m [29:1 - 34:2] (6 lines, 54 tokens)
+   lib\reportsHostesses.js [22:1 - 27:2]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\01_auth\ProductFormDialog.jsx[39m[22m [104:47 - 109:4] (6 lines, 54 tokens)
+   modules\02_customers\CustomerFormDialog.jsx [162:31 - 168:7]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\02_customers\CustomerDetailsPage.jsx[39m[22m [364:3 - 401:4] (38 lines, 180 tokens)
+   modules\03_quotes\QuotesPage.jsx [217:3 - 255:4]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\02_customers\CustomerDetailsPage.jsx[39m[22m [1046:23 - 1068:2] (23 lines, 125 tokens)
+   modules\03_quotes\QuotesPage.jsx [906:25 - 927:2]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\HostessesPage.jsx[39m[22m [50:3 - 77:8] (28 lines, 91 tokens)
+   modules\08_finance\FinancePage.jsx [409:55 - 430:8]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\HostessesPage.jsx[39m[22m [61:59 - 75:4] (15 lines, 80 tokens)
+   modules\06_projects\ProjectsPage.jsx [127:18 - 144:4]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [75:47 - 88:21] (14 lines, 63 tokens)
+   modules\04_hostesses\RepositoryTab.jsx [93:37 - 108:21]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [75:29 - 88:14] (14 lines, 65 tokens)
+   modules\04_hostesses\SmartMatchPage.jsx [84:23 - 96:14]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [75:47 - 88:16] (14 lines, 61 tokens)
+   modules\06_projects\LogisticsTab.jsx [85:64 - 99:16]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [75:47 - 88:14] (14 lines, 60 tokens)
+   modules\06_projects\ProjectsPage.jsx [95:46 - 107:14]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [75:29 - 88:16] (14 lines, 66 tokens)
+   modules\06_projects\TeamTab.jsx [98:37 - 113:16]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [77:35 - 88:16] (12 lines, 55 tokens)
+   modules\06_projects\ProjectCardPage.jsx [104:37 - 115:16]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [313:3 - 325:40] (13 lines, 55 tokens)
+   modules\06_projects\ProjectsPage.jsx [528:3 - 540:40]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [313:3 - 325:22] (13 lines, 52 tokens)
+   modules\08_finance\FinancePage.jsx [988:3 - 1000:22]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\04_hostesses\OverviewTab.jsx[39m[22m [503:5 - 517:2] (15 lines, 56 tokens)
+   modules\06_projects\ProjectsPage.jsx [638:5 - 652:2]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\05_logistics\LogisticsPage.jsx[39m[22m [109:1 - 124:9] (16 lines, 86 tokens)
+   modules\08_finance\FinancePage.jsx [144:1 - 159:9]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\05_logistics\LogisticsPage.jsx[39m[22m [150:17 - 164:14] (15 lines, 68 tokens)
+   modules\08_finance\FinancePage.jsx [461:17 - 471:14]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\05_logistics\LogisticsPage.jsx[39m[22m [535:13 - 543:9] (9 lines, 64 tokens)
+   modules\06_projects\ProjectsPage.jsx [554:13 - 562:9]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\06_projects\CancelProjectDialog.jsx[39m[22m [275:25 - 281:10] (7 lines, 59 tokens)
+   modules\06_projects\ScopeChangeDialog.jsx [763:27 - 771:10]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\06_projects\CancelProjectDialog.jsx[39m[22m [311:7 - 325:14] (15 lines, 52 tokens)
+   modules\06_projects\ScopeChangeDialog.jsx [804:7 - 818:14]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\06_projects\ProjectCardPage.jsx[39m[22m [409:3 - 424:9] (16 lines, 70 tokens)
+   modules\08_finance\ClosingWindowDialog.jsx [388:3 - 403:9]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\06_projects\ProjectsPage.jsx[39m[22m [137:52 - 150:8] (14 lines, 54 tokens)
+   modules\11_reports\ReportsPage.jsx [256:68 - 274:8]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\06_projects\ProjectsPage.jsx[39m[22m [385:1 - 403:24] (19 lines, 90 tokens)
+   modules\08_finance\FinancePage.jsx [765:1 - 784:24]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\06_projects\ScopeChangeDialog.jsx[39m[22m [802:92 - 816:19] (15 lines, 54 tokens)
+   modules\08_finance\ClosingWindowDialog.jsx [1771:30 - 1783:19]
+[1mClone found (javascript)[22m
+ - [1m[32mmodules\06_projects\api.js[39m[22m [40:1 - 47:2] (8 lines, 54 tokens)
+   modules\08_finance\api.js [62:1 - 69:2]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\09_settings\MySettingsPage.jsx[39m[22m [52:40 - 61:10] (10 lines, 72 tokens)
+   modules\09_settings\ParamsTab.jsx [80:79 - 89:10]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\09_settings\MySettingsPage.jsx[39m[22m [67:40 - 81:20] (15 lines, 85 tokens)
+   modules\09_settings\ParamsTab.jsx [91:49 - 107:20]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\09_settings\MySettingsPage.jsx[39m[22m [90:13 - 104:8] (15 lines, 54 tokens)
+   modules\09_settings\ParamsTab.jsx [119:7 - 133:8]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\09_settings\MySettingsPage.jsx[39m[22m [166:59 - 186:21] (21 lines, 117 tokens)
+   modules\09_settings\ParamsTab.jsx [190:57 - 212:21]
+[1mClone found (jsx)[22m
+ - [1m[32mmodules\09_settings\MySettingsPage.jsx[39m[22m [276:38 - 285:30] (10 lines, 68 tokens)
+   modules\09_settings\ParamsTab.jsx [294:33 - 303:26]
+[90m┌────────────┬────────────────┬─────────────┬──────────────┬──────────────┬──────────────────┬───────────────────┐[39m
+[90m│[39m[31m Format     [39m[90m│[39m[31m Files analyzed [39m[90m│[39m[31m Total lines [39m[90m│[39m[31m Total tokens [39m[90m│[39m[31m Clones found [39m[90m│[39m[31m Duplicated lines [39m[90m│[39m[31m Duplicated tokens [39m[90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m javascript [90m│[39m 70             [90m│[39m 17011       [90m│[39m 65498        [90m│[39m 4            [90m│[39m 22 (0.13%)       [90m│[39m 232 (0.35%)       [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m jsx        [90m│[39m 110            [90m│[39m 36083       [90m│[39m 161130       [90m│[39m 28           [90m│[39m 402 (1.11%)      [90m│[39m 2056 (1.28%)      [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m [1mTotal:[22m     [90m│[39m 180            [90m│[39m 53094       [90m│[39m 226628       [90m│[39m 32           [90m│[39m 424 (0.80%)      [90m│[39m 2288 (1.01%)      [90m│[39m
+[90m└────────────┴────────────────┴─────────────┴──────────────┴──────────────┴──────────────────┴───────────────────┘[39m
+[90mFound 32 clones.[39m
+[90mtime: 62.958ms[39m
+
+[90m💡 Auto-refactor with AI: [1m[39mnpx skills add https://github.com/kucherenko/jscpd --skill dry-refactoring[90m[22m
+[90m🎩 New: Gangsta Agents — discipline your AI coding → gangsta.page[39m
+[90m💖 Support jscpd project → https://opencollective.com/jscpd[39m
+
+> reg-in@0.0.0 deadcode
+> knip
+
+Configuration hints (2)
+recharts    knip.jsonc  Remove from ignoreDependencies                               
+.css        knip.jsonc  Compiled extension excluded by project (imports not followed)
+
+> reg-in@0.0.0 audit
+> node scripts/audit-gate.mjs
+
+
+✓ אין חולשות חמורות ללא פטור. (0 ממצאים בסך הכול, 0 מפוטרים)
+
+> reg-in@0.0.0 check:bidi
+> node scripts/check-bidi-glyphs.mjs
+
+✓ אין ממצאי-כיווניות (מספר צמוד ל-₪/★/× בלי בידוד).
+
+> reg-in@0.0.0 check:context
+> node scripts/check-context.mjs
+
+✓ ארכיטקטורת ההקשר תקינה.
+  9 פלאגינים דלוקים · 20 קובצי-סקיל נסרקו · עץ ה-CLAUDE.md שלם.
+  · §6 — 2 חובות פתוחים למודול 9 (לוודא בסגירת-צעד שאינם נסגרו בפועל):
+  ·    ↳ העדפות התראות
+  ·    ↳ ‏`e2e/prices.spec.js
+
+> reg-in@0.0.0 check:docs-structure
+> node scripts/check-docs-structure.mjs
+
+check:docs-structure ✅ 165 קבצים נסרקו, אפס ממצאים
+
+> reg-in@0.0.0 check:iron-rules
+> node scripts/check-iron-rules.mjs
+
+check:iron-rules ✅ 17 כללים באינדקס, וכל מספר שמצוטט בריפו נפתר (1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · 11 · 12 · 13 · 14 · 15 · 16 · 17)
+
+> reg-in@0.0.0 check:declared-counts
+> node scripts/check-declared-counts.mjs
+
+check:declared-counts ✅ 6 מספרים מוצהרים נבדקו מול המקור, כולם תואמים
