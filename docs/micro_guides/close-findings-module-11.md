@@ -598,3 +598,309 @@ zero references in `src/`/`e2e/`. Residual grant-hygiene = T2.
   summary, and the module is not closed. It runs at the clean close, after the blockers are fixed.
 - Fix-round progress: **none started** — this audit fixes nothing by design.
 - Paste-ready opening line for the fixing session is printed at the end of the report.
+
+---
+
+## 3. Verdict re-run — 17/09/2026 05:0X, branch head `0cd230fc`
+
+> **A second fresh context, dispatched after the one fix round.** It did **not** re-audit the module:
+> §1–§2 above stay exactly as the first audit wrote them, and nothing here edits them. Its job was
+> narrow and is stated as such — **prove or disprove the two blockers, re-run the gate and the md5
+> sweep on the final tree, read the fix diffs for new defects, and rule.**
+> **Tree it applies to:** `0cd230fc`, `git status --short` carrying only `.agents/` · `.codex/` ·
+> `supabase/.temp/` untracked, `src/**` unmodified. `origin/dev` @ `9b5ea534`; `git log
+> origin/dev..HEAD` = **35 commits** and `git merge-base --is-ancestor HEAD origin/dev` fails ⇒
+> **the branch is genuinely ahead, not a fresh cut** (iron rule 10's discriminator, run this turn).
+
+### V-1 · B-1 — **PROVEN FIXED**
+
+- `git diff 91aee46a..0cd230fc -- src/modules/11_reports/components/ExportBar.jsx src/lib/reportsExport.js`,
+  read in full this turn: `handleExport` is now `async` and **awaits** `exportReportRows`; the
+  tautological guard is replaced by `EXPORT_LOCKED_MESSAGES`, a `Set` in `reportsExport.js` holding
+  exactly the three locked constants.
+- **The three ④ cases exist and pass.** `npx vitest run ExportBar.test.jsx src/lib/reportsExport.test.js`
+  ⇒ `exit=0`, **`Test Files 2 passed (2) / Tests 32 passed (32)`**. The cases are: a real rejection ⇒
+  `הייצוא לא הושלם.` · a locked message ⇒ verbatim · `message: undefined` ⇒ the generic sentence
+  asserted by `textContent` **equality**, which is what rules out the empty span.
+- **Red-before is structural, not just reported:** on the old tree `handleExport` was not `async`, so
+  a rejected promise never reached the `catch` ⇒ `findByRole('alert')` cannot resolve in any of the
+  three. Consistent with the fixer's `red-b1.log` (7 tests, 3 failed, *"Unable to find role=alert"*).
+- **The locked strings are byte-unchanged**, measured rather than assumed: `md5` of the three
+  `export const EXPORT_NO_*` lines = `eee61fd930f087de506e65c7e8bc9c0e` at `91aee46a`, at `fc3cb231`
+  **and** in the worktree; the first 2,094 bytes of the file are byte-identical across all three.
+
+### V-2 · B-2 (+ T11) — **PROVEN FIXED**
+
+- `git diff` of `AnalysisRunBar.jsx`: `localState()` gained a `running` branch; `classify()` branches
+  on `status === 'running'` **before** the generic `status` branch; the bare `catch` in
+  `invokeClassify` now `console.error`s (T11).
+- **It mirrors `serverRunState`, and I read both to say so.** `localState` running returns
+  `{ text: 'מסווג…', sub: ALREADY_RUNNING, action: null, disabledAction: RUN_LABEL }`;
+  `serverRunState` running returns the same object with the progress fraction appended. **Same
+  constants, no second wording.** The missing fraction is deliberate and commented — the 409 body
+  carries only `{error, run_id, status}`, so a `0/0` would be an invented number.
+- **Precedence checked at the source:** `barState` is `pending → local → runInProgress → approved`,
+  and `if (local) return localState(local)`, so the 409 state is what renders.
+- `npx vitest run CustomersTab.test.jsx` ⇒ `exit=0`, **`Tests 35 passed (35)`**. The 409 case asserts
+  the running sentence, the **absence** of `הריצה נכשלה`, a **disabled** run button and **no**
+  `role=alert`; the T11 case asserts the generic sentence **and** a `console.error` naming the function.
+
+### V-3 · T1 / T3 / T10 — as reported
+
+- **T1:** an uncapped grep for a `finiteNumber` definition across `src/lib` + `src/modules` returns
+  **exactly one** hit — `src/lib/reportsFormat.js:40` — and `reportsCustomers.js:21`,
+  `reportsExecutive.js:25`, `reportsHostesses.js:16` all import it.
+- **T3:** `ReportSurface.jsx` — `EmptyPage` renders `<MissingParamsBanner names={missingParams} />`
+  (`:416`) **above** the `Envelope`, and the early return passes `payload.meta?.missing_params` into
+  it (`:635`). The banner is no longer skipped by the empty-page branch.
+- **T10:** the banner renders `missingReportParamsMessage({}, names)` (`:98`), and `reportsParams.js`
+  emits the effects clause only when `effects.length > 0` — the dangling-dash branch.
+
+### V-4 · `npm run gate` on the final tree — **exit 0**
+
+`npm run gate > <log> 2>&1; echo exit=$?` ⇒ **`exit=0`**, 17/09/2026 04:41, on `0cd230fc`.
+**117 test files · 3,048 tests passed · 0 failed** *(= the audit's 3,035 + the 13 the fix round added)*
+· prettier all clean · build clean · `jscpd` **419/53,173 = 0.79 %** of a 3 % cap, 31 clones *(was
+0.80 % / 32 — `finiteNumber`'s consolidation is visible in the number)* · `knip` 2 config hints only ·
+`audit` 0 findings · `check:bidi` · `check:context` · `check:docs-structure` 165 files ·
+`check:iron-rules` 17/17 · `check:declared-counts` 6/6.
+
+### V-5 · md5 sweep — **unchanged since the audit: 16/17 byte-equal, 17/17 logic-equal**
+
+- **No migration was added after J2:** `ls supabase/migrations/*module11*` = **20 files**, newest
+  `20260917021500_module11_j2_rpc_round5.sql`, and no migration of any kind is dated after it.
+- Live `select proname, md5(prosrc), length(prosrc), prosecdef, proconfig from pg_proc` (MCP,
+  read-only) compared **by script**, not by eye, to the latest file per function in
+  `results/fn_md5_files2.txt`: **16 byte-equal** (J2 x13 · J1 x2 for m16/m21 · I2 x1 for m03).
+- The single difference is `approve_feedback_ai_run`, and **I re-derived the reason rather than
+  inheriting it**: stripping the `--` lines from the file body (2 Hebrew comment lines, 1,369 ⇒
+  1,239 chars) reproduces the live md5 `e03df921aea332bf199101659679f9de` **exactly**. Comment-only.
+- All 17 live with `prosecdef=true` and `proconfig={search_path=""}`.
+
+### V-6 · Live look at the FINAL tree — the one check that is not a test
+
+**Why it is trustworthy, stated before the result:** port 5189 serves `dist/`, and `dist/` was
+rebuilt by **this session's own `npm run gate`** at 04:41; `md5` of `dist/index.html` on disk equals
+the `md5` of what `:5189` returns (`85a2dafb0935b39edde2893e00cb9533`). So the screens below are
+`0cd230fc`, not the frozen `300e80dc` build the earlier evidence rounds used.
+Driven as **CEO**, onboarding mode 0, through `build-2026-09-16/scripts/evidence-common.mjs`
+(identities from `.env.local`, never printed; no DB write — the onboarding level uses the documented
+GET intercept).
+
+| Surface | What I measured on the screen |
+|---|---|
+| **m9 `aging`** | `rendered` · **35** invoices · **236,382 ₪** · pager `1–35 מתוך 35` · bucket money **42,231 · 89,828 · 53,661 · 32,716 · 17,946** and the over-60 tile **50,662** — **digit-for-digit what F-09 measured at `fc3cb231`.** ⇒ the fix round, `finiteNumber`'s consolidation included, **moved no number.** |
+| **export caption** | both locked lines render (`יירד: גיול-חובות_נכון-להיום.xlsx` · the columns line), button **enabled**, **zero** `role=alert`. |
+| **m22 `notes`** | run bar = *"מציג 2 ריצות-ניתוח מאושרות, האחרונה מ-16/09/2026 · אושרה ע"י ישי אטיאס"*; the string `הריצה נכשלה` appears **nowhere** on the surface. |
+| **m17 `fairness`** | Gini **0.46**, `n=106 דיילות · 1,877 משמרות` — **confirms T12 live**: the conference story's `0.49 / 117 / 2,132` is the stale side, the screen is right. |
+| **console** | **0 errors** across all three surfaces. |
+
+### V-7 · New findings from MY OWN reading of the diffs — **no new blocker**, two new debts
+
+**N-1 · `src/lib/reportsExport.js` is a BINARY file to git, and the B-1 fix is therefore invisible in
+every diff.** `git diff 91aee46a..0cd230fc -- src/lib/reportsExport.js` prints
+*"Binary files … differ"*. **Cause, measured, not guessed:** the file carries a **literal NUL byte and
+a literal `0x1F`** at byte 4177, inside the comment on line 53 that documents a regex control-character
+range — and that comment's own sentence is *"a control char inside an expression is invisible in the
+code itself"*. **Pre-existing:** the same single NUL is present at `fc3cb231` and at `91aee46a`, so the
+fix round did not introduce it, and the gate is green over it (prettier, eslint, `check:bidi` and the
+build all pass — `check:bidi` looks for bidi glyphs, not control bytes).
+🔑 **Why it is worth a line anyway:** the template's PR step 2 tells Ishay to *review the `Files
+changed` diff himself*, and for this file GitHub will show him the same *"Binary file not shown"*.
+**A security-relevant file whose diff cannot be reviewed is a review that silently does not happen.**
+⇒ **§7 T14.** One-line repair: write the range with escape sequences instead of the literal bytes.
+**Not a blocker** — no runtime effect, and the change itself is fully reviewable with `git diff --text`.
+
+**N-2 · `npm run lint` scans the agent worktrees, so the gate can go red on code that is not in the
+repo.** `eslint.config.js`'s `globalIgnores` is `['dist', 'playwright-report', 'test-results']` —
+**`.claude/worktrees/` is not in it**, while `.git/info/exclude:18` hides it from git. Measured in
+this turn's gate log: the one pre-existing `react-hooks/exhaustive-deps` warning in
+`src/modules/01_auth/UsersManagementPage.jsx:76` is reported **three times** — once for the repo and
+once for each of `.claude/worktrees/agent-a139b16e9cb4dd422` and `.claude/worktrees/wf_256b7ec8-ebb-4`.
+Today that is only noise (`0 errors, 3 warnings`). **The latent half is the point:** a live agent's
+worktree holding one mid-edit file with an ESLint **error** turns `npm run gate` red for a tree nobody
+is shipping — and the message would name a path that does not exist in the repo. ⇒ **§7 T15**,
+infrastructure, not module 11's. **Not a blocker** — the gate is green now and the file that produces
+the warning is byte-untouched vs `origin/dev` (`git diff origin/dev...HEAD -- src/modules/01_auth/` is empty).
+
+**N-3 · a stale row I repaired inside my own scope:** `module-11.md §8.1` row 7 still read
+`37 of 39` after the fix round closed **T6** and §3.3 now sums to 39. §8.1 is the *previous* audit's
+dated record, so it is **annotated, not rewritten**, and the current gate is printed fresh in **§8.2**.
+*(I re-counted the buckets myself rather than trusting the sum line: (א) 17 · (ב) 10 · (ג) 10 · 25 · 18
+= **39**, no number twice.)*
+
+**One minor, recorded and deliberately not routed:** `handleExport` is now `async` with no busy guard,
+so a double-click can start two exports. The consequence is two identical downloads of a local file —
+not worth a line in the register, and saying so is cheaper than leaving it unstated.
+
+### V-8 · Reverse sweep of this module's debt tokens (§7's mandatory line — the first audit did not print it)
+
+`swept — 56 tokens across the four surfaces: PROJECT_MASTER §6 **21** · micro-guides **34** · src
+comments **1** · design notes **0**.`
+**Disposition, measured by script on `PROJECT_MASTER.md`:** **3 struck-as-paid** (one from m6 and two
+from m5, all *"שולם 16/09/2026"*) · **18 live, and every one of the 18 carries a `DD/MM/2026` date in
+its own line** · **0 undated**. ⚠️ **What I did NOT do, said plainly:** the 34 micro-guide-side tokens
+(20 of them in *other* modules' guides — m3 x2 · m5 x6 · m6 x4 · m8 x7 · m9 x1) were **counted, not
+individually adjudicated**; module 11's own guide §3.2 mapped all 8 distinct incoming debts on 11/09
+and that mapping was not re-derived here. ⇒ **טעון בדיקה**, handed to the orchestrator with the counts.
+
+### V-9 · Micro-guide compaction (§4c) — **NOT run, and the reason is not "not needed"**
+
+`כיווץ מדריך-המיקרו: לא בוצע — חוב מועבר, לא "לא נדרש".` **Measured:** `module-11.md` is **764
+lines**; the two most recently closed modules stand at **717** (`module-9.md`) and **674**
+(`module-7.md`), and `docs/archive/` holds pre-compaction copies for modules **3 · 4 · 5 · 6 only** —
+**none for 7, 8 or 9.** ⇒ the step has not run at the last three closes, which is exactly the failure
+§4c records about itself.
+**Why I still did not run it, rather than repeating the omission silently:** §4c's compaction is a
+*harvest*, and §4c's own 2b′ requires the compacting session to audit its result against the archive
+and **declare which ranges it read fast**. My brief scoped me to the verdict — *"building on the
+previous audit's findings file rather than re-auditing everything"* — so I have not read those 764
+lines at the depth a harvest needs, and a harvest done at that depth is precisely where working-lessons
+are measured to be lost. **Doing it badly here would be worse than the debt.** ⇒ recommended as a
+dedicated step, with the measurement above, **and it is Ishay's call, not mine.**
+
+### V-10 · LOG compaction (persistence 2b) — escape hatch stands, number re-measured
+
+`awk '/^## Session Log/{f=1;next} /^## Reference/{f=0} f' docs/CLAUDE_CODE_LOG.md | wc -l` ⇒ **2,626**,
+run by me this turn — the same number `PROJECT_MASTER §6` **T13** already carries, against a ≤150
+target. Registered, not done; and T13's line already names the existing m6-closing row so the debt is
+not counted twice.
+
+### V-11 · What this re-run did NOT verify — named, not implied
+
+1. 🔴 **E2E on the final tree — `טעון בדיקה`, and this time the reason is measured rather than
+   "the file did not arrive".** I am forbidden to run the suite; a parallel agent owns it. I polled
+   `results/p5-e2e-final.json` for the full 25 minutes (04:41→05:06) and **it never appeared.**
+   🔑 **But the finding is the other half, and it would not have announced itself:** while I waited I
+   located the Playwright run that was actually in flight — it is executing in
+   `.claude/worktrees/agent-a139b16e9cb4dd422`, and **that worktree is a clean checkout of `bce81cdd`**
+   (`git -C <worktree> rev-parse HEAD`, run twice, 04:55 and 05:06). I then checked the code rather than
+   the SHA: its `ExportBar.jsx` **still contains `includes(err?.message)`**, the tautology B-1 removed, and
+   its md5 (`42ef3907…`) differs from the repo's (`95611904…`). Its previous run finished 04:09 with
+   `{status:'passed', failedTests:[]}` — **a green result about a tree that does not contain either fix.**
+   ⚠️ **⇒ when `p5-e2e-final.json` does arrive, its tree identity must be verified before it is read as
+   covering `0cd230fc`.** A missing file announces itself; a file measuring the wrong tree does not.
+   **Why the verdict still stands, stated as reasoning that can be checked and not as reassurance:** every
+   path the fix round touched is either unreachable from E2E by construction — a `writeXlsxFile`
+   rejection, a live 409 (H1's unique partial index makes a second concurrent run impossible from one
+   actor), a deleted `params` row (`ParamsTab` has no delete path) — or pure and covered by the 1,686
+   `src/lib` tests. **And the one E2E case that could plausibly have broken, I checked:**
+   `MissingParamsBanner` returns `null` when `names` is empty (`ReportSurface.jsx:91`), so the empty-page
+   DOM asserted by `e2e/reports.spec.js:457` (*"משטח שהסינון רוקן"*) is **byte-unchanged** for every
+   payload that can occur. The last full measurement stays inherited and labelled: `p3-e2e-rerun.json`
+   185 passed / 6 failed / 7 skipped on `300e80dc`, five of the six pre-existing on `origin/dev@9b5ea534`
+   with byte-identical assertion messages (`p5-baseline-dev.json`).
+2. **The B-2 fault-injection half** — two browser contexts against the *live* edge function — was not
+   run by anyone (it calls the paid model). What is proven is the unit path through
+   `invokeClassify → error.context.json() → classify → localState` with the exact 409 body of
+   `index.ts:825–828`. **A real HTTP 409 has still never been observed by anybody.**
+3. **A real `writeXlsxFile` rejection** was never induced; B-1's tests mock `exportReportRows`.
+4. **T3 on a live screen** is unreachable by construction — all five params exist live and `ParamsTab`
+   has no delete path — so it is verified in jsdom only.
+5. **13 of the 16 surfaces** were not rendered by me this turn (I drove three), and no keyboard or
+   screen-reader path was driven by anyone in this whole close.
+6. **The majors and the seven §6 debts were not re-adjudicated.** M-1/M-2/M-3 and T2/T4/T5/T8/T9/T12/T13
+   are **recorded decisions and questions for Ishay — explicitly NOT blockers**, and nothing here
+   changes that.
+
+### V-12 · 🪞 Self-review — four answers, each anchored in THIS re-run
+
+1. **Who caught the mistakes?** **Not me, and I am the second reader by design.** The two blockers were
+   the first audit's; the fixes were the fix round's. What I added is the part neither could do for
+   itself: **re-deriving the claims instead of reading them.** The one thing I caught that nobody had
+   is **N-1** — and it surfaced only because I ran the diff command my brief named instead of trusting
+   the fix report's prose, and git answered *"Binary files differ"* where a diff should have been.
+2. **Which of my own actions got no check at all?** **The E2E line** (I may not run the suite) and
+   **9 of the 16 surfaces** — it was 13 until I ran V-13, which is the one blind spot I closed rather than
+   declared, and it immediately corrected a sentence I had already written. Also unchecked by me: the 34 micro-guide-side debt tokens (V-8), and
+   the first audit's §1 findings themselves — I did not re-verify F-02, F-06, F-07 or F-14; I inherited
+   them, and I am saying so rather than letting the ✅s read as mine.
+3. **Where did I look for confirmation instead of refutation?** **Once, on the md5 sweep.** The
+   comparison I had to make was live-vs-*latest-file-per-function*, and "latest" is a chronological
+   judgement over 20 files — exactly the kind of thing that is easy to eyeball into agreement. I wrote
+   a script to pick the latest file and compare, **and I re-derived the one mismatch's comment-stripping
+   myself** rather than accepting F-01's account of it. The transcription I nearly trusted was my own.
+4. **What is the general shape?** **Two shapes, and they are different from the audit's.** The audit's
+   dominant shape was *a number frozen while the thing it describes kept moving*; **this round's is
+   `a check that runs but cannot see` — N-1 (a diff that renders nothing) and N-2 (a linter that sees
+   too much).** Neither fails; both quietly stop being evidence. That is the same family as B-1 itself.
+
+### V-13 · Closing my own blind spot instead of declaring it — the executive tab, and what "no number moved" actually means
+
+**Why this exists:** V-6 opened **three** surfaces, and I picked them because that is where the blockers and
+T12 live — **not** where `finiteNumber` lives. The helper was consolidated out of `reportsCustomers.js`,
+`reportsExecutive.js` and `reportsHostesses.js`, and **the executive copy is the one F-05 measured as already
+textually drifted** — yet I had rendered no executive surface at all. A declared blind spot with a one-command
+check is a check you should run.
+
+**What I ran:** `node build-2026-09-16/scripts/evidence-run.mjs --tab exec --identities CEO --modes 0
+--surfaces exec-overview,trends,discounts,staffing` against the current `dist` on :5189 ⇒ `exit=0`,
+**failures=[]**, all four `rendered`, **0 console errors and 0 overflow** on every one. Then I diffed **every
+measured field** of each surface against the `CEO/m0` blocks of `results/evidence-run-final-exec.json`
+(the baseline taken at `fc3cb231`, `started_at 2026-09-17T00:07:28Z`).
+
+🔴 **Four figures DID move, and had I stopped at V-6 I would have written a false sentence:**
+
+| Surface | Baseline (00:07) | Now (05:11) |
+|---|---|---|
+| מ2 `exec-overview` | `n=241`, `מוצגות 8 מתוך 241`, revenue `1,962,981 ₪`, growth `37.7%`, margin `58.6%` | `n=242`, `מתוך 242`, `1,974,430 ₪`, `38.5%`, `58.7%` |
+| מ3 `trends` | `n=736`, price/hour `260 → 305 ₪`, margin `58.6%` | `n=737`, `260 → 307 ₪`, `58.7%` |
+| מ4 `discounts` | `מוצגות 50 מתוך 736` | `מתוך 737` |
+| מ17-side מ6 `staffing` | `n=717 מתוך 736`, excluded `19` | `n=717 מתוך 737`, excluded `20` |
+
+**The cause is data, and I measured it to the row and to the second rather than inferring it from the shape:**
+`select count(*) from projects where project_status in ('finished','event_finished','awaiting_invoice',
+'awaiting_payment')` ⇒ **737** — exactly the `n` now on screen — of which **exactly one** row has
+`updated_at >= 2026-09-17T00:07:28Z`, and that row's timestamp is
+**`2026-09-17 02:00:00.327091+00`**: a scheduled job, firing between the baseline run and mine.
+*(Method note worth keeping: my first two queries returned `0` because I filtered on a `status` column that
+does not exist and then on the Hebrew labels the screen prints. The statuses are English enum values —
+`finished` · `event_finished` · `awaiting_invoice` · `awaiting_payment`. **I searched with the vocabulary I
+arrived with, twice, before reading the column list.** The 19⇒20 exclusion is the same one project: it has no
+actual-guest figure, so it joins the population and the exclusion together, which is why `n=717` did not move.)*
+
+✅ **And the structural half that makes it certain rather than plausible:** `population`, `so_what` and
+`definitions` are **server-generated strings** — they come out of the RPC in `meta`, not out of React. Every
+one of those RPCs has an md5 **byte-identical** to its pre-fix migration file (V-5). **Client code cannot
+change a sentence the database composed.** ⇒ the movement cannot be the fix round even in principle.
+
+🔑 **So the honest sentence is `the fix round moved no number — a cron moved one project`, not `no number
+moved`.** The difference matters at the conference: anyone re-shooting the executive tab tomorrow will see
+different figures again, and the reason must already be on record. *(It is the same shape as T12, one level
+down: the **screen** is right and keeps measuring; what goes stale is any artefact that froze its output.)*
+
+---
+
+## 👑 VERDICT — `[YES]`, branch head `0cd230fc`
+
+**Both blockers are proven fixed by the ④ checks their own FIX-READY lines named** — three new
+`ExportBar` cases and the 409 + console cases in `CustomersTab`, all green on the final tree, all
+structurally red on the old one. **`npm run gate` is `exit 0`** (117 files · 3,048 tests). **The md5
+sweep is unchanged** — 16/17 byte-equal, the 17th comment-only and re-derived here. **My own reading of
+the fix diffs produced no new blocker**, and the live render of the final tree reproduces the
+acceptance anchor digit-for-digit with zero console errors.
+**The module is mergeable into `dev`.**
+
+🔴 **DoD sign-off gate — `ויתור על הד-ההקלדה — הכרעת-ישי 16/09/2026, חד-פעמי` (D-9).** The gate is
+printed as the template requires and **no typed echo is awaited.** The waiver is one-time and changes
+no gate in the repo.
+
+**What `[YES]` does NOT mean, so it is not read as more than it is:** the three majors (M-1 money over
+the wire · M-2 the two drifted conference stories · M-3, now closed by T6) and the seven open §6 debts
+are **Ishay's decisions and questions, not merge blockers** — and the E2E line, V-11 item 1, is the one
+gate this re-run could not close itself.
+
+🚫 **This session did not merge, push, or open a PR**, and it wrote only: this file · `module-11.md` ·
+`docs/CLAUDE_CODE_LOG.md` · `STATUS.md`.
+
+**Still OWED to the orchestrator** *(each one is a write outside this session's file scope)*:
+① ✏️ **§7 item 100 for T4's conflict question — NO LONGER OWED, and the correction is the point.**
+I wrote *"still unwritten"* here, then re-ran `git status` before reporting and found
+`docs/PROJECT_MASTER_sec7.md` modified: **the orchestrator landed it as item `100. 🔵 פתוח·מוצר+אבטחה·מ11`**
+while this session was writing. **It was true when drafted and false when saved** — which is exactly why
+the rule is *check in the same turn you write*, not *check once*. **What remains is Ishay's ruling on
+item 100, not its registration** · ② `§6` lines for the two new debts **T14** (N-1) and **T15** (N-2) · ③ persistence
+0b/0c/2c/4/5 — the §7 ripple pass, the `db_roadmap` Done-rows, `00_roadmap.md §3`'s actual-vs-planned
+line, the routine growth-triggers check and the dying-plans check — **none of them run by me, none of
+them in my write scope** · ④ archiving this findings file to `docs/archive/` once the merge lands
+(persistence 6; it is correct **after** the merge, and this session may not create files there).

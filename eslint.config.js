@@ -9,7 +9,9 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   // dist = תוצר build; playwright-report/test-results = תוצרי-ריצה של Playwright (מגניזה-git),
   // כולל bundle-ים ממוזערים של ה-trace viewer שנכשלים על no-undef/no-cond-assign כשנסרקים כקוד-מקור.
-  globalIgnores(['dist', 'playwright-report', 'test-results']),
+  // ✏️ 17/09/2026 — `.claude/worktrees` = עותקי-עבודה של סוכנים (אודיט-הסגירה של מ11, T15): בלעדיו
+  // `npm run lint` — ולכן השער כולו — סורק קוד שאינו חלק מהריפו ויכול להאדים על עריכה באמצע.
+  globalIgnores(['dist', 'playwright-report', 'test-results', '.claude/worktrees']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
