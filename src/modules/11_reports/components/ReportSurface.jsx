@@ -71,7 +71,11 @@ function Tiles({ tiles, onOpenTarget }) {
         // ✅ `flex-wrap` נשמר — הכרעת-ישי 08/08 (*"פלקס ולעולם לא grid"*) אינה נגועת.
         <div
           key={tile.key}
-          className="flex min-w-[210px] max-w-[340px] grow basis-[210px] [&>*]:w-full"
+          // ✏️ 17/09/2026 — `h-full` נוסף: העוטף כבר נמתח לגובה אחיד *(ברירת `align-items: stretch`)*,
+          // אבל הכרטיס עצמו מילא רק רוחב ⇒ ארבעה כרטיסים באותה שורה בארבעה גבהים.
+          // ‏📏 נמדד: הפרש 17px לפני הגדלת הכתב, **39px אחריה** — הכתב הגדול שובר שורות-משנה
+          // ליותר שורות ומגדיל את הפער. ‏🔑 ו-`flex flex-wrap` נשמר — הכרעת-ישי 08/08 אינה נגועה.
+          className="flex min-w-[210px] max-w-[340px] grow basis-[210px] [&>*]:h-full [&>*]:w-full"
         >
           <KpiTile tile={tile} masked={tile.masked} onOpenTarget={onOpenTarget} />
         </div>
