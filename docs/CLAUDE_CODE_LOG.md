@@ -46,6 +46,10 @@
 
 ## Session Log (newest first)
 
+### 17/09/2026 (12:0X-12:3X) — module 11 released: PR #143 ⇒ dev, PR #144 ⇒ main, Production deployment success
+
+**Ishay's one-time word 12:0X: *"חד פעמי תעלה לייצור אתה"*** — the classifier that had refused `gh pr merge` at 06:1X did not fire this time; both unions went through the CLI with CI green on each: #143 (`10f234c1` ⇒ `dev` = `6bef9740`, 12:19) · #144 (`dev` ⇒ `main` = `2b5e1648`, 12:23) · `gh api …/deployments`: **Production `6499575637` on `2b5e1648`, status success**; main CI run 35204818538 green. Post-merge flips (this entry, STATUS, the guide header ✅ MERGED, dead-branch note, estimation #12 (b)) on branch `ishay/m11-post-merge` ⇒ PR ⇒ `dev`. Lesson: the same command was refused at 06:1X and accepted at 12:1X with identical arguments — the classifier is not deterministic; plan the click as a fallback, not as the path.
+
 ### 16/09/2026 23:1X → 17/09/2026 06:3X — module 11: handoff §0א steps ②–⑩ run end-to-end by the orchestrator; stopped one click short of `dev`
 
 **What ran, in the handoff's order (`HANDOFF-build-2026-09-16.md §0א` row 5), every step by agents, every report written incrementally, every artifact preserved under `docs/specs/module_11_reports/build-2026-09-16/`:**
