@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { allowsColumn } from '@/lib/exportSensitiveColumns'
+import fs from 'node:fs'
+import path from 'node:path'
+import { allowsColumn, PERSON_RATE_KEY_PATTERN } from '@/lib/exportSensitiveColumns'
 import { applyColumnOrder, defaultOrder } from '@/lib/exportColumns'
 import { buildExportSheet } from '@/lib/reportsExport'
 
@@ -26,11 +28,50 @@ const RPC_ROWS = JSON.parse(`[
 const VIEWER = { דיילות: 'view' }
 const MANAGER = { דיילות: 'edit' }
 
-it('🔴 העמודות מה-RPC אינן נושאות פונקציות — וזו סיבת קיומו של הרשם', () => {
-  for (const column of RPC_COLUMNS) {
-    expect(typeof column.visible).not.toBe('function')
-    expect(typeof column.value).not.toBe('function')
-  }
+// 🔴🔴 **הבדיקה שהיתה כאן הוחלפה — היא היתה טאוטולוגיה, וזו טעות שלי.**
+// נכתב כאן `expect(typeof column.visible).not.toBe('function')` על פיקסטורה שנבנתה
+// ב-`JSON.parse` — ו-`JSON.parse` **לעולם אינו מייצר פונקציה**, כלומר הטענה
+// **אינה יכולה להיכשל.** והערה *"הועתק מהמיגרציה"* היא הערה, לא מנגנון:
+// **שום דבר לא קרא את ה-SQL בזמן הבדיקה** ⇒ עמודת-שכר חדשה היתה משאירה הכל ירוק.
+//
+// ✅ **מה שהחליף אותה הוא סריקה אמיתית של קבצי-המיגרציה מהדיסק.**
+// כל הכרזת-עמודה שמפתחה נראה כמו שכר-פר-אדם חייבת להיות ברשם.
+// 🔑 **זה תופס גם את הבא** — מיגרציה עתידית שתחשוף שדה-שכר תחת שם שלישי
+// **תפיל את הבדיקה עד שמישהו יסווג אותה**, ולא תעבור בשתיקה.
+describe('🔴 סריקת המיגרציות — אין שדה-שכר מוכרז שאינו ברשם', () => {
+  const dir = path.resolve(process.cwd(), 'supabase/migrations')
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql'))
+
+  it('הסריקה עצמה מוצאת קבצים — אחרת היא עוברת על ריק ואינה בודקת דבר', () => {
+    expect(files.length).toBeGreaterThan(10)
+  })
+
+  it('🔴 כל מפתח שנראה כמו שכר-פר-אדם נמצא ברשם-העמודות-הרגישות', () => {
+    const unregistered = new Set()
+    for (const file of files) {
+      const sql = fs.readFileSync(path.join(dir, file), 'utf8')
+      for (const match of sql.matchAll(/'key',\s*'([a-z0-9_]+)'/g)) {
+        const key = match[1]
+        if (PERSON_RATE_KEY_PATTERN.test(key) && allowsColumn(key, { דיילות: 'view' })) {
+          unregistered.add(`${key}  (${file})`)
+        }
+      }
+    }
+    expect([...unregistered]).toEqual([])
+  })
+
+  it('הסריקה באמת פוגשת את `hourly_rate` — אחרת הדפוס שלה שגוי', () => {
+    const seen = files.some((file) =>
+      /'key',\s*'hourly_rate'/.test(fs.readFileSync(path.join(dir, file), 'utf8')),
+    )
+    expect(seen).toBe(true)
+    expect(PERSON_RATE_KEY_PATTERN.test('hourly_rate')).toBe(true)
+    expect(PERSON_RATE_KEY_PATTERN.test('hourly_rate_snapshot')).toBe(true)
+    // ⚠️ ולא תופס עמודות-כסף מצרפיות — רישום-יתר מרוקן דוחות-ניהול.
+    expect(PERSON_RATE_KEY_PATTERN.test('final_profit')).toBe(false)
+    expect(PERSON_RATE_KEY_PATTERN.test('median_rate')).toBe(false)
+    expect(PERSON_RATE_KEY_PATTERN.test('response_rate')).toBe(false)
+  })
 })
 
 describe('רשם העמודות הרגישות — תעריף שעתי בתפקיד view', () => {
