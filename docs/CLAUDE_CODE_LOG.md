@@ -2814,4 +2814,10 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
 
 ⚠️ **A skill in Ishay's global `~/.claude/skills/` and a repo-local skill with the SAME NAME shadow each other, silently.** The harness surfaces one of them in the skill listing — its description, its body — while edits to the other never fire, so a session can carefully maintain a skill that is never the one being loaded. *(Anchor 23/07/2026: `feature-acceptance` existed in both places at once, and the listing was showing the **global** one's description while the **repo-local** copy was the one being edited. Resolved by moving it out of the repo entirely — which is *why* it is global today, not merely because it is project-agnostic. Still live as a shape: the current skill listing shows both a bare `feature-acceptance` and an `anthropic-skills:feature-acceptance`.)* ⇒ **before creating or renaming a repo-local skill, check `~/.claude/skills/` for the same name.** *(Restored 12/08/2026 by the prune audit — deleted in the 28/07 journal prune, found nowhere else in the repo: the surviving log line records only that "a real name collision was found and resolved", never what a collision actually does.)*
 
+
+📐 **מ11 פזה א׳ — טיפוגרפיה, 17–18/09/2026, ענף `ishay/type-scale` (טרם מוזג).** למערכת לא היתה סקאלת-גדלים כלל — **422 גדלים ידניים ב-52 קבצים, 87% מהם מחוץ למודול 11.** נבנתה סקאלה אחת ושער `check:type-scale` **עם קו-בסיס** *(כדי שלא יצבע באדום עבודה של סשן מקביל)*, ו-408 מופעים הוחלפו.
+🔑 **ומה ששווה לזכור מהסבב הזה, כי הוא חזר בארבע תצורות שונות: מדידה שמסכימה עם עצמה.** הסקריפט המיר רק `text-[Npx]` ⇒ פסח על שלוש הוראות מפורשות ועל `fontSize` של הגרפים, **והמונה "422 ⇐ 14" הראה ירוק כל הזמן** · טענת-בדיקה *"יש שורות בטבלה"* עברה על מסך אחר לגמרי · ושלושה צילומים נראו מושלמים והציגו בנייה מענף אחר.
+⇒ **הכלל שנולד: בדיקה חייבת לנקוב בשם הדבר שהיא מצפה לו, ולהיבדק שהיא גם יודעת ליפול.** השער עצמו נבדק בשני הכיוונים לפני שנסמך עליו.
+הפירוט המלא: `docs/specs/module_11_reports/HANDOFF-typography-2026-09-17-01.md` · התוכנית `docs/plans/2026-09-17-module-11-typography.md` · ורשומת-הכיול `docs/guides/01_estimation_log.md`.
+
 </div>
