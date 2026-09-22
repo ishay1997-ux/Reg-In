@@ -15,6 +15,8 @@
 
 import writeXlsxFile from 'write-excel-file'
 import { formatIsraelDate } from '@/lib/reportsFormat'
+// 🔑 װ`exportColumns.js` אינו מייבא דבר ⇒ אין מעגל-ייבוא. **אותה דלת-קריאה, לא העתק.**
+import { isVisible, readCell } from '@/lib/exportColumns'
 
 // 🔤 **שלושת המצבים הריקים נעולים מילה-במילה** — ת4 ו-`cards-customers.md` G-ל8. הם מועתקים
 // ולא מנוסחים מחדש: שינוי-נוסח כאן הוא שינוי-מוצר בשלושה-עשר כרטיסים בבת-אחת.
@@ -172,12 +174,18 @@ function cellFor(value, format) {
  * טהור — כדי שייבדק ביחידה בלי לדמות הורדת-קובץ.
  */
 export function buildExportSheet({ columns, rows }) {
-  const header = (columns ?? []).map((c) => ({
+  // 🔴🔴 **הסינון חוזר כאן במכוון, וזו אינה כפילות.** װ`applyColumnOrder` אכף
+  // כבר את `visible`, אבל **הפונקציה הזו היא זו שכותבת את הקובץ**, והיא
+  // מיוצאת וניתנת לקריאה ישירה מכל מסך עתידי שלא יעבור דרך החלון.
+  // 🔑 **השאלה אינה "האם המסלול הרגיל מסנן" אלא "האם קיים מסלול שעוקף"** —
+  // ודליפת-שכר היא טעות בלתי-נראית: אין מסך שמראה אותה ואין בדיקה שנופלת עליה.
+  const visible = (columns ?? []).filter(isVisible)
+  const header = visible.map((c) => ({
     value: c.label,
     type: String,
     fontWeight: 'bold',
   }))
-  const body = (rows ?? []).map((row) => (columns ?? []).map((c) => cellFor(row[c.key], c.format)))
+  const body = (rows ?? []).map((row) => visible.map((c) => cellFor(readCell(row, c), c.format)))
   return [header, ...body]
 }
 

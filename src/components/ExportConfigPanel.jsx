@@ -94,9 +94,9 @@ function ColumnRow({
 
 function FilterRow({ condition, columns, rows, onChange, onRemove }) {
   const column = columns.find((item) => item.key === condition.key)
-  const categorical = column ? isCategorical(rows, column.key) : false
+  const categorical = column ? isCategorical(rows, column) : false
   const operators = column ? operatorsFor(column.format, categorical) : []
-  const values = column && categorical ? distinctValues(rows, column.key) : []
+  const values = column && categorical ? distinctValues(rows, column) : []
 
   return (
     <div className="flex flex-wrap items-center gap-1" data-testid="export-filter-row">
@@ -106,7 +106,7 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
         aria-label="עמודה לסינון"
         onChange={(event) => {
           const next = columns.find((item) => item.key === event.target.value)
-          const nextCategorical = next ? isCategorical(rows, next.key) : false
+          const nextCategorical = next ? isCategorical(rows, next) : false
           const first = next ? operatorsFor(next.format, nextCategorical)[0] : null
           onChange({
             key: event.target.value,
@@ -312,7 +312,7 @@ export default function ExportConfigPanel({
             onClick={() => {
               const column = columns[0]
               if (!column) return
-              const first = operatorsFor(column.format, isCategorical(rows, column.key))[0]
+              const first = operatorsFor(column.format, isCategorical(rows, column))[0]
               onConditions([
                 ...conditions,
                 {

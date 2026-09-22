@@ -78,17 +78,19 @@ describe('operatorsFor — הפקד נגזר מהפורמט', () => {
 
 describe('distinctValues · isCategorical — נמדד מהנתונים, לא מוכרז', () => {
   it('מדרג הוא קטגוריה, שם-לקוח אינו בהכרח', () => {
-    expect(distinctValues(ROWS, 'bucket')).toEqual(['31–60', '61–90', '90+'])
-    expect(isCategorical(ROWS, 'bucket')).toBe(true)
+    expect(distinctValues(ROWS, { key: 'bucket' })).toEqual(['31–60', '61–90', '90+'])
+    expect(isCategorical(ROWS, { key: 'bucket' })).toBe(true)
   })
 
   it('חורג מהסף ⇒ אינו קטגוריה', () => {
     const many = Array.from({ length: CATEGORY_MAX_VALUES + 1 }, (_, i) => ({ k: `v${i}` }))
-    expect(isCategorical(many, 'k')).toBe(false)
+    expect(isCategorical(many, { key: 'k' })).toBe(false)
   })
 
   it('ריקים אינם ערך, וכפילויות מתאחדות', () => {
-    expect(distinctValues([{ k: 'א' }, { k: 'א' }, { k: '' }, { k: null }], 'k')).toEqual(['א'])
+    expect(distinctValues([{ k: 'א' }, { k: 'א' }, { k: '' }, { k: null }], { key: 'k' })).toEqual([
+      'א',
+    ])
   })
 })
 
@@ -164,5 +166,31 @@ describe('applyFilters — הרכבה', () => {
 
   it('אין תנאים ⇒ הכול עובר', () => {
     expect(applyFilters(ROWS, COLUMNS, [])).toHaveLength(4)
+  })
+})
+
+// 🔴 **החוזה ש-`PROJECT_MASTER §6` מבטיח למסכים הבאים — §7 פריט 9ב.**
+// עד 22/09/2026 הרשם הבטיח `value?` ו-`visible?` ו**שניהם לא היו קיימים במנוע.**
+describe('חוזה value — עמודה נגזרת מסוננת כמו כל עמודה', () => {
+  const DERIVED = { key: 'total', label: 'סכום כולל', format: 'money', value: (r) => r.net * 1.18 }
+  const RAW = [{ net: 100 }, { net: 1000 }]
+
+  it('🔴 תנאי מספרי רץ על הערך הנגזר, לא על מפתח שאינו קיים', () => {
+    const out = applyFilters(RAW, [DERIVED], [{ key: 'total', operator: 'gt', value: '200' }])
+    expect(out).toEqual([{ net: 1000 }])
+  })
+
+  it('רשימת-הבחירה נבנית מהערכים הנגזרים ואינה ריקה', () => {
+    const status = {
+      key: 's',
+      label: 'סטטוס',
+      format: 'text',
+      value: (r) => (r.done ? 'סגור' : 'פתוח'),
+    }
+    expect(distinctValues([{ done: true }, { done: false }], status)).toEqual(['סגור', 'פתוח'])
+  })
+
+  it('בלי value — הקריאה נשארת לפי מפתח, בלי שינוי התנהגות', () => {
+    expect(distinctValues(ROWS, { key: 'bucket' })).toEqual(['31–60', '61–90', '90+'])
   })
 })

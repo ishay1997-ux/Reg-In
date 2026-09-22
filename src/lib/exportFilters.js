@@ -15,6 +15,7 @@
 //    מהנתונים** ולא מוכרזת פר-דוח, ולכן היא נכונה גם בדוח ה-17 שטרם נבנה.
 
 import { finiteNumber } from '@/lib/reportsFormat'
+import { readCell } from '@/lib/exportColumns'
 import { stripBidiControls } from '@/lib/reportsExport'
 
 const NUMERIC = new Set(['money', 'int', 'days', 'percent', 'ratio'])
@@ -57,19 +58,25 @@ export function operatorsFor(format, categorical = false) {
   return categorical ? [OPERATORS.oneOf] : [OPERATORS.contains]
 }
 
-/** הערכים שקיימים בפועל בעמודה — הבסיס לרשימת-הבחירה. ריקים אינם ערך. */
-export function distinctValues(rows, key) {
+/**
+ * הערכים שקיימים בפועל בעמודה — הבסיס לרשימת-הבחירה. ריקים אינם ערך.
+ *
+ * ⚠️ **מקבל את העמודה ולא את המפתח, וזה שינוי-חתימה מכוון** (22/09/2026):
+ * עמודה נגזרת (`value`) אינה יושבת על `row[key]` כלל, ורשימת-בחירה שנבנתה
+ * ממפתח היתה **ריקה בשקט** — פקד שנראה תקין ואינו מציג אף ערך.
+ */
+export function distinctValues(rows, column) {
   const seen = new Set()
   for (const row of rows ?? []) {
-    const value = text(row?.[key])
+    const value = text(readCell(row, column))
     if (value !== '') seen.add(value)
   }
   return [...seen].sort((a, b) => a.localeCompare(b, 'he'))
 }
 
 /** האם העמודה מתנהגת כקטגוריה — **נמדד מהשורות, לא מוכרז**. */
-export function isCategorical(rows, key, max = CATEGORY_MAX_VALUES) {
-  const values = distinctValues(rows, key)
+export function isCategorical(rows, column, max = CATEGORY_MAX_VALUES) {
+  const values = distinctValues(rows, column)
   return values.length > 0 && values.length <= max
 }
 
@@ -95,7 +102,11 @@ function passesNumeric(value, condition) {
 }
 
 function passesOne(row, column, condition) {
-  const value = row?.[column.key]
+  // װ`readCell` ולא `row[column.key]`: אחרת סינון על עמודה נגזרת היה משווה מול
+  // `undefined` ומחזיר אפס שורות בלי לומר למה.
+  // 🔑 **והעיקר: המסנן והקובץ חייבים לקרוא את אותו ערך** — שתי דרכי-קריאה
+  // נפרדות הן בדיוק המצב שבו המשתמשת מסננת לפי אחד ומקבלת קובץ לפי השני.
+  const value = readCell(row, column)
   if (column.format === 'date') {
     const d = day(value)
     const edge = day(condition.value)

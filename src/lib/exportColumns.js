@@ -11,6 +11,35 @@
 // עמודה הייתה חייבת להמציא לה מיקום — והיא הייתה נוחתת בסוף, הרחק מהמקום שממנו הוסרה.
 
 /**
+ * 🔑 **דלת-הקריאה היחידה לתא.** עמודה רשאית להצהיר `value: (row) => …`,
+ * **והיא חייבת לקרוא לאותה פונקציית-נגזרת שהטבלה על המסך קוראת לה** — לעולם לא מימוש שני.
+ *
+ * 🔴 **למה זה קיים:** װ`PROJECT_MASTER §6` מבטיח למסכים הבאים חוזה
+ * `{key, label, format, value?, visible?}`, וװ📊 **נמדד 17/09/2026 ששלושת אתרי-הקריאה
+ * קראו `row[key]` בלבד.** װ**הכשל היה שקט:** מפתח חסר ⇒ `undefined` ⇒ תא ריק
+ * **בלי שגיאה ובלי אזהרה** ⇒ עמודה שלמה ריקה בקובץ שנראה תקין.
+ */
+export function readCell(row, column) {
+  return typeof column?.value === 'function' ? column.value(row) : row?.[column?.key]
+}
+
+/**
+ * 🔴🔴 **מסנן-ההרשאות, והוא מנגנון-בטיחות ולא נוחות-תצוגה.**
+ *
+ * װ`RepositoryTab.jsx:404` · `:455` מסירים לגמרי את עמודת `שכר שעתי` כשהמשתמשת
+ * אינה `edit` על 'דיילות'. **תיאור-עמודות תמים היה מייצא אותה לכולן.**
+ *
+ * ⚠️ **ברירת-המחדל היא "נראית" במכוון:** 16 הדוחות של מ11 אינם מצהירים
+ * `visible` כלל, והסתרה-כברירת-מחדל היתה **מרוקנת את כל הקבצים בשקט** — כלומר
+ * בדיוק אותה מחלקת-כשל שהפונקציה הזו נולדה למנוע. **הסתרה היא הצהרה מפורשת.**
+ */
+export function isVisible(column) {
+  const flag = column?.visible
+  if (typeof flag === 'function') return Boolean(flag())
+  return flag !== false
+}
+
+/**
  * ‏`columns` של ה-RPC ⇐ העמודות שייכתבו לקובץ, מסוננות ומסודרות.
  *
  * 🔴 **מפתח שאינו קיים ב-`columns` הנוכחי נזרק בשקט — וזו הנקודה שבה הקובץ הזה מרוויח את
@@ -23,7 +52,13 @@
  * המסך חוסם את המצב הזה מראש (הכפתור מנוטרל), והשכבה הטהורה אינה סומכת עליו.
  */
 export function applyColumnOrder(columns, order, selected) {
-  const list = Array.isArray(columns) ? columns : []
+  // 🔴🔴 **האכיפה יושבת כאן ולא ברכיב, וזה מה שהופך אותה לגדר.**
+  // הפונקציה הזו מזינה **גם** את התצוגה-המקדימה **וגם** את `buildSheet`
+  // (`ExportDialog.jsx` — אותו `visibleColumns` נשלח לשניהם), ולכן סינון כאן
+  // סוגר את שני המסלולים בבת-אחת. ⚠️ **והוא חוזר גם אחרי `defaultOrder` במכוון:**
+  // `order` הוא state ששורד החלפות-דוח, ועמודה שהוסתרה **אחרי** שנכנסה לסדר
+  // היתה חוזרת דרכו. **סינון במקום אחד בלבד הוא דלת פתוחה.**
+  const list = (Array.isArray(columns) ? columns : []).filter(isVisible)
   if (list.length === 0) return []
 
   const byKey = new Map(list.map((column) => [column.key, column]))
@@ -40,7 +75,9 @@ export function applyColumnOrder(columns, order, selected) {
 
 /** סדר-הפתיחה: כפי שה-RPC הכריז. **הוא גם מה ש"איפוס" חוזר אליו.** */
 export function defaultOrder(columns) {
-  return (Array.isArray(columns) ? columns : []).map((column) => column.key)
+  // עמודה שהוסתרה אינה נכנסת לסדר ולכן **גם אינה מופיעה בבוחר** —
+  // המשתמשת אינה יודעת שהיא קיימת, ואינה יכולה לסמן אותה.
+  return (Array.isArray(columns) ? columns : []).filter(isVisible).map((column) => column.key)
 }
 
 /**

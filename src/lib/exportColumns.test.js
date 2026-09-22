@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { applyColumnOrder, defaultOrder, moveKey, moveToTop, reorderKey } from '@/lib/exportColumns'
+import {
+  applyColumnOrder,
+  defaultOrder,
+  isVisible,
+  moveKey,
+  moveToTop,
+  readCell,
+  reorderKey,
+} from '@/lib/exportColumns'
+import { buildExportSheet } from '@/lib/reportsExport'
 
 const COLUMNS = [
   { key: 'project_id', label: 'פרויקט', format: 'id' },
@@ -122,5 +131,61 @@ describe('moveToTop — קפיצה לראש בלחיצה אחת', () => {
     const next = moveToTop(ALL, 'amount')
     expect(ALL).toEqual(before)
     expect(next).not.toBe(ALL)
+  })
+})
+
+// 🔴🔴 **§7 פריט 9ב — החוזה שהרשם הבטיח והמנוע לא קיים.**
+// װ`RepositoryTab.jsx:404` · `:455` מסירים את `שכר שעתי` מהמסך ללא הרשאת-עריכה,
+// ותיאור-עמודות תמים היה מייצא אותה לכולן. **שלוש טענות נפרדות, לא אחת.**
+describe('🔴 visible — עמודה מוסתרת אינה מגיעה לקובץ', () => {
+  const canEdit = false
+  const WITH_WAGE = [
+    { key: 'name', label: 'שם', format: 'text' },
+    { key: 'hourly_wage', label: 'שכר שעתי', format: 'money', visible: () => canEdit },
+  ]
+  const STAFF = [{ name: 'נועה', hourly_wage: 55 }]
+
+  it('① אינה נכנסת ל-defaultOrder ⇒ אינה מופיעה בבוחר', () => {
+    expect(defaultOrder(WITH_WAGE)).toEqual(['name'])
+  })
+
+  it('② אינה חוזרת מ-applyColumnOrder — גם כשה-`order` השמור מבקש אותה במפורש', () => {
+    const smuggled = ['hourly_wage', 'name']
+    const out = applyColumnOrder(WITH_WAGE, smuggled, new Set(smuggled))
+    expect(out.map((c) => c.key)).toEqual(['name'])
+  })
+
+  it('③ אינה בשורת-הכותרת ולא בגוף של buildExportSheet — גם בקריאה ישירה שעוקפת את החלון', () => {
+    const sheet = buildExportSheet({ columns: WITH_WAGE, rows: STAFF })
+    const flat = JSON.stringify(sheet)
+    expect(sheet[0].map((c) => c.value)).toEqual(['שם'])
+    expect(flat).not.toContain('שכר שעתי')
+    expect(flat).not.toContain('55')
+  })
+
+  it('visible חסר ⇒ העמודה נראית (16 דוחות מ11 אינם מצהירים עליו)', () => {
+    expect(defaultOrder(COLUMNS)).toEqual(ALL)
+    expect(isVisible({ key: 'x' })).toBe(true)
+  })
+
+  it('visible כבוליאן עובד גם הוא', () => {
+    expect(isVisible({ key: 'x', visible: false })).toBe(false)
+    expect(isVisible({ key: 'x', visible: true })).toBe(true)
+  })
+})
+
+describe('readCell — דלת-הקריאה היחידה', () => {
+  it('עם value — קורא לנגזרת ומעביר לה את השורה השלמה', () => {
+    const column = { key: 'total', value: (r) => r.a + r.b }
+    expect(readCell({ a: 2, b: 3 }, column)).toBe(5)
+  })
+
+  it('בלי value — קורא לפי מפתח', () => {
+    expect(readCell({ amount: 7 }, { key: 'amount' })).toBe(7)
+  })
+
+  it('שורה או עמודה חסרות — undefined ולא זריקה', () => {
+    expect(readCell(null, { key: 'a' })).toBeUndefined()
+    expect(readCell({ a: 1 }, null)).toBeUndefined()
   })
 })
