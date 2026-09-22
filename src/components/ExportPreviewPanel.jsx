@@ -32,6 +32,27 @@ function cellValue(cell) {
   return String(cell.value ?? '')
 }
 
+// 🔴🔴 **`<bdi>` על כל תא, וזה תיקון של ערך שנקרא **הפוך** — לא קוסמטיקה.**
+//
+// 📊 **נמדד 23/09/2026 באימות-עיניים על דוח הגיול, והמדידה היא העיקר:**
+// המחרוזת הלוגית בתא היא `61–90` (קודנקודות `36 31 2013 39 30`), **ועל המסך היא
+// נקראה `90–61`** · ו-`90+` נקרא `+90`. **הסיבה:** תחת `dir="rtl"` שתי רצפות-הספרות
+// הן רצפי-LTR נפרדים, ו**סדר הרצפים עצמו הוא ימין-לשמאל**; המקף וה-`+` נייטרליים
+// ונגררים איתם. ⇒ **מדרג של "61 עד 90 יום" מוצג למנהלת-הכספים כמדרג שאינו קיים.**
+// 🔑 **וזו אותה מחלקה של מלכודת 17:** *מספר שנקרא כמספר אחר גרוע ממספר שחסר* —
+// והפעם זה **לא** חיתוך: װ`scrollWidth === clientWidth` בכל התאים, והערך שלם.
+//
+// ✅ **והמסך הראשי כבר פתר את זה — התצוגה-המקדימה עקפה אותו:** װ`ReportTable.jsx:37-39`
+// מעביר כל תא דרך `formatByType` עם `textLtr` (נוסף 16/09/2026 בדיוק למלכודה הזו),
+// והפאנל הזה מרנדר מה-`sheet` — שבו ה-`format` כבר אינו קיים. ⇒ בידוד ברמת-התא.
+// 🔑 **למה `<bdi>` ולא `dir="ltr"` קשיח:** װ`<bdi>` מזהה כיווניות מהתוכן — שם-לקוח
+// עברי נשאר RTL ונקרא נכון, וערך מספרי מקבל LTR. **`dir="ltr"` גורף היה שובר את העברית.**
+// ⚠️ **וזה תצוגה בלבד — הקובץ אינו משתנה.** װ`buildExportSheet` מחזיר אותם תאים
+// בדיוק, ו-`stripBidiControls` ממשיך לנקות תווי-כיווניות מהערכים שנכתבים ל-xlsx.
+function Cell({ cell }) {
+  return <bdi>{cellValue(cell)}</bdi>
+}
+
 export default function ExportPreviewPanel({
   loading,
   error,
@@ -84,7 +105,7 @@ export default function ExportPreviewPanel({
               <tr>
                 {header.map((cell, index) => (
                   <th key={index} scope="col" className={HEAD_CELL}>
-                    {cellValue(cell)}
+                    <Cell cell={cell} />
                   </th>
                 ))}
               </tr>
@@ -94,7 +115,7 @@ export default function ExportPreviewPanel({
                 <tr key={rowIndex}>
                   {row.map((cell, index) => (
                     <td key={index} className={BODY_CELL}>
-                      {cellValue(cell)}
+                      <Cell cell={cell} />
                     </td>
                   ))}
                 </tr>

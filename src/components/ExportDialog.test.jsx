@@ -255,3 +255,44 @@ describe('🔴 isVisible — נופל סגור', () => {
     expect(screen.queryByTestId('export-column-hourly_wage')).not.toBeNull()
   })
 })
+
+// 🔴🔴 **בידוד-כיווניות בתצוגה-המקדימה — נמצא באימות-עיניים, לא בשער.**
+// 📊 **נמדד 23/09/2026 על דוח הגיול ב-1024px:** המחרוזת הלוגית בתא היא `61–90`,
+// ועל המסך היא נקראה **`90–61`** · ו-`90+` נקרא **`+90`**. תחת `dir="rtl"` שתי
+// רצפות-הספרות הן רצפי-LTR נפרדים, וסדרם הוא ימין-לשמאל.
+// 🔑 **וזה המקרה הגרוע מכולם:** לא ערך חסר ולא ערך חתוך — **ערך שלם שנקרא
+// כערך אחר.** מנהלת-הכספים רואה מדרג שאינו קיים, ואין שער שתופס את זה.
+describe('🔴 התצוגה-המקדימה — כל תא מבודד כיוונית', () => {
+  const BUCKETS = [
+    { key: 'bucket', label: 'מדרג', format: 'text' },
+    { key: 'customer_name', label: 'לקוח', format: 'text' },
+  ]
+  const BUCKET_ROWS = [
+    { bucket: '61–90', customer_name: 'מועצה מקומית שוהם' },
+    { bucket: '90+', customer_name: 'אלפא סיסטמס בע"מ' },
+  ]
+
+  it('כל תא-גוף עטוף ב-bdi', () => {
+    setup({ columns: BUCKETS, rows: BUCKET_ROWS })
+    const cells = within(screen.getByTestId('export-preview')).getAllByRole('cell')
+    expect(cells.length).toBeGreaterThan(0)
+    for (const cell of cells) {
+      expect(cell.querySelector('bdi')).not.toBeNull()
+    }
+  })
+
+  it('הערך עצמו נשמר בדיוק — הבידוד אינו משנה את הקובץ', () => {
+    setup({ columns: BUCKETS, rows: BUCKET_ROWS })
+    const preview = within(screen.getByTestId('export-preview'))
+    expect(preview.getByText('61–90')).toBeInTheDocument()
+    expect(preview.getByText('90+')).toBeInTheDocument()
+  })
+
+  it('גם שורת-הכותרת מבודדת', () => {
+    setup({ columns: BUCKETS, rows: BUCKET_ROWS })
+    const heads = within(screen.getByTestId('export-preview')).getAllByRole('columnheader')
+    for (const head of heads) {
+      expect(head.querySelector('bdi')).not.toBeNull()
+    }
+  })
+})
