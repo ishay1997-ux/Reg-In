@@ -67,6 +67,7 @@ export default function ExportDialog({
   onRetry,
   blockedReason = null,
   buildSheet,
+  permissions = null,
   fileName = '',
   onExport,
   knownMessages = null,
@@ -80,10 +81,13 @@ export default function ExportDialog({
   //   **ואת ערכה** לתוך גיליון "פרטי הדוח" — ועם `גדול מ-`/`קטן מ-` ושורת-הכמות
   //   זה **חיפוש-בינארי על כל ערך מוסתר**, שנרשם בתוך הקובץ שנמסר.
   // 🔑 **השאלה אינה "האם העמודה בגיליון" אלא "האם הערך ניתן להסקה".**
-  const permitted = useMemo(() => (columns ?? []).filter(isVisible), [columns])
+  const permitted = useMemo(
+    () => (columns ?? []).filter((c) => isVisible(c, permissions)),
+    [columns, permissions],
+  )
 
-  const [order, setOrder] = useState(() => defaultOrder(permitted))
-  const [selected, setSelected] = useState(() => new Set(defaultOrder(permitted)))
+  const [order, setOrder] = useState(() => defaultOrder(permitted, permissions))
+  const [selected, setSelected] = useState(() => new Set(defaultOrder(permitted, permissions)))
   const [conditions, setConditions] = useState([])
   const [busy, setBusy] = useState(false)
   const [exportError, setExportError] = useState(null)
@@ -101,7 +105,7 @@ export default function ExportDialog({
   const columnsKey = permitted.map((column) => column.key).join('|')
   const [seenKey, setSeenKey] = useState(columnsKey)
   if (seenKey !== columnsKey) {
-    const keys = defaultOrder(permitted)
+    const keys = defaultOrder(permitted, permissions)
     setSeenKey(columnsKey)
     setOrder(keys)
     setSelected(new Set(keys))
@@ -114,15 +118,19 @@ export default function ExportDialog({
     [rows, permitted, conditions],
   )
   const visibleColumns = useMemo(
-    () => applyColumnOrder(permitted, order, selected),
-    [permitted, order, selected],
+    () => applyColumnOrder(permitted, order, selected, permissions),
+    [permitted, order, selected, permissions],
   )
   const sheet = useMemo(() => {
     if (typeof buildSheet !== 'function' || selected.size === 0) return []
     // ⚠️ **חתימת-אובייקט ולא שני ארגומנטים** — `buildExportSheet({ columns, rows })`.
     // קריאה מיקומית מחזירה גיליון ריק **בלי לזרוק**, והתצוגה הייתה נראית כ"אין טבלה".
-    return buildSheet({ columns: visibleColumns, rows: filteredRows.slice(0, PREVIEW_ROWS) })
-  }, [buildSheet, visibleColumns, filteredRows, selected])
+    return buildSheet({
+      columns: visibleColumns,
+      rows: filteredRows.slice(0, PREVIEW_ROWS),
+      permissions,
+    })
+  }, [buildSheet, visibleColumns, filteredRows, selected, permissions])
 
   const nothingPicked = selected.size === 0
   const emptyAfterFilter = !loading && !blockedReason && filteredRows.length === 0
@@ -167,7 +175,7 @@ export default function ExportDialog({
   }
 
   function reset() {
-    const keys = defaultOrder(permitted)
+    const keys = defaultOrder(permitted, permissions)
     setOrder(keys)
     setSelected(new Set(keys))
     setConditions([])

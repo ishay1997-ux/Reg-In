@@ -18,6 +18,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/contexts/AuthContext'
 import ExportDialog from '@/components/ExportDialog'
 import { listCustomers } from '@/modules/02_customers/api'
 import { fetchExportData, reportsOfTab } from '@/modules/11_reports/exportFetch'
@@ -34,6 +35,19 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
   // המקביל מרנדרים **בלי Router**. ‏📏 נמדד 17/09/2026: המעבר להוק הפיל **122 בדיקות**
   // בארבעה קבצים שאינם שלי (`ReportSurface` · `HostessesTab` · `CustomersTab` ועוד).
   // ⇒ הרכיב **קורא** את הלשונית ואינו מנהל אותה, ולכן אין לו סיבה לדרוש הקשר.
+  // 🔴 **ההרשאות נקראות ישירות מההקשר ולא דרך `useAuth`, מאותה סיבה שלמעלה:**
+  // װ`useAuth` זורק בלי Provider, ו-`ReportSurface.test.jsx` מרנדר את הרכיב הזה בלעדיו.
+  // 📊 **זו אותה מלכודת שהפילה 122 בדיקות ב-17/09** כשהרכיב נעשה תלוי-ניתוב.
+  // ⇒ אין Provider ⇒ `null` ⇒ **רשם-העמודות-הרגישות נופל סגור ומסתיר**, ולא קורס.
+  let permissions = null
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    permissions = useAuth().permissions
+  } catch {
+    // אין Provider ⇒ אין הרשאות ⇒ רשם-העמודות-הרגישות **נופל סגור ומסתיר**.
+    permissions = null
+  }
+
   const params = new URLSearchParams(window.location.search)
   const tabKey = params.get('tab')
   const openReport = params.get('report')
@@ -148,6 +162,7 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
           blockedReason={data ? data.blockedReason : blockedReason}
           buildSheet={buildExportSheet}
           knownMessages={EXPORT_LOCKED_MESSAGES}
+          permissions={permissions}
           fileName={fileName}
           onExport={({ columns: picked, rows: pickedRows, scope, count }) =>
             exportReportRows({
@@ -156,6 +171,7 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
               columns: picked,
               rows: pickedRows,
               meta: { scope, count, generatedAt: new Date() },
+              permissions,
             })
           }
         />

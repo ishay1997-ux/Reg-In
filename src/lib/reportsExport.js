@@ -173,13 +173,13 @@ function cellFor(value, format) {
  * ממפה שורות+עמודות של C8 לגיליון של `write-excel-file`: שורת-כותרת מודגשת ואז השורות.
  * טהור — כדי שייבדק ביחידה בלי לדמות הורדת-קובץ.
  */
-export function buildExportSheet({ columns, rows }) {
+export function buildExportSheet({ columns, rows, permissions }) {
   // 🔴🔴 **הסינון חוזר כאן במכוון, וזו אינה כפילות.** װ`applyColumnOrder` אכף
   // כבר את `visible`, אבל **הפונקציה הזו היא זו שכותבת את הקובץ**, והיא
   // מיוצאת וניתנת לקריאה ישירה מכל מסך עתידי שלא יעבור דרך החלון.
   // 🔑 **השאלה אינה "האם המסלול הרגיל מסנן" אלא "האם קיים מסלול שעוקף"** —
   // ודליפת-שכר היא טעות בלתי-נראית: אין מסך שמראה אותה ואין בדיקה שנופלת עליה.
-  const visible = (columns ?? []).filter(isVisible)
+  const visible = (columns ?? []).filter((c) => isVisible(c, permissions))
   const header = visible.map((c) => ({
     value: c.label,
     type: String,
@@ -235,12 +235,12 @@ export function buildMetaSheet({ reportName, scope, count, generatedAt } = {}) {
  * ההורדה עצמה. **זורק** כשאין מה לייצא — ולא מוריד קובץ ריק בשקט: קובץ בן שורת-כותרת
  * בלבד נראה כמו ייצוא שהצליח, וזו בדיוק ההטעיה ש-`EXPORT_NO_ROWS` נועד למנוע על המסך.
  */
-export function exportReportRows({ fileName, sheetName, columns, rows, meta }) {
+export function exportReportRows({ fileName, sheetName, columns, rows, meta, permissions }) {
   // 🔴 **השומר מודד את הרשימה המסוננת, וזה תיקון של דלת שהיתה פתוחה.**
   // װ📊 **נמדד 22/09/2026:** כשהשומר בדק את `columns` הגולמי, רשימה שכולה
   // מוסתרת עברה אותו, ו-`buildExportSheet` החזיר גיליון ריק ⇒ **קובץ בלי
   // אף עמודה ירד בשקט** — בדיוק ההטעיה ש-`EXPORT_NO_TABLE` נולד כדי למנוע.
-  const permitted = (columns ?? []).filter(isVisible)
+  const permitted = (columns ?? []).filter((c) => isVisible(c, permissions))
   if (permitted.length === 0) throw new Error(EXPORT_NO_TABLE)
   if (!rows || rows.length === 0) throw new Error(EXPORT_NO_ROWS)
 
@@ -248,7 +248,7 @@ export function exportReportRows({ fileName, sheetName, columns, rows, meta }) {
 
   return writeXlsxFile(
     [
-      buildExportSheet({ columns: permitted, rows }),
+      buildExportSheet({ columns: permitted, rows, permissions }),
       buildMetaSheet({ reportName: sheetName, ...meta }),
     ],
     {
