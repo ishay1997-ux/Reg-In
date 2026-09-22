@@ -90,7 +90,7 @@ function CurrentBucketTile({ currentTile, onOpen }) {
 function RowCapAndDoor({ shown, total, onOpen }) {
   if (!total) return null
   return (
-    <p className="mt-1 text-[12.5px] text-slate-500" data-testid="finance-row-cap">
+    <p className="mt-1 text-sm text-slate-500" data-testid="finance-row-cap">
       {/* ⚠️ המשפט נאמר **רק כשבאמת קוצץ**. אילו הטבלה הציגה את כל החשבוניות, *"אלה 35 מתוך
           35"* היה רעש — ו"אין צורך להציג למשתמש אובר מידע" (‏ishay-visual-taste, 01/08). */}
       {shown < total && (

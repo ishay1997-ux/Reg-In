@@ -105,7 +105,7 @@ text-emerald-800 · text-rose-700 · text-rose-800
 | קובץ | עוגן-גריפ | נכנס בקומיט | שימוש |
 |---|---|---|---|
 | `src/modules/02_customers/CustomersPage.jsx` | `text-rose-700`, `bg-rose-50 border-rose-300 text-rose-800` | `4f2b352`, 28/08/2026 (`git log -S`) | תווית "טעון בירור" + מצב-כפתור |
-| `src/modules/06_projects/ProjectCardPage.jsx` | `bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 border border-emerald-200` | `f4aa4d4`, 05/09/2026 (יום לפני Discovery-מ11!) | צ'יפ בתצוגת-משוב-לקוח |
+| `src/modules/06_projects/ProjectCardPage.jsx` | `bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-800 border border-emerald-200` | `f4aa4d4`, 05/09/2026 (יום לפני Discovery-מ11!) | צ'יפ בתצוגת-משוב-לקוח |
 
 ⇒ **הפלטה של `src/` דריפטה תוך 8 ימים** (28/08→05/09) משתי הוספות נקודתיות, ואף אחת מהן לא
 עברה דרך `PROJECT_MASTER §4` (שם עדיין כתוב "פרימרי טורקיז" בלי `rose`/`emerald`). **המסקנה
@@ -160,7 +160,7 @@ text-emerald-800 · text-rose-700 · text-rose-800
 `src/components/StatTile.jsx`: `<StatTile label="…" value={numberOrNode} sub="…"
 emptyText="אין נתונים עדיין" />` — `rounded-xl border border-slate-200 bg-white p-4`, `flex
 flex-col items-start gap-0.5` (תווית מעל ערך), תווית `text-xs text-slate-500`, ערך `text-xl
-font-bold text-slate-800`, שורת-משנה `text-[11px] text-slate-500`. מעטפת `flex flex-wrap`,
+font-bold text-slate-800`, שורת-משנה `text-xs text-slate-500`. מעטפת `flex flex-wrap`,
 **לעולם לא `grid`**. `value` מספרי עובר אוטומטית דרך `Money`; `value == null` מציג `emptyText`.
 
 🔴 **התקדים המדויק ביותר במערכת לאריח-דוח ממוסך הוא כבר קיים — `src/modules/07_dashboard/
@@ -229,7 +229,7 @@ text-slate-500`.
 text-slate-600`; נבחר `border-teal-200 bg-teal-50 text-teal-700 font-semibold` (טורקיז
 **בהיר** — המלא שמור לפעולה הראשית); `tone="warn"` נבחר = ענבר; מושבת = `opacity-50` **בלי
 להיעלם**, `title` על `<span>` עוטף (לא על הכפתור עצמו — Radix `disabled` חוסם hit-test).
-צורה: `h-auto rounded-full border px-3 py-1 text-[12.5px]` + `aria-pressed`.
+צורה: `h-auto rounded-full border px-3 py-1 text-sm` + `aria-pressed`.
 
 ⇒ **מסנן-הלקוח הגלובלי של מודול 11** (`processes-approved.md`, ת1: "לקוח (ריק = הכול)") —
 ✏️ 17:5X **תוקן:** לא "FilterPill/בורר-Select" (ניסוח דו-משמעי שהיה כאן) אלא **`Select` הקיים
@@ -240,7 +240,7 @@ text-slate-600`; נבחר `border-teal-200 bg-teal-50 text-teal-700 font-semibol
 **‏`WindowChips`/`Pager`** (`src/components/ListWindow.jsx` + `src/lib/listWindow.js`, הכרעת-ישי
 04/09/2026): גלולות-חלון בנויות מ-`FilterPill` עצמו (`מציג: [החודש][3 חודשים][השנה][הכול]`) +
 כותרת-תחתונה `50–100 מתוך 701` (`Ltr` על הטווח, מילים עבריות סביבו — לא שני-מספרים-מבודדים-
-יחד) + כפתורי "הקודם"/"הבא" (`outline` קטנים, `h-auto px-3 py-1 text-[12.5px]`), מוסתרים
+יחד) + כפתורי "הקודם"/"הבא" (`outline` קטנים, `h-auto px-3 py-1 text-sm`), מוסתרים
 בעמוד יחיד. 🔴 **מסנן-"תקופה" הגלובלי של מודול 11 אינו `WindowChips` המקורי (`WINDOW_OPTIONS`)
 — זו סטייה מוצהרת ב-`processes-approved.md` (ת1):** "ברירת-המחדל היא **השנה הקלנדרית**, לא
 90-יום" — כי דוח הוא השוואה תקופתית ולא רשימת-עבודה (§7.95). ⇒ מודול 11 בונה קבוצת-שבבים
@@ -586,7 +586,7 @@ recharts, e2e/accessibility.spec.js, wiki) יש לקרוא את הקובץ המ�
 // הוסף (§5.2 #5) · role="figure" הוסף (§5.2 #6) · tickFormatter עם בידוד-₪ הוסף (§5.2 #3) ·
 // גובה-הורה מפורש על ה-div העוטף (§5.2 #8), לא רק על ResponsiveContainer.
 <div className="rounded-xl border border-slate-200 bg-white p-4">
-  <h3 className="mb-2.5 text-[13.5px] font-semibold text-slate-700"><כותרת-הדוח, בעברית></h3>
+  <h3 className="mb-2.5 text-sm font-semibold text-slate-700"><כותרת-הדוח, בעברית></h3>
   {/* ← הכותרת נשארת מחוץ לעטיפת-ה-LTR (§5.2 #2); role="figure"+aria-label על מעטפת-הגרף עצמה */}
   <div dir="ltr" role="figure" aria-label="<כותרת-הדוח>, גרף" style={{ height: 260 }}>
     <ResponsiveContainer width="100%" height="100%">
@@ -650,6 +650,23 @@ recharts, e2e/accessibility.spec.js, wiki) יש לקרוא את הקובץ המ�
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>מוקאפ מ11 · &lt;שם המשטח&gt;</title>
 <style>
+/* ═══ ✏️ 17/09/2026 — הגדלים בשלד הזה יושרו לסקאלה המרכזית ═══
+   הסקאלה חיה ב-`src/index.css` תחת `@theme inline`, ונאכפת ע"י `npm run check:type-scale`:
+     ‏13px = text-xs  ·  14px = text-sm  ·  16px = text-base  ·  20px = text-xl  ·  24px = text-2xl
+   🔴 **השלד הזה הוא תבנית-ההעתקה למודול הבא** — ולכן השארתו עם 10px/11px
+   היתה מולידה את אותה בעיה מחדש. התוכנית §8: "זה חלק מהעבודה, לא אחריה".
+   מה זז: 10 · 10.5 · 11 · 11.5 ⇒ 13  |  12 · 12.5 · 13 · 13.5 ⇒ 14  |  14 · 15 ⇒ 16  |  17 ⇒ 20
+   מה לא זז: 20px של h1 — הוא כבר text-xl בדיוק.
+   ✏️ **תוקן 17/09 22:5X — ארבע שורות הוחזרו ל-14px, והטעות שלי שווה יותר מהתיקון:**
+   החלתי את מיפוי-התוכנית (`text-[14px]` ⇒ `text-base`) על ערכי-CSS במוקאפ — אבל
+   🔴 **המיפוי חל על `text-[...]` קשיח בלבד.** מחלקה שהיא כבר טוקן (`text-sm`)
+   אינה במיפוי — היא זזה רק דרך הגדרת-הטוקן ב-`index.css`. ‏🔑 **וערך במוקאפ אמור לשקף
+   את מה שהקוד מרנדר, לא לעבור את מיפוי-המחלקות.**
+   נמדד בקוד והוחזר ל-14px: ‏`.btn` (`ui/button.jsx:8` = `text-sm`) · `.tab` (`FinancePage.jsx:779`) ·
+   `.nav-i` (`Sidebar.jsx:84`) · `.tile .masked` (`KpiStrip.jsx:14`). **אף אחד מהם לא היה מעולם ערך קשיח.**
+   ✅ **`body` נשאר 16px, וזה תיקון אמיתי:** ב-`src/index.css` ל-`body` אין `font-size` כלל,
+   ו-Tailwind preflight משאיר אותו על 16px — כלומר השלד היה נמוך מהמערכת, ועכשיו הוא תואם.
+   ═══ */
 /* ═══ טוקנים — אל תשנה ערך. מקור: §① למעלה. ═══ */
 :root{
   --primary:#0F766E;   /* ✏️ 11/09/2026 — הכרעת-ישי 10/09: 0D9488 נכשל 3.74:1 מול לבן */
@@ -668,7 +685,7 @@ recharts, e2e/accessibility.spec.js, wiki) יש לקרוא את הקובץ המ�
 body{
   background:var(--s50); color:var(--s800);
   font-family:'Geist Variable','Geist',"Segoe UI",Arial,sans-serif;
-  font-size:14px; line-height:1.5;
+  font-size:16px; line-height:1.5;
 }
 .ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
@@ -682,14 +699,14 @@ body{
 .side nav{padding:12px 8px; display:flex; flex-direction:column; gap:4px}
 .nav-i{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--r-lg);
       font-size:14px; font-weight:500; color:var(--s600); text-decoration:none}
-.nav-i .ic{width:20px; text-align:center; font-size:15px; flex:none}
+.nav-i .ic{width:20px; text-align:center; font-size:16px; flex:none}
 .nav-i.on{background:var(--teal50); color:var(--teal700)}
 .top{position:fixed; top:0; left:0; right:var(--sidebar); height:var(--topbar); background:#fff;
      border-bottom:1px solid var(--s200); display:flex; align-items:center;
      justify-content:space-between; padding:0 24px; z-index:20}
 main{margin-right:var(--sidebar); padding:calc(var(--topbar) + 24px) 24px 40px; position:relative}
 h1{font-size:20px; font-weight:700; color:var(--s800)}
-.psub{font-size:12px; color:var(--s500); margin-top:2px}
+.psub{font-size:14px; color:var(--s500); margin-top:2px}
 
 /* ── ✏️ 17:5X חותמת "היום" (הכרעה 15-ז) — פינה שמאלית-עליונה של כל מוקאפ ──
    ✏️ 22:1X **ניגודיות: --s400 → --s500.** `text-slate-400` על לבן = יחס **2.63:1**, מתחת ל-4.5:1
@@ -700,17 +717,17 @@ h1{font-size:20px; font-weight:700; color:var(--s800)}
    אחת כהה יותר). ⚠️ **ומה שלא נגעתי בו במכוון:** `.tile .masked` ו-`.tab.masked` נשארים
    `--s400` — הם **מראה של קוד מוזג** (`MASKED_NODE` ב-`src/modules/07_dashboard/KpiStrip.jsx`,
    `text-slate-400`), ושינוי שם הוא אדווה למודול 7, לא החלטת-מוקאפ. נשאר חוב-נגישות advisory ידוע. ── */
-.stamp{position:absolute; top:calc(var(--topbar) + 8px); left:24px; font-size:11px; color:var(--s500)}
+.stamp{position:absolute; top:calc(var(--topbar) + 8px); left:24px; font-size:13px; color:var(--s500)}
 
 /* ── ✏️ 17:5X שורת-מקורות (הכרעה 15-ז) — תחתית כל מוקאפ · ✏️ 22:1X --s400 → --s500, כנ"ל ── */
 .src-footer{margin-top:24px; padding-top:10px; border-top:1px solid var(--s100);
-     font-size:11px; color:var(--s500)}
+     font-size:13px; color:var(--s500)}
 
 /* ── ✏️ 22:1X שורת-הגדרות-מדדים (📐16) — יושבת מעל שורת-המקורות, אותו משקל חזותי ── */
-.def-footer{margin-top:12px; font-size:11px; color:var(--s500); line-height:1.7}
+.def-footer{margin-top:12px; font-size:13px; color:var(--s500); line-height:1.7}
 
 /* ── ✏️ 22:1X שורת-הצהרת-אוכלוסייה (📐2) — מתחת לכותרת-המשנה, בכל דף ── */
-.pop{font-size:11.5px; color:var(--s500); margin-top:4px}
+.pop{font-size:13px; color:var(--s500); margin-top:4px}
 
 /* ── ✏️ 22:1X פירורי-לחם לדריל-דאון (📐13) — **רק** בארבעת דפי-הדריל (1 · 4 · 6 · 16).
    🔑 **לא רכיב חדש — העתק מדויק של התקדים הקיים** `Crumbs` ב-`src/modules/06_projects/
@@ -718,7 +735,7 @@ h1{font-size:20px; font-weight:700; color:var(--s800)}
    text-xs text-slate-500`, הקישור `font-semibold text-teal-700`, המפריד `|` ב-`text-slate-300`.
    ⚠️ **ו-flex ולא טקסט-עם-מפריד** — הערת-הקוד שם: הסדר נקבע ע"י הפריסה ולא ע"י אלגוריתם-ה-bidi.
    **מה שמודול 11 מוסיף:** יותר משתי רמות, והפריט האחרון נושא `aria-current="page"`. ── */
-.crumbs{display:flex; align-items:center; gap:8px; margin:10px 0 4px; font-size:12px; color:var(--s500)}
+.crumbs{display:flex; align-items:center; gap:8px; margin:10px 0 4px; font-size:14px; color:var(--s500)}
 .crumbs button{border:none; background:none; font:inherit; font-weight:600; color:var(--teal700);
      cursor:pointer; padding:0}
 .crumbs .sep{color:var(--s300)}
@@ -744,7 +761,7 @@ body.hide-markers .im{display:none}
 .tab.on{border-color:var(--teal600); font-weight:600; color:var(--teal700)}
 /* ✏️ 17:5X לשונית-ממוסכת (הכרעה 15-ה): שם באפור + 🔒, וטקסט-גלוי "לא זמין בתפקידך" מתחתיו — לא רק title */
 .tab.masked{color:var(--s400); cursor:not-allowed}
-.tab.masked .lock-txt{font-size:10.5px; font-weight:400; color:var(--s400)}
+.tab.masked .lock-txt{font-size:13px; font-weight:400; color:var(--s400)}
 
 /* ── בורר-דוח (§2.7) — עמודה ימנית, GroupList כתקדים ── */
 /* 🔴 ✏️ 11/09/2026 — שורת-שבבים אופקית, לא סרגל אנכי. הכרעת-ישי, ומועתק מילה-במילה
@@ -752,7 +769,7 @@ body.hide-markers .im{display:none}
    כלומר **סרגל-צד שני** בתוך מסך שכבר יש לו סרגל-צד — וארבעת המוקאפים המאושרים מעולם לא נראו כך. */
 .picker{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px; width:100%}
 .picker button{border:1px solid var(--s200); background:#fff; color:var(--s600);
-     border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px; cursor:pointer;
+     border-radius:999px; padding:5px 12px; font:inherit; font-size:14px; cursor:pointer;
      white-space:nowrap; line-height:1.3}
 .picker button:hover{background:var(--s50)}
 .picker button.on{border-color:var(--teal200); background:var(--teal50);
@@ -762,19 +779,19 @@ body.hide-markers .im{display:none}
 /* ── שורת-מסננים גלובליים (תקופה·לקוח) — FilterPill ── */
 .filters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px}
 .pill{border:1px solid var(--s200); background:#fff; color:var(--s600);
-     border-radius:999px; padding:4px 12px; font:inherit; font-size:12.5px; cursor:pointer}
+     border-radius:999px; padding:4px 12px; font:inherit; font-size:14px; cursor:pointer}
 .pill.on{background:var(--teal50); border-color:var(--teal200); color:var(--teal700); font-weight:600}
 /* ✏️ 17:5X צ'יפ-ניקוי לקרוס-פילטר (הכרעה 15-ד): "× נקה בחירה" — מופיע רק כשיש בחירה בגרף */
 .clear-chip{border:1px solid var(--s200); background:#fff; color:var(--s600);
-     border-radius:999px; padding:4px 10px; font:inherit; font-size:12px; cursor:pointer}
+     border-radius:999px; padding:4px 10px; font:inherit; font-size:14px; cursor:pointer}
 
 /* ── אריח-KPI (StatTile, §2.2) — לבן+מסגרת, לעולם לא מילוי (§④) ── */
 .tiles{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px}
 .tile{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl); padding:16px;
       display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:180px}
-.tile .lb{font-size:12px; color:var(--s500)}
+.tile .lb{font-size:14px; color:var(--s500)}
 .tile .vl{font-size:20px; font-weight:700; color:var(--s800)}
-.tile .sub{font-size:11px; color:var(--s500)}
+.tile .sub{font-size:13px; color:var(--s500)}
 .tile .masked{font-size:14px; font-weight:400; color:var(--s400)}
 /* ✏️ 17:5X שורת-השוואה (הכרעה 15-ב): ▲/▼ לא-צבוע + הערך הקודם, באותה שורה */
 /* 🔴 ✏️ 10/09/2026 — `display:flex` הוסר, ו**זה היה שורש רב-קבצי**.
@@ -785,36 +802,36 @@ body.hide-markers .im{display:none}
    📊 **ההיקף:** ‏46 · 42 · 14 מופעי-`.ltr` שחושבו `block` בשלוש לשוניות — **כולם מהשורה הזו**,
    שכל צייר העתיק מכאן. ⇒ תוקן **במקור**, לא בארבעת העותקים.
    הריווח מוחזר במפורש ב-`margin` על החץ, ולא ב-`gap` שחל על הכול. */
-.tile .cmp{font-size:11px; color:var(--s500); display:block}
-.tile .cmp .arrow{color:inherit; font-size:10px; margin-left:4px}
+.tile .cmp{font-size:13px; color:var(--s500); display:block}
+.tile .cmp .arrow{color:inherit; font-size:13px; margin-left:4px}
 /* ✏️ 22:1X **חלון-הזמן של האריח** (📐3) — שורה שלישית קבועה בכל אריח: "נכון ל-…" · "06/09–06/10" ·
    "12 החודשים האחרונים"; ואריח שאינו מגיב למסנן נושא כאן "אינו מושפע ממסנן התקופה". */
-.tile .win{font-size:10.5px; color:var(--s500)}
+.tile .win{font-size:13px; color:var(--s500)}
 
 /* ── כרטיס-גרף (§⑤) ── */
 .chart-card{border:1px solid var(--s200); background:#fff; border-radius:var(--r-xl);
      padding:16px; margin-bottom:16px}
-.chart-card h3{font-size:13.5px; font-weight:600; color:var(--s700); margin-bottom:10px}
+.chart-card h3{font-size:14px; font-weight:600; color:var(--s700); margin-bottom:10px}
 
 /* ── שורת-"אז מה" (מילון-נעול, הכרעה 15-ג) — ✏️ 17:5X תוקן: בלי מילוי-רקע, קו-ימני דק בלבד.
    ✏️ 22:1X **שם-המחלקה `somuch` → `so-what`** — המילון-הנעול קובע "שורת-אז מה", ו-`grep somuch`
    בבנייה לא מוצא אותה (ביקורת §3.2 · §6 שורה 40). ⚠️ **המוקאפ שנחת עדיין כותב `.somuch`** —
    ליישר בסבב-הציור, לא כאן. ── */
 .so-what{background:none; border:none; border-right:3px solid var(--teal600); border-radius:0;
-     padding:6px 14px; font-size:13px; font-weight:600; color:var(--teal700); margin-bottom:16px}
+     padding:6px 14px; font-size:14px; font-weight:600; color:var(--teal700); margin-bottom:16px}
 
 /* ── טבלה + חלון-דפדוף (ListWindow, §2.5) ──
    ✏️ 22:1X **כל `<th>` נושא `scope="col"`** — מראת 📐9 (WCAG H63; נמדד במוקאפ שנחת: 99 `<th>`,
    0 `scope`). זו תכונת-HTML ולא CSS, ולכן היא בשלד למטה — כאן רק התזכורת. ── */
 table{width:100%; border-collapse:collapse}
-th{font-size:12px; font-weight:600; color:var(--s500); text-align:right;
+th{font-size:14px; font-weight:600; color:var(--s500); text-align:right;
    padding:6px 10px; border-bottom:1px solid var(--s200); white-space:nowrap}
 td{padding:10px; border-bottom:1px solid var(--s100); vertical-align:middle}
 tr.click{cursor:pointer}
 tr.click:hover td{background:var(--s50)}
 tr.amber td{background:var(--amber50)}
 .pager{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;
-     border-top:1px solid var(--s100); padding:8px 12px; font-size:12.5px; color:var(--s500)}
+     border-top:1px solid var(--s100); padding:8px 12px; font-size:14px; color:var(--s500)}
 
 /* ── כפתורים ── */
 .btn{border-radius:var(--r-lg); font:inherit; font-size:14px; font-weight:600;
@@ -832,7 +849,7 @@ tr.amber td{background:var(--amber50)}
 @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.5}}
 .states-gallery{display:flex; flex-direction:column; gap:16px; margin-top:24px}
 .states-gallery > div{border:1px dashed var(--s300); border-radius:var(--r-lg); padding:12px}
-.states-gallery h4{font-size:11px; color:var(--s400); margin-bottom:8px; font-weight:600}
+.states-gallery h4{font-size:13px; color:var(--s400); margin-bottom:8px; font-weight:600}
 </style>
 </head>
 <body>
@@ -854,7 +871,7 @@ tr.amber td{background:var(--amber50)}
 </aside>
 
 <header class="top">
-  <h1 style="font-size:17px">דו"חות</h1>
+  <h1 style="font-size:20px">דו"חות</h1>
   <div class="who"><span style="width:36px; height:36px; border-radius:999px; background:var(--teal600);
       color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600">מ</span></div>
 </header>
@@ -908,12 +925,12 @@ tr.amber td{background:var(--amber50)}
 
       <!-- מסננים גלובליים (§2.5): תקופה · לקוח -->
       <div class="filters">
-        <span style="font-size:12px; color:var(--s500)">תקופה:</span>
+        <span style="font-size:14px; color:var(--s500)">תקופה:</span>
         <button class="pill">החודש</button>
         <button class="pill">3 חודשים</button>
         <button class="pill on">השנה</button>
         <button class="pill">הכול</button>
-        <span style="font-size:12px; color:var(--s500); margin-right:8px">לקוח:</span>
+        <span style="font-size:14px; color:var(--s500); margin-right:8px">לקוח:</span>
         <button class="pill">הכול</button>
         <!-- ✏️ 17:5X צ'יפ-ניקוי-קרוס-פילטר (הכרעה 15-ד) — מופיע רק כשנבחרה עמודה בגרף למטה -->
         <button class="clear-chip">× נקה בחירה</button>
@@ -987,9 +1004,9 @@ tr.amber td{background:var(--amber50)}
                בתקופה היא התקלה שנמדדה במוקאפ שנחת. -->
           <span><span class="ltr">1–50</span> מתוך 701</span>
           <div style="display:flex; gap:8px">
-            <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הקודם</button>
+            <button class="btn btn-outline" style="padding:4px 12px; font-size:14px">הקודם</button>
             <span>עמוד <span class="ltr">1/5</span></span>
-            <button class="btn btn-outline" style="padding:4px 12px; font-size:12.5px">הבא</button>
+            <button class="btn btn-outline" style="padding:4px 12px; font-size:14px">הבא</button>
           </div>
         </div>
       </div>

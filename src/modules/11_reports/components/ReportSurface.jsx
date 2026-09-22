@@ -52,7 +52,7 @@ function PopulationLine({ population }) {
   // חוזה-ההטמעה): *"דוח שמחריג בשקט מדבר על עולם אחר מזה שהקורא מדמיין"*.
   if (!population?.label) return null
   return (
-    <p className="mb-2 text-[11.5px] text-slate-500" data-testid="report-population">
+    <p className="mb-2 text-xs text-slate-500" data-testid="report-population">
       {population.label}
     </p>
   )
@@ -71,7 +71,11 @@ function Tiles({ tiles, onOpenTarget }) {
         // ✅ `flex-wrap` נשמר — הכרעת-ישי 08/08 (*"פלקס ולעולם לא grid"*) אינה נגועת.
         <div
           key={tile.key}
-          className="flex min-w-[210px] max-w-[340px] grow basis-[210px] [&>*]:w-full"
+          // ✏️ 17/09/2026 — `h-full` נוסף: העוטף כבר נמתח לגובה אחיד *(ברירת `align-items: stretch`)*,
+          // אבל הכרטיס עצמו מילא רק רוחב ⇒ ארבעה כרטיסים באותה שורה בארבעה גבהים.
+          // ‏📏 נמדד: הפרש 17px לפני הגדלת הכתב, **39px אחריה** — הכתב הגדול שובר שורות-משנה
+          // ליותר שורות ומגדיל את הפער. ‏🔑 ו-`flex flex-wrap` נשמר — הכרעת-ישי 08/08 אינה נגועה.
+          className="flex min-w-[210px] max-w-[340px] grow basis-[210px] [&>*]:h-full [&>*]:w-full"
         >
           <KpiTile tile={tile} masked={tile.masked} onOpenTarget={onOpenTarget} />
         </div>
@@ -105,16 +109,13 @@ function Footers({ definitions, notes }) {
     <>
       {/* 📐16 — שורת-הגדרות-המדדים, בתחתית כל דף. **בסיס**, לא שכבת-הטמעה. */}
       {definitions && (
-        <p
-          className="mt-3 text-[11px] leading-relaxed text-slate-500"
-          data-testid="report-definitions"
-        >
+        <p className="mt-3 text-xs leading-relaxed text-slate-500" data-testid="report-definitions">
           {definitions}
         </p>
       )}
       {/* סייגי-דאטה שהכרטיס מחייב על המסך (C8 `meta.notes`) — למשל "נמדד על N שורות מתוך M". */}
       {notes?.length > 0 && (
-        <p className="mt-2 text-[11px] text-slate-500" data-testid="report-meta-notes">
+        <p className="mt-2 text-xs text-slate-500" data-testid="report-meta-notes">
           {notes.join(' · ')}
         </p>
       )}
@@ -152,7 +153,7 @@ function ExtraTable({ table, onDrill }) {
   const [page, setPage] = useState(1)
   return (
     <section className="mb-4" data-testid="report-extra-table">
-      <h3 className="mb-1.5 text-[13px] font-semibold text-slate-700">{table.title}</h3>
+      <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{table.title}</h3>
       <ReportTable
         columns={table.columns}
         rows={table.rows}
@@ -186,7 +187,7 @@ function ExtraTable({ table, onDrill }) {
 function RowCapNote({ rowTotal, shown }) {
   if (rowTotal == null || rowTotal <= shown) return null
   return (
-    <p className="mb-1.5 text-[11px] leading-relaxed text-slate-500" data-testid="report-row-cap">
+    <p className="mb-1.5 text-xs leading-relaxed text-slate-500" data-testid="report-row-cap">
       {`מוצגות ${formatByType(shown, 'int')} מתוך ${formatByType(rowTotal, 'int')} שורות`}
     </p>
   )
@@ -676,7 +677,7 @@ export default function ReportSurface({
           הסדר ההפוך עד כאן. */}
       {payload.so_what && (
         <p
-          className="mb-4 border-r-[3px] border-teal-600 px-3.5 py-1.5 text-[13px] font-semibold text-teal-700"
+          className="mb-4 border-r-[3px] border-teal-600 px-3.5 py-1.5 text-sm font-semibold text-teal-700"
           data-testid="report-so-what"
         >
           {payload.so_what}
@@ -720,7 +721,7 @@ export default function ReportSurface({
           >
             × נקי בחירה
           </FilterPill>
-          <span className="text-[11.5px] text-slate-500" data-testid="report-crossfilter-label">
+          <span className="text-xs text-slate-500" data-testid="report-crossfilter-label">
             {selection.label}
           </span>
         </div>

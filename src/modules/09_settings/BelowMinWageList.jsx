@@ -103,10 +103,7 @@ export default function BelowMinWageList({ threshold, draftThreshold, refreshKey
       </h3>
 
       {activeThreshold != null && (
-        <p
-          className="mb-2 text-[11px] text-amber-800"
-          data-testid="settings-below-min-wage-preview"
-        >
+        <p className="mb-2 text-xs text-amber-800" data-testid="settings-below-min-wage-preview">
           תצוגה מקדימה — טרם נשמר
         </p>
       )}

@@ -142,15 +142,15 @@ function AwaitingAnswer({ invite, saving, onAnswer }) {
       <p className="text-base font-bold">שלום, {invite?.hostess_name} 👋</p>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-[15px] font-bold">
+        <p className="text-base font-bold">
           {invite?.event_name}
           {invite?.customer_name ? ` — ${invite.customer_name}` : ''}
         </p>
         {invite?.location ? (
-          <p className="mt-2 text-[12.5px] text-slate-600">📍 {invite.location}</p>
+          <p className="mt-2 text-sm text-slate-600">📍 {invite.location}</p>
         ) : null}
-        {when ? <p className="mt-2 text-[12.5px] text-slate-600">🕓 {when}</p> : null}
-        <p className="mt-3 border-t border-dashed border-slate-300 pt-3 text-[13px] font-semibold text-teal-700">
+        {when ? <p className="mt-2 text-sm text-slate-600">🕓 {when}</p> : null}
+        <p className="mt-3 border-t border-dashed border-slate-300 pt-3 text-sm font-semibold text-teal-700">
           {/* `local-3` — כל עוד פרמטר-הנסיעות `0`, "נסיעות" מודפס **בלי מספר**, בדיוק כמו במייל. */}
           תעריף: <Money amount={invite?.hourly_rate} />
           /שעה + נסיעות
@@ -174,7 +174,7 @@ function AwaitingAnswer({ invite, saving, onAnswer }) {
           disabled={saving}
           onClick={() => onAnswer(SHIFT_RESPONSE.confirm)}
           data-testid="shift-confirm"
-          className="h-auto rounded-xl bg-teal-700 py-3.5 text-[15px] font-bold text-white hover:bg-teal-800"
+          className="h-auto rounded-xl bg-teal-700 py-3.5 text-base font-bold text-white hover:bg-teal-800"
         >
           ✓ אני מגיעה
         </Button>
@@ -184,14 +184,14 @@ function AwaitingAnswer({ invite, saving, onAnswer }) {
           disabled={saving}
           onClick={() => onAnswer(SHIFT_RESPONSE.decline)}
           data-testid="shift-decline"
-          className="h-auto rounded-xl border-slate-300 py-3.5 text-[15px] font-bold text-slate-700"
+          className="h-auto rounded-xl border-slate-300 py-3.5 text-base font-bold text-slate-700"
         >
           לא אוכל הפעם
         </Button>
       </div>
 
       {expiry ? (
-        <p className="mt-auto text-center text-[11px] text-slate-500" data-testid="shift-expiry">
+        <p className="mt-auto text-center text-xs text-slate-500" data-testid="shift-expiry">
           {expiry}
         </p>
       ) : null}
@@ -217,7 +217,7 @@ function Result({ state, onRetry }) {
       >
         {look.icon}
       </span>
-      <p className="max-w-[230px] text-[13px] leading-relaxed text-slate-600">
+      <p className="max-w-[230px] text-sm leading-relaxed text-slate-600">
         {SHIFT_INVITE_MESSAGE[state]}
       </p>
       {onRetry ? (

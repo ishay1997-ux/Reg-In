@@ -171,7 +171,7 @@ export default function CalendarGrid({ summary, monthStartIso, onPrev, onNext, o
           התרחב איתו. רשת נפרדת באותן 7 עמודות פותרת בלי לגעת בתאים. */}
       <div className="grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="pb-1 text-center text-[11px] font-semibold text-slate-400">
+          <div key={d} className="pb-1 text-center text-xs font-semibold text-slate-400">
             {d}
           </div>
         ))}
@@ -209,7 +209,7 @@ function DayCell({ cell, today, inWarningWindow, projects }) {
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-[3px] rounded-lg border p-[4px] text-[11px] text-slate-500',
+        'flex min-w-0 flex-col gap-[3px] rounded-lg border p-[4px] text-xs text-slate-500',
         isToday ? 'border-teal-500 ring-1 ring-teal-500' : 'border-slate-200',
       )}
       data-testid={`dashboard-day-${cell.date}`}
@@ -220,7 +220,7 @@ function DayCell({ cell, today, inWarningWindow, projects }) {
       <span data-warning={inWarningWindow ? 'true' : undefined}>
         <Ltr
           className={cn(
-            'px-[2px] text-[11px] font-semibold',
+            'px-[2px] text-xs font-semibold',
             inWarningWindow ? 'text-amber-600' : 'text-slate-600',
           )}
         >
@@ -238,7 +238,7 @@ function DayCell({ cell, today, inWarningWindow, projects }) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="px-[3px] text-right text-[10.5px] font-semibold text-slate-400 hover:text-teal-700"
+          className="px-[3px] text-right text-xs font-semibold text-slate-400 hover:text-teal-700"
           data-testid={`dashboard-more-${cell.date}`}
         >
           {`+${extra} עוד`}
@@ -248,7 +248,7 @@ function DayCell({ cell, today, inWarningWindow, projects }) {
         <button
           type="button"
           onClick={() => setExpanded(false)}
-          className="px-[3px] text-right text-[10.5px] font-semibold text-slate-400 hover:text-teal-700"
+          className="px-[3px] text-right text-xs font-semibold text-slate-400 hover:text-teal-700"
           data-testid={`dashboard-less-${cell.date}`}
         >
           הציגי פחות
@@ -271,14 +271,14 @@ function DayChip({ project }) {
     <Link
       to={`/projects/${project.project_id}`}
       className={cn(
-        'flex items-center gap-[4px] overflow-hidden rounded px-[5px] py-[2px] text-[11px] font-semibold',
+        'flex items-center gap-[4px] overflow-hidden rounded px-[5px] py-[2px] text-xs font-semibold',
         CHIP_CLASS[project.color],
       )}
       data-testid={`dashboard-chip-${project.project_id}`}
     >
       <span className="min-w-0 flex-1 truncate">{project.event_name}</span>
       {tag ? (
-        <span className="shrink-0 text-[9px] font-normal">{tag}</span>
+        <span className="shrink-0 text-xs font-normal">{tag}</span>
       ) : (
         (staffingShort || logisticsShort) && (
           <span className="flex shrink-0 items-center gap-[2px]">

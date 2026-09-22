@@ -38,7 +38,7 @@ export default function ChipRow({ label, chips, announcement = '', testId = 'rep
       data-testid={testId}
     >
       {label && (
-        <span id={labelId} className="ml-1 text-[11.5px] text-slate-500">
+        <span id={labelId} className="ml-1 text-xs text-slate-500">
           {label}
         </span>
       )}
@@ -50,7 +50,7 @@ export default function ChipRow({ label, chips, announcement = '', testId = 'rep
           aria-pressed={chip.on}
           data-testid={`${testId}-${chip.key}`}
           className={cn(
-            'whitespace-nowrap rounded-full border px-3 py-1 text-[12.5px] leading-tight',
+            'whitespace-nowrap rounded-full border px-3 py-1 text-sm leading-tight',
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700',
             chip.on
               ? 'border-teal-200 bg-teal-50 font-semibold text-teal-700'
