@@ -46,6 +46,26 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 — the wage registry, a bucket that read backwards, and the first screen outside module 11
+
+**Continues the entry below.** Handoff: `docs/specs/module_11_reports/HANDOFF-export-dialog-2026-09-23.md`.
+
+**The finding that reframed the item, verified link by link rather than accepted:** column descriptors for module 11 arrive as **JSON** from the RPC, and JSON cannot carry a function — so an RPC-declared column can never carry `visible`. The mechanism built the night before was sound and had no input. ⚠️ **The parallel session's wording was "it can have no producer at all"; that is too strong and both sides corrected it** — the §7.2 contract is a client-side JS literal where a function *is* the producer. The real gap is narrower and worse: `report_m16_quality_cost` returns `hourly_rate` to `view` users. 🔑 **And the detail that hides it from any search:** the screen calls the field `שכר שעתי`, the RPC calls it `תעריף שעתי`.
+
+**`src/lib/exportSensitiveColumns.js`** — a registry keyed by `key` (which JSON does carry), consulted before the functional flag. **Both mechanisms, not one instead of the other.** Fails closed three ways. Its test **reads the migration files from disk** and fails on any person-rate key that is not registered — replacing a tautology that could not fail (`typeof column.visible !== 'function'` over a `JSON.parse` fixture). Mutation-checked: removing a key fails it and names all four migrations.
+
+🔴 **Stated plainly: this closes the FILE, not the leak.** The rate still reaches the browser payload, and the screen and the chart still show it — the chart's x axis *is* the rate, `x_domain` is built from its own min and max, and the median reference line prints the number as text. **A table-only client mask was proposed, measured, and rejected in writing** because it leaves the chart untouched and would look like closure. Blocking m16 for `view` is not a flag either — `reportsCatalog` gates per tab. One line in the RPC closes both surfaces; deferred as debt by Ishay, recorded in `PROJECT_MASTER §6`.
+
+**Eyes on the real screen found what no gate sees.** The aging bucket cell holds `61–90` and a finance manager reads `90–61`; `90+` reads `+90`. Not clipped — `scrollWidth === clientWidth` on every cell at four widths. Under RTL the two digit runs are separate LTR runs ordered right-to-left. `ReportTable` already solved this on 16/09 via `formatByType`/`textLtr`; the preview renders from the sheet where `format` is gone, so isolation moved to the cell as `<bdi>` (not a hard `dir`, which would break Hebrew names). A scan then found **eight more values of the same shape** in the executive migrations.
+
+**`ProjectsPage` is now the first screen outside module 11 to use the dialog** — column descriptor plus wiring. Four of eight columns are derived and call the same functions the table calls. The dialog receives `windowedVisible`, not the paginated page: Ishay's ruling was "all the rows that pass the filter".
+
+**Three traps worth carrying:** ① port 5173 serves a *different project* and `reuseExistingServer: true` makes Playwright reuse it silently — and `npm run smoke` and `npx playwright test` still point there. ② `useAuth` throws without a Provider and `ReportSurface.test.jsx` renders `ExportBar` without one; exporting the context tripped lint, exporting a hook broke 29 partially-mocking test files, so the guard lives in `ExportBar` alone. ③ The repo hook blocks any command ending in a pipe to `head`/`tail`/`grep`, including innocent file reads.
+
+🔴 **And an error I owe the record:** I told Ishay that 24px targets would cost him four visible rows and asked him to choose; he chose to enlarge the list. **Both numbers were derived rather than measured, and both were wrong** — the row was already 34px and stayed 34px. The change was therefore not made and the decision goes back to him on a correct premise.
+
+**A fresh-eyes review of the handoff found 14 defects, five blocking** — a grep instruction that returns nothing, a reading-list path that exists only on `dev`, a branch 43 commits behind that the document never mentioned, and the previous handoff's external blocker having been resolved on `dev` without correction. All fixed before the commit. **This is the third time the fresh-eyes rule has paid for itself on a document its author called finished.**
+
 ### 22/09/2026 (23:0X) → 23/09/2026 — m11 export: move-to-top, the value/visible contract, and a wage column that was reaching `view` users
 
 **Three commits, each gated at `GATE_EXIT=0` with all 12 sub-steps read individually in the log.**
