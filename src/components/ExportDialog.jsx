@@ -25,7 +25,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { applyColumnOrder, defaultOrder, moveKey, moveToTop, reorderKey } from '@/lib/exportColumns'
+import {
+  applyColumnOrder,
+  defaultOrder,
+  isVisible,
+  moveKey,
+  moveToTop,
+  reorderKey,
+} from '@/lib/exportColumns'
 import { applyFilters } from '@/lib/exportFilters'
 import ExportConfigPanel from '@/components/ExportConfigPanel'
 import ExportPreviewPanel from '@/components/ExportPreviewPanel'
@@ -64,8 +71,19 @@ export default function ExportDialog({
   onExport,
   knownMessages = null,
 }) {
-  const [order, setOrder] = useState(() => defaultOrder(columns))
-  const [selected, setSelected] = useState(() => new Set(defaultOrder(columns)))
+  // 🔴🔴 **כל החלון עובד על הרשימה המסוננת, ולעולם לא על `columns` הגולמי.**
+  // 📊 **נמדד 22/09/2026 על-ידי סוכן-יריב, ושחזר בשתי בדיקות שנכשלו:**
+  // סינון הגיליון בלבד **אינו מספיק** — הערך דלף בשני מסלולים עוקפים:
+  // ① **בורר-העמודות של המסנן** — העמודה הוצגה ברשימה, ו-`distinctValues`
+  //   היה מרנדר את **ערכי-השכר האמיתיים** כ-`<option>`.
+  // ② **שורת-"חל על הקובץ"** — תנאי על עמודה מוסתרת היה מדפיס את תוויתה
+  //   **ואת ערכה** לתוך גיליון "פרטי הדוח" — ועם `גדול מ-`/`קטן מ-` ושורת-הכמות
+  //   זה **חיפוש-בינארי על כל ערך מוסתר**, שנרשם בתוך הקובץ שנמסר.
+  // 🔑 **השאלה אינה "האם העמודה בגיליון" אלא "האם הערך ניתן להסקה".**
+  const permitted = useMemo(() => (columns ?? []).filter(isVisible), [columns])
+
+  const [order, setOrder] = useState(() => defaultOrder(permitted))
+  const [selected, setSelected] = useState(() => new Set(defaultOrder(permitted)))
   const [conditions, setConditions] = useState([])
   const [busy, setBusy] = useState(false)
   const [exportError, setExportError] = useState(null)
@@ -80,10 +98,10 @@ export default function ExportDialog({
   // מרנדר פעם אחת עם המצב הישן ואז שוב עם החדש — כלומר **התצוגה-המקדימה הייתה מהבהבת בעמודות
   // של הדוח הקודם** לפני שהיא מתקנת את עצמה. ‏ESLint חוסם את זה (`react-hooks/set-state-in-effect`),
   // והדפוס כאן הוא זה שהתיעוד של React מורה עליו: השוואת-מפתח והתאמה מיידית.
-  const columnsKey = columns.map((column) => column.key).join('|')
+  const columnsKey = permitted.map((column) => column.key).join('|')
   const [seenKey, setSeenKey] = useState(columnsKey)
   if (seenKey !== columnsKey) {
-    const keys = defaultOrder(columns)
+    const keys = defaultOrder(permitted)
     setSeenKey(columnsKey)
     setOrder(keys)
     setSelected(new Set(keys))
@@ -92,12 +110,12 @@ export default function ExportDialog({
   }
 
   const filteredRows = useMemo(
-    () => applyFilters(rows, columns, conditions),
-    [rows, columns, conditions],
+    () => applyFilters(rows, permitted, conditions),
+    [rows, permitted, conditions],
   )
   const visibleColumns = useMemo(
-    () => applyColumnOrder(columns, order, selected),
-    [columns, order, selected],
+    () => applyColumnOrder(permitted, order, selected),
+    [permitted, order, selected],
   )
   const sheet = useMemo(() => {
     if (typeof buildSheet !== 'function' || selected.size === 0) return []
@@ -116,7 +134,7 @@ export default function ExportDialog({
     const customer = customers.find((item) => String(item.id) === String(customerId))
     parts.push(customer ? `לקוח: ${customer.name}` : 'כל הלקוחות')
     for (const condition of conditions) {
-      const column = columns.find((item) => item.key === condition.key)
+      const column = permitted.find((item) => item.key === condition.key)
       if (!column) continue
       const shown =
         condition.operator === 'oneOf' ? (condition.values ?? []).join(' · ') : condition.value
@@ -124,7 +142,7 @@ export default function ExportDialog({
       parts.push(`${column.label} ${condition.operatorLabel ?? ''} ${shown}`.trim())
     }
     return parts.join(' · ')
-  }, [from, to, customers, customerId, conditions, columns])
+  }, [from, to, customers, customerId, conditions, permitted])
 
   // 🔴 **שורת-הכמות אומרת את האמת גם כשאינה נוחה.** רשימת-שיא אינה "מדגם" ואינה חיתוך —
   // היא הדוח (מ02 · מ07 · מ19), ולכן היא נוקבת **במספר האוכלוסייה** ולא ב-"כל הלקוחות":
@@ -149,7 +167,7 @@ export default function ExportDialog({
   }
 
   function reset() {
-    const keys = defaultOrder(columns)
+    const keys = defaultOrder(permitted)
     setOrder(keys)
     setSelected(new Set(keys))
     setConditions([])
@@ -235,7 +253,7 @@ export default function ExportDialog({
             from={from}
             to={to}
             onPeriodChange={onPeriodChange}
-            columns={columns}
+            columns={permitted}
             rows={rows}
             order={order}
             selected={selected}

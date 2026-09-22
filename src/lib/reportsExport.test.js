@@ -215,6 +215,22 @@ describe('exportReportRows — הקריאה לספרייה', () => {
     ).toThrow(EXPORT_NO_TABLE)
     expect(writeXlsxFile).not.toHaveBeenCalled()
   })
+
+  // 🔴 **כל העמודות מוסתרות — השומר חייב לזרוק, לא להוריד קובץ ריק.**
+  // עד 22/09/2026 השומר מדד את `columns` הגולמי ⇒ הרשימה נראתה לא-ריקה,
+  // הגיליון יצא בלי אף עמודה, **והקובץ ירד כאילו הצליח** — בדיוק ההטעיה
+  // ש-`EXPORT_NO_TABLE` נולד כדי למנוע. *(נמצא על-ידי סוכן-יריב, אומת ותוקן.)*
+  it('🔴 כל העמודות מוסתרות ⇒ זורק, ולא מוריד קובץ בלי עמודות', () => {
+    expect(() =>
+      exportReportRows({
+        fileName: 'x.xlsx',
+        sheetName: 'x',
+        columns: [{ key: 'hourly_wage', label: 'שכר שעתי', format: 'money', visible: () => false }],
+        rows: ROWS,
+      }),
+    ).toThrow(EXPORT_NO_TABLE)
+    expect(writeXlsxFile).not.toHaveBeenCalled()
+  })
 })
 
 // ✏️ **תווי-בידוד אינם יוצאים לאקסל** (16/09/2026).

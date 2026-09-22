@@ -29,7 +29,7 @@ const ROWS = [
 
 function setup(props = {}) {
   const onExport = vi.fn().mockResolvedValue(undefined)
-  render(
+  const view = render(
     <ExportDialog
       open
       onOpenChange={vi.fn()}
@@ -41,7 +41,7 @@ function setup(props = {}) {
       {...props}
     />,
   )
-  return { onExport }
+  return { onExport, container: view.container }
 }
 
 const headers = () =>
@@ -199,5 +199,59 @@ describe('ExportDialog — הבטחת השם וכשל הייצוא', () => {
     setup({ onExport, knownMessages: new Set(['אין שורות לייצא']) })
     fireEvent.click(screen.getByTestId('export-dialog-run'))
     expect(await screen.findByRole('alert')).toHaveTextContent('הייצוא לא הושלם.')
+  })
+})
+
+// 🔴🔴 **דליפת-השכר — שלושה מסלולים שסוכן-יריב מצא 22/09/2026,**
+// וכולם אומתו בקוד לפני שתוקנו. 🔑 **השאלה אינה "האם העמודה בגיליון"**
+// אלא **"האם הערך ניתן להסקה"** — תווית בשורת-"חל על הקובץ" וערכים
+// ברשימת-הבחירה של המסנן מדליפים אותו בדיוק כמו עמודה.
+describe('🔴 visible — העמודה המוסתרת אינה דולפת גם סביב הגיליון', () => {
+  const HIDDEN = [
+    { key: 'name', label: 'שם', format: 'text' },
+    { key: 'hourly_wage', label: 'שכר שעתי', format: 'money', visible: () => false },
+  ]
+  const STAFF = [
+    { name: 'נועה', hourly_wage: 145 },
+    { name: 'שיר', hourly_wage: 160 },
+  ]
+
+  it('① אינה מופיעה ברשימת-העמודות של הבוחר', () => {
+    setup({ columns: HIDDEN, rows: STAFF })
+    expect(screen.queryByTestId('export-column-hourly_wage')).toBeNull()
+  })
+
+  it('② אינה מופיעה בבורר-העמודות של המסנן — ולכן אי-אפשר לראות את ערכיה', () => {
+    setup({ columns: HIDDEN, rows: STAFF })
+    fireEvent.click(screen.getByTestId('export-add-filter'))
+    const picker = screen.getByLabelText('עמודה לסינון')
+    expect(picker.textContent).not.toContain('שכר שעתי')
+  })
+
+  it('③ ערכיה אינם מגיעים לשום מקום בחלון', () => {
+    const { container } = setup({ columns: HIDDEN, rows: STAFF })
+    expect(container.textContent).not.toContain('145')
+    expect(container.textContent).not.toContain('שכר שעתי')
+  })
+})
+
+// 🔴 **כיוון-הכשל של מנגנון-הרשאות.** בריפו הזה הרשאות הן **מחרוזות**
+// (`RepositoryTab.jsx:72` — `permissions['דיילות'] === 'edit'`), ולכן הכתיבה הטבעית
+// `visible: () => permissions['דיילות']` מחזירה `'view'` — **אמתית, ולכן הייתה מייצאת את השכר.**
+// ⚠️ **מנגנון-הרשאות חייב ליפול סגור, לא פתוח.**
+describe('🔴 isVisible — נופל סגור', () => {
+  const wage = (flag) => [
+    { key: 'name', label: 'שם', format: 'text' },
+    { key: 'hourly_wage', label: 'שכר שעתי', format: 'money', visible: flag },
+  ]
+
+  it('מחרוזת-הרשאה אינה כן — view מסתיר, ואינו חושף', () => {
+    setup({ columns: wage(() => 'view'), rows: [{ name: 'נועה', hourly_wage: 145 }] })
+    expect(screen.queryByTestId('export-column-hourly_wage')).toBeNull()
+  })
+
+  it('רק true מפורש חושף', () => {
+    setup({ columns: wage(() => true), rows: [{ name: 'נועה', hourly_wage: 145 }] })
+    expect(screen.queryByTestId('export-column-hourly_wage')).not.toBeNull()
   })
 })

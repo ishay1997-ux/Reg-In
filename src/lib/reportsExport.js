@@ -236,13 +236,21 @@ export function buildMetaSheet({ reportName, scope, count, generatedAt } = {}) {
  * בלבד נראה כמו ייצוא שהצליח, וזו בדיוק ההטעיה ש-`EXPORT_NO_ROWS` נועד למנוע על המסך.
  */
 export function exportReportRows({ fileName, sheetName, columns, rows, meta }) {
-  if (!columns || columns.length === 0) throw new Error(EXPORT_NO_TABLE)
+  // 🔴 **השומר מודד את הרשימה המסוננת, וזה תיקון של דלת שהיתה פתוחה.**
+  // װ📊 **נמדד 22/09/2026:** כשהשומר בדק את `columns` הגולמי, רשימה שכולה
+  // מוסתרת עברה אותו, ו-`buildExportSheet` החזיר גיליון ריק ⇒ **קובץ בלי
+  // אף עמודה ירד בשקט** — בדיוק ההטעיה ש-`EXPORT_NO_TABLE` נולד כדי למנוע.
+  const permitted = (columns ?? []).filter(isVisible)
+  if (permitted.length === 0) throw new Error(EXPORT_NO_TABLE)
   if (!rows || rows.length === 0) throw new Error(EXPORT_NO_ROWS)
 
-  const dataWidths = columns.map((c) => ({ width: c.label && c.label.length > 14 ? 26 : 16 }))
+  const dataWidths = permitted.map((c) => ({ width: c.label && c.label.length > 14 ? 26 : 16 }))
 
   return writeXlsxFile(
-    [buildExportSheet({ columns, rows }), buildMetaSheet({ reportName: sheetName, ...meta })],
+    [
+      buildExportSheet({ columns: permitted, rows }),
+      buildMetaSheet({ reportName: sheetName, ...meta }),
+    ],
     {
       fileName,
       sheets: [sanitizeSheetName(sheetName), META_SHEET_NAME],

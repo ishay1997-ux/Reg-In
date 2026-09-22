@@ -35,8 +35,17 @@ export function readCell(row, column) {
  */
 export function isVisible(column) {
   const flag = column?.visible
-  if (typeof flag === 'function') return Boolean(flag())
-  return flag !== false
+  // לא הוצהר כלל ⇒ נראית. 16 הדוחות של מ11 אינם מצהירים `visible`.
+  if (flag === undefined || flag === null) return true
+  const resolved = typeof flag === 'function' ? flag() : flag
+  // 🔴🔴 **`=== true` ולא `Boolean(…)`, וזה ההפרש בין נופל-סגור לנופל-פתוח.**
+  // 📊 **נמדד 22/09/2026 על-ידי סוכן-יריב, ואומת בבדיקה שנכשלה:** הרשאות
+  // בריפו הזה הן **מחרוזות** (`RepositoryTab.jsx:72` — `permissions['דיילות'] === 'edit'`),
+  // ולכן הכתיבה הטבעית `visible: () => permissions['דיילות']` מחזירה `'view'`.
+  // װ`Boolean('view')` הוא **`true`** ⇒ השכר היה מיוצא למי שאסור לה לראות אותו.
+  // ⚠️ **מנגנון-הרשאות חייב ליפול סגור:** כל שאינו `true` מפורש — מסתיר.
+  // װ(Promise מ-`async`, מחרוזת, מספר, `undefined` מפרמטר שלא הועבר — כולם מסתירים.)
+  return resolved === true
 }
 
 /**
