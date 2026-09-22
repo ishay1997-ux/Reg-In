@@ -288,6 +288,23 @@ describe('🔴 התצוגה-המקדימה — כל תא מבודד כיווני
     expect(preview.getByText('90+')).toBeInTheDocument()
   })
 
+  // 📊 **סריקה, לא ניחוש (23/09/2026):** `grep -rhoE "'[0-9]+[–-][0-9]+'"` על מיגרציות מ11
+  // מחזיר עוד **שמונה** ערכים מאותה צורה — `1-5` · `6-10` · `25-30` … `50-55` —
+  // בדוחות-ההנהלה (`module11_d_rpcs_executive.sql:998` · `:1404`). **אם `61–90` נשבר, גם הם.**
+  // 🔑 והתיקון הוא פר-תא ואדיש-לתוכן ⇒ **מכסה את כולם**, וגם את הבא.
+  it('הבידוד אדיש לצורת-הערך — מקף ASCII · מקף-עילי · פלוס · טווח-שנים', () => {
+    const shapes = ['25-30', '61–90', '10+', '2024–2026', '1-5']
+    setup({
+      columns: [{ key: 'band', label: 'מדרג', format: 'text' }],
+      rows: shapes.map((band) => ({ band })),
+    })
+    const preview = within(screen.getByTestId('export-preview'))
+    for (const shape of shapes) {
+      const node = preview.getByText(shape)
+      expect(node.tagName).toBe('BDI')
+    }
+  })
+
   it('גם שורת-הכותרת מבודדת', () => {
     setup({ columns: BUCKETS, rows: BUCKET_ROWS })
     const heads = within(screen.getByTestId('export-preview')).getAllByRole('columnheader')
