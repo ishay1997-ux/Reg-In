@@ -459,6 +459,9 @@ C:\Users\ishay\Reg-In-copy-wt\docs\specs\module_11_reports\HANDOFF-typography-20
   cd C:\Users\ishay\Reg-In-copy-wt && git branch --show-current   ⇒ ishay/type-scale
   npm install                                                      ⇒ חובה לפני כל עריכה
 
+המשימה: פזה ב׳ — הניסוחים, הכפילויות, המונים והפקדים המתים. 8 שלבים.
+פזה א׳ סגורה ומגובה — אל תיגע בה.
+
 מה לא לשבור: אין PR · אין מיזוג ל-dev/main · אין --force · אין apply_migration.
 מה אסור להכריע לבד: כל הכרעה מוצרית — ר׳ §5ב (כלל-הניתוב).
 השעון: הכנס 15/10/2026 · הקפאה רוחבית 08/10.
