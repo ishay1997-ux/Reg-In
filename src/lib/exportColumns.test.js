@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyColumnOrder, defaultOrder, moveKey, reorderKey } from '@/lib/exportColumns'
+import { applyColumnOrder, defaultOrder, moveKey, moveToTop, reorderKey } from '@/lib/exportColumns'
 
 const COLUMNS = [
   { key: 'project_id', label: 'פרויקט', format: 'id' },
@@ -82,5 +82,45 @@ describe('reorderKey — גרירה אנכית', () => {
 
   it('מפתח שאינו ברשימה אינו נוסף', () => {
     expect(reorderKey(ALL, 'nope', 'amount')).toEqual(ALL)
+  })
+})
+
+describe('moveToTop — קפיצה לראש בלחיצה אחת', () => {
+  it('מעביר מהסוף לראש, והסדר היחסי של השאר נשמר', () => {
+    expect(moveToTop(ALL, 'days_overdue')).toEqual([
+      'days_overdue',
+      'project_id',
+      'customer_name',
+      'amount',
+    ])
+  })
+
+  it('מעביר מהאמצע לראש', () => {
+    expect(moveToTop(ALL, 'amount')).toEqual([
+      'amount',
+      'project_id',
+      'customer_name',
+      'days_overdue',
+    ])
+  })
+
+  // 🔴 **הבדיקה שנועלת את סיבת-הקיום של הפונקציה.** װ`reorderKey(ALL, key, ALL[0])`
+  // בקריאה ישירה **מעיף את הפריט לסוף** במקרה הזה: המפתח מסונן החוצה,
+  // ואז `indexOf(beforeKey)` מחפש אותו מפתח עצמו ⇒ `-1` ⇒ `at < 0 ? list.length`.
+  // ⚠️ **הכפתור מנוטרל ב-`index === 0`, והשכבה הטהורה אינה סומכת על ה-UI.**
+  it('🔴 מפתח שכבר ראשון נשאר ראשון — ולא נוחת בסוף', () => {
+    expect(moveToTop(ALL, 'project_id')).toEqual(ALL)
+    expect(reorderKey(ALL, 'project_id', ALL[0])).not.toEqual(ALL)
+  })
+
+  it('מפתח שאינו ברשימה — אין-מעש', () => {
+    expect(moveToTop(ALL, 'nope')).toEqual(ALL)
+  })
+
+  it('מחזיר מערך חדש ואינו משנה במקום', () => {
+    const before = [...ALL]
+    const next = moveToTop(ALL, 'amount')
+    expect(ALL).toEqual(before)
+    expect(next).not.toBe(ALL)
   })
 })

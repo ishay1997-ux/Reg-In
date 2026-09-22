@@ -16,7 +16,26 @@ import { distinctValues, isCategorical, operatorsFor } from '@/lib/exportFilters
 const FIELD = 'w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs'
 const ROW = 'flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1'
 
-function ColumnRow({ column, index, total, checked, onToggle, onMove, onDragStart, onDropBefore }) {
+// ‏♿ **שלושת פקדי-הסידור חולקים קבוע אחד, וזה האכיפה של "שלושתם או אף אחד".**
+// הכרעת-ישי 18/09/2026 (*"מאשר לפי המלצה"*): יעד-הקליק ≥ 24×24 לפי WCAG 2.5.8 AA.
+// װ📊 **המדידה שלפני, על המסך ולא מה-CSS** (1024px, 22/09/2026): החצים היו **19.9×16**
+// עם `px-1 text-xs` בלבד — נמוך מהסף בשני המימדים. װ**ב-8 עמודות זה מעצבן; ב-30, עם עכבר, זה מחטיא.**
+// 🔑 **ו-`size-6` ולא `variant="link"`+`h-auto p-0`:** װ`src/CLAUDE.md §2.6` חל על רכיב `Button`,
+// ושלושת אלה הם `<button>` גולמי — אין כאן כלל שנשבר, וגם לא תקדים חדש שנכנס.
+const ICON_BTN =
+  'inline-flex size-6 shrink-0 items-center justify-center rounded text-xs text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent'
+
+function ColumnRow({
+  column,
+  index,
+  total,
+  checked,
+  onToggle,
+  onMove,
+  onMoveToTop,
+  onDragStart,
+  onDropBefore,
+}) {
   return (
     <li
       draggable
@@ -44,7 +63,16 @@ function ColumnRow({ column, index, total, checked, onToggle, onMove, onDragStar
       </span>
       <button
         type="button"
-        className="px-1 text-xs text-slate-500 disabled:opacity-30"
+        className={ICON_BTN}
+        disabled={index === 0}
+        onClick={() => onMoveToTop(column.key)}
+        aria-label={`העבירי את ${column.label} לראש הרשימה`}
+      >
+        ⤒
+      </button>
+      <button
+        type="button"
+        className={ICON_BTN}
         disabled={index === 0}
         onClick={() => onMove(column.key, -1)}
         aria-label={`הזיזי את ${column.label} מעלה`}
@@ -53,7 +81,7 @@ function ColumnRow({ column, index, total, checked, onToggle, onMove, onDragStar
       </button>
       <button
         type="button"
-        className="px-1 text-xs text-slate-500 disabled:opacity-30"
+        className={ICON_BTN}
         disabled={index === total - 1}
         onClick={() => onMove(column.key, 1)}
         aria-label={`הזיזי את ${column.label} מטה`}
@@ -178,6 +206,7 @@ export default function ExportConfigPanel({
   selected,
   onToggle,
   onMove,
+  onMoveToTop,
   onDragStart,
   onDropBefore,
   conditions,
@@ -347,6 +376,7 @@ export default function ExportConfigPanel({
               checked={selected.has(column.key)}
               onToggle={onToggle}
               onMove={onMove}
+              onMoveToTop={onMoveToTop}
               onDragStart={onDragStart}
               onDropBefore={onDropBefore}
             />

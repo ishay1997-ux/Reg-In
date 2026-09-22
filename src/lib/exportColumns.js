@@ -70,3 +70,22 @@ export function reorderKey(order, key, beforeKey) {
   list.splice(at < 0 ? list.length : at, 0, key)
   return list
 }
+
+/**
+ * קפיצה לראש הרשימה בלחיצה אחת (הכרעת-ישי 17/09/2026: *"«העבר לראש» מסכים"*).
+ *
+ * 🔑 **למה פונקציה ולא `reorderKey(order, key, order[0])` בקריאה ישירה:** ‏📊 **נמדד —
+ * הקריאה הישירה שוברת כשהמפתח כבר ראשון.** ‏`reorderKey` מסנן את `key` החוצה ואז מחפש
+ * את `beforeKey` ברשימה המסוננת; כששניהם אותו מפתח `indexOf` מחזיר `-1`, והענף
+ * `at < 0 ? list.length` **מעיף את הפריט לסוף הרשימה במקום להשאירו בראש.**
+ * ⚠️ **הכפתור אמנם מנוטרל ב-`index === 0`, והשכבה הטהורה אינה סומכת על כך** — אותו
+ * נימוק בדיוק שכתוב ב-`applyColumnOrder` על בחירה ריקה.
+ *
+ * 📊 **והנימוק שהמוקאפ חשף:** להעביר שדה ממקום 30 למקום 1 בחצים = **29 לחיצות**.
+ * הסידור — לא החיפוש — הוא מה שנשבר כשרשימת-העמודות גדלה מ-8 ל-30.
+ */
+export function moveToTop(order, key) {
+  const list = Array.isArray(order) ? order : []
+  if (!list.includes(key) || list[0] === key) return [...list]
+  return reorderKey(list, key, list[0])
+}

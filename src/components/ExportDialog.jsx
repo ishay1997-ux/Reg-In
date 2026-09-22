@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { applyColumnOrder, defaultOrder, moveKey, reorderKey } from '@/lib/exportColumns'
+import { applyColumnOrder, defaultOrder, moveKey, moveToTop, reorderKey } from '@/lib/exportColumns'
 import { applyFilters } from '@/lib/exportFilters'
 import ExportConfigPanel from '@/components/ExportConfigPanel'
 import ExportPreviewPanel from '@/components/ExportPreviewPanel'
@@ -241,6 +241,7 @@ export default function ExportDialog({
             selected={selected}
             onToggle={toggle}
             onMove={(key, delta) => setOrder((prev) => moveKey(prev, key, delta))}
+            onMoveToTop={(key) => setOrder((prev) => moveToTop(prev, key))}
             onDragStart={(key) => {
               dragKey.current = key
             }}
