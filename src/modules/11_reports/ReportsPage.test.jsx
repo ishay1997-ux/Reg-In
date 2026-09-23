@@ -150,8 +150,8 @@ describe('מ1 — בורר-הדוח (הכרעה 18 · 29)', () => {
     expect(screen.getByText('מה מצב העסק השנה?')).toBeInTheDocument()
 
     await click(screen.getByTestId('reports-chip-trends'))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מגמות רב-שנתיות')
-    expect(screen.getByText('האם הצמיחה שומרת על שולי-הרווח?')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('סגירת הצעות')
+    expect(screen.getByText('מה סוגר הצעה, ואיפה הכסף הולך לאיבוד?')).toBeInTheDocument()
   })
 
   it('הבורר הוא שורת-שבבים אופקית ברוחב מלא — לא סרגל אנכי', async () => {
@@ -167,9 +167,9 @@ describe('מ1 — בורר-הדוח (הכרעה 18 · 29)', () => {
   it('התוויות הן השם הקצר, והשאלה יורדת לכותרת-המשנה', async () => {
     renderPage()
     const picker = await screen.findByTestId('reports-picker')
-    expect(within(picker).getByText('מגמות רב-שנתיות')).toBeInTheDocument()
+    expect(within(picker).getByText('סגירת הצעות')).toBeInTheDocument()
     // 🚫 השאלה אינה תווית-שבב (הכרעה 18), ואין מספר-דוח בממשק.
-    expect(within(picker).queryByText('האם הצמיחה שומרת על שולי-הרווח?')).toBeNull()
+    expect(within(picker).queryByText('מה סוגר הצעה, ואיפה הכסף הולך לאיבוד?')).toBeNull()
     expect(picker.textContent).not.toMatch(/דוח \d/)
   })
 
@@ -205,7 +205,7 @@ describe('מ1 — מצב-התצוגה חי בכתובת (📐13④ · S-18)', ()
   it('בחירת שבב כותבת את הדוח לכתובת, וקריאה חוזרת משחזרת אותו', async () => {
     renderPage()
     await click(await screen.findByTestId('reports-chip-discounts'))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('הנחות ורווחיות')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('הנחה מול סגירה')
     expect(screen.getByTestId('reports-chip-discounts')).toHaveAttribute('aria-current', 'true')
   })
 

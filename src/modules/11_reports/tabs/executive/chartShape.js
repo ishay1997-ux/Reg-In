@@ -24,20 +24,6 @@ export function withCharts(payload, transform) {
   return { ...payload, chart: next }
 }
 
-/**
- * מחליף את ציר-הקטגוריה למפתח שנושא תווית עברית.
- * ⚠️ **נשאר בשימוש של מ4 בלבד** — ‏`report_m04_discounts` עדיין מחזיר `xKey: 'tier'`
- * (‏`'0'` · `'1-5'` · `'6-10'` · `'10+'`) בעוד כל שורה נושאת `label` עברי (`'1–5%'`).
- * מ2 ומ3 קיבלו את התיקון בשרת במיגרציית `d2` ואינם עוברים כאן יותר.
- */
-export function withLabelAxis(chart, labelKey = 'label') {
-  if (chart.xKey === labelKey) return chart
-  if (!chart.data?.length || !Object.hasOwn(chart.data[0], labelKey)) return chart
-  return { ...chart, xKey: labelKey }
-}
-
-// ── 📐20 · הצהרת-תקופה-חלקית ────────────────────────────────────────────────
-
 /** ‏`'2026-09-16'` ⇒ `16` · ‏`'2026-09-16'` ⇒ `'16/09'`. **נגזר מה-`window` שהשרת החזיר
  * ולעולם לא מ-`new Date()`** — מוקש-השעון של `src/CLAUDE.md`: מסך שנטען אחרי חצות היה
  * מצהיר אורך-תקופה שגוי. */
@@ -46,10 +32,6 @@ export function withLabelAxis(chart, labelKey = 'label') {
 function dayOfMonth(isoDate) {
   const day = Number(isoDate?.slice(8, 10))
   return Number.isFinite(day) && day > 0 ? day : null
-}
-
-export function shortDate(isoDate) {
-  return isoDate?.length === 10 ? `${isoDate.slice(8, 10)}/${isoDate.slice(5, 7)}` : null
 }
 
 /**
@@ -65,7 +47,7 @@ export function shortDate(isoDate) {
  * השורות המלאות מקבלות `label` (מה-`label` שלהן אם יש, אחרת מערך-הציר עצמו).
  * 🚫 שום שורה אינה נמחקת ושום מפתח אינו יורד; `partial` נשאר במקומו.
  */
-export function withPartialSegment(chart, { labelOf, note }) {
+function withPartialSegment(chart, { labelOf, note }) {
   if (!chart.data?.some((row) => row.partial)) return chart
   const data = chart.data.map((row) => {
     const label = row.label ?? String(row[chart.xKey])
@@ -88,17 +70,4 @@ export function withPartialMonth(chart, windowTo) {
     // נמוכה**, לא לתאר את הציור (כ7: הצדקה-לחריגה נשארת, הצהרת-ציות יורדת).
     note: `החודש האחרון חלקי — ${isolateLtr(String(days))} ימים בלבד, ולכן העמודה שלו נמוכה.`,
   })
-}
-
-/**
- * 🚫 **כיבוי מפורש של הקרוס-פילטר** (`ReportSurface` · תוספת C8 16/09).
- * המנגנון המשותף מזהה מפתח-סינון **אוטומטית** כשערכי-ציר-ה-X נפגשים עם ערכי-השורות, וזו
- * ברירת-מחדל נכונה לרוב המשטחים. ‏**שני משטחי-הלשונית הזו הם החריגים המתועדים:** מ4 מסנן
- * בשרת דרך `p_drill` (שורת-השבבים), ומ6 מתועד ב-`cards-management.md` ① כמי ש**אין** בו
- * סינון-צולב כלל — ושם זה נרשם כסטייה מוצהרת מ-📐13 ולא כפער.
- * ⇒ שני סינונים מתחרים על אותה טבלה הם בדיוק המצב שבו המשתמשת רואה מספר ואינה יודעת
- * מה הוא סופר.
- */
-export function withoutCrossFilter(chart) {
-  return { ...chart, filter_key: false }
 }

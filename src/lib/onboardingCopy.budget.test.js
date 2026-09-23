@@ -14,10 +14,7 @@ import { ONBOARDING_COPY } from './onboardingCopy'
 const visibleLength = (text) => (text ?? '').replace(/[⁦-⁩]/g, '').length
 const BUDGET = 220
 
-// ⏳ **פטור מתוארך, 23/09/2026:** שלושת משטחי-ההנהלה האלה יוחלפו בדוחות-החלטה חדשים (הכרעת-ישי,
-// "כן הכרעה שלי") ⇒ פזה ב׳ אינה משכתבת אותם. **הפטור נמחק יחד עם המשטחים.**
-const REPLACED_SURFACES = ['reports.trends.', 'reports.discounts.', 'reports.staffing.']
-const isExempt = (key) => REPLACED_SURFACES.some((prefix) => key.startsWith(prefix))
+// ✂️ 24/09/2026 — הפטור של מ3/מ4/מ6 נמחק יחד עם המשטחים הישנים (דוחות-ההחלטה נכתבו בתוך התקציב).
 
 function sourceFiles(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -30,7 +27,6 @@ function sourceFiles(dir) {
 describe('שכבת-ההסבר — תקציב ומפתחות', () => {
   it(`כל רמז עד ${BUDGET} תווים גלויים`, () => {
     const over = Object.entries(ONBOARDING_COPY)
-      .filter(([key]) => !isExempt(key))
       .map(([key, entry]) => [key, visibleLength(entry.guided)])
       .filter(([, length]) => length > BUDGET)
     expect(over).toEqual([])
