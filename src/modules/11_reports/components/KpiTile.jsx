@@ -137,20 +137,31 @@ function CompareLine({ compare, fallbackFormat }) {
  * מידע, רק לא מידע שצריך לקרוא כדי לקרוא את המספר. אותו עיקרון כמו שבב-ההיקף (`Disclosure.jsx`).
  * ✅ מ02 — הדגם שישי אישר — כבר עמד בזה כמעט: השוואה אחת + חלון-זמן שחוזר על שורת-המסננים.
  */
+// ✏️ **כויל מול ישי, 23/09 לילה**, על כרטיס "יתרת-חוב פתוחה" (*"235,382 ₪ · 35 חשבוניות פתוחות ·
+// ▼ לפני חודש · נכון להיום"*): *"אולי אשתקד זה כן נחמד"*. ⇒ לא "שורה אחת" אלא **השוואה + שורת-הקשר
+// אחת אם היא קצרה.** מה שיורד תמיד: חלון-הזמן (כתוב בשורת-המסננים) · הערת-השוואה · משפט-במקום-מספר.
+// 📏 **30 תווים גלויים** — "35 חשבוניות פתוחות" (18) נשאר; "0 מחמשת הגדולים (44.4% מההכנסה)
+// מסומנים 'מתרחק'" (52) עובר ל-ⓘ. תווי-הבידוד אינם נספרים — הם בלתי-נראים.
+const SUB_VISIBLE_MAX = 30
+const visibleLength = (text) => String(text ?? '').replace(/[⁦-⁩]/g, '').length
+
 function splitLines(tile, masked) {
-  if (masked) return { primary: null, details: { window: tile.window } }
+  if (masked) return { showSub: false, showCompare: false, details: { window: tile.window } }
   const compare = tile.compare
-  const compareHasValue = Boolean(compare) && compare.value !== null && compare.value !== undefined
-  if (compareHasValue) {
-    return {
-      primary: 'compare',
-      details: { sub: tile.sub, note: compare.note, window: tile.window },
-    }
+  const showCompare = Boolean(compare) && compare.value !== null && compare.value !== undefined
+  // ⚠️ **אריח בלי ערך מציג את המכנה בכל אורך** — "—" לבדו אינו אומר *למה* אין מספר (מ17: "טרם נמדד").
+  const noValue = tile.value === null || tile.value === undefined
+  const showSub = Boolean(tile.sub) && (noValue || visibleLength(tile.sub) <= SUB_VISIBLE_MAX)
+  return {
+    showSub,
+    showCompare,
+    details: {
+      sub: showSub ? null : tile.sub,
+      compare: showCompare ? null : compare,
+      note: compare?.note ?? null,
+      window: tile.window,
+    },
   }
-  if (tile.sub) {
-    return { primary: 'sub', details: { compare, window: tile.window } }
-  }
-  return { primary: null, details: { compare, window: tile.window } }
 }
 
 function TileDetails({ label, details, fallbackFormat }) {
@@ -189,7 +200,7 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
   // ‏בלי מעטפת (בדיקת-לשונית, רינדור בודד) אין מי שיודע — וכל יעד נחשב פתיח.
   const canOpenTarget = useContext(ReportsShellContext)?.canOpenTarget
   const value = masked ? MASKED_NODE : renderValue(tile)
-  const { primary, details } = splitLines(tile, masked)
+  const { showSub, showCompare, details } = splitLines(tile, masked)
   // ‏`pl-10` — מקום ל-ⓘ בפינה, כדי שתווית ארוכה (*"אימוץ המלצת Smart Match"*) לא תעבור מתחתיו (נמדד בצילום).
   const hasDetails = Object.values(details).some(Boolean)
 
@@ -198,10 +209,14 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
       label={tile.label}
       value={value}
       sub={
-        primary === 'compare' ? (
-          <CompareLine compare={{ ...tile.compare, note: null }} fallbackFormat={tile.format} />
-        ) : primary === 'sub' ? (
-          <SubLine sub={tile.sub} />
+        showSub || showCompare ? (
+          <>
+            {/* סדר-המוקאפ: המכנה ואז ההשוואה (`.sub · .cmp`). */}
+            {showSub && <SubLine sub={tile.sub} />}
+            {showCompare && (
+              <CompareLine compare={{ ...tile.compare, note: null }} fallbackFormat={tile.format} />
+            )}
+          </>
         ) : null
       }
       emptyText={NO_VALUE}

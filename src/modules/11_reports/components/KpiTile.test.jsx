@@ -34,18 +34,28 @@ describe('KpiTile — 📑ב · שורת-המכנה-הגלוי (tiles[].sub)', (
     expect(screen.getByTestId('kpi-sub')).toHaveTextContent('35 חשבוניות פתוחות')
   })
 
-  // 🔴 **תקן-הכרטיס (23/09/2026):** שורה גלויה אחת — השוואה-עם-ערך גוברת; המכנה והחלון עוברים ל-ⓘ.
-  // ✏️ מחליף את בדיקת-הסדר *"ערך ⇐ sub ⇐ השוואה ⇐ חלון"* — ארבע השורות הגלויות הן בדיוק מה שישי
-  // פסל על האתר החי (*"ככה לא ניראת מערכת SAAS מקצועית"*).
-  it('שורה גלויה אחת: ההשוואה בכרטיס, המכנה והחלון ב-ⓘ', () => {
+  // 🔴 **תקן-הכרטיס (23/09/2026, כויל מול ישי):** השוואה + מכנה קצר גלויים; החלון עובר ל-ⓘ.
+  // ✏️ מחליף את בדיקת-הסדר *"ערך ⇐ sub ⇐ השוואה ⇐ חלון"* — ישי על האתר החי: *"ככה לא ניראת מערכת
+  // SAAS מקצועית"*, ועל כרטיס-החוב: *"אולי אשתקד זה כן נחמד"*.
+  it('מכנה קצר והשוואה בכרטיס — החלון ב-ⓘ', () => {
     render(<KpiTile tile={TILE} />)
     const card = screen.getByTestId('report-tile-open_debt')
-    const details = screen.getByTestId('kpi-details')
+    expect(within(card).getByTestId('kpi-sub')).toHaveTextContent('35 חשבוניות פתוחות')
     expect(within(card).getByTestId('kpi-compare')).toBeInTheDocument()
-    expect(within(card).queryByTestId('kpi-sub')).toBeNull()
     expect(within(card).queryByTestId('kpi-window')).toBeNull()
-    expect(within(details).getByTestId('kpi-sub')).toHaveTextContent('35 חשבוניות פתוחות')
-    expect(within(details).getByTestId('kpi-window')).toHaveTextContent('נכון להיום')
+    expect(within(screen.getByTestId('kpi-details')).getByTestId('kpi-window')).toHaveTextContent(
+      'נכון להיום',
+    )
+  })
+
+  it('מכנה ארוך (משפט) עובר ל-ⓘ', () => {
+    const sub = '0 מחמשת הגדולים (44.4% מההכנסה) מסומנים "מתרחק"'
+    render(<KpiTile tile={{ ...TILE, sub }} />)
+    const card = screen.getByTestId('report-tile-open_debt')
+    expect(within(card).queryByTestId('kpi-sub')).toBeNull()
+    expect(within(screen.getByTestId('kpi-details')).getByTestId('kpi-sub')).toHaveTextContent(
+      'מתרחק',
+    )
   })
 
   it('בלי השוואה-עם-ערך — המכנה הוא השורה הגלויה', () => {
