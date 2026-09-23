@@ -352,6 +352,7 @@ git -C C:\Users\ishay\Reg-In-export-wt status --short                 # חייב
 | תאריך | מצב | SHA | הבא |
 |---|---|---|---|
 | 24/09/2026 | תוכנית v2, אחרי שני מבקרים. דוחות-ההחלטה בייצור (`4d718709`) | `git log -1` | סשן 1, שלב ① |
+| 24/09/2026 00:2X | 🗣️ **אושר ע"י ישי בצ'אט** (*"מבחינתי מעולה תמשיך עד מה שתוכל בלי לעצור"*) — סשן 1, ואם נשאר מקום ממשיכים ל-D1 ואחריו D2. **קו-בסיס על `953b1cdc`** (📏 ריצה בפועל): `gate` נעצר ב-`test:run` ⇐ 3 כשלים, **שלושתם `Test timed out in 5000ms` תחת עומס** (3 סוכנים ודפדפנים רצו במקביל): `CustomerDetailsPage.export.test.jsx` ×1 · `RepositoryTab.pagination.test.jsx` ×2 — **בריצה בודדת 11/11 עוברים** ⇐ עומס, לא באג. 3,221 אחרים ירוקים. lint: אזהרה קיימת אחת (`UsersManagementPage.jsx:76`, exhaustive-deps). dup · deadcode · audit · bidi · context · docs-structure · iron-rules · declared-counts · type-scale = 0. **e2e: ר' השורה הבאה.** | `953b1cdc` | שלב ② |
 
 ## 13 · 🧾 טבלת "לא נתקעת" — ממולאת בשלב ③ ומעודכנת בשלב ⑥
 | מסך | שאלת השבוע-הראשון | איפה נתקעים | רמז / ממצא-מבנה | לפני | אחרי |
