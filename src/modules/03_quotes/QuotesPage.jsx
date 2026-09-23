@@ -115,7 +115,7 @@ function FilterChip({ label, count, active, onToggle, testId }) {
       <span
         dir="ltr"
         className={cn(
-          'rounded-full px-1.5 text-[11px] font-semibold',
+          'rounded-full px-1.5 text-xs font-semibold',
           disabled && 'bg-slate-100 text-slate-400',
           !disabled && active && 'bg-teal-100 text-teal-700',
           !disabled && !active && 'bg-amber-200 text-amber-800',
@@ -709,7 +709,7 @@ export default function QuotesPage() {
               data-testid="quotes-table"
             >
               <thead>
-                <tr className="text-[11.5px] text-slate-500 border-b border-slate-200">
+                <tr className="text-xs text-slate-500 border-b border-slate-200">
                   <th className="font-medium py-2.5 pl-3.5 text-right">מס׳</th>
                   <th className="font-medium py-2.5 pl-3.5">ההצעה</th>
                   <th className="font-medium py-2.5 pl-3.5">איש קשר</th>
@@ -747,13 +747,13 @@ export default function QuotesPage() {
                       </td>
                       <td className="py-2.5 pl-3.5">
                         <div className="font-semibold text-slate-800">{quote.event_name}</div>
-                        <div className="text-[11.5px] text-slate-500">
+                        <div className="text-xs text-slate-500">
                           {quote.customers?.company_name}
                         </div>
                       </td>
                       <td className="py-2.5 pl-3.5">
                         <div className="text-slate-700">{contact?.contact_name}</div>
-                        <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
+                        <div dir="ltr" className="text-xs text-slate-500 text-right">
                           {contact?.phone}
                         </div>
                         {/* קישור-פנייה כללי לאיש-הקשר (mailto ריק, אותו מנגנון כמו פאנל-השיווק
@@ -768,7 +768,7 @@ export default function QuotesPage() {
                             // נפרע 27/08/2026 — חצי (א) של `🚧 מ10 ← מ3` ברשם-החובות.
                             href={`mailto:${encodeURIComponent(email)}`}
                             title="מייל לאיש הקשר"
-                            className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
+                            className="inline-block mt-1 text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
                             data-testid={`quote-mailto-${quote.quote_id}`}
                           >
                             ✉ מייל לאיש הקשר
@@ -786,15 +786,13 @@ export default function QuotesPage() {
                         {/* "אחרי X% הנחה" מוצג רק כשיש הנחה (הכרעת-ישי): בלשונית "נדחו" הוא
                             נקרא לצד "נבחר מתחרה" — כלומר גם הנחנו וגם הפסדנו. */}
                         {discountPercent > 0 && (
-                          <div className="text-[11.5px] text-slate-500">
-                            אחרי {discountPercent}% הנחה
-                          </div>
+                          <div className="text-xs text-slate-500">אחרי {discountPercent}% הנחה</div>
                         )}
                       </td>
                       <td className="py-2.5 pl-3.5">
                         <span
                           className={cn(
-                            'inline-block rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold whitespace-nowrap',
+                            'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap',
                             pill?.className,
                           )}
                         >
@@ -803,14 +801,12 @@ export default function QuotesPage() {
                         {/* מתחת לתגית: עבור הצעה פתוחה — כמה זמן נשאר; עבור נדחתה — הסיבה,
                             שהיא הדבר היחיד שמסביר את השורה. */}
                         {expiry && (
-                          <div className="text-[11.5px] text-slate-500">
+                          <div className="text-xs text-slate-500">
                             פג בעוד {expiry.daysLeft} יום
                           </div>
                         )}
                         {quote.quote_status === 'rejected' && quote.rejection_reason && (
-                          <div className="text-[11.5px] text-slate-500">
-                            {quote.rejection_reason}
-                          </div>
+                          <div className="text-xs text-slate-500">{quote.rejection_reason}</div>
                         )}
                         {/* חיווי "נשלחה / טרם נשלחה" (LOCAL-16, הכרעת-ישי 01/08/2026 להביאו
                             גם לכאן). ⚠️ **רק על הצעה פתוחה** — על הצעה סגורה זו כבר לא פעולה
@@ -820,7 +816,7 @@ export default function QuotesPage() {
                             לא נטען (null) **שני** החיוויים נעלמים, ובמקומם הבאנר שמעל הטבלה. */}
                         {sentIds && isOpen && !sentIds.has(quote.quote_id) && (
                           <div
-                            className="text-[11.5px] text-amber-600"
+                            className="text-xs text-amber-600"
                             data-testid={`quote-unsent-${quote.quote_id}`}
                           >
                             טרם נשלחה ללקוח
@@ -828,7 +824,7 @@ export default function QuotesPage() {
                         )}
                         {sentIds?.has(quote.quote_id) && (
                           <div
-                            className="text-[11.5px] text-teal-700"
+                            className="text-xs text-teal-700"
                             data-testid={`quote-sent-${quote.quote_id}`}
                           >
                             נשלחה ללקוח

@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (15:XX–) — typography phase B on `ishay/type-copy-phase-b` (M11 wording, counters, dead controls)
+
+**Rulings before code** (plan `docs/plans/2026-09-17-module-11-typography.md`, block "🗣️ אושר 23/09/2026"): every explanatory string of the 16 reports is built **inside the SQL bodies** (J1/J2/J3, patched by K1) — so the rewrite goes into **one text migration**, applied at a single stop with Ishay typing its name; new wording is Claude's call ("תחליט אתה") with the M02 model gate kept; the M20 "מה מכעיס" chart is deleted as approved; economical mode (no build army, Sonnet for scans).
+**Slices, newest last** (SHAs: `git log --oneline origin/dev..HEAD`):
+- Phase-A remainder: `QuotesPage.jsx` 11 sizes ⇒ `text-xs`, baseline ⇒ 5 (all `quotePdf.jsx`, print points). `/quotes` shot at 1024/1536, overflow 0. ⚠️ Trap hit: `prettier --write` on an explicit `.md` path formats it even though `*.md`/`docs` are in `.prettierignore` — reformatted two whole docs; reverted with `git checkout --` and re-applied. ⚠️ And PowerShell 5.1 `Out-File` has no `utf8NoBOM` — write commit messages with `[IO.File]::WriteAllText`.
+
 ### 23/09/2026 (13:XX) — dev merged into the branch, and the "all rows" toggle finally does something
 
 **Ishay released the permission** the tool's classifier had refused, and ruled the `hourly_rate` migration stays a debt for two more weeks (~07/10/2026) and the three small product questions stay as they are (`353e04d9`). **Merge `origin/dev` ⇒ `757ff3c3`:** 47 commits, four conflicts — STATUS and the log keep both sides, `module-11.md` keeps both ledger rows, `ProjectsPage.jsx` keeps the export button and takes dev's `text-sm` on the sort line (the branch side carried a `text-[12px]` that the newly-arrived `check:type-scale` refuses). Gate on the merged tree: exit 0, 125 files / 3,189 tests, 13 sub-steps now.
