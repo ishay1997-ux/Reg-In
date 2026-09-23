@@ -17,8 +17,8 @@ import Ltr from '@/components/Ltr'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { NO_VALUE, formatByType, formatDelta } from '@/lib/reportsFormat'
 import { useContext } from 'react'
-import { Info } from 'lucide-react'
 import { ReportsShellContext } from './reportsShellContext'
+import InfoDetails from './InfoDetails'
 
 // 🔑 מועתק מ-`KpiStrip.jsx` (מ7) — **התקדים המדויק לאריח-דוח ממוסך**, וההערה שם מסבירה
 // למה זה `text-slate-400`: הוא מראה של קוד מוזג, ושינוי-גוון כאן הוא אדווה למודול 7.
@@ -168,31 +168,22 @@ function TileDetails({ label, details, fallbackFormat }) {
   const { sub, compare, note, window } = details
   if (!sub && !compare && !note && !window) return null
   return (
-    // 🔽 `<details>` מקומי — מקלדת מלידה, בלי portal ובלי מוקש-RTL (ר' `Disclosure.jsx`).
-    // ⚠️ **אח של הכפתור ולא בתוכו:** אריח-דלת הוא `<button>`, ואלמנט-אינטראקטיבי בתוך כפתור
-    // אינו HTML תקין — הלחיצה על ⓘ הייתה פותחת את הדוח במקום את הפירוט.
-    <details className="group absolute left-2 top-2 z-10" data-testid="kpi-details">
-      <summary
-        aria-label={`פירוט — ${label}`}
-        className="flex size-7 cursor-pointer list-none items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-700 [&::-webkit-details-marker]:hidden"
-      >
-        <Info aria-hidden="true" className="size-4" />
-      </summary>
-      <div className="absolute left-0 top-8 w-64 space-y-1 rounded-lg border border-slate-200 bg-white p-3 text-right shadow-lg">
-        <SubLine sub={sub} />
-        {compare && <CompareLine compare={compare} fallbackFormat={fallbackFormat} />}
-        {note && (
-          <span className="block text-sm text-slate-600" data-testid="kpi-compare-note">
-            {note}
-          </span>
-        )}
-        {window && (
-          <span className="block text-sm text-slate-600" data-testid="kpi-window">
-            {window}
-          </span>
-        )}
-      </div>
-    </details>
+    // 🔽 הקליפה (`<details>` + ⓘ) חולצה ל-`InfoDetails` (24/09/2026) — פס ה-AI במ22 משתמש בה.
+    // ⚠️ **אח של הכפתור ולא בתוכו** — ר' ההערה ב-`InfoDetails.jsx`.
+    <InfoDetails label={label} className="absolute left-2 top-2 z-10">
+      <SubLine sub={sub} />
+      {compare && <CompareLine compare={compare} fallbackFormat={fallbackFormat} />}
+      {note && (
+        <span className="block text-sm text-slate-600" data-testid="kpi-compare-note">
+          {note}
+        </span>
+      )}
+      {window && (
+        <span className="block text-sm text-slate-600" data-testid="kpi-window">
+          {window}
+        </span>
+      )}
+    </InfoDetails>
   )
 }
 
