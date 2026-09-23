@@ -49,4 +49,7 @@ export function applyMigrationFile(file, fn, body) {
 }
 
 export const postL1 = (fn) => applyMigrationFile(L1_FILE, fn, preL1(fn))
+// ✏️ 23/09/2026 — L2 applied (md5 16/16 == `expect-md5.mjs l2`); a third round builds on this.
+export const L2_FILE = path.join(MIGS, '20260923200000_module11_l2_tile_copy.sql')
+export const postL2 = (fn) => applyMigrationFile(L2_FILE, fn, postL1(fn))
 export const md5 = (s) => crypto.createHash('md5').update(s, 'utf8').digest('hex')
