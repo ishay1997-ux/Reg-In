@@ -1,6 +1,6 @@
 # HANDOFF — module 11 build, 16/09/2026
 
-> **Continues from:** `docs/specs/module_11_reports/HANDOFF-stage3-2026-09-10-02.md` (spec stage; its §2
+> **Continues from:** `docs/specs/module_11_reports/archive/HANDOFF-stage3-2026-09-10-02.md` (spec stage; its §2
 > blockers are all closed — see `STATUS.md`, which says so explicitly. Do **not** read state from it;
 > its §5 traps and §7 "how to work with Ishay" still hold).
 > **Written by:** the orchestrating session `719c2c51` at 16/09/2026 ~08:3X, while eight agents were in flight.
