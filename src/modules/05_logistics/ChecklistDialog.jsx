@@ -39,6 +39,7 @@ import Ltr from '@/components/Ltr'
 import StatusTag from '@/components/StatusTag'
 import LoadingOrError from '@/components/LoadingOrError'
 import Hint from '@/components/Hint'
+import { Lock } from 'lucide-react'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
 import SegmentedControl from './SegmentedControl'
 import { useAuth } from '@/contexts/AuthContext'
@@ -545,6 +546,11 @@ function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
             {EXPLAINER_SAVE}
           </p>
           <Hint id="checklist.autoSave" />
+          {canEdit &&
+            !isCancelled &&
+            sorted.some((row) => row.item_status !== 'ordered' && row.item_status !== 'ready') && (
+              <Hint id="checklist.qtyLocked" />
+            )}
         </div>
       )}
 
@@ -766,6 +772,16 @@ function ItemRows({
             >
               {AUTOFILL_TAG}
             </span>
+          )}
+          {/* 🔒 24/09/2026 (ליטושי-הכנס, B): **נעילה גלויה, לא רק `title`.** עד היום הסיבה שהשדה
+              מושבת נראתה רק בריחוף-עכבר — במגע ובמקלדת לא בכלל (H4). המנעול מסמן שיש סיבה, והסיבה
+              עצמה נשארת ב-`aria-label` של השדה ובשכבה (`checklist.qtyLocked`). */}
+          {canEdit && !qtyStateAllows && (
+            <Lock
+              aria-hidden="true"
+              className="mb-1 ml-1 inline size-4 text-slate-500"
+              data-testid={`checklist-qty-lock-${key}`}
+            />
           )}
           {canEdit ? (
             <input

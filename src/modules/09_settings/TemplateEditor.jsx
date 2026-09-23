@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 import { TEMPLATE_PLACEHOLDERS, templateSaveVerdict } from '@/lib/emailTemplates'
 import { getParamEntry } from '@/lib/paramsRegistry'
 import Ltr from '@/components/Ltr'
+import Hint from '@/components/Hint'
 
 function tokenTestId(token) {
   return token.replace(/[[\]]/g, '')
@@ -192,6 +193,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
             aria-label={`גוף התבנית — ${getParamEntry(selectedRow.param_name).label}`}
             data-testid="settings-template-body"
           />
+          {editable && <Hint id="templates.chipInsertPoint" />}
 
           {verdict?.status === 'blocked' && (
             <div

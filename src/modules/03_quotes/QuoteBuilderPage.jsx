@@ -718,6 +718,7 @@ export default function QuoteBuilderPage() {
               onChange={setLines}
               error={errors.lines}
             />
+            {lines.length > 0 && <Hint id="quoteBuilder.priceLocked" />}
             {/* השוואה מול הכמות שנקבעה בטופס (ולא מול ההמלצה) — מאז שהיא נערכת ידנית, היא
                 זו שמבטאת את הכוונה, והפער שמעניין הוא בינה לבין השורות שבפועל. */}
             {actualHostesses > 0 && actualHostesses !== Number(form.hostessCount) && (

@@ -872,6 +872,7 @@ export default function FinancePage() {
       <Hint id="finance.amberRows" />
       <Card>
         <TabsBar active={tab} counts={counts} onSelect={changeTab} />
+        {tab === 'awaiting_payment' && <Hint id="finance.paidWhileAwaiting" />}
         <FilterBar filters={filters} onChange={changeFilters} onClear={clearFilters} />
         {/* חלון-הזמן יושב מתחת לסרגל-החיפוש, לפני הטבלה (חוזה §4) — אותו מיקום-יחסי כמו
             במסך-הפרויקטים (שם הוא יושב מתחת לגלולות-הסטטוס). */}

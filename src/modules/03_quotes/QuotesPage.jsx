@@ -644,6 +644,8 @@ export default function QuotesPage() {
           </div>
         </div>
 
+        {showChips && <Hint id="quotes.expiringVsEventSoon" className="mb-2" />}
+
         {/* חלון-הזמן — שורה עצמאית מתחת לשורת-הסינון (הרחבת השורה הקיימת נמדדה שוברת אותה,
             ר' ההערה למעלה על 1,174px בתוך 960px). מציג-ומאפס עמוד יחד (הכרעת-ישי 04/09/2026). */}
         <div className="mb-3">

@@ -29,6 +29,7 @@ import { PRODUCT_CATEGORY_LABELS, PRODUCT_UNITS } from '@/lib/catalog'
 import { isValidNonNegativePrice, isValidSku } from '@/lib/validators'
 import { createProduct, updateProduct } from '@/modules/01_auth/pricesApi'
 import { cn } from '@/lib/utils'
+import Hint from '@/components/Hint'
 
 const EMPTY_FORM = {
   sku: '',
@@ -311,6 +312,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
                 data-testid="product-form-base-price"
               />
               <FieldError name="base_price" message={fieldErrors.base_price} />
+              <Hint id="prices.openQuotes" />
             </div>
 
             <div className="flex flex-col gap-1.5">

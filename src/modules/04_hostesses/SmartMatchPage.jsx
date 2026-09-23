@@ -673,6 +673,11 @@ export default function SmartMatchPage({ projectId, onBack }) {
           )}
 
           {candidates.length > 0 && <Hint id="smartMatch.angles" />}
+          {/* 🆕 24/09/2026 (ליטושי-הכנס, B): "למה היא ראשונה?" כשהאמינות **דלוקה** — כשהיא כבויה,
+              הבאנר `sm-reliability-off` כבר אומר על מה הדירוג מבוסס. */}
+          {candidates.length > 0 && params?.reliabilityEnabled !== false && (
+            <Hint id="smartMatch.weightsWhy" />
+          )}
 
           {candidates.length === 0 ? (
             <>

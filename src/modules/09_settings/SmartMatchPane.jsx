@@ -32,6 +32,7 @@ import { getParamEntry, parseForDisplay, weightsSumOk } from '@/lib/paramsRegist
 import { activeWeights } from '@/lib/smartMatch'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { countAttendanceRows } from '@/modules/09_settings/api'
+import Hint from '@/components/Hint'
 import ParamRow, {
   PARAMS_TABLE_CLASS,
   ParamsTableHead,
@@ -266,6 +267,7 @@ export default function SmartMatchPane({
           />
         </div>
       )}
+      {reliabilityRow && <Hint id="settingsSmartMatch.reliabilityOff" />}
     </div>
   )
 }

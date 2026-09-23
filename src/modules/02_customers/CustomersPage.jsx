@@ -954,6 +954,7 @@ export default function CustomersPage() {
             ) : (
               <>
                 <Hint id="customers.satisfactionAverage" />
+                {filters.dormantOnly === true && <Hint id="customers.dormantWhy" />}
                 {/* עטיפת-גלילה אופקית: 11 עמודות גולשות במסך צר (מובייל) — min-w שומר על רוחב קריא
                     והעטיפה גוללת במקום לרסק עמודות; במסך רחב w-full נמתח כרגיל. */}
                 <div className="overflow-x-auto">
