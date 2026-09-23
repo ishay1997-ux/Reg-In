@@ -12,8 +12,17 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowRight, Check, Eye, Pencil, Plus, X } from 'lucide-react'
+import { ArrowRight, Check, Download, Eye, Pencil, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import ExportDialog from '@/components/ExportDialog'
+import {
+  buildExportFileName,
+  buildExportSheet,
+  EXPORT_LOCKED_MESSAGES,
+  exportReportRows,
+} from '@/lib/reportsExport'
+import { CANCEL_TYPE_LABELS } from '@/lib/projectCard'
+import { formatTimestampFull } from '@/lib/dates'
 import LoadingOrError from '@/components/LoadingOrError'
 import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
@@ -36,7 +45,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import { CUSTOMER_TYPE_LABELS, deriveCustomerMetrics, primaryContact } from '@/lib/customers'
 import { parseVatPercent } from '@/lib/pricing'
-import { scoreTag } from '@/lib/projectFinance'
+import { scoreTag, scoreTagText } from '@/lib/projectFinance'
 import { eventDaysFromToday, PROJECT_STATUS_LABELS, resolveProjectTone } from '@/lib/projects'
 import {
   DORMANT_THRESHOLD_PARAM_NAME,
@@ -208,7 +217,6 @@ function deriveWindowedListsState({
   searchText,
   sortKey,
   vatRate,
-  projectsShowControls,
   projectSearchText,
   pageParam,
 }) {
@@ -245,21 +253,217 @@ function deriveWindowedListsState({
   // החיפוש בלשונית-הפרויקטים הוא פר-לשונית (`matchesProjectSearch`) ומחושב כאן ולא בתוך
   // ProjectsTabContent, כדי ש-WindowChips היחיד שמעל שתי הלשוניות יידע להציג את "עוד N
   // מחוץ לחלון" הנכון גם כשהלשונית הפעילה היא 'projects'.
+  // 🔴 התנאי נגזר מהרשימה **שבתוך החלון** — בדיוק כמו `ProjectsTabContent` (שמחשב אותו מחדש
+  // מה-prop שהוא מקבל). הסוכן-היריב 23/09 מדד: עד היום הוא נגזר מכל ההיסטוריה, ולכן חיפוש שהוקלד
+  // ב"הכול" המשיך לסנן בשקט את הקובץ ואת "עוד N מחוץ לחלון" אחרי מעבר לחלון שבו התיבה נעלמה.
+  const projectsShowControls = windowedProjects.length > CONTROLS_THRESHOLD
   function applyProjectRowFilters(list) {
     return projectsShowControls
       ? list.filter((p) => matchesProjectSearch(p, projectSearchText))
       : list
   }
-  const projectsHiddenByWindow =
-    applyProjectRowFilters(projects).length - applyProjectRowFilters(windowedProjects).length
+  // 23/09/2026 — הרשימה שחלון-הייצוא מקבל בלשונית-הפרויקטים: חלון-זמן + חיפוש, **בלי** דפדוף
+  // (הכרעת-ישי 17/09: "כל השורות שעומדות במסנן"). אותו סינון בדיוק ש-`ProjectsTabContent`
+  // מדפדף עליו — נגזר כאן פעם אחת כדי שהמסך והקובץ לא יוכלו לסטות.
+  const visibleProjects = applyProjectRowFilters(windowedProjects)
+  const projectsHiddenByWindow = applyProjectRowFilters(projects).length - visibleProjects.length
 
   return {
     counts,
     visibleQuotes,
     quotesPagination,
     windowedProjects,
+    visibleProjects,
     projectsTabCount,
     hiddenByWindow: tab === 'projects' ? projectsHiddenByWindow : quotesHiddenByWindow,
+  }
+}
+
+// ── חלון-הייצוא (23/09/2026): שני תיאורי-עמודות, אחד ללשונית ─────────────────
+//
+// 🔑 **ברירת-המחדל = מה שהטבלה של הלשונית מראה** (הכרעת-ישי 23/09), כולל שורות-המשנה שהן
+// נתונים (הנחה · סיבת-דחייה · נשלחה-ללקוח · פרטי-ביטול · ציון). כל `value` קורא לאותה נגזרת
+// שהשורה על המסך קוראת לה — `deriveQuoteAmount` · `statusPill` · `projectAmount` · `scoreTagText`.
+// 📊 שתי השליפות (`listQuotesByCustomer` · `getCustomerProjects`) מביאות את כל השדות שהמסך
+// מציג — אין כאן שדה שלא נשלף ואין מיגרציה. **אין `visible`:** הכסף מגודר ב-RLS על 'הצעות
+// מחיר'/'פרויקטים' (שורה שאין הרשאה אליה אינה מגיעה כלל), ואין מפתח ברשם-הרגישות.
+// המימוש מחוץ לרכיב — `CustomerDetailsPage` כבר על רף-המורכבות (sonarjs), כמו שאר העוזרים כאן.
+
+function quoteExportColumns(vatRate, sentIds) {
+  return [
+    { key: 'quote_id', label: 'מס׳ הצעה', format: 'id', value: (q) => q.quote_id },
+    {
+      key: 'estimated_event_date',
+      label: 'תאריך אירוע',
+      format: 'date',
+      core: true,
+      value: (q) => q.estimated_event_date,
+    },
+    {
+      key: 'event_name',
+      label: 'שם האירוע',
+      format: 'text',
+      core: true,
+      value: (q) => q.event_name,
+    },
+    {
+      key: 'total',
+      label: 'סכום',
+      format: 'money',
+      core: true,
+      value: (q) => deriveQuoteAmount(q, vatRate).total,
+    },
+    {
+      key: 'discount_percent',
+      label: 'הנחה %',
+      format: 'percent',
+      core: true,
+      value: (q) => deriveQuoteAmount(q, vatRate).discountPercent,
+    },
+    {
+      key: 'status',
+      label: 'סטטוס',
+      format: 'text',
+      core: true,
+      value: (q) => statusPill(q).label,
+    },
+    // המסך מסתיר "פג תוקף" (התגית "פגה" כבר אומרת זאת) — הקובץ נוהג זהה.
+    {
+      key: 'rejection_reason',
+      label: 'סיבת דחייה',
+      format: 'text',
+      core: true,
+      value: (q) =>
+        q.quote_status === 'rejected' && q.rejection_reason !== EXPIRED_REASON
+          ? (q.rejection_reason ?? '')
+          : '',
+    },
+    // `sentIds === null` = יומן-השליחות לא נטען ⇒ תא ריק, לא "לא" (אותו כלל כמו החיווי במסך).
+    {
+      key: 'sent',
+      label: 'נשלחה ללקוח',
+      format: 'text',
+      core: true,
+      // ובדיוק כמו המסך: "לא" רק על הצעה **פתוחה** — על סגורה זו כבר לא שאלה פתוחה, והתא ריק.
+      value: (q) => {
+        if (!sentIds) return ''
+        if (sentIds.has(q.quote_id)) return 'כן'
+        return q.quote_status === 'in_progress' ? 'לא' : ''
+      },
+    },
+  ]
+}
+
+function projectExportColumns(vatRate) {
+  const cancelDate = (p) => (formatTimestampFull(p.cancelled_at) || '').split(' ')[0]
+  return [
+    { key: 'project_id', label: 'מס׳ פרויקט', format: 'id', value: (p) => p.project_id },
+    {
+      key: 'final_event_date',
+      label: 'תאריך אירוע',
+      format: 'date',
+      core: true,
+      value: (p) => p.final_event_date,
+    },
+    {
+      key: 'event_name',
+      label: 'שם האירוע',
+      format: 'text',
+      core: true,
+      value: (p) => p.event_name,
+    },
+    {
+      key: 'amount',
+      label: 'סכום',
+      format: 'money',
+      core: true,
+      value: (p) => projectAmount(p, vatRate),
+    },
+    {
+      key: 'project_status',
+      label: 'סטטוס',
+      format: 'text',
+      core: true,
+      value: (p) => PROJECT_STATUS_LABELS[p.project_status] ?? '',
+    },
+    {
+      key: 'score_label',
+      label: 'שביעות רצון',
+      format: 'text',
+      core: true,
+      // 🔴 כמו `ScoreCell` על המסך: ציון נספר רק כשהמשוב **הושלם** — RPC-הסגירה של מ6 כותב ציון
+      // בלי לעדכן את הסטטוס, והמסך מציג "—" על שורה כזו (הסוכן-היריב 23/09).
+      value: (p) =>
+        p.feedback_status === 'completed' ? (scoreTagText(p.feedback_score) ?? '') : '',
+    },
+    // שורת-הביטול שעל המסך (`cancellationSubLabel`) — כשלושה נתונים, לא כמשפט.
+    { key: 'cancelled_at', label: 'תאריך ביטול', format: 'text', core: true, value: cancelDate },
+    {
+      key: 'cancel_type',
+      label: 'סוג ביטול',
+      format: 'text',
+      core: true,
+      value: (p) => CANCEL_TYPE_LABELS[p.cancel_type] ?? p.cancel_type ?? '',
+    },
+    {
+      key: 'cancel_reason',
+      label: 'סיבת ביטול',
+      format: 'text',
+      core: true,
+      value: (p) => p.cancel_reason ?? '',
+    },
+    {
+      key: 'feedback_score',
+      label: 'ציון משוב',
+      format: 'int',
+      value: (p) => (p.feedback_status === 'completed' ? p.feedback_score : null),
+    },
+  ]
+}
+
+// 🔤 נעולים (`ui-copy-styleguide.md` §5). הראשון הוא הנוסח הקיים של לשונית-הפרויקטים.
+const EXPORT_NO_PROJECTS_PERMISSION = 'אין לך הרשאה לצפות בפרויקטים.'
+const EXPORT_BLOCKED_PROJECTS = 'היסטוריית הפרויקטים לא נטענה — לחצי "נסי שוב" ואז ייצאי'
+const EXPORT_PROJECTS_FAILED_SHORT = 'היסטוריית הפרויקטים לא נטענה'
+const EXPORT_TAB_LABELS = { quotes: 'הצעות מחיר', projects: 'פרויקטים' }
+
+// מה החלון מקבל, לפי הלשונית. 🔴 כשל-טעינה ⇒ חסימה עם "נסי שוב" בתוך החלון (המודאל מסתיר את
+// כפתור-הלשונית), ולא קובץ חלקי שנראה שלם — הכלל שנמדד בלקוחות ובכספים באותו יום.
+function deriveExportState({
+  tab,
+  customer,
+  vatRate,
+  sentIds,
+  visibleQuotes,
+  visibleProjects,
+  canViewProjects,
+  projectsLoading,
+  projectsError,
+}) {
+  const fileName = buildExportFileName({
+    reportName: customer?.company_name ?? 'לקוח',
+    windowLabel: EXPORT_TAB_LABELS[tab],
+  })
+  if (tab !== 'projects') {
+    return {
+      columns: quoteExportColumns(vatRate, sentIds),
+      rows: visibleQuotes,
+      loading: false,
+      blockedReason: null,
+      error: null,
+      fileName,
+    }
+  }
+  let blockedReason = null
+  if (!canViewProjects) blockedReason = EXPORT_NO_PROJECTS_PERMISSION
+  else if (projectsError) blockedReason = EXPORT_BLOCKED_PROJECTS
+  return {
+    columns: projectExportColumns(vatRate),
+    rows: visibleProjects,
+    loading: canViewProjects && projectsLoading,
+    blockedReason,
+    error: canViewProjects && projectsError ? EXPORT_PROJECTS_FAILED_SHORT : null,
+    fileName,
   }
 }
 
@@ -355,6 +559,7 @@ export default function CustomerDetailsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [editOpen, setEditOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [documentQuote, setDocumentQuote] = useState(null)
   const [approveTarget, setApproveTarget] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
@@ -522,7 +727,6 @@ export default function CustomerDetailsPage() {
   }
 
   const showControls = quotes.length > CONTROLS_THRESHOLD
-  const projectsShowControls = projects.length > CONTROLS_THRESHOLD
 
   // 🆕 שני אריחי-המדד שמ6 מחבר (③.2) — `null` (ולא 0/תאריך מזויף) כל עוד הנתון אינו ידוע
   // בביטחון: אין הרשאה · עדיין נטען · טעינה נכשלה. "אין נתונים עדיין" עדיף על שקר.
@@ -555,6 +759,7 @@ export default function CustomerDetailsPage() {
     visibleQuotes,
     quotesPagination,
     windowedProjects,
+    visibleProjects,
     projectsTabCount,
     hiddenByWindow,
   } = deriveWindowedListsState({
@@ -569,9 +774,20 @@ export default function CustomerDetailsPage() {
     searchText,
     sortKey,
     vatRate,
-    projectsShowControls,
     projectSearchText,
     pageParam,
+  })
+
+  const exportState = deriveExportState({
+    tab,
+    customer,
+    vatRate,
+    sentIds,
+    visibleQuotes,
+    visibleProjects,
+    canViewProjects,
+    projectsLoading,
+    projectsError,
   })
 
   return (
@@ -744,12 +960,24 @@ export default function CustomerDetailsPage() {
 
         {/* חלון-הזמן — מופע יחיד מעל שתי הלשוניות (הכרעת-ישי 04/09/2026): שתיהן מציגות
             היסטוריה שגדלה, וחלון אחד שחל על שתיהן חוסך מהמשתמש ללמוד שני פקדים זהים. */}
-        <div className="px-6 pt-4">
+        <div className="px-6 pt-4 flex flex-wrap items-center gap-2">
           <WindowChips
             value={windowKey}
             onChange={handleWindowChange}
             hiddenCount={hiddenByWindow}
           />
+          {/* ייצוא לאקסל (23/09/2026) — כפתור אחד מעל שתי הלשוניות, כמו חלון-הזמן; מייצא את
+              הלשונית הפעילה. 🔑 פעיל תמיד — החלון אומר בעצמו כשאין מה לייצא (ת4ב). */}
+          <Button
+            type="button"
+            variant="outline"
+            className="mr-auto gap-1.5"
+            onClick={() => setExportOpen(true)}
+            data-testid="customer-export-button"
+          >
+            <Download className="size-4" aria-hidden="true" />
+            ייצוא
+          </Button>
         </div>
 
         {/* ---- לשוניות ---- */}
@@ -1014,6 +1242,33 @@ export default function CustomerDetailsPage() {
           )}
         </div>
       </div>
+
+      {/* חלון-הייצוא — הלשונית הפעילה בלבד; מה שהוא מקבל נגזר ב-`deriveExportState`. */}
+      {exportOpen && (
+        <ExportDialog
+          open={exportOpen}
+          onOpenChange={setExportOpen}
+          title={`ייצוא ${EXPORT_TAB_LABELS[tab]} לאקסל`}
+          columns={exportState.columns}
+          rows={exportState.rows}
+          loading={exportState.loading}
+          blockedReason={exportState.blockedReason}
+          error={exportState.error}
+          onRetry={() => setProjectsReloadTick((t) => t + 1)}
+          buildSheet={buildExportSheet}
+          knownMessages={EXPORT_LOCKED_MESSAGES}
+          fileName={exportState.fileName}
+          onExport={({ columns: picked, rows: pickedRows, scope, count }) =>
+            exportReportRows({
+              fileName: exportState.fileName,
+              sheetName: EXPORT_TAB_LABELS[tab],
+              columns: picked,
+              rows: pickedRows,
+              meta: { scope, count, generatedAt: new Date() },
+            })
+          }
+        />
+      )}
 
       {/* טופס-הלקוח של מודול 2, נצרך כמות-שהוא. remount לפי מצב-הפתיחה = איפוס בלי effect. */}
       {canEditCustomer && (

@@ -46,6 +46,14 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (12:XX) — customer card wired to the export dialog; the four unfrozen screens are done
+
+**Fourth screen** (`src/modules/02_customers/CustomerDetailsPage.jsx` + `CustomerDetailsPage.export.test.jsx`, 6 tests). Record: `docs/micro_guides/module-2.md` §9 (dated line). Two tabs ⇒ two column sets; one button above both, exporting the active tab. `deriveWindowedListsState` now also returns `visibleProjects` — the exact list the projects tab paginates — so the file and the screen cannot diverge. Sub-lines are exported as data (discount %, rejection reason, sent-to-customer, cancellation date/type/reason). No permission on *'פרויקטים'* ⇒ the tab's own sentence blocks the export; a failed projects load ⇒ blocked with *"נסי שוב"* inside the modal.
+
+📊 Live on 5199 as CEO (top-revenue customer): quotes 42 / 7 default (8 available), projects 24 / 8 (10), the first quote row 3,219.51 vs the screen's rounded 3,220 ₪; xlsx downloaded; 0 page errors. The adversarial reviewer's verdict is recorded beside the commit in the module-2 line.
+
+**State of the export work after this commit:** `ProjectsPage` · `CustomersPage` · `FinancePage` · `CustomerDetailsPage` wired; `RepositoryTab` frozen on the `hourly_rate` migration (Ishay); *"כל השורות"* waits on pulling `origin/dev` (blocked this session by the Claude Code permission classifier — "modify shared resources"); three small product questions on the STATUS line.
+
 ### 23/09/2026 (11:XX) — finance screen wired to the export dialog: three core sets, one per tab
 
 **Third screen outside module 11** (`src/modules/08_finance/FinancePage.jsx` + a new `FinancePage.export.test.jsx`, 9 tests). Full record: `docs/micro_guides/module-8.md` §10 (dated line).
