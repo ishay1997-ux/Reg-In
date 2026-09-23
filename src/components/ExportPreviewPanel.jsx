@@ -116,7 +116,17 @@ export default function ExportPreviewPanel({
           role="region"
           aria-label="תצוגה מקדימה של הקובץ — ניתן לגלול הצידה לעמודות נוספות"
         >
-          <table className="min-w-max border-collapse text-xs">
+          {/*
+            🔑 **`w-full` **לצד** `min-w-max`, ושני אלה אינם סותרים — הם תקרה ורצפה.**
+            ‏`min-width: max-content` הוא **הרצפה**: העמודות לעולם לא נדחסות מתחת לרוחבן הטבעי,
+            וזה מה שמייצר את פס-הגלילה ב-30 עמודות. ‏`width: 100%` הוא **הבקשה**: כשיש מקום
+            פנוי — הטבלה לוקחת אותו. ⇒ הרוחב בפועל הוא `max(100%, max-content)`.
+            📊 **נמדד 23/09/2026 בצילום:** בלי `w-full`, ב-8 עמודות על מסך 1440 הטבלה תפסה
+            ‏685px מתוך מכל של 870 — **185px של לבן ריק לצד הנתונים**, שנקראו כחוסר-איזון.
+            ⚠️ **וזה אינו מבטל את המדידה של 17/09** — ב-30 עמודות `max-content` גובר על 100%,
+            הטבלה גולשת, והפס חוזר. **הרצפה נשארה; רק הבקשה נוספה.**
+          */}
+          <table className="w-full min-w-max border-collapse text-xs">
             <thead>
               <tr className="group/head">
                 {header.map((cell, index) => {
