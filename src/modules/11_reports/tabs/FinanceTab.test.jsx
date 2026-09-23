@@ -125,7 +125,12 @@ const base = (extra) => ({
 
 const overviewPayload = () =>
   base({
-    population: { n: 35, label: 'אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · n=35', excluded: {} },
+    population: {
+      n: 35,
+      summary: '35 חשבוניות פתוחות',
+      label: 'אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · n=35',
+      excluded: {},
+    },
     window: { from: '2026-01-01', to: '2026-09-16', label: '01/01–16/09/2026' },
     tiles: [
       {
@@ -133,7 +138,7 @@ const overviewPayload = () =>
         label: 'יתרת-חוב פתוחה',
         value: 236382,
         format: 'money',
-        window: 'נכון להיום · אינו מושפע ממסנן התקופה',
+        window: 'נכון להיום',
         compare: { label: 'לפני חודש', value: 206002, direction: 'up' },
         target: { tab: 'כספים', report: 'report_m09_aging', drill: null },
       },
@@ -472,9 +477,13 @@ describe('מ7 · מבט-על כספים', () => {
     expect(plain(tile)).toContain('236,382 ₪')
     // 📐1 — חצי-ההשוואה מעוצב ככסף ולא כמספר גולמי (ר' `withCompareFormat`).
     expect(plain(tile)).toContain('206,002 ₪')
-    // 📐3 — חלון-הזמן על האריח, כולל ההצהרה שהוא אינו מגיב למסנן.
-    expect(plain(tile)).toContain('אינו מושפע ממסנן התקופה')
+    // 📐3 — חלון-הזמן על האריח. ✏️ 23/09/2026 (L1): בלי "אינו מושפע ממסנן התקופה" — שורת-המסננים
+    // כבר אומרת זאת כעובדה (`תקופה  נכון להיום`), וההסתייגות ירדה מהשרת.
+    expect(plain(tile)).toContain('נכון להיום')
+    expect(plain(tile)).not.toContain('אינו מושפע')
 
+    // שבב-ההיקף מהשרת (`population.summary`); ההצהרה המלאה מקופלת בתוכו.
+    expect(plain(screen.getByTestId('report-scope-summary'))).toContain('35 חשבוניות פתוחות')
     expect(plain(screen.getByTestId('report-population'))).toContain('n=35')
     expect(plain(screen.getByTestId('report-so-what'))).toContain('מעל 60 יום')
     expect(plain(screen.getByTestId('report-definitions'))).toContain('יתרת-חוב פתוחה =')

@@ -23,7 +23,7 @@ const TILE = {
   value: 236382,
   format: 'money',
   sub: 'הכל 35 חשבוניות פתוחות',
-  window: 'נכון להיום · אינו מושפע ממסנן התקופה',
+  window: 'נכון להיום',
   compare: { value: 206002, label: 'לפני חודש', direction: 'up' },
   target: null,
 }

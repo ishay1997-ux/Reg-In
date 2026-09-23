@@ -123,6 +123,7 @@ const m2Payload = () =>
   base({
     population: {
       n: 241,
+      summary: '241 אירועים שהסתיימו · מתוך 837',
       label: 'אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית · n=241',
       excluded: {},
     },
@@ -135,14 +136,14 @@ const m2Payload = () =>
         label: 'הכנסות מתחילת השנה',
         value: 1962981.47,
         format: 'money',
-        sub: '241 אירועים שהסתיימו',
+        sub: null,
         window: 'חלון-האריח',
         target: { tab: 'הנהלה', report: 'report_m03_trends', drill: null },
         compare: {
           value: 1425658.65,
           label: '2025 באותו טווח',
           direction: 'up',
-          note: '184 אירועים',
+          note: null,
         },
       },
       {
@@ -150,7 +151,7 @@ const m2Payload = () =>
         label: 'שולי-רווח גולמי',
         value: 58.613608308793665,
         format: 'percent',
-        sub: 'רווח מתוך הכנסה',
+        sub: null,
         window: 'חלון-האריח',
         target: { tab: 'הנהלה', report: 'report_m04_discounts', drill: null },
         compare: { value: 55.9443559648728, label: '2025 באותו טווח', direction: 'up', note: null },
@@ -160,7 +161,7 @@ const m2Payload = () =>
         label: 'אירועים שהסתיימו',
         value: 241,
         format: 'int',
-        sub: 'ארבעת המצבים',
+        sub: null,
         window: 'חלון-האריח',
         target: { tab: 'כספים', report: 'report_m08_profitability', drill: null },
         compare: { value: 184, label: '2025 באותו טווח', direction: 'up', note: null },
@@ -170,8 +171,8 @@ const m2Payload = () =>
         label: 'נתח 5 הלקוחות הגדולים',
         value: 45.65447369246654,
         format: 'percent',
-        sub: 'אצל 55 לקוחות עם הכנסה',
-        window: 'כל הזמנים · אינו מושפע ממסנן התקופה',
+        sub: null,
+        window: 'כל הזמנים',
         target: { tab: 'לקוחות', report: 'report_m21_drifting', drill: null },
         compare: {
           value: 47.53143924185967,
@@ -574,10 +575,11 @@ describe('מ2 · מבט-על הנהלה', () => {
     // 📐4 — ₪ בלי אגורות · אחוז בספרה אחת, שניהם מבודדים.
     expect(screen.getByText(isolateLtr('1,962,981 ₪'))).toBeInTheDocument()
     expect(screen.getByText(isolateLtr('58.6%'))).toBeInTheDocument()
-    // 📑ב — `tiles[].sub` מרונדר **פעם אחת**, ע"י `KpiTile` (GAP 1 של השכבה המשותפת).
-    // ⚠️ ‏`compare.note` עדיין אינו מרונדר ע"י אף רכיב — ר' הדיווח; הבדיקה אינה מתחזה לכך שכן.
-    expect(screen.getAllByTestId('kpi-sub')).toHaveLength(4)
-    expect(screen.getByText('241 אירועים שהסתיימו')).toBeInTheDocument()
+    // ✏️ 23/09/2026 (L1, הדגם שישי אישר): אריח = שם · מספר · השוואה — בלי תת-שורה. השרת מחזיר
+    // `sub: null` בארבעתם, וההיקף ("241 אירועים שהסתיימו · מתוך 837") עבר לשבב-ההיקף.
+    // (רינדור `tiles[].sub` כשיש כזה נעול ב-`KpiTile.test.jsx`.)
+    expect(screen.queryAllByTestId('kpi-sub')).toHaveLength(0)
+    expect(screen.getByTestId('report-scope-summary')).toHaveTextContent('241 אירועים שהסתיימו')
     // 📐4 — חצי-ההשוואה מעוצב כמו האריח, ולא נשפך כמספר גולמי (נמדד כפגם 16/09).
     expect(screen.getByText(isolateLtr('1,425,659 ₪'))).toBeInTheDocument()
     expect(screen.getByText(isolateLtr('55.9%'))).toBeInTheDocument()

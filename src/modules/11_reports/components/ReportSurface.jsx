@@ -48,7 +48,8 @@ function toScreenError(err) {
   return { kind: 'error' }
 }
 
-// 🔤 נוסח-השבב כשהשרת עוד לא מוסר `population.summary` (עד מיגרציית-הטקסט של פזה ב׳).
+// 🔤 נוסח-השבב כשהשרת אינו מוסר `population.summary`. ✏️ 23/09/2026: מיגרציית-הטקסט L1 הוסיפה
+// אותו ל-13 פונקציות; נשארו בלעדיו רק מ3/מ4/מ6 — שיוחלפו בדוחות-החלטה (הכרעת-ישי 23/09).
 const SCOPE_FALLBACK = 'מי נכלל בדוח'
 
 /**
@@ -260,13 +261,11 @@ const datumLabel = (datum, xKey) => String(datum?.label ?? datum?.[xKey] ?? '')
  * (`'drill_key', jsonb_build_object('kind','year','year',yr)` ב-`…j3….sql`). ⇒ **שלוש עמודות-השנים
  * בדף "מגמות רב-שנתיות" היו מתות לגמרי**, והשורות שמתחתן עבדו. שני מנגנונים לאותה התנהגות
  * הם בדיוק מחלקת-הפגם של D-30: ביום שהם נפרדו, איש לא ידע איזה מהם קובע.
- * ⏳ **והמוסכמה הישנה נשארת כגיבוי אחד, מתוארך, למ9 בלבד:** שם הדאטום נושא `bucket_key` ועדיין
- * לא `drill_key`. מיגרציית-הטקסט של פזה ב׳ מוסיפה אותו — ואז הענף הזה נמחק.
+ * ✏️ **23/09/2026 — הגיבוי למוסכמה הישנה (`<xKey>_key`, מ9 בלבד) נמחק:** מיגרציית-הטקסט L1 הוסיפה
+ * `drill_key` לדאטום של מ9, ונמדד מהמסד שהוא שם. דאטום בלי `drill_key` אינו דלת.
  */
-function datumDrillKey(chart, datum) {
-  if (datum?.drill_key && typeof datum.drill_key === 'object') return datum.drill_key
-  const legacy = datum?.[`${chart?.xKey}_key`]
-  return chart?.xKey && legacy != null ? { [chart.xKey]: legacy } : null
+function datumDrillKey(datum) {
+  return datum?.drill_key && typeof datum.drill_key === 'object' ? datum.drill_key : null
 }
 
 /** האם מפתח-הדאטום הוא הרמה הפתוחה — השוואה על הממדים בלבד; `kind` הוא סוג, לא ממד. */
@@ -284,10 +283,10 @@ function chartDrill(chart, onDrillLevel) {
   if (!onDrillLevel) return null
   // ⚠️ אין ולו דאטום אחד שנושא מפתח ⇒ אין דלת. מפתח ריק היה נכתב לכתובת כ-`{}` ומחזיר
   // את הדף לשורש בלי שאיש יבין למה.
-  const usable = (chart?.data ?? []).some((datum) => datumDrillKey(chart, datum) != null)
+  const usable = (chart?.data ?? []).some((datum) => datumDrillKey(datum) != null)
   if (!usable) return null
   return (datum) => {
-    const key = datumDrillKey(chart, datum)
+    const key = datumDrillKey(datum)
     if (key) onDrillLevel(key)
   }
 }
@@ -338,7 +337,7 @@ function drillHandlers(surface, payload, onDrill, drill) {
 /** הדאטום של הרמה **הפתוחה** — כדי שהעמודה שנפתחה תישאר מסומנת (15-ד) גם אחרי הירידה. */
 function activeDrillLabel(chart, drill) {
   if (!drill) return undefined
-  const datum = (chart?.data ?? []).find((row) => isOpenLevel(datumDrillKey(chart, row), drill))
+  const datum = (chart?.data ?? []).find((row) => isOpenLevel(datumDrillKey(row), drill))
   return datum ? datum[chart.xKey] : undefined
 }
 

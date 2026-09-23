@@ -640,7 +640,15 @@ const DRILL_SURFACE = {
   drill: true,
 }
 
-// 🌱 צורת-המטען החי של מ9: העמודה מציגה **תווית** והדאטום נושא **מפתח**.
+// 🌱 צורת-המטען החי של מ9 *(אחרי מיגרציית-הטקסט L1, 23/09/2026)*: העמודה מציגה **תווית**,
+// והדאטום נושא את **הדלת** — `drill_key`, אותו שדה שהשורה נושאת. ‏`bucket_key` נשאר בשרת
+// לצידו (לקוח-האתר-החי הישן עוד קורא אותו), אבל הלקוח הזה כבר אינו קורא אותו.
+const agingDatum = (bucket, key, amount) => ({
+  bucket,
+  bucket_key: key,
+  drill_key: { bucket: key },
+  amount,
+})
 const agingPayload = (over = {}) =>
   payload({
     chart: {
@@ -649,9 +657,9 @@ const agingPayload = (over = {}) =>
       xKey: 'bucket',
       series: [{ key: 'amount', label: 'חוב' }],
       data: [
-        { bucket: '1–30', bucket_key: 'd1_30', amount: 82000 },
-        { bucket: '31–60', bucket_key: 'd31_60', amount: 57000 },
-        { bucket: '90+', bucket_key: 'd90p', amount: 0 },
+        agingDatum('1–30', 'd1_30', 82000),
+        agingDatum('31–60', 'd31_60', 57000),
+        agingDatum('90+', 'd90p', 0),
       ],
     },
     drill: { level: 0, levels: ['מדרג', 'לקוח'], crumbs: [{ label: 'הכול', drill: null }] },
@@ -689,6 +697,30 @@ describe('ReportSurface — 🚪 לחיצה על עמודה בדף-דריל יו
     const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
     // העמודה הפתוחה נשארת טורקיז, השתיים האחרות יורדות ל-slate-300.
     expect(cells.filter((c) => c.fill === '#CAD5E2')).toHaveLength(2)
+  })
+
+  // ✏️ 23/09/2026 — הגיבוי המתוארך (`<xKey>_key`) נמחק: דלת אחת, `drill_key`. דאטום בלי
+  // `drill_key` אינו דלת, גם אם יש לו שדה בשם `bucket_key` — אחרת שני מנגנונים שוב קובעים יחד.
+  it('דאטום בלי drill_key אינו מוריד רמה, גם כשיש לו bucket_key', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(
+      agingPayload({
+        chart: {
+          type: 'stackedBar',
+          title: 'חוב לפי מדרג',
+          xKey: 'bucket',
+          series: [{ key: 'amount', label: 'חוב' }],
+          data: [{ bucket: '1–30', bucket_key: 'd1_30', amount: 82000 }],
+        },
+      }),
+    )
+    render(
+      <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    await screen.findByTestId('report-table-card')
+    const select = screen.queryByTestId('chart-select-0')
+    if (select) fireEvent.click(select)
+    expect(onDrill).not.toHaveBeenCalled()
   })
 
   // 🚫 מדרג שספירתו אפס אינו דלת — המגן של `ChartCard` ממשיך לחול על נתיב-הדריל.
