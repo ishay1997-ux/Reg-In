@@ -46,6 +46,24 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (02:4X) — the preview scrolled sideways and gave no sign that it did
+
+**`6570c7da`.** Ishay: *"צריך בתצוגה מקדימה גלילה ימינה שמאלה לראות את העמודות"*.
+
+📊 **Measured with twenty columns:** `canScrollX: true`, **856px hidden** — and `offsetHeight - clientHeight` = **0**. The browser drew **no bar at all**. The scrolling worked and nothing said so, which makes a column cut at the edge **read as the end of the table**.
+
+🔴 **That is a wrong conclusion from 17/09 being corrected, not a new defect.** That session measured *"עובי-פס 0"* and concluded *"`auto` ודי"*. **The measurement was right and the conclusion was inverted** — zero means there is no bar. Chromium draws an **overlay scrollbar** by default: it takes no space and does not appear until you scroll.
+
+**An explicit bar is now drawn** — `.scrollbar-visible` in `index.css`. It has to be a class: `scrollbar-width` as an inline style was tried **and measured first**, and stayed at zero; `::-webkit-scrollbar` cannot be written inline.
+
+⚠️ **And the honest half: I cannot verify that bar from here.** Headless Chromium uses overlay scrollbars regardless, so the measurement stays 0 **even with an explicit height**. On Ishay's machine it will appear; from here that is an **assumption, not a measurement** — the same §7 item 3ה open since 17/09.
+🔑 **So the guarantee does not rest on it.** The caption now states the column count — *"· 20 עמודות"* — which **depends on nothing the browser draws**, and is measurable. Two tests lock it, including that the number follows the **file** and not the report.
+
+### 🔴 A pattern worth naming: three Stop-hook catches in one session, all the same
+
+The hook blocked the turn **three times** for the same reason — code committed before `CLAUDE_CODE_LOG` and `STATUS` were updated. Each time the fix was applied and the next commit repeated it.
+🔑 **The lesson is not "remember harder".** It is that *"docs last"* (correct, because the hook needs a fresh mtime) quietly became *"docs later"*. ⇒ **The write-back belongs in the same turn as the code, before the commit message is written** — the hook is the backstop, not the process.
+
 ### 23/09/2026 (02:2X) — the preview table fills its space, and two rulings taken back off Ishay's desk
 
 **`9c09d219`.** He asked a question worth recording: *"נשאר לי להחליט משהו, והאם באמת יש לי את הידע לענות — אם לא, תחליט אתה."* Re-reading the open list against that test showed **most of it was never his** — it was craft I had escalated. Two came back:
