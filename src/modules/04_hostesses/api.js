@@ -384,6 +384,46 @@ export async function getHostessAssignments(hostessId) {
   return data ?? []
 }
 
+// 🆕 **העדפות-הלקוחות של דיילת אחת — לכרטיס 3ד** (ליטושי-הכנס, חבילה C1, 24/09/2026).
+// עד היום הכרטיס כתב *"טרם נרשמו העדפות"* **לכל דיילת**, קבוע בקוד, בעוד שבמסד יש כ-2,000 העדפות.
+// 🔴 **שם-הלקוח מ-`projects.customer_name`, לא בצירוף ל-`customers`** — מנהלת גיוס ושיבוץ
+// **חסומה** על 'לקוחות', והצירוף היה מחזיר `null` בלי שגיאה (אותו תקדים של `listStaffingOverview`).
+// ‏RLS (נמדד 24/09 ב-`pg_policies`): `customer_hostess_preference` נקראת ב-view/edit על 'דיילות',
+// ו-`projects` ב-view/edit על 'פרויקטים' — **כל תפקיד שרואה את הכרטיס רואה את שתיהן.**
+// ⚠️ **זורקת ולא מחזירה `[]` על כשל** — "לא נטען" ו"אין העדפות" הם שני מצבים שונים (`CLAUDE.md` §4.3).
+export async function getHostessClientPreferences(hostessId) {
+  const { data, error } = await supabase
+    .from('customer_hostess_preference')
+    .select('customer_id, preference, preference_reason')
+    .eq('hostess_id', hostessId)
+  if (error) throw toError(error, 'שגיאה בטעינת העדפות הלקוחות.')
+  const rows = data ?? []
+  if (rows.length === 0) return []
+
+  const customerIds = [...new Set(rows.map((row) => row.customer_id))]
+  const { data: projects, error: projectsError } = await fetchAll(() =>
+    supabase
+      .from('projects')
+      .select('project_id, customer_id, customer_name')
+      .in('customer_id', customerIds)
+      .not('customer_name', 'is', null)
+      .order('project_id'),
+  )
+  if (projectsError) throw toError(projectsError, 'שגיאה בטעינת העדפות הלקוחות.')
+  const names = new Map()
+  for (const project of projects ?? []) {
+    if (!names.has(project.customer_id)) names.set(project.customer_id, project.customer_name)
+  }
+  return rows
+    .map((row) => ({
+      customerId: row.customer_id,
+      customerName: names.get(row.customer_id) ?? null,
+      preference: row.preference,
+      reason: row.preference_reason ?? null,
+    }))
+    .sort((a, b) => (a.customerName ?? '').localeCompare(b.customerName ?? '', 'he'))
+}
+
 // הפרמטרים שמסכי מודול 4 צריכים.
 // 🔴 **עברה לקורא המשותף (מודול 9 · צעד 2.3), וזה שינוי-התנהגות מכוון: שם שלא חוזר
 // עכשיו *זורק* במקום להיעדר בשקט.** עד כאן היא החזירה מפה חלקית, והקורא לא יכול היה
