@@ -123,6 +123,7 @@ function measure(slug) {
       under,
       top: Math.round(r.top),
       height: Math.round(r.height),
+      width: Math.round(r.width),
     }
   })
   const text = (sel) =>
@@ -211,6 +212,9 @@ function mode0Violations(surface, m) {
     const heights = new Set(row.map((t) => t.height))
     if (heights.size > 1) at('כרטיסים', '0.4 גובה שווה', [...heights].join('/'))
   }
+  // 0.4 — ✏️ רשת (הכרעת-ישי 23/09 לילה): רוחב שווה לכל הכרטיסים בדף, גם לכרטיס יתום בשורה שנייה.
+  const widths = new Set(m.tiles.map((t) => t.width))
+  if (widths.size > 1) at('כרטיסים', '0.4 רוחב שווה', [...widths].join('/'))
   if (m.soWhat) {
     if (m.soWhat.length > LIMITS.soWhatChars) at('אז מה', '0.5 ≤120 תווים', m.soWhat.length)
     if (!ACTION_START.test(m.soWhat)) at('אז מה', '0.5 מתחיל בפעולה', m.soWhat.split(' ')[0])
