@@ -36,6 +36,7 @@ import {
   parsePageParam,
   parseWindowParam,
 } from '@/lib/listWindow'
+import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/dates'
@@ -378,10 +379,12 @@ export default function ProjectsPage() {
               <Button
                 type="button"
                 variant="outline"
+                className="gap-1.5"
                 onClick={() => setExportOpen(true)}
                 data-testid="projects-export-button"
               >
-                ייצוא לאקסל
+                <Download className="size-4" aria-hidden="true" />
+                ייצוא
               </Button>
             </div>
             {visible.length > 0 && <Hint id="projects.sort" />}

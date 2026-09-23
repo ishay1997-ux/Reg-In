@@ -313,3 +313,46 @@ describe('🔴 התצוגה-המקדימה — כל תא מבודד כיווני
     }
   })
 })
+
+// 🔴🔴 **מסנן מכותרת-העמודה — הכרעת-ישי 23/09/2026.**
+// 🔑 **מה שנבדק כאן אינו "הכפתור קיים" אלא **שהוא מזין את אותה רשימת-תנאים**
+// שבפאנל הימני — כלל-ברזל 14. **שתי מערכות-סינון מקבילות היו מתפצלות.**
+describe('🔴 מסנן מכותרת-העמודה', () => {
+  it('לחיצה על האייקון מוסיפה שורת-תנאי לפאנל הימני', () => {
+    setup()
+    expect(screen.queryAllByTestId('export-filter-row')).toHaveLength(0)
+    fireEvent.click(screen.getByTestId('export-head-filter-days_overdue'))
+    const rows = screen.getAllByTestId('export-filter-row')
+    expect(rows).toHaveLength(1)
+    expect(screen.getByLabelText('עמודה לסינון')).toHaveValue('days_overdue')
+  })
+
+  it('קליק-ימני על הכותרת עושה בדיוק את אותו דבר', () => {
+    setup()
+    const head = within(screen.getByTestId('export-preview'))
+      .getAllByRole('columnheader')
+      .find((cell) => cell.textContent.includes('סכום'))
+    fireEvent.contextMenu(head)
+    expect(screen.getAllByTestId('export-filter-row')).toHaveLength(1)
+    expect(screen.getByLabelText('עמודה לסינון')).toHaveValue('amount')
+  })
+
+  // ⚠️ **שני תנאים על אותה עמודה מצטברים ב"וגם"** ⇒ לחיצה חוזרת היתה
+  // מצמצמת את הקובץ בלי שהמשתמשת ביקשה זאת. לחיצה שנייה = אין-מעש.
+  it('לחיצה חוזרת על עמודה שכבר מסוננת אינה מוסיפה תנאי שני', () => {
+    setup()
+    fireEvent.click(screen.getByTestId('export-head-filter-days_overdue'))
+    fireEvent.click(screen.getByTestId('export-head-filter-days_overdue'))
+    expect(screen.getAllByTestId('export-filter-row')).toHaveLength(1)
+  })
+
+  it('התנאי שנוצר הוא החוקי לסוג העמודה — ולא ברירת-מחדל שרירותית', () => {
+    setup()
+    fireEvent.click(screen.getByTestId('export-head-filter-project_id'))
+    // װ`project_id` הוא `id` ⇒ אין לו "גדול מ-"
+    const options = within(screen.getByLabelText('תנאי'))
+      .getAllByRole('option')
+      .map((option) => option.textContent)
+    expect(options).not.toContain('גדול מ-')
+  })
+})

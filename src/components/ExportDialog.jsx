@@ -33,7 +33,7 @@ import {
   moveToTop,
   reorderKey,
 } from '@/lib/exportColumns'
-import { applyFilters } from '@/lib/exportFilters'
+import { applyFilters, isCategorical, operatorsFor } from '@/lib/exportFilters'
 import ExportConfigPanel from '@/components/ExportConfigPanel'
 import ExportPreviewPanel from '@/components/ExportPreviewPanel'
 
@@ -174,6 +174,32 @@ export default function ExportDialog({
     })
   }
 
+  // 🔑 **אילו עמודות מסוננות — נגזר מ-`conditions`, ולא נשמר בנפרד.**
+  // שמירה נפרדת הייתה מקור-אמת שני שמתפצל ברגע שתנאי נמחק מהפאנל (כלל-ברזל 14).
+  const filteredKeys = useMemo(
+    () => new Set((conditions ?? []).map((condition) => condition?.key).filter(Boolean)),
+    [conditions],
+  )
+
+  /**
+   * 🔴 **הדלת השנייה לאותו מסנן — מכותרת-העמודה בתצוגה-המקדימה (הכרעת-ישי 23/09/2026).**
+   *
+   * 🔑 **היא מוסיפה ל-`conditions` הקיימות ואינה מנהלת רשימה משלה** — מקור-אמת אחד.
+   * ⚠️ **ועמודה שכבר מסוננת אינה מקבלת תנאי כפול:** לחיצה חוזרת עליה היא כנראה ניסיון
+   * לערוך את מה שכבר קיים, ולא לבקש תנאי שני — **ושני תנאים על אותה עמודה מצטברים
+   * ב"וגם", כלומר היו מצמצמים את הקובץ בלי שהמשתמשת ביקשה זאת.**
+   */
+  function filterByColumn(key) {
+    const column = permitted.find((item) => item.key === key)
+    if (!column || filteredKeys.has(key)) return
+    const first = operatorsFor(column.format, isCategorical(rows, column))[0]
+    if (!first) return
+    setConditions((prev) => [
+      ...prev,
+      { key, operator: first.id, operatorLabel: first.label, value: '', values: [] },
+    ])
+  }
+
   function reset() {
     const keys = defaultOrder(permitted, permissions)
     setOrder(keys)
@@ -288,6 +314,9 @@ export default function ExportDialog({
             error={error}
             onRetry={onRetry}
             sheet={sheet}
+            columns={visibleColumns}
+            filteredKeys={filteredKeys}
+            onFilterColumn={filterByColumn}
             countLine={countLine}
             scopeLine={scopeLine}
             fileName={fileName}

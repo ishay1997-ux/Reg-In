@@ -24,6 +24,19 @@
 // ♿ **ו-`tabIndex` + `role="region"` אינם קוסמטיקה:** אזור שניתן לגלול חייב להיות
 // מגיע-במקלדת, אחרת העמודות הנסתרות אינן נגישות למי שאינה משתמשת בעכבר.
 
+// 🔴🔴 **מסנן מכותרת-העמודה — הכרעת-ישי 23/09/2026, והנימוק הוא גילוי ולא נוחות.**
+//
+// הוא הציע קליק-ימני. 📊 **נבדק מה גרידים אמיתיים עושים:** ‏AG Grid ו-MUI X נותנים קליק-ימני
+// **כקיצור**, ולצידו **תמיד אייקון גלוי בכותרת** (ו-MUI אף מוסיף `Ctrl+Enter` למקלדת).
+// 🔑 **הסיבה אינה טכנית אלא גילוי:** לקליק-ימני **אין סימן שהוא קיים** — מי שלא ינסה, לא יֵדע.
+// ➕ **ואין לו מקבילה במקלדת** ⇒ הכפתור הוא גם הנתיב הנגיש. **שניהם, לא אחד במקום השני.**
+//
+// 🔴 **והוא אינו מערכת-סינון שנייה — וזה קריטי (כלל-ברזל 14):** הלחיצה **מוסיפה תנאי לאותה
+// רשימת-`conditions` שבפאנל הימני**. מקור-אמת אחד, שתי דלתות-כניסה.
+// ⚠️ האייקון מופיע בריחוף או בפוקוס, ו**נשאר דולק כשהמסנן פעיל** — כדי שאפשר יהיה לראות
+// **אילו עמודות מסוננות בלי לקרוא את כל רשימת-התנאים**.
+import { Filter } from 'lucide-react'
+
 const HEAD_CELL = 'sticky top-0 bg-slate-50 px-2 py-1 text-right font-medium text-slate-600'
 const BODY_CELL = 'whitespace-nowrap border-t border-slate-200 px-2 py-1 text-right'
 
@@ -58,6 +71,9 @@ export default function ExportPreviewPanel({
   error,
   onRetry,
   sheet = [],
+  columns = [],
+  filteredKeys,
+  onFilterColumn,
   countLine,
   scopeLine,
   fileName,
@@ -102,12 +118,40 @@ export default function ExportPreviewPanel({
         >
           <table className="min-w-max border-collapse text-xs">
             <thead>
-              <tr>
-                {header.map((cell, index) => (
-                  <th key={index} scope="col" className={HEAD_CELL}>
-                    <Cell cell={cell} />
-                  </th>
-                ))}
+              <tr className="group/head">
+                {header.map((cell, index) => {
+                  const column = columns[index]
+                  const active = Boolean(column && filteredKeys?.has(column.key))
+                  return (
+                    <th
+                      key={index}
+                      scope="col"
+                      className={HEAD_CELL}
+                      onContextMenu={(event) => {
+                        if (!column || !onFilterColumn) return
+                        event.preventDefault()
+                        onFilterColumn(column.key)
+                      }}
+                    >
+                      <span className="flex items-center justify-between gap-1">
+                        <Cell cell={cell} />
+                        {column && onFilterColumn && (
+                          <button
+                            type="button"
+                            onClick={() => onFilterColumn(column.key)}
+                            aria-label={`סנני לפי ${column.label}`}
+                            data-testid={`export-head-filter-${column.key}`}
+                            className={`inline-flex size-6 shrink-0 items-center justify-center rounded transition-opacity hover:bg-slate-200 focus-visible:opacity-100 group-hover/head:opacity-100 ${
+                              active ? 'text-teal-700 opacity-100' : 'text-slate-400 opacity-0'
+                            }`}
+                          >
+                            <Filter className="size-3.5" aria-hidden="true" />
+                          </button>
+                        )}
+                      </span>
+                    </th>
+                  )
+                })}
               </tr>
             </thead>
             <tbody>

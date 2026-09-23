@@ -194,3 +194,32 @@ describe('חוזה value — עמודה נגזרת מסוננת כמו כל עמ
     expect(distinctValues(ROWS, { key: 'bucket' })).toEqual(['31–60', '61–90', '90+'])
   })
 })
+
+// 🔴 **תנאי שטרם מולא — נמצא באימות-עיניים 23/09/2026, לא בשער.**
+// לחיצה על מסנן-הכותרת יוצרת תנאי ריק, והטבלה התרוקנה **לפני שהוקלד ערך**.
+describe('🔴 תנאי לא-מושלם אינו מסנן', () => {
+  const COLS = [
+    { key: 'n', label: 'מספר', format: 'int' },
+    { key: 't', label: 'טקסט', format: 'text' },
+  ]
+  const R = [
+    { n: 5, t: 'א' },
+    { n: 50, t: 'ב' },
+  ]
+
+  it('ערך ריק בתנאי מספרי ⇒ כל השורות נשארות', () => {
+    expect(applyFilters(R, COLS, [{ key: 'n', operator: 'gt', value: '' }])).toEqual(R)
+  })
+
+  it('בין — צד אחד בלבד אינו מסנן', () => {
+    expect(applyFilters(R, COLS, [{ key: 'n', operator: 'between', value: '1' }])).toEqual(R)
+  })
+
+  it('אחד מ- בלי ערכים אינו מסנן', () => {
+    expect(applyFilters(R, COLS, [{ key: 't', operator: 'oneOf', values: [] }])).toEqual(R)
+  })
+
+  it('ומרגע שהוא מולא — הוא כן מסנן', () => {
+    expect(applyFilters(R, COLS, [{ key: 'n', operator: 'gt', value: '10' }])).toEqual([R[1]])
+  })
+})

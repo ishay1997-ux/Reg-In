@@ -17,6 +17,7 @@
 // בחתימה כי `ReportSurface.jsx` שולח אותו, והוא **שטח של הסשן המקביל** שאין לגעת בו.
 
 import { useEffect, useState } from 'react'
+import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import ExportDialog from '@/components/ExportDialog'
@@ -129,14 +130,23 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
 
   return (
     <div data-testid="reports-export">
+      {/*
+        🔑 **אייקון-הורדה + המילה "ייצוא" — הכרעת-ישי 23/09/2026.**
+        מילותיו: *"ייצוא לאקסל נשמע קצת מערכת שנות ה-90"*. **הנוסח גם כבל אותנו לפורמט**
+        במקום לפעולה, והפורמט הוא פרט מימושי — הקובץ יכול להשתנות והפעולה לא.
+        🚫 **ולמה לא אייקון ערום:** אייקון בלבד דורש ריחוף כדי להבין מה הוא עושה,
+        ו**זו פעולה נדירה שמחפשים בעיניים** — לא פעולה יומיומית שהיד לומדת. *(מחקר-שוק
+        על טבלאות-נתונים: אייקונים משמעותיים **עם תווית**, לא אייקון לבדו.)*
+      */}
       <Button
         type="button"
         variant="outline"
         onClick={() => setOpen(true)}
-        className="h-auto rounded-lg border-slate-300 px-4 py-2 font-medium text-slate-700"
+        className="h-auto gap-1.5 rounded-lg border-slate-300 px-4 py-2 font-medium text-slate-700"
         data-testid="reports-export-button"
       >
-        ייצוא לאקסל
+        <Download className="size-4" aria-hidden="true" />
+        ייצוא
       </Button>
 
       {open && (

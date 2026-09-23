@@ -127,10 +127,30 @@ function passesOne(row, column, condition) {
  * כל התנאים מצטברים (AND). תנאי שעמודתו אינה קיימת בדוח הנוכחי — **נזרק**, לא מסנן הכול החוצה:
  * החלון מרכיב מחדש את רשימת-התנאים בכל החלפת-דוח, וזו רשת-ביטחון לרגע שבין השניים.
  */
+/**
+ * 🔴 **תנאי שטרם מולא אינו מסנן — וזה תיקון של סתירה, לא נוחות.**
+ *
+ * 📊 **נמדד 23/09/2026 באימות-עיניים:** לחיצה על מסנן-הכותרת יוצרת תנאי עם ערך ריק,
+ * ו-`passesNumeric` עם ערך ריק מחזיר `false` **לכל השורות** ⇒ הטבלה התרוקנה מיד,
+ * הופיע *"הסינון לא הותיר שורות"*, **והייצוא נחסם** — לפני שהמשתמשת הקלידה דבר.
+ *
+ * 🔑 **וזו סתירה שהיתה קיימת קודם ורק לא נראתה:** שורת-"חל על הקובץ"
+ * (`ExportDialog.jsx`) **כבר מדלגת על תנאי בלי ערך** — כלומר המסך אמר *"אין מסנן"*
+ * בדיוק כשהמנוע סינן **הכול החוצה.** ⇒ השניים מוסכמים עכשיו על אותה הגדרה.
+ */
+function isComplete(condition) {
+  if (condition?.operator === 'oneOf') return (condition.values ?? []).length > 0
+  const filled = (value) => value !== '' && value !== null && value !== undefined
+  if (condition?.operator === 'between') return filled(condition.value) && filled(condition.value2)
+  return filled(condition?.value)
+}
+
 export function applyFilters(rows, columns, conditions) {
   const list = Array.isArray(rows) ? rows : []
   const byKey = new Map((columns ?? []).map((column) => [column.key, column]))
-  const active = (conditions ?? []).filter((condition) => byKey.has(condition?.key))
+  const active = (conditions ?? []).filter(
+    (condition) => byKey.has(condition?.key) && isComplete(condition),
+  )
   if (active.length === 0) return list
   return list.filter((row) =>
     active.every((condition) => passesOne(row, byKey.get(condition.key), condition)),

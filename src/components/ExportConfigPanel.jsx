@@ -9,6 +9,7 @@
 // ‏`id` אינו מקבל "גדול מ-" · טקסט קצר-ערכים מקבל רשימת-בחירה ולא תיבת-חיפוש · וההבחנה
 // **מחושבת מהשורות**, ולכן נכונה גם בדוח שטרם נבנה. הפירוט: `src/lib/exportFilters.js`.
 
+import { ChevronDown, ChevronUp, ChevronsUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { distinctValues, isCategorical, operatorsFor } from '@/lib/exportFilters'
@@ -22,6 +23,11 @@ const ROW = 'flex items-center gap-1 rounded-md border border-slate-200 bg-white
 // עם `px-1 text-xs` בלבד — נמוך מהסף בשני המימדים. װ**ב-8 עמודות זה מעצבן; ב-30, עם עכבר, זה מחטיא.**
 // 🔑 **ו-`size-6` ולא `variant="link"`+`h-auto p-0`:** װ`src/CLAUDE.md §2.6` חל על רכיב `Button`,
 // ושלושת אלה הם `<button>` גולמי — אין כאן כלל שנשבר, וגם לא תקדים חדש שנכנס.
+// 🔑 **שלושה אייקוני `lucide` ולא תווי-טקסט (הכרעת-ישי 23/09/2026).**
+// װ`⤒` הוא **תו טקסט**, ולכן עוביו תלוי-גופן ואינו תואם ל-`▲`/`▼` שלידו. נמדד בצילום
+// ב-1024px: הוא נקרא דק וחלש, וישי תפס את זה בעין.
+// 🔑 **ולמה דווקא כפול-מול-יחיד:** הקשר ביניהם נקרא בלי הסבר — **אחד זז צעד,
+// כפול זז עד הסוף.** ✅ וזה גם מיישר את הפקדים ל-`src/CLAUDE.md §4.3`: אייקוני `lucide` בגודל `size-4`.
 const ICON_BTN =
   'inline-flex size-6 shrink-0 items-center justify-center rounded text-xs text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent'
 
@@ -68,7 +74,7 @@ function ColumnRow({
         onClick={() => onMoveToTop(column.key)}
         aria-label={`העבירי את ${column.label} לראש הרשימה`}
       >
-        ⤒
+        <ChevronsUp className="size-4" aria-hidden="true" />
       </button>
       <button
         type="button"
@@ -77,7 +83,7 @@ function ColumnRow({
         onClick={() => onMove(column.key, -1)}
         aria-label={`הזיזי את ${column.label} מעלה`}
       >
-        ▲
+        <ChevronUp className="size-4" aria-hidden="true" />
       </button>
       <button
         type="button"
@@ -86,7 +92,7 @@ function ColumnRow({
         onClick={() => onMove(column.key, 1)}
         aria-label={`הזיזי את ${column.label} מטה`}
       >
-        ▼
+        <ChevronDown className="size-4" aria-hidden="true" />
       </button>
     </li>
   )
@@ -99,9 +105,17 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
   const values = column && categorical ? distinctValues(rows, column) : []
 
   return (
-    <div className="flex flex-wrap items-center gap-1" data-testid="export-filter-row">
+    /*
+      🔑 **שורה אחת ולא `flex-wrap` — הכרעת-ישי 23/09/2026, והנימוק הוא קריאות ולא יופי.**
+      📊 נמדד בצילום: עם `w-28`/`w-24` שלושת הפקדים חרגו מפאנל של 320px ונערמו
+      **אנכית, כל אחד בשורה משלו**, וה-`✕` נשאר תלוי לבד. װ**ישי לא הבין מזה שזה תנאי אחד.**
+      ⇒ בשורה אחת הוא נקרא כמשפט: *"ימי איחור · גדול מ- · 60"*.
+      ⚠️ **ו-`min-w-0` על כל פריט הוא הדבר שמאפשר את זה** — בלעדיו `flex-1` משאיר `min-width:auto`
+      והפקד מסרב להתכווץ (אותה מלכודת-flexbox שתפסה את שדות-התאריך).
+    */
+    <div className="flex items-center gap-1" data-testid="export-filter-row">
       <select
-        className={`${FIELD} w-28`}
+        className={`${FIELD} min-w-0 flex-[3]`}
         value={condition.key}
         aria-label="עמודה לסינון"
         onChange={(event) => {
@@ -125,7 +139,7 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
       </select>
 
       <select
-        className={`${FIELD} w-24`}
+        className={`${FIELD} min-w-0 flex-[3]`}
         value={condition.operator}
         aria-label="תנאי"
         onChange={(event) => {
@@ -143,7 +157,7 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
       {condition.operator === 'oneOf' ? (
         <select
           multiple
-          className={`${FIELD} w-32`}
+          className={`${FIELD} min-w-0 flex-[2]`}
           value={condition.values ?? []}
           aria-label="ערכים"
           onChange={(event) =>
@@ -161,7 +175,7 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
         </select>
       ) : (
         <Input
-          className="h-7 w-24 text-xs"
+          className="h-7 min-w-0 flex-[2] text-xs"
           value={condition.value ?? ''}
           aria-label="ערך"
           placeholder={column?.format === 'date' ? 'YYYY-MM-DD' : ''}
@@ -171,7 +185,7 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
 
       {condition.operator === 'between' && (
         <Input
-          className="h-7 w-20 text-xs"
+          className="h-7 min-w-0 flex-[2] text-xs"
           value={condition.value2 ?? ''}
           aria-label="ערך שני"
           onChange={(event) => onChange({ ...condition, value2: event.target.value })}
@@ -180,7 +194,7 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
 
       <button
         type="button"
-        className="px-1 text-xs text-slate-500"
+        className={`${ICON_BTN} shrink-0`}
         onClick={onRemove}
         aria-label="הסירי מסנן"
       >
