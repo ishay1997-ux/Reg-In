@@ -587,23 +587,24 @@ describe('מ2 · מבט-על הנהלה', () => {
     expect(screen.getByTestId('report-definitions')).toBeInTheDocument()
   })
 
-  it('📐20 — החודש החלקי מצהיר על אורכו בתווית ובהערת-הגרף, ו-📐8 מצהיר על תקרת-השורות', async () => {
+  it('📐20 — החודש החלקי מצהיר על אורכו בתווית ובהערת-הגרף, והרשימה נושאת כותרת-כנה', async () => {
     callReport.mockResolvedValueOnce(m2Payload())
     renderTab('מ2')
 
     expect(await screen.findByTestId('chart-note')).toHaveTextContent(
-      `מכסה ${isolateLtr('16')} ימים ולא חודש שלם`,
+      `חלקי — ${isolateLtr('16')} ימים בלבד`,
     )
     // 📐20 ① — הערוץ שהשכבה המשותפת פתחה: העמודה החלקית מסומנת `is_today`.
     expect(chartProps('Cell').some((props) => props.strokeDasharray)).toBe(true)
     // ציר-הקטגוריה עבר ל-`label`, והתווית החלקית נושאת את אורך-החלון.
     expect(chartProps('XAxis')[0].dataKey).toBe('label')
     expect(screen.getByText(`ספטמבר (${isolateLtr('16')} ימים)`)).toBeInTheDocument()
-    // §9 D-25 — שורה אחת, בנוסח של השלד המשותף.
-    expect(screen.getAllByTestId('report-row-cap')).toHaveLength(1)
-    expect(screen.getByTestId('report-row-cap')).toHaveTextContent(
-      `מוצגות ${isolateLtr('1')} מתוך ${isolateLtr('241')} שורות`,
+    // ✏️ 23/09/2026 (פזה ב׳ שלב 4, הכרעת-ישי 4) — רשימת-שיא: כותרת-כנה, בלי פאג'ר ובלי שורת-תקרה.
+    expect(screen.getByTestId('report-topn-title')).toHaveTextContent(
+      `8 האירועים הגדולים · מתוך ${isolateLtr('241')}`,
     )
+    expect(screen.queryByTestId('report-row-cap')).toBeNull()
+    expect(screen.queryByTestId('report-pager')).toBeNull()
   })
 
   it('הכרעה 19 — לחיצה על שורה פותחת את כרטיס-האירוע, והשורה כולה היא הדלת', async () => {
@@ -689,7 +690,7 @@ describe('מ3 · מגמות רב-שנתיות', () => {
     await screen.findByTestId('report-population')
 
     expect(await screen.findByTestId('chart-note')).toHaveTextContent(
-      `מכסה ${isolateLtr('16')} ימים ולא חודש שלם`,
+      `חלקי — ${isolateLtr('16')} ימים בלבד`,
     )
     expect(screen.getByText(`ספטמבר (${isolateLtr('16')} ימים)`)).toBeInTheDocument()
     const dashedMonths = chartProps('Cell').filter((props) => props.strokeDasharray)

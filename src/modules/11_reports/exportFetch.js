@@ -14,17 +14,21 @@
 // **בשם**, ולכן ההבדל שקוף לקורא והברירה-מחדל של המסד תופסת. 🔴 **האיסור היחיד: קריאה לפי מיקום.**
 
 import { callReport } from '@/modules/11_reports/api'
-import { findTab } from '@/modules/11_reports/reportsCatalog'
+import { REPORT_TABS, findTab } from '@/modules/11_reports/reportsCatalog'
 
 // 🔴 **שלושת המשטחים האלה אינם "חתוכים" — הם רשימות-שיא מתוכננות**, וזו הבחנה מוצרית שנקראה
 // מה-SQL ולא הונחה: מ07 — *"הטבלה מציגה את 4 הישנות ביותר בלי פאג'ר + קישור 'כל N →' לדוח
 // הגיול"* · מ19 — *"הטבלה · 8 הלקוחות הגדולים ב-12 החודשים"*. ⇒ הקובץ מכיל את רשימת-השיא,
 // ושורת-הכמות נוקבת באוכלוסייה במקום להעמיד פנים שזה הכול.
-const TOP_N_LABELS = Object.freeze({
-  report_m02_exec_overview: '8 האירועים הגדולים',
-  report_m07_finance_overview: '4 החשבוניות הישנות ביותר',
-  report_m19_customers_overview: '8 הלקוחות הגדולים',
-})
+// ✏️ **23/09/2026 — התוויות עברו ל-`reportsCatalog.js` (`surface.topN`):** הטבלה שעל המסך
+// צריכה את אותה תווית בדיוק לכותרת-הכנה שלה, ושני עותקים היו נפרדים ביום הראשון.
+const TOP_N_LABELS = Object.freeze(
+  Object.fromEntries(
+    REPORT_TABS.flatMap((tab) => tab.surfaces)
+      .filter((surface) => surface.topN)
+      .map((surface) => [surface.rpc, surface.topN]),
+  ),
+)
 
 // 🔴 **ושני אלה כן חתוכים — תקרה של 50, לא רשימת-שיא** (כותרת K1: *"תקרה אמיתית, 50 מתוך n"*).
 // התווית נגזרת מהמיון ב-SQL (`order by d desc` · `order by gap desc`), כדי שהתיבה תאמר **אילו**

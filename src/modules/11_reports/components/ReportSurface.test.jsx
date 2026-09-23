@@ -780,6 +780,33 @@ describe('ReportSurface — 🚪 לחיצה על עמודה בדף-דריל יו
   })
 })
 
+// ── 🔽 שבב-ההיקף — הכרעת-ישי א׳ (פזה ב׳ שלב 4, 23/09/2026) ─────────────────────────
+
+describe('ReportSurface — שבב-ההיקף במקום שורת-האוכלוסייה ושורת-ההגדרות', () => {
+  it('השבב אומר את ההיקף שהשרת מסר, והפירוט מקופל בתוכו', async () => {
+    callReport.mockResolvedValueOnce(
+      payload({
+        population: { n: 246, label: 'נכללים אירועים שהתקיימו', summary: '246 אירועים · מתוך 837' },
+        definitions: 'שולי-רווח = רווח חלקי הכנסה',
+      }),
+    )
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    const scope = await screen.findByTestId('report-scope')
+    expect(scope.tagName).toBe('DETAILS')
+    expect(scope.open).toBe(false)
+    expect(screen.getByTestId('report-scope-summary')).toHaveTextContent('246 אירועים · מתוך 837')
+    // התוכן זמין (ב-DOM ובלחיצה), אבל אינו גלוי עד שנפתח.
+    expect(scope).toContainElement(screen.getByTestId('report-population'))
+    expect(scope).toContainElement(screen.getByTestId('report-definitions'))
+  })
+
+  it('בלי `population.summary` — נוסח-שבב כללי, לא שבב ריק', async () => {
+    callReport.mockResolvedValueOnce(payload())
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    expect(await screen.findByTestId('report-scope-summary')).toHaveTextContent('מי נכלל בדוח')
+  })
+})
+
 // ── 🚪 הגרף והשורה — דלת אחת, שתי כניסות (פזה ב׳ שלב 8, 23/09/2026) ─────────────
 
 // 🌱 צורת-המטען החי של מ3 (`…j3….sql` — `'drill_key', jsonb_build_object('kind','year','year',yr)`):

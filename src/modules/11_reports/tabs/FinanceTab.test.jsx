@@ -508,11 +508,10 @@ describe('מ7 · מבט-על כספים', () => {
     callReport.mockResolvedValue(overviewPayload())
     const { onDrill } = renderTab({ slug: 'finance-overview' })
 
-    // 📐8 — הפאג'ר סופר את מה שמוצג; ההצהרה שלצידו נושאת את הסך האמיתי מ-`open_invoice_count`.
+    // ✏️ 23/09/2026 (פזה ב׳ שלב 4) — משפט *"אלה N החשבוניות הישנות ביותר מתוך 35"* נמחק: הכותרת-
+    // הכנה של רשימת-השיא (`surface.topN`) אומרת אותו, ושתי הצהרות זו מעל זו היו כפילות. הדלת נשארת.
     const cap = await screen.findByTestId('finance-row-cap')
-    expect(plain(cap)).toContain('אלה 2 החשבוניות הישנות ביותר מתוך 35 הפתוחות.')
-    // 🔴 **ושתי ההצהרות אינן יכולות להצטייר יחד:** ההערה המשותפת (§9 D-25) נקראת מ-
-    // `meta.row_total`, ומ7 אינו מחזיר אותו — נמדד חי אחרי H2 על ארבעת משטחי-הכספים.
+    expect(plain(cap)).not.toContain('אלה')
     expect(screen.queryByTestId('report-row-cap')).not.toBeInTheDocument()
     const door = screen.getByTestId('finance-open-invoices-door')
     expect(plain(door)).toBe('כל 35 החשבוניות הפתוחות →')

@@ -341,26 +341,33 @@ test.describe('בדיקת-עשן', () => {
     for (const [index, label] of anchors.reports.periodPills.entries()) {
       await expect(periodPills.nth(index)).toHaveText(label)
     }
-    // 📐2 · 📐23 — שתי שורות-הבסיס שכל דף חייב, ושתיהן נכתבות ע"י ה-RPC: ריקות = מטען שבור.
-    await expect(page.getByTestId('report-population')).toContainText('אוכלוסייה')
+    // 📐2 · 📐23 — שבב-ההיקף ושורת-"אז מה" נכתבים ע"י ה-RPC: ריקים = מטען שבור.
+    // ✏️ 23/09/2026 (פזה ב׳ שלב 4) — שורת-האוכלוסייה מקופלת בשבב-ההיקף; היא ב-DOM, לא גלויה.
+    await expect(page.getByTestId('report-scope-summary')).not.toBeEmpty()
+    await expect(page.getByTestId('report-population')).not.toBeEmpty()
     await expect(page.getByTestId('report-so-what')).not.toBeEmpty()
-    // האינווריאנט העצמי: הטבלה מציגה min(המונה שבפאג'ר, 50) שורות.
+    // האינווריאנט העצמי: מבט-על הנהלה הוא **רשימת-שיא** (הכרעת-ישי 4) — כותרת-כנה
+    // *"8 האירועים הגדולים · מתוך N"*, בלי פאג'ר; הטבלה מציגה בין 1 ל-8 שורות, ו-N גדול מהן.
     const reportRows = page
       .getByTestId('report-table-card')
       .first()
       .locator('[data-testid="report-row"], [data-testid="report-row-drillable"]')
-    const reportRangeText = await page.getByTestId('report-pager-range').first().innerText()
+    const topNText = await page.getByTestId('report-topn-title').innerText()
     const reportTotal = Number(
-      reportRangeText
+      topNText
         .split('מתוך')
         .pop()
         .replace(/[^0-9]/g, ''),
     )
     expect(
       reportTotal,
-      'מונה-השורות של הדוח הראשון הוא 0 אצל המנכ"ל — הזדהות/RLS שבורים, לא "אין דאטה"',
+      'מונה-האוכלוסייה של הדוח הראשון הוא 0 אצל המנכ"ל — הזדהות/RLS שבורים, לא "אין דאטה"',
     ).toBeGreaterThan(0)
-    await expect(reportRows).toHaveCount(Math.min(reportTotal, 50))
+    const shownRows = await reportRows.count()
+    expect(shownRows).toBeGreaterThan(0)
+    expect(shownRows).toBeLessThanOrEqual(8)
+    expect(reportTotal).toBeGreaterThan(shownRows)
+    await expect(page.getByTestId('report-pager')).toHaveCount(0)
 
     // המנגנונים — לא הבטחות: אפס ניסיונות-כתיבה, אפס יעדים חיצוניים, אפס שגיאות-קונסול.
     expect(blockedWrites, 'מסך ניסה לכתוב למסד בזמן קריאה-בלבד').toEqual([])

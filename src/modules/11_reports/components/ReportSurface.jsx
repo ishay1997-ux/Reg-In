@@ -16,6 +16,7 @@
 
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import Disclosure from '@/components/Disclosure'
 import FilterPill from '@/components/FilterPill'
 import { formatByType } from '@/lib/reportsFormat'
 import { missingReportParamsMessage } from '@/lib/reportsParams'
@@ -47,14 +48,25 @@ function toScreenError(err) {
   return { kind: 'error' }
 }
 
-function PopulationLine({ population }) {
-  // 📐2 — **שורה קבועה בכל דף**: מי נכלל · מי הוצא · ה-`n`. היא **בסיס ולא רמז** (§3 של
-  // חוזה-ההטמעה): *"דוח שמחריג בשקט מדבר על עולם אחר מזה שהקורא מדמיין"*.
-  if (!population?.label) return null
+// 🔤 נוסח-השבב כשהשרת עוד לא מוסר `population.summary` (עד מיגרציית-הטקסט של פזה ב׳).
+const SCOPE_FALLBACK = 'מי נכלל בדוח'
+
+/**
+ * 📐2 + 📐16 — **שבב-ההיקף: מי נכלל, ואיך כל מדד נמדד.**
+ * ✏️ **הכרעת-ישי א׳, 17/09/2026 — בוצע 23/09 (פזה ב׳ שלב 4):** עד כאן שורת-האוכלוסייה עמדה
+ * גלויה בראש כל דף, ושורת-ההגדרות בתחתיתו — יחד ~500 תווים בכל משטח במצב 0. עכשיו: **שבב אחד
+ * עם ההיקף** (*"246 אירועים שהסתיימו · מתוך 837"* — `population.summary` מהשרת), וההצהרה המלאה
+ * + ההגדרות נפתחות בלחיצה. 🔑 **הנימוק המקורי של 📐2 נשמר** — *"דוח שמחריג בשקט מדבר על עולם
+ * אחר"* — כי ה-`n` מתוך ה-`N` נשאר גלוי; רק **הפירוט** מתקפל (`onboarding-layer-contract.md §3`).
+ * ⚠️ `data-testid` הישנים נשמרים על הפסקאות שבפנים — התוכן ב-DOM גם כשהשבב סגור.
+ */
+function ScopeLine({ population, definitions }) {
+  if (!population?.label && !definitions) return null
   return (
-    <p className="mb-2 text-xs text-slate-500" data-testid="report-population">
-      {population.label}
-    </p>
+    <Disclosure summary={population?.summary ?? SCOPE_FALLBACK} testId="report-scope">
+      {population?.label && <p data-testid="report-population">{population.label}</p>}
+      {definitions && <p data-testid="report-definitions">{definitions}</p>}
+    </Disclosure>
   )
 }
 
@@ -104,22 +116,14 @@ function MissingParamsBanner({ names }) {
   )
 }
 
-function Footers({ definitions, notes }) {
+function Footers({ notes }) {
+  // ✏️ 23/09/2026 — שורת-ההגדרות עברה לשבב-ההיקף (`ScopeLine`). ‏**הסייגים נשארים גלויים:**
+  // `meta.notes` הם סייג-דאטה שהכרטיס מחייב על המסך (*"נמדד על N שורות מתוך M"*), לא הגדרה.
+  if (!notes?.length) return null
   return (
-    <>
-      {/* 📐16 — שורת-הגדרות-המדדים, בתחתית כל דף. **בסיס**, לא שכבת-הטמעה. */}
-      {definitions && (
-        <p className="mt-3 text-xs leading-relaxed text-slate-500" data-testid="report-definitions">
-          {definitions}
-        </p>
-      )}
-      {/* סייגי-דאטה שהכרטיס מחייב על המסך (C8 `meta.notes`) — למשל "נמדד על N שורות מתוך M". */}
-      {notes?.length > 0 && (
-        <p className="mt-2 text-xs text-slate-500" data-testid="report-meta-notes">
-          {notes.join(' · ')}
-        </p>
-      )}
-    </>
+    <p className="mt-2 text-xs text-slate-500" data-testid="report-meta-notes">
+      {notes.join(' · ')}
+    </p>
   )
 }
 
@@ -190,6 +194,21 @@ function RowCapNote({ rowTotal, shown }) {
     <p className="mb-1.5 text-xs leading-relaxed text-slate-500" data-testid="report-row-cap">
       {`מוצגות ${formatByType(shown, 'int')} מתוך ${formatByType(rowTotal, 'int')} שורות`}
     </p>
+  )
+}
+
+/**
+ * 🏷️ **כותרת-כנה לרשימת-שיא** (הכרעת-ישי 4, 17/09/2026 — בוצע 23/09, פזה ב׳ שלב 4):
+ * *"8 האירועים הגדולים · מתוך 246"* — במקום פאג'ר שאומר *"1–8 מתוך 8"* ושורה שאומרת *"מוצגות 8
+ * מתוך 246 שורות"*, כלומר שני מונים שסותרים זה את זה על אותה טבלה. ⚠️ **רק כשהרשימה באמת
+ * קטנה מהאוכלוסייה** — לקוח מסונן עם 3 אירועים אינו "8 האירועים הגדולים".
+ */
+function TopNTitle({ label, rowTotal, shown }) {
+  if (rowTotal == null || rowTotal <= shown) return null
+  return (
+    <h3 className="mb-1.5 text-sm font-semibold text-slate-700" data-testid="report-topn-title">
+      {`${label} · מתוך ${formatByType(rowTotal, 'int')}`}
+    </h3>
   )
 }
 
@@ -683,7 +702,7 @@ export default function ReportSurface({
       {/* 📐13① — פירורים **רק** בדפי-הדריל, ורק כשיש יותר מרמה אחת. */}
       {surface.drill && <DrillCrumbs crumbs={crumbs} onNavigate={(next) => onDrill(next)} />}
       {renderTop?.(payload)}
-      <PopulationLine population={payload.population} />
+      <ScopeLine population={payload.population} definitions={payload.definitions} />
       <MissingParamsBanner names={payload.meta?.missing_params} />
 
       {/* ת4 — *"בדיוק מה שעל המסך"*: הייצוא מקבל את השורות **אחרי** הבחירה-בגרף, ותווית
@@ -753,6 +772,15 @@ export default function ReportSurface({
         </div>
       )}
 
+      {/* 🏷️ הכותרת קודמת לשורת-הפעולה ולרמז — נמדד בצילום: שורת "לחיצה על שורה…" מעל
+          הכותרת נקראה כאילו היא הכותרת. */}
+      {!selection && surface.topN && (
+        <TopNTitle
+          label={surface.topN}
+          rowTotal={payload.meta?.row_total}
+          shown={rawPayload?.rows?.length ?? payload.rows.length}
+        />
+      )}
       {payload.columns?.length > 0 && renderBeforeTable?.(payload)}
       {/* 🔴 **והשורה נעלמת בזמן סינון-צולב — נמדד 16/09/2026, וזה היה שקר על המסך:**
           ‏`RowCapNote` נמדד תמיד מול `payload.rows.length` (התקרה שהשרת החזיר), בעוד הטבלה
@@ -766,13 +794,14 @@ export default function ReportSurface({
           שורות"* מעל פאג'ר שאומר *"1–17 מתוך 17"*. **צמצום-לקוח נקרא כתקרת-שרת**, והוא
           בדיוק ההפך: השרת מסר הכול. ⇒ המונה הוא `rawPayload.rows.length`, וסינון-לקוח
           פשוט מכבה את השורה. */}
-      {!selection && (
+      {!selection && !surface.topN && (
         <RowCapNote
           rowTotal={payload.meta?.row_total}
           shown={rawPayload?.rows?.length ?? payload.rows.length}
         />
       )}
       <ReportTable
+        hidePager={Boolean(surface.topN)}
         columns={payload.columns}
         rows={selectedRows}
         page={page}
@@ -786,7 +815,7 @@ export default function ReportSurface({
         <ExtraTable key={table.title} table={table} onDrill={rowDrill} />
       ))}
 
-      <Footers definitions={payload.definitions} notes={payload.meta?.notes} />
+      <Footers notes={payload.meta?.notes} />
       {renderExtras?.(payload)}
     </div>
   )
