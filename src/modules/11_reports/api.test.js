@@ -87,6 +87,22 @@ describe('assertReportShape — שער-הצורה של C8', () => {
 })
 
 describe('callReport', () => {
+  it('🔴 `p_page_size` נשלח רק כשנמסר מספר — 11 דוחות אינם מכירים אותו והיו נופלים', async () => {
+    rpc.mockResolvedValue({ data: validPayload(), error: null })
+    await callReport('report_m19_customers_overview', { pageSize: 52 })
+    expect(rpc).toHaveBeenLastCalledWith('report_m19_customers_overview', {
+      p_from: null,
+      p_to: null,
+      p_customer_id: null,
+      p_drill: null,
+      p_page_size: 52,
+    })
+    await callReport('report_m09_aging', { pageSize: null })
+    expect(rpc.mock.calls.at(-1)[1]).not.toHaveProperty('p_page_size')
+    await callReport('report_m09_aging', { pageSize: 0 })
+    expect(rpc.mock.calls.at(-1)[1]).not.toHaveProperty('p_page_size')
+  })
+
   it('שולח את ארבעת הפרמטרים תמיד, גם כשהם ריקים', async () => {
     rpc.mockResolvedValue({ data: validPayload(), error: null })
     await callReport('report_m09_aging', {})

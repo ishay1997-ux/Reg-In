@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (13:XX) — dev merged into the branch, and the "all rows" toggle finally does something
+
+**Ishay released the permission** the tool's classifier had refused, and ruled the `hourly_rate` migration stays a debt for two more weeks (~07/10/2026) and the three small product questions stay as they are (`353e04d9`). **Merge `origin/dev` ⇒ `757ff3c3`:** 47 commits, four conflicts — STATUS and the log keep both sides, `module-11.md` keeps both ledger rows, `ProjectsPage.jsx` keeps the export button and takes dev's `text-sm` on the sort line (the branch side carried a `text-[12px]` that the newly-arrived `check:type-scale` refuses). Gate on the merged tree: exit 0, 125 files / 3,189 tests, 13 sub-steps now.
+
+**"כל השורות" (export handoff §7 item 9, `module-11.md` §9 D-44):** `callReport` sends `p_page_size` only when a positive integer is passed — K1 extended five RPCs and the other eleven would reject it; `exportFetch.js` holds `PAGED_RPCS` and sends `row_total` from the previous fetch as the page size; `ExportBar` keeps `showAll` in state and in `requestKey`. 📊 Live, m19: *"8 מתוך 52"* ⇒ *"52 שורות"*, body `p_page_size: 52`, xlsx 53 rows. Three tests added. **Scope left to Ishay:** m04/m06 cap at 50 and show no checkbox. The adversarial reviewer's verdict is beside the commit in D-44.
+
 ### 23/09/2026 (12:XX) — customer card wired to the export dialog; the four unfrozen screens are done
 
 **Fourth screen** (`src/modules/02_customers/CustomerDetailsPage.jsx` + `CustomerDetailsPage.export.test.jsx`, 6 tests). Record: `docs/micro_guides/module-2.md` §9 (dated line). Two tabs ⇒ two column sets; one button above both, exporting the active tab. `deriveWindowedListsState` now also returns `visibleProjects` — the exact list the projects tab paginates — so the file and the screen cannot diverge. Sub-lines are exported as data (discount %, rejection reason, sent-to-customer, cancellation date/type/reason). No permission on *'פרויקטים'* ⇒ the tab's own sentence blocks the export; a failed projects load ⇒ blocked with *"נסי שוב"* inside the modal.

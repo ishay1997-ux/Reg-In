@@ -26,6 +26,20 @@ const TOP_N_LABELS = Object.freeze({
   report_m19_customers_overview: '8 הלקוחות הגדולים',
 })
 
+// 🔴 **חמשת הדוחות שהשרת חותך, ולכן היחידים שמקבלים `p_page_size`** (מיגרציית K1, 17/09/2026 —
+// `20260917150000_module11_k1_pagination_params.sql`, הכותרת). 11 האחרים מחזירים הכול ממילא,
+// ופרמטר שאינו בחתימה שלהם היה מפיל את הקריאה. **"כל השורות" = `p_page_size` בגודל האוכלוסייה
+// (`meta.row_total` מהשליפה הראשונה)** — ולא `null`. תיעוד PostgreSQL מגדיר `LIMIT NULL` כבלי-הגבלה
+// ו-`OFFSET NULL` כ-0 (✏️ תוקן 23/09 — הנוסח הקודם טען שההתנהגות לא מוגדרת), אבל מספר שנמדד
+// מאותו שרת הוא מה ששורת-הכמות מבטיחה, והקובץ חייב להיות שווה לה — לא לסמנטיקה של SQL.
+const PAGED_RPCS = new Set([
+  'report_m02_exec_overview',
+  'report_m19_customers_overview',
+  'report_m07_finance_overview',
+  'report_m04_discounts',
+  'report_m06_staffing',
+])
+
 /** ארבעת הדוחות של הלשונית, בצורה שהחלון מבין. לשונית לא-מוכרת ⇒ רשימה ריקה, לא קריסה. */
 export function reportsOfTab(tabKey) {
   const tab = findTab(tabKey)
@@ -40,18 +54,31 @@ export function reportsOfTab(tabKey) {
  * שליפה אחת לחלון. מחזיר **רק** את מה שהחלון צריך — הוא אינו מקבל את ה-payload המלא,
  * כדי שלא ייווצר צרכן שני לשדות שהמסך מפרש אחרת.
  */
-export async function fetchExportData({ rpc, from, to, customerId }) {
+export async function fetchExportData({
+  rpc,
+  from,
+  to,
+  customerId,
+  showAll = false,
+  rowTotal = null,
+}) {
+  // "כל השורות" (הכרעת-ישי 17/09: *"כל השורות שעומדות במסנן"*): רק לדוח חתוך, ורק כשגודל
+  // האוכלוסייה כבר ידוע מהשליפה הקודמת. אחרת — השליפה הרגילה, והתיבה עדיין מוצגת כי `topN` נגזר.
+  const wantsAll = showAll && PAGED_RPCS.has(rpc) && Number.isInteger(rowTotal) && rowTotal > 0
   const payload = await callReport(rpc, {
     from: from || null,
     to: to || null,
     customerId: customerId || null,
     drill: null,
+    ...(wantsAll ? { pageSize: rowTotal } : {}),
   })
 
   const total = payload?.meta?.row_total ?? null
   const label = TOP_N_LABELS[rpc] ?? null
 
   return {
+    // מזהה-הדוח נוסע עם הנתונים — `ExportBar` משתמש ב-`row_total` רק כשהוא של אותו דוח.
+    rpc,
     columns: payload?.columns ?? [],
     rows: payload?.rows ?? [],
     // ⚠️ `row_total` שאינו גדול ממספר השורות אינו "חיתוך" — ולכן לא נאמר עליו דבר.

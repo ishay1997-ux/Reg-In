@@ -62,6 +62,9 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [tick, setTick] = useState(0)
+  // "כל השורות" — §7 פריט 9 של המסירה: התיבה הוצגה מ-17/09 ולא עשתה דבר עד 23/09.
+  // מתאפס בהחלפת-דוח — הגודל שנשלח הוא `row_total` של הדוח **הזה**, לא של הקודם.
+  const [showAll, setShowAll] = useState(false)
 
   const reports = reportsOfTab(tabKey)
   const selected = reports.find((report) => report.id === reportId) ?? reports[0] ?? null
@@ -84,7 +87,9 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
   // כאילו הם מוכנים, ורק אז נדלק חיווי-הטעינה. ‏ESLint חוסם זאת (`react-hooks/set-state-in-effect`).
   // ⇒ מפתח-הבקשה מוגדר כאן, והאפקט מעדכן **רק בתוך ה-callbacks**.
   const requestKey =
-    open && selected ? `${selected.rpc}|${period.from}|${period.to}|${customerId}|${tick}` : null
+    open && selected
+      ? `${selected.rpc}|${period.from}|${period.to}|${customerId}|${showAll}|${tick}`
+      : null
   const [seenRequest, setSeenRequest] = useState(null)
   if (requestKey && seenRequest !== requestKey) {
     setSeenRequest(requestKey)
@@ -100,6 +105,9 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
       from: period.from,
       to: period.to,
       customerId,
+      showAll,
+      // גודל-האוכלוסייה מהשליפה הקודמת של אותו דוח; בשליפה הראשונה עדיין אין.
+      rowTotal: data?.rpc === selected.rpc ? data.rowTotal : null,
     })
       .then((next) => {
         if (alive) setData(next)
@@ -108,6 +116,8 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
         // 🔴 מצב תלת-ערכי: כישלון **אינו** נכתב כ-`[]`. הוא נאמר, והחלון מציע לנסות שוב.
         if (alive) {
           setData(null)
+          // כשל מאבד את `row_total` ⇒ "נסי שוב" עם תיבה מסומנת היה שולף 8 ומציג תיבה שמבטיחה הכול.
+          setShowAll(false)
           setError(err?.message || 'שליפת הנתונים לא הושלמה.')
         }
       })
@@ -155,13 +165,27 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
           onOpenChange={setOpen}
           reports={reports}
           reportId={selected?.id ?? null}
-          onReportChange={setReportId}
+          onReportChange={(next) => {
+            setShowAll(false)
+            setReportId(next)
+          }}
+          showAll={showAll}
+          onShowAllChange={setShowAll}
           customers={customers}
           customerId={customerId}
-          onCustomerChange={setCustomerId}
+          // 🔴 כל שינוי-מסנן מאפס את "כל השורות" — הגודל שנשלח הוא `row_total` של השליפה
+          // הקודמת, ואחרי שינוי תקופה/לקוח הוא של אוכלוסייה אחרת: הסוכן-היריב (23/09) מדד
+          // תרחיש שבו לקוח בודד (1) ואז "כל הלקוחות" היו מורידים קובץ של שורה אחת מתוך 52.
+          onCustomerChange={(next) => {
+            setShowAll(false)
+            setCustomerId(next)
+          }}
           from={period.from}
           to={period.to}
-          onPeriodChange={setPeriod}
+          onPeriodChange={(next) => {
+            setShowAll(false)
+            setPeriod(next)
+          }}
           columns={data?.columns ?? columns}
           rows={data?.rows ?? []}
           rowTotal={data?.rowTotal ?? null}

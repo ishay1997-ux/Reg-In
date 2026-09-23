@@ -101,3 +101,66 @@ describe('ExportBar — פתיחת החלון', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('שגיאה בטעינת הדוח.')
   })
 })
+
+// 🔴 "כל השורות" — §7 פריט 9 של המסירה: התיבה הוצגה מ-17/09 ולא עשתה דבר עד 23/09.
+describe('ExportBar — "כל השורות"', () => {
+  const TOP_N_PAYLOAD = {
+    ...PAYLOAD,
+    rows: Array.from({ length: 8 }, (_, i) => ({ project_id: 1000 + i, amount: 100 + i })),
+    meta: { row_total: 20 },
+  }
+
+  it('סימון התיבה שולף מחדש עם p_page_size = row_total, ושורת-הכמות מפסיקה לומר "מתוך"', async () => {
+    callReport.mockResolvedValue(TOP_N_PAYLOAD)
+    renderBar()
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    const box = await screen.findByTestId('export-show-all')
+    await waitFor(() => expect(callReport).toHaveBeenCalledTimes(1))
+    expect(callReport.mock.calls[0][1]).not.toHaveProperty('pageSize')
+    expect(screen.getByTestId('export-count')).toHaveTextContent('מתוך 20')
+    callReport.mockResolvedValue({
+      ...TOP_N_PAYLOAD,
+      rows: Array.from({ length: 20 }, (_, i) => ({ project_id: 1000 + i, amount: 100 + i })),
+    })
+    fireEvent.click(box)
+    await waitFor(() => expect(callReport).toHaveBeenCalledTimes(2))
+    expect(callReport.mock.calls[1][1]).toMatchObject({ pageSize: 20 })
+    await waitFor(() =>
+      expect(screen.getByTestId('export-count')).toHaveTextContent('הקובץ יכלול 20 שורות'),
+    )
+  })
+
+  it('החלפת דוח מאפסת את התיבה — הגודל שנשלח הוא של הדוח הנוכחי, לא של הקודם', async () => {
+    callReport.mockResolvedValue(TOP_N_PAYLOAD)
+    renderBar()
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    fireEvent.click(await screen.findByTestId('export-show-all'))
+    await waitFor(() => expect(callReport).toHaveBeenCalledTimes(2))
+    const select = screen.getByTestId('export-report-select')
+    fireEvent.change(select, { target: { value: select.querySelectorAll('option')[1].value } })
+    await waitFor(() => expect(callReport).toHaveBeenCalledTimes(3))
+    expect(callReport.mock.calls[2][1]).not.toHaveProperty('pageSize')
+  })
+})
+
+// 🔴 הסוכן-היריב (23/09): הגודל שנשלח הוא `row_total` של השליפה הקודמת — שינוי תקופה/לקוח מחליף אוכלוסייה.
+describe('ExportBar — "כל השורות" מתאפסת עם כל שינוי-מסנן', () => {
+  const TOP_N_PAYLOAD = {
+    ...PAYLOAD,
+    rows: Array.from({ length: 8 }, (_, i) => ({ project_id: 1000 + i, amount: 100 + i })),
+    meta: { row_total: 20 },
+  }
+
+  it('שינוי תקופה מכבה את התיבה, והשליפה הבאה יוצאת בלי p_page_size', async () => {
+    callReport.mockResolvedValue(TOP_N_PAYLOAD)
+    renderBar()
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    fireEvent.click(await screen.findByTestId('export-show-all'))
+    await waitFor(() => expect(callReport).toHaveBeenCalledTimes(2))
+    expect(callReport.mock.calls[1][1]).toMatchObject({ pageSize: 20 })
+    fireEvent.change(screen.getByTestId('export-from'), { target: { value: '2026-01-01' } })
+    await waitFor(() => expect(callReport).toHaveBeenCalledTimes(3))
+    expect(callReport.mock.calls[2][1]).not.toHaveProperty('pageSize')
+    expect(screen.getByTestId('export-show-all')).not.toBeChecked()
+  })
+})
