@@ -557,12 +557,12 @@ function IdentityCard({
           )}
         </Cell>
 
-        <Cell label="מנהל/ת הפרויקט" testId="project-cell-owner">
+        <Cell label="מנהלת הפרויקט" testId="project-cell-owner">
           {project.owner_name ? (
             <Val>{project.owner_name}</Val>
           ) : (
             // ענבר ולא אדום — "אזהרת-היגיינה, חסר-מידע" (④); וזה חוסם בפועל את מייל-האישור.
-            <span className="text-xs font-semibold text-amber-700">לא הוגדר/ה מנהל/ת פרויקט</span>
+            <span className="text-xs font-semibold text-amber-700">לא הוגדרה מנהלת פרויקט</span>
           )}
           {/* 🔴 טלפון ואימייל בשתי שורות נפרדות (S-23) — לרצף בן שני ערכי-LTR בתוך משפט
               עברי אין סדר נכון בכלל; התיקון הוא לפרק את הרצף. */}

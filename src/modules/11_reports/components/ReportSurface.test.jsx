@@ -545,7 +545,7 @@ describe('ReportSurface — 📐10: ריקות נמדדת באוכלוסייה',
     )
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
     expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-      'חסר פרמטר מערכת: מקדם_אמינות_אדום',
+      'חסר פרמטר מערכת: מקדם אמינות לסימון אדום',
     )
     // ⚠️ ומצב-הריק **נשאר** — הבאנר מתווסף לו ואינו מחליף אותו.
     expect(screen.getByTestId('report-reliability-blank')).toBeInTheDocument()
@@ -561,7 +561,7 @@ describe('ReportSurface — משפט-הפרמטר-החסר הוא זה של `rep
     callReport.mockResolvedValueOnce(payload({ meta: { missing_params: ['מקדם_אמינות_אדום'] } }))
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
     expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-      'חסר פרמטר מערכת: מקדם_אמינות_אדום — אין סימון אדום בדוח אמינות הדיילות. ' +
+      'חסר פרמטר מערכת: מקדם אמינות לסימון אדום — אין סימון אדום בדוח אמינות הדיילות. ' +
         'יש להוסיף את השורה בהגדרות המערכת.',
     )
   })
@@ -574,7 +574,7 @@ describe('ReportSurface — משפט-הפרמטר-החסר הוא זה של `rep
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
     const banner = await screen.findByTestId('report-missing-params')
     expect(banner).toHaveTextContent(
-      'חסר פרמטר מערכת: יחס_אורחים_לדיילת. יש להוסיף את השורה בהגדרות המערכת.',
+      'חסר פרמטר מערכת: יחס אורחים לדיילת. יש להוסיף את השורה בהגדרות המערכת.',
     )
     expect(banner.textContent).not.toContain('— .')
   })
@@ -585,7 +585,9 @@ describe('ReportSurface — משפט-הפרמטר-החסר הוא זה של `rep
     )
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
     const banner = await screen.findByTestId('report-missing-params')
-    expect(banner).toHaveTextContent('חסרים פרמטרי מערכת: מקדם_אמינות_אדום, מקדם_אמינות_ענבר')
+    expect(banner).toHaveTextContent(
+      'חסרים פרמטרי מערכת: מקדם אמינות לסימון אדום, מקדם אמינות לסימון ענבר',
+    )
     expect(banner).toHaveTextContent('יש להוסיף את השורות בהגדרות המערכת.')
   })
 })

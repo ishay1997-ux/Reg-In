@@ -467,7 +467,7 @@ describe('S1 — סרגל-הסינון', () => {
     fireEvent.change(screen.getByTestId('finance-filter-from'), { target: { value: '2026-12-01' } })
     fireEvent.change(screen.getByTestId('finance-filter-to'), { target: { value: '2026-01-01' } })
     const empty = screen.getByTestId('finance-empty-filtered')
-    expect(empty).toHaveTextContent('אין פרויקט התואם לסינון שבחרת.')
+    expect(empty).toHaveTextContent('אין פרויקט התואם למסנן שבחרת.')
     expect(screen.queryByTestId('finance-error')).not.toBeInTheDocument()
   })
 

@@ -308,7 +308,7 @@ a log nobody reads for rulings.
 | Write failure | `העדכון לא נשמר — הערך הוחזר לקודם. נסי שוב.` | S-2 |
 | Negative qty | `כמות בפועל אינה יכולה להיות שלילית.` | S-5 |
 | Note placeholder | `הערה חופשית — מה שכדאי שמנהלת הפרויקטים תדע` | S-5 |
-| Explainers under the table (quoted in full — a pointer here hid the ㊵ teaching line once) | `כל שינוי נשמר מיד — אין כפתור שמירה במסך.` · `סימון מוכן ממלא את הכמות בפועל אוטומטית, רק אם עדיין לא הוקלד בה ערך. וערך שמולא כך נושא לידו את הכיתוב "מולא אוטומטית" — שנעלם ברגע שהיא מקלידה. מספר שהקלדת לעולם אינו נדרס.` | S-5 (mockup verbatim) |
+| Explainers under the table (quoted in full — a pointer here hid the ㊵ teaching line once) | `כל שינוי נשמר מיד — אין כפתור שמירה במסך.` · `סימון מוכן ממלא את הכמות בפועל אוטומטית, רק אם עדיין לא הוקלד בה ערך. וערך שמולא כך נושא לידו את הכיתוב "מולא אוטומטית" — שנעלם ברגע שהיא מקלידה. מספר שהקלדת לעולם אינו נדרס.` ↳ **as-built 24/09/2026 (system-polish A4):** base = `כל שינוי נשמר מיד.` only; the rest → hint `checklist.autoSave` (mode 2), "מודול 8" off the screen | S-5 (mockup verbatim) |
 | Auto-fill tag | `מולא אוטומטית` | ㊵ |
 | Removal refusals (M6 dialog + M5-7 raise, byte-identical both sides) | `הפריט כבר הוזמן — לא ניתן להסירו` · `הגיעו כבר פריטים — לא ניתן להסיר` | ㉚·㊱ (processes 🔄ה) |
 | Cancelled-lock titles | `הפרויקט בוטל — לא ניתן לעדכן` (controls) · `הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה (㊴)` (actual_qty) | mockup (appearance-final) |
@@ -324,7 +324,7 @@ a log nobody reads for rulings.
 | Second-amber reason | ✅ `ההגעה מתעכבת — הובטח ל-DD/MM וטרם הגיע` | O-1 — approved 26/08/2026 |
 | In-transit reason (queue/outbound) | ✅ `{N} יחידות עדיין בדרך` · `יחידה אחת עדיין בדרך` · prefix `יוצא היום —` / `יוצא ביום {weekday} —` | O-5 — approved 26/08/2026 |
 | Not-ordered counts | ✅ `פריט אחד טרם הוזמן` · `שני פריטים טרם הוזמנו` (drawn dual) · `N פריטים טרם הוזמנו` (N≥3) · fully-ready in `הכול` ⇒ `✓ מוכן` | mockup + O-5 |
-| Cancel-banner ㊴ sentence | ✅ `אין לעדכן מצב או הערה בפרויקט מבוטל.` + `אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.` | O-4 — approved 26/08/2026 |
+| Cancel-banner ㊴ sentence | ✅ `אין לעדכן מצב או הערה בפרויקט מבוטל.` + `אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.` ↳ **as-built 24/09/2026 (system-polish A4):** only the exception line stays (the disabled controls already say "locked"; R18/R27); "הנעילה חלה על כל המשתמשות" dropped; the ordered-item reason → hint `checklist.cancelledOrdered`; `checklist-locked-note` = `הפרויקט בוטל — הפקדים נעולים, חוץ מרישום כמות שהגיעה.` | O-4 — approved 26/08/2026 |
 | Staffing-hold banner (card §② "נאמר בהודעה ברגע שזה קורה") | ✅ `כל הפריטים מוכנים — אך הפרויקט לא עבר ל"מוכן לביצוע": צוות הדיילות טרם הושלם.` (`STAFFING_HOLD_SENTENCE`, ChecklistDialog) | closing-audit C-3 — built 27/08/2026 under Ishay's "בצע הכל לפי המלצה שלך"; wording `הנחתי`-delegated, overridable |
 
 ### 3.8 🔴 Ruling-coverage ledger — the decision-coverage back-check (denominator = the registry)

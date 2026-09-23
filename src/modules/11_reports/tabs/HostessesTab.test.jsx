@@ -935,7 +935,7 @@ describe('רצפת-המשטח — כל ארבעת המשטחים', () => {
       })
       renderTab(surface)
       expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-        'חסר פרמטר מערכת: קבוע_ריסון_m',
+        'חסר פרמטר מערכת: משקל ממוצע-החברה',
       )
     },
   )

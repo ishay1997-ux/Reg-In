@@ -16,6 +16,8 @@ const CEO_EMAIL = process.env.E2E_CEO_EMAIL
 const CEO_PASSWORD = process.env.E2E_CEO_PASSWORD
 
 const VAT_PARAM = 'אחוז_מעמ'
+// ✏️ 24/09/2026 (ליטושי-הכנס, A5): ההודעות נוקבות בתווית שבמסך הפרמטרים, לא בשם-העמודה.
+const VAT_LABEL = 'אחוז מע"מ'
 
 async function login(page, email, password) {
   await page.goto('/login')
@@ -56,14 +58,14 @@ test.describe('שומר המע"מ — מסמך אינו מופק כששיעור 
     // (1) האזהרה במסך — היא שנותנת למשתמשת סיכוי לתקן לבד.
     const banner = page.getByTestId('quotes-missing-params')
     await expect(banner).toBeVisible()
-    await expect(banner).toContainText(VAT_PARAM)
+    await expect(banner).toContainText(VAT_LABEL)
 
     // (2) החלון נפתח — ובמקום המסמך יש הודעה שאומרת מה לתקן, לא "הפקת המסמך נכשלה".
     const firstDocButton = page.locator('[data-testid^="quote-document-"]').first()
     await firstDocButton.click()
     const error = page.getByTestId('quote-document-error')
     await expect(error).toBeVisible()
-    await expect(error).toContainText(VAT_PARAM)
+    await expect(error).toContainText(VAT_LABEL)
     await expect(page.getByTestId('quote-document-frame')).toHaveCount(0)
 
     // (3) הכפתורים. ההורדה קיימת תמיד; השליחה מוצגת רק להצעה "בתהליך" —

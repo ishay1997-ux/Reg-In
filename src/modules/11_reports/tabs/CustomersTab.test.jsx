@@ -1092,7 +1092,7 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     })
     renderTab(SURFACES.מ21)
     expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-      'חסר פרמטר מערכת: מכפיל_מרווח_מתרחק',
+      'חסר פרמטר מערכת: מכפיל מרווח ללקוח מתרחק',
     )
   })
 

@@ -213,7 +213,7 @@ describe('DashboardPage — טעינה ושגיאה', () => {
 
 // T-1 — הכשל שנקרא כבשורה טובה: בלי שורת-הפרמטר הלוח לא מאדים והרצועה מכריזה "אין פריטים".
 describe('DashboardPage — שורת-פרמטר חסרה (T-1)', () => {
-  it('חסר ימי_אזהרה_קדם_אירוע ⇒ באנר שנוקב בשם הפרמטר ובהשלכה, והמסך ממשיך לעבוד', async () => {
+  it('חסר ימי אזהרה לפני אירוע ⇒ באנר שנוקב בשם הפרמטר ובהשלכה, והמסך ממשיך לעבוד', async () => {
     getDashboardSummary.mockResolvedValueOnce(
       summaryFixture({
         params: {
@@ -225,7 +225,7 @@ describe('DashboardPage — שורת-פרמטר חסרה (T-1)', () => {
     )
     renderPage()
     const banner = await screen.findByTestId('dashboard-missing-params')
-    expect(banner.textContent).toContain('ימי_אזהרה_קדם_אירוע')
+    expect(banner.textContent).toContain('ימי אזהרה לפני אירוע')
     expect(banner.textContent).toContain('אין התראה על אירועים קרובים')
     // המסך עצמו ממשיך לעבוד — הבאנר מוסיף אמירה, לא מחליף מסך.
     expect(screen.getByTestId('kpi-active')).toBeInTheDocument()

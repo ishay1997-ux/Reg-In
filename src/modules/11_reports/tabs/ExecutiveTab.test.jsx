@@ -682,7 +682,7 @@ describe('ה3 · איכות אירועים', () => {
     renderTab('מ6')
 
     expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-      'חסר פרמטר מערכת: סף_שביעות_רצון',
+      'חסר פרמטר מערכת: סף שביעות רצון',
     )
   })
 })
