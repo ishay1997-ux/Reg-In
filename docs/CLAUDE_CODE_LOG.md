@@ -52,6 +52,8 @@
 
 📊 Live on 5199 as CEO (top-revenue customer): quotes 42 / 7 default (8 available), projects 24 / 8 (10), the first quote row 3,219.51 vs the screen's rounded 3,220 ₪; xlsx downloaded; 0 page errors. The adversarial reviewer's verdict is recorded beside the commit in the module-2 line.
 
+**Ripples written at close (iron rule 13), all in the same commit as the handoff refresh:** `processes-approved.md` ת4ב row ⑥✏️✏️ (the "not all in one session" pace was superseded for this day by Ishay's *"סגור לי את כל הפינות"* mandate — recorded as his ruling, not a breach) · `PROJECT_MASTER_sec7.md` §7.103 dated tail · `PROJECT_MASTER §6` line 895 (four screens ✅, `RepositoryTab` frozen) · the export handoff §4 third-round rulings, §5 traps 26–30, §7 items 9–11 and a rewritten §8 paste block for the next step (merge `origin/dev`, then *"כל השורות"*), fresh-eyed by an Opus reviewer before commit. **Not rippled, on purpose:** `docs/CODE_MAP.md` (file/line counts — `regin-docs-sync` measures them) · the export plan (`docs/plans/2026-09-17-module-11-excel-export.md` lives on `origin/dev`, not on this branch).
+
 **State of the export work after this commit:** `ProjectsPage` · `CustomersPage` · `FinancePage` · `CustomerDetailsPage` wired; `RepositoryTab` frozen on the `hourly_rate` migration (Ishay); *"כל השורות"* waits on pulling `origin/dev` (blocked this session by the Claude Code permission classifier — "modify shared resources"); three small product questions on the STATUS line.
 
 ### 23/09/2026 (11:XX) — finance screen wired to the export dialog: three core sets, one per tab
