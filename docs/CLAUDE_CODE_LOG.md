@@ -46,6 +46,20 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (02:2X) — the preview table fills its space, and two rulings taken back off Ishay's desk
+
+**`9c09d219`.** He asked a question worth recording: *"נשאר לי להחליט משהו, והאם באמת יש לי את הידע לענות — אם לא, תחליט אתה."* Re-reading the open list against that test showed **most of it was never his** — it was craft I had escalated. Two came back:
+
+**The preview table alignment — decided and done.** `w-full` **alongside** `min-w-max`. They are not in conflict; they are a **floor and a request**. `min-width: max-content` is the floor — columns never compress below natural width, which is what produces the scrollbar at thirty columns. `width: 100%` is the request — take spare room when it exists. Used width is `max(100%, max-content)`.
+📊 **Before:** at 1440 the eight aging columns filled 685px of an 870px container — **185px of empty white beside the data**, which reads as a table that drifted rather than a table.
+📊 **After, measured in both directions because the point was not to undo 17/09:** 1440 ⇒ table 870 / container 870, gap 0, no scroll · 1024 ⇒ table 728 / container 614, `canScrollX: true`, still overflowing rather than squashing. **The floor held; only the request was added.**
+
+**The list height (`40vh` ⇒ `50vh`) — decided NOT to do it.** Ishay's ruling was given as **compensation for row loss that measurement then showed did not occur** (the row was already 34px). A compensation for damage that did not happen is an appearance change nobody asked for. 🔑 **And the real trigger cannot be evaluated yet:** whether thirty fields feel cramped is answerable only on a screen that has thirty fields. ⇒ revisit then, not now.
+
+🔴 **The one item that genuinely stayed with him, and why:** the `מה חסר` column in the projects export is a **computed sentence**. The plan disqualifies `LogisticsPage` from export on exactly that reasoning — *"התאים הם משפטים מחושבים, לא נתונים"* — but there the sentence is the entire content, and here it is one column of eight. **Whether it reads as useful or as noise in his Excel is field knowledge, not code knowledge.** Recommendation on record if he delegates: keep it, because it can be switched off in the column picker and a column that is easy to turn off beats one you have to ask for.
+
+⚠️ **And §7 item 2 is still ◐, deliberately.** He has now ruled on four things from nine screenshots — that is no longer "nobody has seen it". **But a screenshot is not use.** What remains untested by any human: clicking, dragging a column, downloading a file and opening it in Excel. **Not marked ✅ on a claim.**
+
 ### 23/09/2026 (01:5X-02:1X) — four design rulings, and a filter that emptied the table before you typed
 
 **`77317f94`.** Ishay reviewed the screenshots and ruled on four things; each is recorded with the reasoning, not just the outcome.
