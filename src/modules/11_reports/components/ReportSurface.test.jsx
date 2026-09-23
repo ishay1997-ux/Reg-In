@@ -780,6 +780,81 @@ describe('ReportSurface — 🚪 לחיצה על עמודה בדף-דריל יו
   })
 })
 
+// ── 🚪 הגרף והשורה — דלת אחת, שתי כניסות (פזה ב׳ שלב 8, 23/09/2026) ─────────────
+
+// 🌱 צורת-המטען החי של מ3 (`…j3….sql` — `'drill_key', jsonb_build_object('kind','year','year',yr)`):
+// הדאטום של הגרף נושא **אותו** `drill_key` שהשורה בטבלה נושאת. עד היום הגרף חיפש `year_key`,
+// שאינו קיים, ולכן שלוש העמודות בדף "מגמות רב-שנתיות" היו מתות.
+const trendsPayload = (over = {}) =>
+  payload({
+    chart: {
+      type: 'bar',
+      title: 'הכנסה לפי שנה',
+      xKey: 'year',
+      series: [{ key: 'revenue', label: 'הכנסה' }],
+      data: [
+        { year: 2024, revenue: 100, drill_key: { kind: 'year', year: 2024 } },
+        { year: 2025, revenue: 120, drill_key: { kind: 'year', year: 2025 } },
+      ],
+    },
+    rows: [{ row_key: 1, name: '2024', drill_key: { kind: 'year', year: 2024 } }],
+    drill: { level: 0, levels: ['כל השנים', 'שנה', 'חודש'], crumbs: [{ label: 'כל השנים' }] },
+    ...over,
+  })
+
+const TRENDS_SURFACE = { ...DRILL_SURFACE, id: 'm3', slug: 'trends', rpc: 'report_m03_trends' }
+
+describe('ReportSurface — 🚪 הגרף יורד רמה דרך ה-drill_key של הדאטום', () => {
+  it('לחיצה על עמודת-שנה מוסרת את מפתח-הדאטום עצמו, כמו לחיצה על השורה', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(trendsPayload())
+    render(
+      <ReportSurface surface={TRENDS_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    fireEvent.click(await screen.findByTestId('chart-select-1'))
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'year', year: 2025 }, null, 'level')
+  })
+
+  it('ליד גרף שיורד רמה יש שורת-יכולת, ובנוסח שהמשטח מסר', async () => {
+    callReport.mockResolvedValueOnce(trendsPayload())
+    render(
+      <ReportSurface
+        surface={TRENDS_SURFACE}
+        filters={filters}
+        drill={null}
+        onDrill={vi.fn()}
+        chartAction={() => 'לחיצה על שנה בגרף יורדת לחודשים שלה'}
+      />,
+    )
+    expect(await screen.findByTestId('chart-action')).toHaveTextContent(
+      'לחיצה על שנה בגרף יורדת לחודשים שלה',
+    )
+  })
+
+  it('בגרף-קווים הנוסח אומר "נקודה", לא "עמודה"', async () => {
+    callReport.mockResolvedValueOnce(crossPayload({ ...CHART, type: 'line' }))
+    renderCross()
+    expect(await screen.findByTestId('chart-action')).toHaveTextContent(
+      'לחיצה על נקודה מסננת את הטבלה',
+    )
+  })
+
+  it('גרף שמסנן את הטבלה אומר זאת', async () => {
+    callReport.mockResolvedValueOnce(crossPayload())
+    renderCross()
+    expect(await screen.findByTestId('chart-action')).toHaveTextContent(
+      'לחיצה על עמודה מסננת את הטבלה',
+    )
+  })
+
+  it('גרף שאינו לחיץ אינו מבטיח דבר', async () => {
+    callReport.mockResolvedValueOnce(crossPayload({ ...CHART, filter_key: false }))
+    renderCross()
+    await screen.findAllByTestId('report-row')
+    expect(screen.queryByTestId('chart-action')).toBeNull()
+  })
+})
+
 // ── 📐8 · שורת-התקרה מול צמצום-לקוח ────────────────────────────────────────
 
 describe('ReportSurface — תקרת-השורות נמדדת מול השורות הגולמיות', () => {

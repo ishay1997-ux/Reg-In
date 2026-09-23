@@ -235,15 +235,26 @@ function announceSelection(label, count) {
 const datumLabel = (datum, xKey) => String(datum?.label ?? datum?.[xKey] ?? '')
 
 /**
- * 🚪 **שני השדות שקובעים איך עמודה בדף-דריל יורדת רמה** — שניהם אופציונליים, ושניהם
- * נגזרים מ-`chart.xKey` כשה-RPC לא הצהיר:
- * ‏`chart.drill_param` — שם-המפתח שנכתב למצב-הדריל (ברירת-מחדל: `xKey`, למשל `bucket`) ·
- * ‏`chart.drill_key` — שדה-הדאטום שמחזיק את **המפתח** (ברירת-מחדל: `<xKey>_key`).
- * 🔴 **וההפרדה אינה תיאורטית:** במ9 העמודה מציגה `bucket: "1–30"` (תווית) והשרת מצפה
- * ל-`d1_30` — המטען החי כבר נושא `bucket_key` בכל דאטום, וזה בדיוק הפער ש-D-30① מתעד.
+ * 🚪 **הדלת של עמודה בגרף היא ה-`drill_key` של הדאטום — אותו שדה בדיוק שהשורה בטבלה נושאת.**
+ * ✏️ **תוקן 23/09/2026 (פזה ב׳ שלב 8, תוכנית-הטיפוגרפיה §6ב):** עד כאן הגרף חיפש מוסכמת-שם
+ * משלו — `"<xKey>_key"` — ובמ3 הוא חיפש `year_key`, שאינו קיים: המטען נושא `drill_key` בלבד
+ * (`'drill_key', jsonb_build_object('kind','year','year',yr)` ב-`…j3….sql`). ⇒ **שלוש עמודות-השנים
+ * בדף "מגמות רב-שנתיות" היו מתות לגמרי**, והשורות שמתחתן עבדו. שני מנגנונים לאותה התנהגות
+ * הם בדיוק מחלקת-הפגם של D-30: ביום שהם נפרדו, איש לא ידע איזה מהם קובע.
+ * ⏳ **והמוסכמה הישנה נשארת כגיבוי אחד, מתוארך, למ9 בלבד:** שם הדאטום נושא `bucket_key` ועדיין
+ * לא `drill_key`. מיגרציית-הטקסט של פזה ב׳ מוסיפה אותו — ואז הענף הזה נמחק.
  */
-const drillParamOf = (chart) => chart?.drill_param ?? chart?.xKey
-const drillKeyOf = (chart) => chart?.drill_key ?? `${chart?.xKey}_key`
+function datumDrillKey(chart, datum) {
+  if (datum?.drill_key && typeof datum.drill_key === 'object') return datum.drill_key
+  const legacy = datum?.[`${chart?.xKey}_key`]
+  return chart?.xKey && legacy != null ? { [chart.xKey]: legacy } : null
+}
+
+/** האם מפתח-הדאטום הוא הרמה הפתוחה — השוואה על הממדים בלבד; `kind` הוא סוג, לא ממד. */
+const isOpenLevel = (key, drill) => {
+  const dims = Object.keys(key ?? {}).filter((dim) => dim !== 'kind')
+  return dims.length > 0 && dims.every((dim) => String(key[dim]) === String(drill?.[dim]))
+}
 
 /**
  * ‏`onSelect` של דף-דריל — **ירידת-רמה**, לא סינון. `null` כשאין לגרף מפתח-דריל בדאטה,
@@ -252,19 +263,25 @@ const drillKeyOf = (chart) => chart?.drill_key ?? `${chart?.xKey}_key`
  */
 function chartDrill(chart, onDrillLevel) {
   if (!onDrillLevel) return null
-  const param = drillParamOf(chart)
-  const keyField = drillKeyOf(chart)
-  if (!param) return null
-  // ⚠️ אין ולו דאטום אחד שנושא את המפתח ⇒ אין דלת. `{bucket: undefined}` היה נכתב
-  // לכתובת כ-`{}` ומחזיר את הדף לשורש בלי שאיש יבין למה.
-  const usable = (chart?.data ?? []).some((datum) => datum?.[keyField] != null)
+  // ⚠️ אין ולו דאטום אחד שנושא מפתח ⇒ אין דלת. מפתח ריק היה נכתב לכתובת כ-`{}` ומחזיר
+  // את הדף לשורש בלי שאיש יבין למה.
+  const usable = (chart?.data ?? []).some((datum) => datumDrillKey(chart, datum) != null)
   if (!usable) return null
   return (datum) => {
-    const value = datum?.[keyField]
-    if (value == null) return
-    onDrillLevel({ [param]: value })
+    const key = datumDrillKey(chart, datum)
+    if (key) onDrillLevel(key)
   }
 }
+
+// 🔤 **שורת-היכולת של גרף — פזה ב׳ שלב 8.** עד היום לא הייתה אף מילה על המסך שאומרת שאפשר
+// ללחוץ על גרף (לטבלה יש `ROW_ACTION`), ולכן היכולת הייתה בלתי-נראית גם היכן שעבדה.
+// המשטח מוסר נוסח ירידת-רמה משלו (`chartAction`); הסינון הוא אותו משפט בכל משטח.
+// ⚠️ **שם-האלמנט נגזר מסוג-הגרף** — נמדד על המסך: "לחיצה על עמודה" מעל גרף-קווים הוא הוראה
+// לדבר שאינו קיים.
+const CLICK_NOUN = Object.freeze({ line: 'נקודה', scatter: 'נקודה', pie: 'פלח' })
+const clickNoun = (chart) => CLICK_NOUN[chart?.type] ?? 'עמודה'
+const crossFilterAction = (chart) => `לחיצה על ${clickNoun(chart)} מסננת את הטבלה`
+const drillActionFallback = (chart) => `לחיצה על ${clickNoun(chart)} בגרף פותחת את הפירוט`
 
 /**
  * 🚪 **בדף-דריל שיש לו רמה נוספת, לחיצה היא ירידת-רמה — ולא דלת-ישות.**
@@ -301,11 +318,8 @@ function drillHandlers(surface, payload, onDrill, drill) {
 
 /** הדאטום של הרמה **הפתוחה** — כדי שהעמודה שנפתחה תישאר מסומנת (15-ד) גם אחרי הירידה. */
 function activeDrillLabel(chart, drill) {
-  const param = drillParamOf(chart)
-  const active = drill?.[param]
-  if (active == null) return undefined
-  const keyField = drillKeyOf(chart)
-  const datum = (chart?.data ?? []).find((row) => String(row?.[keyField]) === String(active))
+  if (!drill) return undefined
+  const datum = (chart?.data ?? []).find((row) => isOpenLevel(datumDrillKey(chart, row), drill))
   return datum ? datum[chart.xKey] : undefined
 }
 
@@ -327,6 +341,7 @@ function SurfaceCharts({
   onToggle,
   renderChartAside,
   renderChartFooter,
+  chartAction,
   emptyText,
 }) {
   return charts.map((chart, index) => {
@@ -339,13 +354,20 @@ function SurfaceCharts({
     // מצפה ל**מפתח** (`"d1_30"`), והפער הזה הוא בדיוק מה ש-D-30① מתעד.
     // 🔑 המגן על עמודת-אפס ונתיב-המקלדת מגיעים מ-`ChartCard` בלי שינוי.
     const drillFromChart = chartDrill(chart, drillSurface)
+    const onSelect = drillFromChart ?? selectHandler(key, chart, index, onToggle)
+    const actionHint = drillFromChart
+      ? (chartAction?.(payload, index) ?? drillActionFallback(chart))
+      : onSelect
+        ? crossFilterAction(chart)
+        : null
     return (
       <ChartCard
         key={chart.title ?? index}
         chart={chart}
         // 🚫 **`onSelect` נמסר רק כשיש מפתח** — אחרת הגרף היה מקבל `cursor:pointer` וכפתורים
         // בטבלת-קורא-המסך על אינטראקציה שאינה קיימת (📐14ב③).
-        onSelect={drillFromChart ?? selectHandler(key, chart, index, onToggle)}
+        onSelect={onSelect}
+        actionHint={actionHint}
         // 15-ד — הגוון אומר **איפה** נבחר; הצ'יפ אומר **מה**. רק הגרף שהבחירה שייכת לו.
         // ➕ **ובדף-דריל — הרמה הפתוחה**: הדלי שנפתח נשאר טורקיז והשאר מעומעמים, אחרת
         // המשתמשת יורדת רמה והגרף נראה בדיוק כמו קודם.
@@ -454,6 +476,8 @@ function EmptyPage({
  * ‏`renderChartFooter(payload, index)` — **מתחת** לגרף, בתוך הכרטיס (רמזי-⑩ שהכרטיס מעגן
  *   *"מתחת ל-.legend/.barkey"*).
  * ⚠️ שתי האחרונות מקבלות גם את **מספר הגרף** — משטח עם שני גרפים צריך לבחור לאיזה מהם.
+ * ‏`chartAction(payload, index)` *(23/09/2026)* — נוסח שורת-היכולת של גרף שיורד רמה
+ *   (*"לחיצה על עמודה יורדת לחודשים של אותה שנה"*). בלעדיה — ניסוח כללי.
  *
  * כל השבע מקבלות את ה-payload **אחרי** `transformPayload`.
  */
@@ -471,6 +495,7 @@ export default function ReportSurface({
   renderChartFooter,
   renderBeforeTable,
   renderExtras,
+  chartAction,
 }) {
   // 🚪 המעטפת יודעת מה ממוסך ואיפה יושבת שורת-המסננים; המשטח אינו יודע אף אחד מהשניים.
   const shell = useContext(ReportsShellContext)
@@ -701,6 +726,7 @@ export default function ReportSurface({
         onToggle={toggleSelection}
         renderChartAside={renderChartAside}
         renderChartFooter={renderChartFooter}
+        chartAction={chartAction}
         // ✏️ 17/09/2026 — הגרף אומר את אותו משפט-ריקות שהמעטפת אומרת: לפי המסנן שרוקן (כ17).
         emptyText={customerId ? EMPTY_AFTER_CUSTOMER_FILTER : EMPTY_AFTER_FILTER}
       />

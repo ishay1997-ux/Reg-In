@@ -125,6 +125,7 @@ export default function FinanceSurface({ surface, spec, filters, drill, onDrill,
       onDrill={onDrill}
       onWindow={onWindow}
       transformPayload={transformPayload}
+      chartAction={spec.chartAction ? () => spec.chartAction : undefined}
       // 🔴 **`afterSoWhat` ולא `renderTop` — וזה עוגן-כרטיס, לא טעם:** §⑩ של ארבעת הכרטיסים
       // מעגן את רמז-ה-`whyAndFirst` *"אחרי שורת-'אז מה', מעל .tiles"*. עד שהמעטפת פתחה את
       // הנקודה הזו הוא נתלה מעל שורת-האוכלוסייה — קרוב, אבל לא מה שהכרטיס אומר.
