@@ -1026,9 +1026,10 @@ describe('מיקום שכבת-ההטמעה (רמה 2)', () => {
         expect(follows(hint, table)).toBe(true)
         expect(follows(screen.getByTestId('report-table-title'), hint)).toBe(true)
       }
-      // ‏renderExtras — בלוק-המונחים **אחרי** שורת-ההגדרות שהוא מפרש.
-      const firstTerm = screen.getAllByTestId(/^hint-reports\..+\.term\./)[0]
-      expect(follows(definitions, firstTerm)).toBe(true)
+      // ✏️ 23/09/2026 — **אין עוד בלוק-מונחים בתחתית הדף** (התוכנית §4ה, 2.1 · 2.3): רמז שאינו
+      // צמוד לרכיב שהוא מסביר הוא מילון, לא עזרה. הבדיקה נועלת שהקיר לא חוזר.
+      expect(screen.queryAllByTestId(/^hint-reports\..+\.term\./)).toHaveLength(0)
+      expect(definitions).toBeInTheDocument()
     },
   )
 })
@@ -1056,12 +1057,13 @@ describe('שלמות מפתחות-ההטמעה', () => {
     }
   })
 
-  it('אין מפתח בקובץ-הקופי שאיש אינו שותל — ו-38 הם כל מה ש-§⑩ מונה', () => {
+  it('אין מפתח בקובץ-הקופי שאיש אינו שותל — ו-14 הם כל מה שהלשונית שותלת', () => {
     for (const key of Object.keys(M11_HOSTESSES_COPY)) {
       expect(used.has(key), `מפתח שאינו בשימוש: ${key}`).toBe(true)
     }
-    expect(Object.keys(M11_HOSTESSES_COPY)).toHaveLength(38)
-    expect(used.size).toBe(38)
+    // ✏️ 23/09/2026 — 38 ⇒ 14: המונחים ירדו מהשכבה (התוכנית §4ה, 2.3 · 2.5).
+    expect(Object.keys(M11_HOSTESSES_COPY)).toHaveLength(14)
+    expect(used.size).toBe(14)
   })
 
   it('אין `pointer` באף ערך — רק רמה 2 נכתבת (הכרעת-ישי)', () => {

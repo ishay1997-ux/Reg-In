@@ -176,10 +176,18 @@ function contactCell(row) {
   return `${name} · ${isolateLtr(String(row.contact_phone).replaceAll('-', NB_HYPHEN))}`
 }
 
+// 🔤 משפט-ההרשאה של מ21 — **נאמר רק כשיש באמת סכום מוסתר** (הכרעה ש1, התוכנית §4ג, 23/09/2026).
+// משפט על סכומים מוסתרים, מול מי שרואה את כל הסכומים, הוא רעש — בדיוק מה שמצב 0 מנקה.
+// ⚠️ מילה-במילה מ-`meta.notes` של `report_m21_drifting`; נוסח אחר בשרת ⇒ המשפט פשוט נשאר.
+const MONEY_GATE_NOTE = 'עמודות ואריחי ה-₪ בדף זה כפופים להרשאת מודול כספים.'
+
 /** מ21 · לקוחות מתרחקים. */
 function driftingPayload(payload, { canSeeMoney }) {
   const rows = payload.rows.map((row) => ({ ...row, contact_name: contactCell(row) }))
-  if (canSeeMoney) return { ...payload, rows }
+  if (canSeeMoney) {
+    const notes = payload.meta?.notes?.filter((note) => note !== MONEY_GATE_NOTE)
+    return { ...payload, rows, ...(notes ? { meta: { ...payload.meta, notes } } : {}) }
+  }
   return maskMoney(payload, rows, { fallbackSortKey: 'ratio' })
 }
 

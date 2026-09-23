@@ -37,7 +37,7 @@ const K1 = {
   ],
 }
 for (const [fn, file] of Object.entries(FILES)) {
-  const src = fs.readFileSync(path.join('C:/Users/ishay/Reg-In-copy-wt/supabase/migrations/', file), 'utf8').replace(/\r\n/g, '\n')
+  const src = fs.readFileSync(path.join('C:/Users/ishay/Reg-In-dash-wt/supabase/migrations/', file), 'utf8').replace(/\r\n/g, '\n')
   const start = src.lastIndexOf(`create or replace function public.${fn}(`)
   const open = src.indexOf('$function$', start)
   let body = src.slice(open + 10, src.indexOf('$function$', open + 10))
