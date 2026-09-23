@@ -356,3 +356,20 @@ describe('🔴 מסנן מכותרת-העמודה', () => {
     expect(options).not.toContain('גדול מ-')
   })
 })
+
+// 🔴 **מספר-העמודות בכיתוב — הכרעת-ישי 23/09/2026.**
+// 🔑 **הוא קיים כי פס-הגלילה אינו ניתן למדידה מכאן:** Chromium ב-headless מצייר
+// overlay-scrollbar שלעולם אינו תופס מקום. **המספר אינו תלוי בציור של הדפדפן**,
+// ולכן הוא הדבר היחיד שאפשר להבטיח שהמשתמשת תדע שיש עמודות מעבר לקצה.
+describe('🔴 כיתוב התצוגה נוקב במספר העמודות', () => {
+  it('אומר כמה עמודות יש בקובץ', () => {
+    setup()
+    expect(screen.getByTestId('export-preview-caption')).toHaveTextContent('4 עמודות')
+  })
+
+  it('המספר עוקב אחרי כיבוי עמודה — הוא סופר את הקובץ, לא את הדוח', () => {
+    setup()
+    fireEvent.click(screen.getByLabelText('סכום, עמודה 3 מתוך 4'))
+    expect(screen.getByTestId('export-preview-caption')).toHaveTextContent('3 עמודות')
+  })
+})

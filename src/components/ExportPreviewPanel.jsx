@@ -87,7 +87,23 @@ export default function ExportPreviewPanel({
       aria-label="תצוגה מקדימה של הקובץ"
       data-testid="export-preview"
     >
-      <p className="mb-2 text-xs text-slate-500">כך ייראה הקובץ — חמש השורות הראשונות</p>
+      {/*
+        🔴🔴 **מספר-העמודות נאמר במילים, וזה לא קישוט — הוא הסימן היחיד שאפשר לסמוך עליו.**
+
+        הכרעת-ישי 23/09/2026: *"צריך בתצוגה מקדימה גלילה ימינה שמאלה לראות את העמודות"*.
+        📊 **נמדד ב-20 עמודות:** הגלילה עובדת (856px מוסתרים) **ואין שום סימן שהיא קיימת.**
+        נוסף פס מפורש (`.scrollbar-visible` ב-`index.css`) — **אבל אי-אפשר לאמת אותו מכאן:**
+        🔴 Chromium ב-headless מצייר **overlay-scrollbar שלעולם אינו תופס מקום**, ולכן
+        `offsetHeight - clientHeight` נשאר `0` **גם אחרי `::-webkit-scrollbar` עם גובה מפורש**.
+        ⇒ על המכונה של ישי הפס יופיע; **כאן זו הנחה, לא מדידה** (§7 פריט 3ה, פתוח מ-17/09).
+
+        🔑 **ולכן המספר:** הוא **אינו תלוי בשום ציור של הדפדפן** — אם הקובץ נושא
+        20 עמודות ועל המסך נראות תשע, **המשתמשת יודעת שיש עוד.** והוא ניתן למדידה.
+      */}
+      <p className="mb-2 text-xs text-slate-500" data-testid="export-preview-caption">
+        כך ייראה הקובץ — חמש השורות הראשונות
+        {hasTable && header.length > 0 && ` · ${header.length} עמודות`}
+      </p>
 
       {loading && (
         <div className="space-y-2 py-2" data-testid="export-preview-loading">
@@ -109,9 +125,27 @@ export default function ExportPreviewPanel({
         </div>
       )}
 
+      {/*
+        🔴🔴 **פס-גלילה שנראה בעין — הכרעת-ישי 23/09/2026: *"צריך בתצוגה מקדימה גלילה ימינה
+        שמאלה לראות את העמודות"*.**
+
+        📊 **נמדד לפני התיקון, ב-20 עמודות:** ‏`canScrollX: true` · **856px מוסתרים** ·
+        **ו-`offsetHeight - clientHeight` = `0`** ⇒ **הדפדפן לא צייר פס בכלל.**
+        ⇒ הגלילה עבדה, **ולא היה שום סימן שהיא קיימת** — המשתמשת רואה עמודה נחתכת בקצה
+        ואין לה דרך לדעת שיש עוד שמונה מאחוריה.
+
+        🔴 **וזו מסקנה שגויה מ-17/09 שתוקנה כאן, ולא פגם חדש:** שם נמדד *"עובי-פס 0"* והוסק
+        *"`auto` ודי"*. **המדידה הייתה נכונה; המסקנה הפוכה** — אפס פירושו שאין פס.
+        🔑 **הסיבה:** ‏Chromium מצייר כברירת-מחדל **overlay-scrollbar** שאינו תופס מקום ואינו
+        מופיע עד שגוללים. `scrollbar-width` הופך אותו ל**פס קלאסי שתמיד נוכח**.
+
+        ⚠️ **ולמה `style` ולא מחלקת-Tailwind:** ‏`scrollbar-width`/`scrollbar-color` הם תקן-CSS
+        שאין לו utility ב-v4, והחלופה (`::-webkit-scrollbar`) מחייבת גיליון-סגנון משותף.
+        **מאפיין-סגנון על הרכיב שומר את השינוי בקובץ אחד.**
+      */}
       {!loading && !error && hasTable && (
         <div
-          className="max-h-64 overflow-x-auto overflow-y-auto rounded-md bg-white"
+          className="scrollbar-visible max-h-64 overflow-x-auto overflow-y-auto rounded-md bg-white"
           tabIndex={0}
           role="region"
           aria-label="תצוגה מקדימה של הקובץ — ניתן לגלול הצידה לעמודות נוספות"
