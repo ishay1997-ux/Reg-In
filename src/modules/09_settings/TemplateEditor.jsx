@@ -38,7 +38,7 @@ function TemplateChip({ token, required, missing, disabled, onInsert }) {
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => onInsert(token)}
       className={cn(
-        'rounded-full border px-2.5 py-1 text-[12.5px] disabled:cursor-not-allowed disabled:opacity-60',
+        'rounded-full border px-2.5 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-60',
         missing
           ? 'border-amber-200 bg-amber-50 font-semibold text-amber-800'
           : required
@@ -156,7 +156,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
             type="button"
             onClick={() => setSelectedName(row.param_name)}
             className={cn(
-              'block w-full rounded-md px-2.5 py-1.5 text-right text-[13px]',
+              'block w-full rounded-md px-2.5 py-1.5 text-right text-sm',
               row.param_name === selectedName
                 ? 'bg-teal-50 font-semibold text-teal-700'
                 : 'text-slate-600',
@@ -186,7 +186,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
               onChange?.(selectedRow.param_name, e.target.value)
             }}
             className={cn(
-              'w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-[13.5px] leading-[2.1] text-slate-700',
+              'w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm leading-[2.1] text-slate-700',
               !editable && 'cursor-not-allowed text-slate-500',
             )}
             aria-label={`גוף התבנית — ${getParamEntry(selectedRow.param_name).label}`}
@@ -195,7 +195,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
 
           {verdict?.status === 'blocked' && (
             <div
-              className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-[12.5px] leading-relaxed text-red-700"
+              className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm leading-relaxed text-red-700"
               data-testid="settings-template-blocked"
             >
               <b>{verdict.message}</b>
@@ -213,7 +213,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
 
           {verdict?.status === 'warning' && (
             <div
-              className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[12.5px] leading-relaxed text-amber-800"
+              className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-sm leading-relaxed text-amber-800"
               data-testid="settings-template-warning"
             >
               <b>{verdict.message}</b>
@@ -224,7 +224,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
 
           {errors?.[selectedRow.param_name] && (
             <div
-              className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-[12.5px] text-red-700"
+              className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm text-red-700"
               data-testid="settings-template-form-error"
             >
               {errors[selectedRow.param_name]}
@@ -257,7 +257,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
                 />
               ))}
             </div>
-            <div className="mt-2 flex flex-wrap gap-3.5 text-[11.5px] text-slate-500">
+            <div className="mt-2 flex flex-wrap gap-3.5 text-xs text-slate-500">
               <span>
                 <b className="text-slate-700">✱ חובה</b> — בלעדיו השמירה נחסמת
               </span>
@@ -266,10 +266,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
           </div>
 
           {!editable && (
-            <div
-              className="mt-3 text-[12px] text-slate-500"
-              data-testid="settings-template-view-only"
-            >
+            <div className="mt-3 text-sm text-slate-500" data-testid="settings-template-view-only">
               צפייה בלבד
             </div>
           )}

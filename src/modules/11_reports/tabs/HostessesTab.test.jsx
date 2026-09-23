@@ -151,7 +151,8 @@ const m14 = () =>
         value: 0.4581,
         format: 'gini',
         window: '12 החודשים האחרונים',
-        compare: { label: 'התקופה המקבילה אשתקד (n=97)', value: 0.4383, direction: 'up' },
+        // ✏️ 23/09/2026 (L3): בלי "(n=97)" — השרת אומר "אשתקד" בלבד.
+        compare: { label: 'אשתקד', value: 0.4383, direction: 'up' },
         target: { tab: 'דיילות', drill: null, report: 'report_m17_fairness' },
       },
       {
@@ -435,7 +436,7 @@ const m17 = () =>
         format: 'gini',
         window: '12 החודשים האחרונים',
         compare: {
-          label: 'התקופה המקבילה אשתקד · n=⁦97⁩ מול n=⁦106⁩ היום',
+          label: 'אשתקד',
           value: 0.4383,
           direction: 'up',
         },
@@ -944,8 +945,11 @@ describe('רצפת-המשטח — כל ארבעת המשטחים', () => {
     async (_name, surface, make) => {
       callReport.mockResolvedValue({ ...make(), rows: [] })
       renderTab(surface)
-      expect(await screen.findByTestId('reports-export-button')).toBeDisabled()
-      expect(screen.getByTestId('reports-export-file')).toHaveTextContent('אין שורות לייצא')
+      expect(await screen.findByTestId('reports-export-button')).toBeEnabled()
+      // ✏️ **17/09/2026 — ת4ב:** הכפתור פעיל תמיד והכיתוב עבר לתוך החלון; החסימה נבדקת
+      // פר-דוח נבחר. הנוסח הנעול עצמו נבדק ב-`reportsExport.test.js` (זהות-בייט) וב-
+      // `ExportDialog.test.jsx` (מוצג במקום שורת-הכמות, והייצוא מנוטרל).
+      expect(screen.queryByTestId('reports-export-file')).toBeNull()
     },
   )
 

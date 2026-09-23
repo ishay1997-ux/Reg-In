@@ -98,6 +98,8 @@ export const FINANCE_SURFACE_SPECS = Object.freeze({
     }),
     // האריח יושב **לצד** הגרף ובתוך הכרטיס (כרטיס מ9 ①6ב · §⑩ד) — `renderChartAside`.
     currentBucketTile: 0,
+    // 🔤 פזה ב׳ שלב 8 — שורת-היכולת של גרף-המדרגים (לחיצה על מדרג פותחת את לקוחותיו).
+    chartAction: 'לחיצה על מדרג בגרף פותחת את הלקוחות שבו',
   }),
   equipment: Object.freeze({
     hints: Object.freeze({

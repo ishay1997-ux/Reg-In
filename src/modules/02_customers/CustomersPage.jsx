@@ -12,6 +12,7 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
+  Download,
   Pencil,
   Search,
   Send,
@@ -63,6 +64,116 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import ExportDialog from '@/components/ExportDialog'
+import {
+  buildExportFileName,
+  buildExportSheet,
+  EXPORT_LOCKED_MESSAGES,
+  exportReportRows,
+} from '@/lib/reportsExport'
+
+// 🔴 **תיאור-העמודות לחלון-הייצוא — המסך השני מחוץ למודול 11 שצורך את החוזה של `PROJECT_MASTER §6`.**
+// הדפוס: `06_projects/ProjectsPage.jsx` (`EXPORT_COLUMNS`); המנוע: `src/lib/exportColumns.js`.
+//
+// 🔑 **כל `value` קורא לאותה נגזרת שהטבלה קוראת לה — לעולם לא מימוש שני (כלל 14):**
+// "סוג לקוח" הוא `CUSTOMER_TYPE_LABELS` · איש-הקשר הוא `primaryContact()` · "סה"כ הצעות מאושרות"
+// ו-"שביעות רצון" הם `total_revenue`/`avg_feedback` שכבר נגזרו על השורה (ב-`visibleCustomers`,
+// מ-`deriveCustomerMetrics`) — החלון מקבל את השורות **אחרי** הנגזרת, ולכן קורא אותן כמות-שהן.
+//
+// 📊 **9 עמודות במסד, וכולן נשלפות — אין כאן "שדה שלא נשלף"** (בשונה מהפרויקטים, 17 מ-30):
+// `customers` היא טבלה רזה (`docs/schema.sql`: company_number · customer_type · company_name ·
+// discount_percent · marketing_consent · status · customer_id · created_at · updated_at), ו-
+// `listCustomers` מריצה `select('*')` + איש-הקשר. ⇒ אין מיגרציה ואין חוב-RPC לרשום.
+//
+// 🔑 **ברירת-המחדל היא בדיוק מה שהטבלה על המסך מראה** — הכרעת-ישי 23/09/2026:
+// *"בכל מסך שילחצו ייצוא ברירת המחדל תהיה מה שבמסך, ואם ירצה יוכל להוסיף עוד"*.
+// המסך מסמן `core: true`; האכיפה ב-`defaultSelection` (`src/lib/exportColumns.js`), לא כאן.
+// תא "איש קשר" על המסך מציג שם + טלפון + מייל ⇒ שלושתם ליבה, כשלוש עמודות ולא כמשפט אחד —
+// באקסל ממיינים ומסננים עמודה, לא תא מודבק.
+//
+// 🚧 **ואין כאן `visible`, וזה נמדד:** אין מפתח ברשם-העמודות-הרגישות ואין שדה-שכר. עמודת-הכסף
+// היחידה (`total_revenue`) **ממוסכת במקור**: בלי הרשאת 'הצעות מחיר' `listQuotes` מחזירה `[]`
+// ⇒ `revenueByCustomer` ריק ⇒ `null` לכולם ⇒ תא ריק (לא 0). `permissions` אינו מועבר במכוון,
+// כמו בפרויקטים: מפתח רשום בלי הרשאות נופל **סגור**.
+const EXPORT_COLUMNS = [
+  { key: 'company_name', label: 'שם לקוח', format: 'text', core: true },
+  // ח"פ — **טקסט, לא מספר**: 9 ספרות שיכולות להתחיל באפס, ואקסל היה מוחק אותו.
+  { key: 'company_number', label: 'ח"פ', format: 'text', core: true },
+  {
+    key: 'customer_type',
+    label: 'סוג לקוח',
+    format: 'text',
+    core: true,
+    value: (customer) => CUSTOMER_TYPE_LABELS[customer.customer_type] ?? customer.customer_type,
+  },
+  {
+    key: 'contact_name',
+    label: 'איש קשר',
+    format: 'text',
+    core: true,
+    value: (customer) => primaryContact(customer)?.contact_name ?? '',
+  },
+  {
+    key: 'contact_phone',
+    label: 'טלפון',
+    format: 'text',
+    core: true,
+    value: (customer) => primaryContact(customer)?.phone ?? '',
+  },
+  {
+    key: 'contact_email',
+    label: 'אימייל',
+    format: 'text',
+    core: true,
+    value: (customer) => primaryContact(customer)?.email ?? '',
+  },
+  { key: 'discount_percent', label: '% הנחה', format: 'percent', core: true },
+  // המנוע אינו מכיר פורמט בוליאני ⇒ הנוסח שהמסך עצמו מציג במצב view (`'מאושר'/'לא מאושר'`).
+  {
+    key: 'marketing_consent',
+    label: 'מאושר לדיוור',
+    format: 'text',
+    core: true,
+    value: (customer) => (customer.marketing_consent ? 'מאושר' : 'לא מאושר'),
+  },
+  { key: 'total_revenue', label: 'סה"כ הצעות מאושרות', format: 'money', core: true },
+  { key: 'avg_feedback', label: 'שביעות רצון', format: 'ratio', core: true },
+  {
+    key: 'status',
+    label: 'סטטוס',
+    format: 'text',
+    core: true,
+    value: (customer) => (customer.status === 'active' ? 'פעיל' : 'לא פעיל'),
+  },
+
+  // ⬇️ **זמינות בבוחר, אינן מסומנות** — "ואם ירצה יוכל להוסיף עוד" (הכרעת-ישי 23/09).
+  // 🔴 "טעון בירור" — מחוץ לברירת-המחדל לפי הקריטריון שישי נתן ל"מה חסר" (23/09):
+  // *"אם זה לא עוזר להם בניתוח באקסל אז מיותר"*. זה `שביעות רצון < הסף` במילים, והמספר
+  // עצמו כבר בקובץ. `הכרעתי, הפיך` (23/09/2026) — החלת קריטריון קיים על מסך שני, לא כלל חדש.
+  {
+    key: 'low_satisfaction',
+    label: 'טעון בירור',
+    format: 'text',
+    value: (customer) => (customer.needs_attention ? 'כן' : 'לא'),
+  },
+  // "רדום" קיים על המסך כמסננת בלבד, לא כעמודה ⇒ זמין, לא ליבה.
+  { key: 'is_dormant', label: 'רדום', format: 'text', value: (c) => (c.is_dormant ? 'כן' : 'לא') },
+  { key: 'customer_id', label: 'מס׳ לקוח', format: 'id' },
+  // "תאריך הוספה" — המסננת במסך נקראת "נוספו לאחרונה" (`CustomersFilterSheet.jsx`), R30.
+  // `הכרעתי, הפיך` (23/09/2026): תווית, לא כלל.
+  { key: 'created_at', label: 'תאריך הוספה', format: 'date' },
+  // 🚫 `updated_at` הושמט במכוון — חותמת-מערכת שאין לה צרכן במסך ולא בניתוח; לא "שדה שנשכח".
+]
+
+// 🔤 נוסח נעול (`ui-copy-styleguide.md` §5) — משתנה רק יחד עם הבדיקה שטוענת עליו.
+// מחוץ לרכיב כי הרכיב כבר על רף-המורכבות של SonarJS (20), לא מטעמי סגנון.
+const EXPORT_BLOCKED_PARTIAL_DATA = 'חלק מנתוני הרשימה לא נטענו — לחצי "נסי שוב" ואז ייצאי'
+const EXPORT_PARTIAL_DATA_SHORT = 'חלק מנתוני הרשימה לא נטענו'
+// `reason` חוסם את הייצוא (שורת-הכמות) · `error` מרנדר את "נסי שוב" בתצוגה-המקדימה. שניהם `null` כשהכול נטען.
+function exportBlockFor(revenueFailed, paramsFailed) {
+  if (!revenueFailed && !paramsFailed) return { reason: null, error: null }
+  return { reason: EXPORT_BLOCKED_PARTIAL_DATA, error: EXPORT_PARTIAL_DATA_SHORT }
+}
 
 // שביעות-רצון (§7.80, הכרעת P13): כוכבים + "אין נתונים עדיין" — **בלי תג-טקסט** ("מצוין").
 // ‏🆕 **הודלקה 28/08/2026 (מ8 · צעד 4.2): העמודה כבר אינה רדומה.** עד אז לא היה `feedback_score`
@@ -166,6 +277,13 @@ export default function CustomersPage() {
   // react-hooks/set-state-in-effect: ה-setState קורה רק בתגובה לתשובת ה-DB (אחרי await), לא סינכרונית,
   // ודגל cancelled מונע כתיבת-state אחרי unmount (ניווט באמצע טעינה).
   const [reloadTick, setReloadTick] = useState(0)
+  // 🔴 23/09/2026 — "הנגזרות עוד בדרך": הרשימה נטענת תחילה, וההכנסות/הפרויקטים אחריה, בנפרד.
+  // 📊 נמדד חי: לחיצה על "ייצוא" מיד כשהטבלה עלתה הורידה קובץ עם 60 שורות **ועמודת-כסף ריקה
+  // כולה** — בלי שגיאה, כי `null` הוא גם "טרם נטען" וגם "אין הרשאה". המסך עצמו מציג "—" בשני
+  // המצבים ומסתדר; קובץ שנמסר הלאה לא. ⇒ הדגל הזה מחזיק את החלון במצב-טעינה (שלד + כפתור
+  // מנוטרל) עד שהשליפה השנייה והשלישית הסתיימו — בהצלחה או בכישלון מוצהר.
+  // `הכרעתי, הפיך` — מנגנון, לא מוצר: אין כאן נוסח חדש ואין שינוי במה שמיוצא.
+  const [derivedLoading, setDerivedLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -249,6 +367,8 @@ export default function CustomersPage() {
           setScreenParamsFailed(true)
         }
       }
+      // שתי השליפות הנגזרות הסתיימו (כל אחת בהצלחה או בכישלון מוצהר) ⇒ החלון רשאי לייצא.
+      if (!cancelled) setDerivedLoading(false)
     })()
     return () => {
       cancelled = true
@@ -256,6 +376,8 @@ export default function CustomersPage() {
   }, [reloadTick])
 
   function reloadCustomers() {
+    // מאפס את דגל-הנגזרות כאן (מטפל-אירוע) ולא ב-effect — `react-hooks/set-state-in-effect`.
+    setDerivedLoading(true)
     setReloadTick((t) => t + 1)
   }
 
@@ -398,12 +520,24 @@ export default function CustomersPage() {
     // `deriveCustomerMetrics` — אותה פונקציה שהכרטיס קורא לה — כדי שהרשימה והכרטיס לא יוכלו
     // להציג שני ממוצעים שונים לאותו לקוח (⑨/כלל 14). מסנן-האוכלוסייה (`completed` בלבד, ה8)
     // חי שם ולא כאן.
-    const withDerived = customers.map((c) => ({
-      ...c,
-      total_revenue: revenueByCustomer?.[c.customer_id]?.totalRevenue ?? null,
-      is_dormant: isCustomerDormant(projectsByCustomer[c.customer_id], today, dormantThresholdDays),
-      avg_feedback: deriveCustomerMetrics(projectsByCustomer[c.customer_id] ?? []).avgFeedback,
-    }))
+    const withDerived = customers.map((c) => {
+      const avg_feedback = deriveCustomerMetrics(
+        projectsByCustomer[c.customer_id] ?? [],
+      ).avgFeedback
+      return {
+        ...c,
+        total_revenue: revenueByCustomer?.[c.customer_id]?.totalRevenue ?? null,
+        is_dormant: isCustomerDormant(
+          projectsByCustomer[c.customer_id],
+          today,
+          dormantThresholdDays,
+        ),
+        avg_feedback,
+        // 23/09/2026 — לעמודת "טעון בירור" בחלון-הייצוא: אותה `needsSatisfactionAttention`
+        // שהתא על המסך קורא לה, נגזרת פעם אחת על השורה כדי שהקובץ והתג לא יוכלו לסטות.
+        needs_attention: needsSatisfactionAttention(avg_feedback, satisfactionThreshold),
+      }
+    })
     // מסנן-הסטטוס: 'active'/'inactive' מסננים לסטטוס יחיד, 'all' מסיר את ההגבלה (status=undefined).
     // createdAfter ("נוספו לאחרונה") מחושב במסננת (event handler) ומגיע דרך ...filters — לא כאן,
     // כדי לא לקרוא Date.now בזמן רינדור (react-hooks/purity).
@@ -439,6 +573,25 @@ export default function CustomersPage() {
   // רק עמוד. `paginate` גוזרת את `page` לטווח החוקי בעצמה (רשימה שהתקצרה אחרי סינון).
   const pagedResult = useMemo(() => paginate(visibleCustomers, page), [visibleCustomers, page])
   const pagedCustomers = pagedResult.pageRows
+
+  // חלון-הייצוא (23/09/2026). שם-הקובץ מאותו `buildExportFileName` שמודול 11 והפרויקטים
+  // משתמשים בו — בונה אחד לשם-קובץ. תווית-החלון היא תצוגת-הסטטוס (פעילים/ארכיון): ללקוחות
+  // אין לשוניות ואין חלון-זמן, וזו ההבחנה היחידה שהמסך עצמו עושה בין שתי רשימות.
+  const [exportOpen, setExportOpen] = useState(false)
+  // 🔴 כשל-טעינה אינו קובץ-חלקי-שנראה-שלם. הסוכן-היריב (23/09/2026) מדד: אחרי כשל ב-`listQuotes`
+  // עמודת-הכסף הייתה יורדת ריקה כולה, וכשל ב-`getCustomerScreenParams` היה מוריד "לא" כעובדה
+  // בעמודות "רדום"/"טעון בירור" ומרוקן את "שביעות רצון" — בלי שום סימן בקובץ. הבאנר על המסך
+  // אינו נוסע עם ה-xlsx. ⇒ החלון נחסם עם הסיבה (אותו מנגנון של מודול 11, `blockedReason`), ו"נסי
+  // שוב" שבבאנר פותח אותו מחדש. `הכרעתי, הפיך` — הדוקטרינה של `src/CLAUDE.md §3` (כשל ≠ ריק).
+  const exportBlock = exportBlockFor(revenueLoadFailed, screenParamsFailed)
+  const exportFileName = useMemo(
+    () =>
+      buildExportFileName({
+        reportName: 'לקוחות',
+        windowLabel: statusView === 'inactive' ? 'ארכיון' : 'פעילים',
+      }),
+    [statusView],
+  )
 
   // מפתח-רענון לאזור-השיווק: משתנה בדיוק כשקבוצת המאושרים-הפעילים משתנה (מתג-הסכמה/ארכוב/עריכה),
   // כדי שהפאנל יביא-מחדש את רשימת-הנמענים מ-getConsentedCustomers ולא יפגר. מפתח-מטמון בלבד,
@@ -751,6 +904,19 @@ export default function CustomersPage() {
                   </>
                 )}
               </Button>
+              {/* ייצוא לאקסל (23/09/2026) — בשורת-המסננים כמו בפרויקטים ובמודול 11, ובסגנון הכפתורים
+                  של השורה הזו (מעבר-אחידות). 🔑 **פעיל תמיד, וגם ל-view:** החלון עצמאי ואומר בעצמו
+                  כשאין מה לייצא (הכרעת-ישי 17/09, ת4ב), וה-RLS הוא מה שמגדר את הנתונים — לא הכפתור. */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setExportOpen(true)}
+                className="h-auto py-2.5 px-4 rounded-lg border-slate-300 text-slate-700 gap-2"
+                data-testid="customers-export-button"
+              >
+                <Download className="size-4" aria-hidden="true" />
+                ייצוא
+              </Button>
             </div>
 
             {showFilters && (
@@ -890,7 +1056,7 @@ export default function CustomersPage() {
                                 האלמנט שנושא את הערך עצמו, לא על עוטף: תווית-RTL שנפרדת מערך-LTR
                                 היא הכשל שחזר שלוש פעמים (src/CLAUDE.md). */}
                               {contact?.phone && (
-                                <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
+                                <div dir="ltr" className="text-xs text-slate-500 text-right">
                                   {contact.phone}
                                 </div>
                               )}
@@ -906,7 +1072,7 @@ export default function CustomersPage() {
                                   href={`mailto:${encodeURIComponent(contact.email)}`}
                                   title={`מייל ל${contact.contact_name || 'איש הקשר'}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
+                                  className="inline-block mt-1 text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
                                   data-testid={`customer-mailto-${customer.customer_id}`}
                                 >
                                   ✉ מייל
@@ -1027,6 +1193,39 @@ export default function CustomersPage() {
               total={pagedResult.total}
               onPage={setPage}
             />
+            {/*
+              🔑 **החלון מקבל `visibleCustomers` ולא `pagedCustomers`:** הכרעת-ישי 17/09
+              *"כל השורות שעומדות במסנן"* — קובץ שמכיל עמוד אחד מתוך שניים הוא בדיוק החיתוך-השקט
+              שכל המנגנון נבנה למנוע. אין שליפה שנייה: `listCustomers` כבר הביא הכול (fetchAll).
+              ⚠️ `permissions` אינו מועבר במכוון — ר' ההערה מעל `EXPORT_COLUMNS`.
+            */}
+            {exportOpen && (
+              <ExportDialog
+                open={exportOpen}
+                onOpenChange={setExportOpen}
+                title="ייצוא לקוחות לאקסל"
+                columns={EXPORT_COLUMNS}
+                rows={visibleCustomers}
+                loading={derivedLoading}
+                blockedReason={exportBlock.reason}
+                // החלון מודאלי, והבאנר עם "נסי שוב" נשאר מאחוריו ⇒ הכפתור חייב להיות גם כאן
+                // (`error` הוא מה שמרנדר אותו בתצוגה-המקדימה). נמצא במסך-הכספים, תוקן בשניהם.
+                error={exportBlock.error}
+                onRetry={reloadCustomers}
+                buildSheet={buildExportSheet}
+                knownMessages={EXPORT_LOCKED_MESSAGES}
+                fileName={exportFileName}
+                onExport={({ columns: picked, rows: pickedRows, scope, count }) =>
+                  exportReportRows({
+                    fileName: exportFileName,
+                    sheetName: 'לקוחות',
+                    columns: picked,
+                    rows: pickedRows,
+                    meta: { scope, count, generatedAt: new Date() },
+                  })
+                }
+              />
+            )}
           </>
         )}
       </div>

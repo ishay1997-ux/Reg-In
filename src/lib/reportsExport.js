@@ -15,6 +15,8 @@
 
 import writeXlsxFile from 'write-excel-file'
 import { formatIsraelDate } from '@/lib/reportsFormat'
+// 🔑 װ`exportColumns.js` אינו מייבא דבר ⇒ אין מעגל-ייבוא. **אותה דלת-קריאה, לא העתק.**
+import { isVisible, readCell } from '@/lib/exportColumns'
 
 // 🔤 **שלושת המצבים הריקים נעולים מילה-במילה** — ת4 ו-`cards-customers.md` G-ל8. הם מועתקים
 // ולא מנוסחים מחדש: שינוי-נוסח כאן הוא שינוי-מוצר בשלושה-עשר כרטיסים בבת-אחת.
@@ -94,30 +96,11 @@ export function buildExportFileName({ reportName, windowLabel, drillLabel } = {}
   return `${parts.join('_')}.xlsx`
 }
 
-/**
- * שתי שורות-הכיתוב שיושבות מתחת לשורת-המסננים **לפני** הלחיצה (ת4 · `cards-*.md §⑤` שורה 5):
- * השורה הראשונה נוקבת בשם-הקובץ הצפוי, השנייה בשמות-העמודות שיירדו.
- *
- * 🔑 **למה זה חשוב ולא קישוט:** הייצוא מוריד את **מצב-המסך** — מסננים ורמת-דריל כלולים.
- * בלי הכיתוב, המשתמשת לוחצת בלי לדעת אם תקבל 12 שורות או 700, והפער מתגלה רק באקסל.
- * ⚠️ **ומצב בלי טבלה אינו "כיתוב ריק"** — הוא אומר זאת במפורש (📐10: לכל דף יש מצב מוגדר).
- */
-export function exportCaption({ fileName, columns, rowCount, blockedReason } = {}) {
-  if (blockedReason) return { file: blockedReason, columns: null, disabled: true }
-
-  const names = (columns ?? []).map((c) => c.label).filter(Boolean)
-  if (names.length === 0) {
-    return { file: EXPORT_NO_TABLE, columns: null, disabled: true }
-  }
-  if (rowCount === 0) {
-    return { file: EXPORT_NO_ROWS, columns: `עמודות: ${names.join(' · ')}`, disabled: true }
-  }
-  return {
-    file: `יירד: ${fileName}`,
-    columns: `עמודות: ${names.join(' · ')}`,
-    disabled: false,
-  }
-}
+// 🗑️ **`exportCaption` הוסרה 17/09/2026 (הכרעת-ישי: *"מאשר לפי המלצך"*).** היא בנתה את שתי
+// שורות-הכיתוב שמתחת לכפתור — הבטחה-לפני-לחיצה שהייתה נחוצה כשהלחיצה הורידה **מיד**.
+// מרגע שהכפתור פותח חלון עם תצוגה-מקדימה, ההבטחה יושבת שם ונגזרת מ-`buildExportFileName`,
+// ושורה שמבטיחה דוח שאולי כלל לא ייבחר היא הבטחה שקרית. ⇒ נמחקה ולא הושארה כקוד-מת.
+// 🔤 **שלוש המחרוזות הנעולות נשארו** — `exportReportRows` זורקת אותן, והחלון מציג אותן.
 
 // 🔴 **התא נבנה מהפורמט שה-RPC הכריז עליו (C8), ולא מ-`typeof` של הערך.** ההבדל אינו
 // אקדמי: סכום שמגיע כ-`"1250"` (מחרוזת) היה נוחת באקסל כטקסט, ות4 דורש במפורש *"סכומים
@@ -150,7 +133,11 @@ function numericCell(value, format) {
  */
 const BIDI_CONTROLS = /[‎‏؜⁦-⁩‪-‮]/g
 
-const stripBidiControls = (text) => text.replace(BIDI_CONTROLS, '')
+// 🔑 **מיוצא — ולא מועתק — כי מנוע-הסינון חייב להשוות על אותו טקסט בדיוק** (`exportFilters.js`).
+// ‏why: ערך שנושא תו-בידוד בלתי-נראה נראה על המסך זהה לחלוטין, אבל `'עמק חפר' === '⁦עמק חפר⁩'`
+// הוא `false`. מסנן שמשווה על הגולמי היה מחזיר *"אין שורות"* על חיפוש שהמשתמשת רואה בעיניה
+// שהוא תואם — **כשל שקט מושלם**. עותק שני של הביטוי היה נפרד ביום שהרשימה תתעדכן.
+export const stripBidiControls = (text) => text.replace(BIDI_CONTROLS, '')
 
 function cellFor(value, format) {
   switch (format) {
@@ -186,13 +173,19 @@ function cellFor(value, format) {
  * ממפה שורות+עמודות של C8 לגיליון של `write-excel-file`: שורת-כותרת מודגשת ואז השורות.
  * טהור — כדי שייבדק ביחידה בלי לדמות הורדת-קובץ.
  */
-export function buildExportSheet({ columns, rows }) {
-  const header = (columns ?? []).map((c) => ({
+export function buildExportSheet({ columns, rows, permissions }) {
+  // 🔴🔴 **הסינון חוזר כאן במכוון, וזו אינה כפילות.** װ`applyColumnOrder` אכף
+  // כבר את `visible`, אבל **הפונקציה הזו היא זו שכותבת את הקובץ**, והיא
+  // מיוצאת וניתנת לקריאה ישירה מכל מסך עתידי שלא יעבור דרך החלון.
+  // 🔑 **השאלה אינה "האם המסלול הרגיל מסנן" אלא "האם קיים מסלול שעוקף"** —
+  // ודליפת-שכר היא טעות בלתי-נראית: אין מסך שמראה אותה ואין בדיקה שנופלת עליה.
+  const visible = (columns ?? []).filter((c) => isVisible(c, permissions))
+  const header = visible.map((c) => ({
     value: c.label,
     type: String,
     fontWeight: 'bold',
   }))
-  const body = (rows ?? []).map((row) => (columns ?? []).map((c) => cellFor(row[c.key], c.format)))
+  const body = (rows ?? []).map((row) => visible.map((c) => cellFor(readCell(row, c), c.format)))
   return [header, ...body]
 }
 
@@ -200,15 +193,70 @@ export function buildExportSheet({ columns, rows }) {
  * ההורדה עצמה. **זורק** כשאין מה לייצא — ולא מוריד קובץ ריק בשקט: קובץ בן שורת-כותרת
  * בלבד נראה כמו ייצוא שהצליח, וזו בדיוק ההטעיה ש-`EXPORT_NO_ROWS` נועד למנוע על המסך.
  */
-export function exportReportRows({ fileName, sheetName, columns, rows }) {
-  if (!columns || columns.length === 0) throw new Error(EXPORT_NO_TABLE)
+export const META_SHEET_NAME = 'פרטי הדוח'
+
+/**
+ * הגיליון השני — **ההקשר שהקובץ נושא איתו לכל מקום** (הכרעת-ישי 17/09/2026: *"לפי המלצתך"*).
+ *
+ * 🔑 **למה הוא קיים:** הקובץ מגיע למי שאין לו את המערכת, ובעוד חודשיים מישהו יצטט ממנו מספרים
+ * בישיבה בלי לדעת על איזו תקופה הם. שם-הקובץ לבדו אינו נקרא אחרי ששולחים אותו הלאה.
+ *
+ * 🔴 **גיליון שני ולא שורות בראש הטבלה — ולא מטעמי יופי:** שורות-מטא מעל הנתונים שוברות כל
+ * `VLOOKUP`, כל מיון וכל טבלת-ציר שהרו"ח יבנה. **הגיליון הראשון נשאר טבלה טהורה**, שורת-הכותרת
+ * בשורה 1.
+ *
+ * ⚠️ **`scope` ו-`count` מגיעים מבחוץ ואינם מחושבים כאן** — הם **אותן מחרוזות בדיוק** שהמשתמשת
+ * ראתה בחלון לפני הלחיצה. גזירה שנייה כאן הייתה נפרדת מהראשונה ביום שאחת מהן תשתנה.
+ * ⚠️ **`generatedAt` מוזרק** ואינו `new Date()` פנימי — אחרת הבדיקה מודדת את השעון.
+ */
+export function buildMetaSheet({ reportName, scope, count, generatedAt } = {}) {
+  const at = generatedAt instanceof Date ? generatedAt : new Date(generatedAt ?? Date.now())
+  const stamp = Number.isNaN(at.getTime())
+    ? '—'
+    : `${formatIsraelDate(at.toISOString())} ${at.toLocaleTimeString('he-IL', {
+        timeZone: 'Asia/Jerusalem',
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+
+  const pairs = [
+    ['דוח', reportName ?? '—'],
+    ['חל על הקובץ', scope ?? '—'],
+    ['שורות בקובץ', count ?? '—'],
+    ['הופק', stamp],
+  ]
+  return pairs.map(([label, value]) => [
+    { value: label, type: String, fontWeight: 'bold' },
+    { value: stripBidiControls(String(value)), type: String },
+  ])
+}
+
+/**
+ * ההורדה עצמה. **זורק** כשאין מה לייצא — ולא מוריד קובץ ריק בשקט: קובץ בן שורת-כותרת
+ * בלבד נראה כמו ייצוא שהצליח, וזו בדיוק ההטעיה ש-`EXPORT_NO_ROWS` נועד למנוע על המסך.
+ */
+export function exportReportRows({ fileName, sheetName, columns, rows, meta, permissions }) {
+  // 🔴 **השומר מודד את הרשימה המסוננת, וזה תיקון של דלת שהיתה פתוחה.**
+  // װ📊 **נמדד 22/09/2026:** כשהשומר בדק את `columns` הגולמי, רשימה שכולה
+  // מוסתרת עברה אותו, ו-`buildExportSheet` החזיר גיליון ריק ⇒ **קובץ בלי
+  // אף עמודה ירד בשקט** — בדיוק ההטעיה ש-`EXPORT_NO_TABLE` נולד כדי למנוע.
+  const permitted = (columns ?? []).filter((c) => isVisible(c, permissions))
+  if (permitted.length === 0) throw new Error(EXPORT_NO_TABLE)
   if (!rows || rows.length === 0) throw new Error(EXPORT_NO_ROWS)
 
-  return writeXlsxFile(buildExportSheet({ columns, rows }), {
-    fileName,
-    sheet: sanitizeSheetName(sheetName),
-    // 🔴 האופציה שכל הייצוא העברי תלוי בה — ר' הערת-הכותרת.
-    rightToLeft: true,
-    columns: columns.map((c) => ({ width: c.label && c.label.length > 14 ? 26 : 16 })),
-  })
+  const dataWidths = permitted.map((c) => ({ width: c.label && c.label.length > 14 ? 26 : 16 }))
+
+  return writeXlsxFile(
+    [
+      buildExportSheet({ columns: permitted, rows, permissions }),
+      buildMetaSheet({ reportName: sheetName, ...meta }),
+    ],
+    {
+      fileName,
+      sheets: [sanitizeSheetName(sheetName), META_SHEET_NAME],
+      // 🔴 האופציה שכל הייצוא העברי תלוי בה — ר' הערת-הכותרת. **חלה על שני הגיליונות.**
+      rightToLeft: true,
+      columns: [dataWidths, [{ width: 22 }, { width: 60 }]],
+    },
+  )
 }

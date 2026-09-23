@@ -129,6 +129,9 @@ export default function ReportTable({
   onDrill,
   announcement = '',
   caption,
+  // ✏️ 23/09/2026 — רשימת-שיא (`surface.topN`) אינה מדפדפת: פאג'ר שאומר "1–8 מתוך 8" מעל
+  // רשימה של 8 מתוך 246 הוא המונה-השקרן של הכרעת-ישי 4. הכותרת הכנה יושבת מעל הטבלה.
+  hidePager = false,
 }) {
   if (columns.length === 0) return null
   const view = paginate(rows, page)
@@ -169,7 +172,7 @@ export default function ReportTable({
         </table>
       </div>
       {/* 📐8 — `total` הוא `rows.length` שכבר עבר את המסננים ואת הבחירה-בגרף. */}
-      <Pager {...view} onPage={onPage} testId="report-pager" />
+      {!hidePager && <Pager {...view} onPage={onPage} testId="report-pager" />}
     </div>
   )
 }

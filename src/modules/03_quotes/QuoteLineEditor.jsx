@@ -192,7 +192,7 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                     {isInactiveProduct && (
                       <span
                         id={inactiveNoticeId}
-                        className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-700"
+                        className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700"
                         data-testid={`quote-line-inactive-${line.key}`}
                       >
                         מוצר מושבת — לא יוצע בהצעות חדשות

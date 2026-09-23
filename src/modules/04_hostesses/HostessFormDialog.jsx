@@ -391,7 +391,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                   data-testid="hostess-hourly-rate"
                 />
                 {isEdit && (
-                  <span className="mt-1 block text-[11px] text-amber-700">
+                  <span className="mt-1 block text-xs text-amber-700">
                     שינוי כאן <b>לא משפיע</b> על תעריף שכבר הוקפא בשיבוץ קיים — הוא יחול רק על
                     השיבוץ הבא
                   </span>
@@ -480,7 +480,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                   {ranges.map((range, index) => (
                     <div
                       key={`${range.start_date}-${range.end_date}-${index}`}
-                      className="mb-1.5 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[12.5px] text-amber-800"
+                      className="mb-1.5 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-800"
                       data-testid={`hostess-range-${index}`}
                     >
                       <span>
@@ -579,15 +579,15 @@ function Field({ label, hint, error, warning, children, compact, grow }) {
       {/* ✏️ 09/09/2026 13:1X — הכרעת-ישי ("מוצר בוגר בבסיס, הסברים לשכבה"): ההסבר אינו חלק מהתווית
           (R1: תווית 1–3 מילים) אלא שורת-עזר מתחתיה (R3); שני מעריכי-שלב-10 מדדו "תווית — הרצאה" בשישה שדות. */}
       <label className="mb-1 block text-xs font-medium text-slate-600">{label}</label>
-      {hint && <span className="-mt-0.5 mb-1 block text-[11px] text-slate-400">{hint}</span>}
+      {hint && <span className="-mt-0.5 mb-1 block text-xs text-slate-400">{hint}</span>}
       {children}
       {error && (
-        <span className="mt-1 block text-[11px] font-semibold text-red-600" role="alert">
+        <span className="mt-1 block text-xs font-semibold text-red-600" role="alert">
           {error}
         </span>
       )}
       {!error && warning && (
-        <span className="mt-1 block text-[11px] font-semibold text-amber-700">{warning}</span>
+        <span className="mt-1 block text-xs font-semibold text-amber-700">{warning}</span>
       )}
     </div>
   )

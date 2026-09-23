@@ -71,7 +71,7 @@ function TwoMethodsBanner({ payload }) {
   const dormant = personal.detail?.dormant_rule_finds
   return (
     <p
-      className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px] leading-relaxed text-slate-700"
+      className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-relaxed text-slate-700"
       data-testid="drifting-two-methods"
     >
       <b>שתי שיטות לאותה שאלה, וההפרש הוא הדף הזה.</b> <b>&quot;רדום&quot;</b> — הדגל שכבר קיים
@@ -98,10 +98,10 @@ function PaymentCadenceDetails({ payload }) {
       className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
       data-testid="m19-payment-detail"
     >
-      <summary className="cursor-pointer text-[12.5px] font-semibold text-slate-700">
+      <summary className="cursor-pointer text-sm font-semibold text-slate-700">
         {tile.label} — הפילוח המלא
       </summary>
-      <ul className="mt-2 space-y-1 text-[12px] text-slate-600">
+      <ul className="mt-2 space-y-1 text-sm text-slate-600">
         {rows.map((row) => (
           <li key={row.customerType}>
             {row.label}: {formatByType(row.medianDays, 'days')} · על{' '}
@@ -122,8 +122,8 @@ function NoApprovedRun({ payload, hintId }) {
   return (
     <section className="mb-4" data-testid="m22-no-run">
       <div className="rounded-xl border border-slate-200 bg-white p-4">
-        <p className="text-[15px] font-semibold text-slate-800">טרם אושרה ריצת-ניתוח</p>
-        <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600">
+        <p className="text-base font-semibold text-slate-800">טרם אושרה ריצת-ניתוח</p>
+        <p className="mt-1 text-sm leading-relaxed text-slate-600">
           הדוח הזה מציג רק תוצאות של ריצה שאושרה להצגה, כדי שלא יוצג על המסך סיווג שאיש לא בדק.
           להרצה יש שני שלבים: הרצה, ואז בדיקה של {isolateLtr('20')} דוגמאות ואישור.
         </p>
@@ -131,10 +131,10 @@ function NoApprovedRun({ payload, hintId }) {
       {hintId && <Hint id={hintId} />}
       {quotes.length > 0 && (
         <details className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
-          <summary className="cursor-pointer text-[12.5px] font-semibold text-slate-700">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">
             מה כבר אפשר לקרוא בלי המודל — דוגמאות מההערות שתויגו &quot;אחר&quot;
           </summary>
-          <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-slate-600">
+          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-600">
             {quotes.map((quote) => (
               <li key={quote.project_id}>
                 <b>{quote.company_name}</b> · {isolateLtr(formatIsraelDate(quote.final_event_date))}{' '}

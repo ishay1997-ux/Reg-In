@@ -332,15 +332,15 @@ function safeQuoteTotal(quote) {
 function IdentityCell({ label, children }) {
   return (
     <div className="flex flex-col items-start">
-      <span className="text-[11px] text-slate-500">{label}</span>
-      <span className="text-[12.5px] font-semibold text-slate-800">{children}</span>
+      <span className="text-xs text-slate-500">{label}</span>
+      <span className="text-sm font-semibold text-slate-800">{children}</span>
     </div>
   )
 }
 
 const NUM_TD = 'border-b border-slate-100 px-2 py-2 text-left align-middle whitespace-nowrap'
 const NUM_TH =
-  'border-b border-slate-200 px-2 py-1.5 text-left text-[11.5px] font-semibold whitespace-nowrap text-slate-500'
+  'border-b border-slate-200 px-2 py-1.5 text-left text-xs font-semibold whitespace-nowrap text-slate-500'
 
 // 🔑 מזהה-התיאור נגזר בפונקציה אחת כדי ש**שדה-הכמות וכפתור-ההסרה יצביעו לאותו אלמנט**:
 // משפט-הסיבה נכתב על המסך פעם אחת בלבד (מעבר-המלאי ב-`src/CLAUDE.md`: שניים באותו תפקיד
@@ -394,18 +394,14 @@ function QtyInput({
         onChange={onChange}
       />
       {error ? (
-        <div
-          id={describedById}
-          className="mt-1 text-[11px] font-semibold text-red-600"
-          role="alert"
-        >
+        <div id={describedById} className="mt-1 text-xs font-semibold text-red-600" role="alert">
           {error}
         </div>
       ) : hint ? (
         // ㉚ — הפקד נשאר, והסיבה יושבת לצידו **גם בלי שהיא תקליד אפס**: "כפתור מושבת
         // מלמד אותה את החוק". וכשהיא כן מקלידה אפס, אותו משפט עצמו עולה באדום למעלה —
         // הודעה אחת, לא שתיים שאומרות את אותו דבר בשני צבעים.
-        <div id={describedById} className="mt-1 text-[11px] text-slate-500">
+        <div id={describedById} className="mt-1 text-xs text-slate-500">
           {hint}
         </div>
       ) : null}
@@ -437,7 +433,7 @@ function RemovalButton({
       type="button"
       // אדום = הרסני בשפת-העיצוב של הבית; הביטול הוא פעולה מחזירה ולכן ניטרלי — ואין
       // בשפה הזאת צבע "מותר לך", ולא ממציאים אחד.
-      className={`mt-1 block text-[11.5px] font-semibold whitespace-nowrap disabled:text-slate-400 ${
+      className={`mt-1 block text-xs font-semibold whitespace-nowrap disabled:text-slate-400 ${
         marked ? 'text-slate-600' : 'text-red-600'
       }`}
       // 🔴 נסגר על `removable` (שני תנאי ㊱) ולא על "יש סיבת-חסימה": היום שניהם משלימים
@@ -490,7 +486,7 @@ function ExistingLineRow({ state, quoteReadable, submitting, onQtyChange }) {
         >
           {model.name}
         </div>
-        <div className="mt-0.5 text-[11.5px] text-slate-500">
+        <div className="mt-0.5 text-xs text-slate-500">
           {model.subLabel}
           {statusLabel ? (
             <>
@@ -510,7 +506,7 @@ function ExistingLineRow({ state, quoteReadable, submitting, onQtyChange }) {
         {marked ? (
           // הכמות אינה נערכת יותר — השורה כולה יוצאת. שדה-מספר שהיה נשאר על המסך היה
           // מזמין אותה "לתקן" כמות של פריט שלא יהיה, ומטשטש את מה שהיא בעצם עשתה.
-          <div className="text-[12.5px] font-bold text-red-700">יוסר</div>
+          <div className="text-sm font-bold text-red-700">יוסר</div>
         ) : (
           <QtyInput
             value={raw}
@@ -570,7 +566,7 @@ function NewItemRow({ state, index, addableProducts, submitting, onChange, onRem
             </option>
           ))}
         </select>
-        <div className="mt-0.5 text-[11.5px] text-slate-500">
+        <div className="mt-0.5 text-xs text-slate-500">
           לא היה בהצעה
           {/* ✏️ שלב 4 (R12: כפתור = פועל בנקבה, לא שם-עצם) — "הסרה" הוחלף בפועל. נבחר
               "בטלי הוספה" ולא "הסירי" כדי לשמור על ההבחנה המכוונת מול "הסירי פריט"
@@ -590,7 +586,7 @@ function NewItemRow({ state, index, addableProducts, submitting, onChange, onRem
       <td className={`${NUM_TD} text-slate-600`}>
         {price !== null ? <Money exact amount={price} /> : <Ltr>—</Ltr>}
         {tier ? (
-          <div className="text-[11.5px] text-slate-500">
+          <div className="text-xs text-slate-500">
             מדרגה <Ltr>{`${tier.min_qty}–${tier.max_qty ?? ''}`}</Ltr>
           </div>
         ) : null}
@@ -624,7 +620,7 @@ function MoneyRow({ label, amount, quoteReadable, bold, testId }) {
       className={
         bold
           ? 'flex items-baseline justify-between py-1.5 text-sm font-bold text-slate-800'
-          : 'flex items-baseline justify-between border-b border-slate-100 py-1.5 text-[12.5px] text-slate-600'
+          : 'flex items-baseline justify-between border-b border-slate-100 py-1.5 text-sm text-slate-600'
       }
     >
       <span>{label}</span>
@@ -673,9 +669,7 @@ function MoneySummary({ money }) {
             שמעל כבר מציגה את האחוז המאוחד; הפירוט עצמו רשום כמועמד לשכבה בדוח-הכתיבה. מה
             שנשאר כאן הוא הסייג שכן חיוני: המע"מ קפוא, לא מחושב לפי שיעור-היום. */}
         {readable ? (
-          <div className="pb-2 text-[11px] text-slate-500">
-            מע"מ לפי השיעור שהוקפא באישור ההצעה.
-          </div>
+          <div className="pb-2 text-xs text-slate-500">מע"מ לפי השיעור שהוקפא באישור ההצעה.</div>
         ) : null}
         <Hint id="scope.discountFormula" />
       </div>
@@ -686,7 +680,7 @@ function MoneySummary({ money }) {
 function ConsequenceRow({ label, children }) {
   return (
     <div className="flex gap-2.5 border-b border-slate-100 px-3 py-2 text-xs last:border-b-0">
-      <span className="w-[78px] flex-none pt-px text-[11.5px] text-slate-500">{label}</span>
+      <span className="w-[78px] flex-none pt-px text-xs text-slate-500">{label}</span>
       <span className="leading-relaxed text-slate-700">{children}</span>
     </div>
   )
@@ -964,7 +958,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
         <table className="mt-1.5 w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th className="w-[34%] border-b border-slate-200 px-2 py-1.5 text-right text-[11.5px] font-semibold text-slate-500">
+              <th className="w-[34%] border-b border-slate-200 px-2 py-1.5 text-right text-xs font-semibold text-slate-500">
                 פריט
               </th>
               <th className={`w-[15%] ${NUM_TH}`}>מחיר ליח' · קפוא</th>
@@ -1003,7 +997,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
         <div className="pt-2">
           <button
             type="button"
-            className="text-[12.5px] font-semibold whitespace-nowrap text-teal-700"
+            className="text-sm font-semibold whitespace-nowrap text-teal-700"
             data-testid="scope-add-item"
             disabled={submitting}
             onClick={() =>
@@ -1015,7 +1009,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           >
             + פריט שאינו בהצעה
           </button>
-          <span className="mr-2 text-[11.5px] text-slate-400">
+          <span className="mr-2 text-xs text-slate-400">
             פריט חדש נכנס לפי מדרגת-המחיר בקטלוג היום, ומקבל את הנחת ההצעה
           </span>
         </div>
@@ -1053,7 +1047,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
       ) : null}
 
       {tierNotices.map((notice) => (
-        <div key={notice} className="text-[11.5px] text-slate-500" data-testid="scope-tier-notice">
+        <div key={notice} className="text-xs text-slate-500" data-testid="scope-tier-notice">
           {notice}
         </div>
       ))}
@@ -1110,7 +1104,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
         />
         {reasonEmpty && changedCount > 0 ? (
           <span
-            className="text-[11px] font-semibold text-red-600"
+            className="text-xs font-semibold text-red-600"
             role="alert"
             data-testid="scope-reason-error"
           >
@@ -1119,13 +1113,13 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
         ) : (
           // ✏️ שלב 4 — משפט אחד (R3/R13): "חובה" ו"בלי סיבה אי-אפשר לשמור" אמרו את אותו
           // דבר פעמיים (R27) — ומה שהיה חסר, נכנס: מותנית בזה שהסיבה גם נשמרת בהיסטוריה.
-          <span className="text-[11px] text-slate-500">
+          <span className="text-xs text-slate-500">
             חובה למלא — הסיבה נשמרת עם השינוי ומוצגת בהיסטוריה שבלשונית הלוגיסטיקה.
           </span>
         )}
       </div>
 
-      <div className="text-[11px] text-slate-500">
+      <div className="text-xs text-slate-500">
         יירשם אוטומטית — {user?.fullName ?? user?.email ?? '—'} ·{' '}
         <Ltr>{formatTimestamp(loadedAt.toISOString())}</Ltr>
       </div>
@@ -1160,7 +1154,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           ביטול
         </Button>
         {changedCount === 0 ? (
-          <span className="self-center text-[11.5px] text-slate-400" data-testid="scope-no-change">
+          <span className="self-center text-xs text-slate-400" data-testid="scope-no-change">
             {NO_CHANGE_MESSAGE}
           </span>
         ) : null}

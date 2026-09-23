@@ -80,10 +80,10 @@ const DEFAULT_PILL = 'needsAction'
 // טוני שורת-הנימוק — תרגום 1:1 של מחלקות המוקאפ (`.miss`/`.hint`/`.done`/`.calm`), זהה
 // למפה של מבט-העל במ6: המילה נושאת את המשמעות, הצבע רק מדגיש.
 const REASON_TONES = {
-  miss: 'text-red-600 text-[11.5px] font-semibold',
-  hint: 'text-amber-700 text-[11px] font-semibold',
-  done: 'text-slate-500 text-[11.5px]',
-  calm: 'text-slate-400 text-[11.5px]',
+  miss: 'text-red-600 text-xs font-semibold',
+  hint: 'text-amber-700 text-xs font-semibold',
+  done: 'text-slate-500 text-xs',
+  calm: 'text-slate-400 text-xs',
 }
 
 // ── המחרוזות שמקורן המוקאפ המאושר (S-3 · S-2, מדריך-המיקרו §3.7) ─────────────
@@ -295,7 +295,7 @@ export default function LogisticsPage() {
                 // ל-no-op בדיוק במצב היחיד שבו הוא מוצג. התקדים המוזג עושה בדיוק את זה
                 // (`ProjectsPage.jsx` — `onClear` מעביר ל-`all`). מדווח לישי.
                 onClick={() => setPill('all')}
-                className="h-auto p-0 text-[12.5px] font-semibold text-teal-700"
+                className="h-auto p-0 text-sm font-semibold text-teal-700"
                 data-testid="logistics-clear-filter"
               >
                 {CLEAR_FILTER_LABEL}
@@ -338,7 +338,7 @@ function PageHeader({ today }) {
   return (
     <div className="mb-4">
       <h1 className="text-lg font-bold text-slate-800">לוגיסטיקה</h1>
-      <div className="mt-0.5 text-[12px] text-slate-500" data-testid="logistics-today">
+      <div className="mt-0.5 text-sm text-slate-500" data-testid="logistics-today">
         היום: <Ltr>{formatDate(today)}</Ltr> · יום {weekdayOf(today)}
       </div>
     </div>
@@ -376,7 +376,7 @@ function PillsBar({ counts, pill, onSelect }) {
       })}
       {/* כיתוב-מיון, לא פקד (תקדים מ4/מ6): אין מיון-בלחיצה-על-כותרת ואין מימד-מיון שני —
           הגלולה כבר עשתה את מה ש"חסרים תחילה" עושה שם. */}
-      <span className="mr-auto text-[12px] text-slate-400">{QUEUE_SORT_LINE}</span>
+      <span className="mr-auto text-sm text-slate-400">{QUEUE_SORT_LINE}</span>
     </div>
   )
 }
@@ -395,7 +395,7 @@ function OutboundSection({ entries, today, onOpen }) {
         // מצב ⑥ — **הסעיף נשאר על המסך** (S-7). סעיף שנעלם מלמד אותה שהוא לא תמיד שם,
         // ואז היא תפסיק לסמוך עליו — וזה הרוב המוחלט של הימים.
         <p
-          className="px-4 py-6 text-center text-[12.5px] text-slate-500"
+          className="px-4 py-6 text-center text-sm text-slate-500"
           data-testid="logistics-outbound-empty"
         >
           {EMPTY_OUTBOUND_SENTENCE}
@@ -439,14 +439,14 @@ function OutboundRow({ entry, today, onOpen }) {
     >
       <Td>
         <div className="font-semibold text-slate-800">{project.event_name}</div>
-        <div className="mt-0.5 text-[11.5px] text-slate-500">{project.customer_name}</div>
+        <div className="mt-0.5 text-xs text-slate-500">{project.customer_name}</div>
         {/* ⑳ צובע **רקע-שורה**; הסעיף צובע **טקסט בלבד** (כרטיס §⑧-12) — כך שני הענברים
             שבמסך אינם נקראים כאותו סימון. */}
         <ReasonLine reason={reason} className="mt-[3px] block" />
       </Td>
       <Td>
-        <Ltr className="text-[13px]">{formatDate(project.final_event_date, '—')}</Ltr>
-        <span className="mt-0.5 block text-[11.5px] text-slate-400">
+        <Ltr className="text-sm">{formatDate(project.final_event_date, '—')}</Ltr>
+        <span className="mt-0.5 block text-xs text-slate-400">
           {proximitySentence(days)} · {weekdayOf(project.final_event_date)}
         </span>
       </Td>
@@ -536,13 +536,13 @@ function QueueRow({ entry, products, today, amberDays, onOpen }) {
           )}
           {project.event_name}
         </div>
-        <div className="mt-0.5 text-[11.5px] text-slate-500">{project.customer_name}</div>
+        <div className="mt-0.5 text-xs text-slate-500">{project.customer_name}</div>
       </Td>
       <Td>
-        <Ltr className="text-[13px]">{formatDate(project.final_event_date, '—')}</Ltr>
-        <span className="mt-0.5 block text-[11.5px] text-slate-400">{proximitySentence(days)}</span>
+        <Ltr className="text-sm">{formatDate(project.final_event_date, '—')}</Ltr>
+        <span className="mt-0.5 block text-xs text-slate-400">{proximitySentence(days)}</span>
         {glyphTitle && amber.businessDays !== null && (
-          <span className="block text-[11px] font-semibold text-amber-700">
+          <span className="block text-xs font-semibold text-amber-700">
             <Ltr>{String(amber.businessDays)}</Ltr> ימי עסקים
           </span>
         )}
@@ -569,7 +569,7 @@ function QueueRow({ entry, products, today, amberDays, onOpen }) {
             event.stopPropagation()
             onOpen(project.project_id)
           }}
-          className="h-auto p-0 text-[12.5px] font-semibold whitespace-nowrap text-teal-700"
+          className="h-auto p-0 text-sm font-semibold whitespace-nowrap text-teal-700"
           data-testid={`logistics-checklist-${project.project_id}`}
         >
           {CHECKLIST_LINK_LABEL}
@@ -612,7 +612,7 @@ function ReadinessCell({ metric }) {
   // שני מספרים ברצף אינם מבודדים — **מפרקים** אותם במילה עברית ביניהם (`src/CLAUDE.md`,
   // המופע התשיעי): `<Ltr>` על כל ערך בנפרד, לעולם לא על "1 מתוך 4" כמחרוזת אחת.
   return (
-    <span className="text-[13.5px] font-bold text-slate-800">
+    <span className="text-sm font-bold text-slate-800">
       <Ltr>{String(metric.ready)}</Ltr> מתוך <Ltr>{String(metric.total)}</Ltr>
     </span>
   )
@@ -639,7 +639,7 @@ function ReasonLine({ reason, className }) {
 // נשאלת מול המסך, בכנס.
 function AmberLegend() {
   return (
-    <div className="mt-2.5 text-[11.5px] leading-[1.8] text-slate-500">
+    <div className="mt-2.5 text-xs leading-[1.8] text-slate-500">
       <span className="font-bold text-amber-700">⏱ שורה בענבר</span> = דורש תשומת-לב. שום דבר לא
       ננעל.
     </div>

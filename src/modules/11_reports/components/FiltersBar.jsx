@@ -23,68 +23,48 @@ import FilterPill from '@/components/FilterPill'
 import { PERIOD_OPTIONS } from '../reportsPeriod'
 
 const LABEL_CLASS = 'text-xs text-slate-500'
+// 🔤 ערך-עובדה במקום פקד — טקסט רגיל ולא גלולה, כדי שלא ייראה לחיץ.
+const FACT_CLASS = 'text-sm text-slate-700'
 
-function CustomerPicker({ customers, customerId, onCustomerChange, disabledReason }) {
+function CustomerPicker({ customers, customerId, onCustomerChange }) {
   return (
-    <>
-      {/* 🔤 **בלי נקודתיים** (‏`m11-copy-rules §2.5`, כלל כ19 · R2: *"התו האחרון הוא `:`
-          או `.`? מחקי אותו"*) — תוקן 17/09/2026, פריט C1 של הערכת-הניסוח. */}
-      <label className={`${LABEL_CLASS} mr-2`} htmlFor="reports-customer">
-        לקוח
-      </label>
-      {/* 🔴 **פקד שאינו חל על הדף — מושבת ומנומק, ולא מוסתר** (㉚ · אותה הכרעה כמו
-          הלשונית הממוסכת): ארבעת משטחי-הדיילות מצהירים `meta.customer_filter_ignored: true`,
-          וה-RPC שלהם אינו מקבל `p_customer_id` כלל. עד 17/09/2026 הבורר היה פתוח שם,
-          כלומר בחירה בו הייתה משנה כותרת ולא נתונים (פריט [8]). */}
-      <select
-        id="reports-customer"
-        // ⚠️ `<select>` מקורי ולא Radix: אין כאן portal ⇒ אין את המוקש של §3.5
-        // (*"כל משטח שנפתח ב-portal מקבל `dir=\"rtl\"` מפורש"*), והפקד יורש את כיוון-הדף.
-        value={customerId ?? ''}
-        onChange={(e) => onCustomerChange(e.target.value || null)}
-        disabled={Boolean(disabledReason)}
-        title={disabledReason || undefined}
-        data-testid="reports-customer-filter"
-        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[12.5px] text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:opacity-50"
-      >
-        <option value="">כל הלקוחות</option>
-        {customers.map((c) => (
-          <option key={c.customer_id} value={String(c.customer_id)}>
-            {c.company_name}
-          </option>
-        ))}
-      </select>
-      {/* 🔴 **הנימוק חייב להיות **גלוי**, לא רק ב-`title`** — פקד `disabled` אינו מקבל
-          hit-test, ולכן הדפדפן אינו מרנדר לו tooltip **כלל** (הנימוק המלא ב-`FilterPill`,
-          ששם הפתרון היה עטיפת-`span`). כאן המשפט קצר ויושב על המסך, בדיוק כמו *"לא זמין
-          בתפקידך"* של הלשונית הממוסכת — ‏`title` לבדו אינו נגיש למקלדת. */}
-      {disabledReason && (
-        <span className={`${LABEL_CLASS} mr-1`} data-testid="reports-customer-disabled">
-          {disabledReason}
-        </span>
-      )}
-    </>
+    <select
+      id="reports-customer"
+      // ⚠️ `<select>` מקורי ולא Radix: אין כאן portal ⇒ אין את המוקש של §3.5
+      // (*"כל משטח שנפתח ב-portal מקבל `dir=\"rtl\"` מפורש"*), והפקד יורש את כיוון-הדף.
+      value={customerId ?? ''}
+      onChange={(e) => onCustomerChange(e.target.value || null)}
+      data-testid="reports-customer-filter"
+      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+    >
+      <option value="">כל הלקוחות</option>
+      {customers.map((c) => (
+        <option key={c.customer_id} value={String(c.customer_id)}>
+          {c.company_name}
+        </option>
+      ))}
+    </select>
   )
 }
 
 /**
- * ‏`periodDisabledReason` · `customerDisabledReason` — ✏️ **נוספו 17/09/2026** (פריטים
- * ‏[3] · [8] · [28] של סבב-הראיות). מחרוזת ⇒ הפקד **מושבת ומנומק**; ‏`null` ⇒ כרגיל.
- *
- * 🔴 **למה מושבת ולא מוסתר, ולמה בכלל:** נמדד שמ22 מריצה את אותן ⁦426⁩ שורות בדיוק בכל
- * חמש הגלולות (‏`probe-filters.log` 1–6) — כלומר הגלולות **זזו ולא סיננו**, והדבר היחיד
- * שהשתנה על המסך היה תווית-החלון. פקד שנראה עובד ואינו עושה דבר הוא ההטעיה שהמודול הזה
- * נבנה נגדה; והסתרתו הייתה משאירה את המשתמשת בלי לדעת שהיכולת קיימת במקומות אחרים —
- * **אותה הכרעה בדיוק כמו הלשונית הממוסכת** (הכרעה 2 · 15-ה).
+ * ‏`periodFixedLabel` · `customerFixed` — **משטח שאינו מגיב למסנן מציג עובדה, לא פקד.**
+ * ✏️ **הכרעת-ישי 5, 17/09/2026** (`processes-approved.md` §👤 טיפוגרפיה וניסוח): *"לפעמים כתוב
+ * הדף לא מושפע ממסנן התקופה אז למה להציג אותו בכלל??? ... תנסה להכליל את הטעות"* ⇒ *"פקד-מת
+ * מוחלף בתווית עובדה"*. **בוצע 23/09/2026 (פזה ב׳ שלב 9)** — עד אז הפקד היה **מושבת ומנומק**
+ * (㉚, 17/09), כלומר חמש גלולות אפורות ומשפט-הסתייגות לצידן.
+ * ‏`periodFixedLabel` — מחרוזת-העובדה (תווית-החלון שהשרת מדד, למשל *"כל הזמנים"*) ⇒ במקום
+ * הגלולות; ‏`null` ⇒ הגלולות כרגיל. ‏`customerFixed` ⇒ *"כל הלקוחות"* במקום הבורר.
+ * 🔑 **והכתובת ממשיכה לעבוד:** ‏`?period=`/`?customer=` נשמרים, ומשטח שכן מסנן לפיהם מחזיר אותם.
  */
 export default function FiltersBar({
   period,
   onPeriodChange,
-  periodDisabledReason,
+  periodFixedLabel,
   customers = [],
   customerId,
   onCustomerChange,
-  customerDisabledReason,
+  customerFixed,
   exportSlot,
 }) {
   return (
@@ -94,33 +74,44 @@ export default function FiltersBar({
       role="group"
       aria-label="מסננים"
     >
-      {/* 🔤 **בלי נקודתיים** — ר' הנימוק אצל תווית-הלקוח (כ19 · R2). */}
+      {/* 🔤 **בלי נקודתיים** (‏`m11-copy-rules §2.5`, כלל כ19 · R2). */}
       <span className={LABEL_CLASS}>תקופה</span>
-      {PERIOD_OPTIONS.map((option) => (
-        <FilterPill
-          key={option.key}
-          on={period === option.key}
-          onClick={() => onPeriodChange(option.key)}
-          disabled={Boolean(periodDisabledReason)}
-          title={periodDisabledReason || undefined}
-          testId={`reports-period-${option.key}`}
-        >
-          {option.label}
-        </FilterPill>
-      ))}
-      {/* הנימוק גלוי, לא רק ב-`title` — ר' הנימוק אצל בורר-הלקוח. */}
-      {periodDisabledReason && (
-        <span className={LABEL_CLASS} data-testid="reports-period-disabled">
-          {periodDisabledReason}
+      {periodFixedLabel ? (
+        <span className={FACT_CLASS} data-testid="reports-period-fixed">
+          {periodFixedLabel}
         </span>
+      ) : (
+        PERIOD_OPTIONS.map((option) => (
+          <FilterPill
+            key={option.key}
+            on={period === option.key}
+            onClick={() => onPeriodChange(option.key)}
+            testId={`reports-period-${option.key}`}
+          >
+            {option.label}
+          </FilterPill>
+        ))
       )}
 
-      <CustomerPicker
-        customers={customers}
-        customerId={customerId}
-        onCustomerChange={onCustomerChange}
-        disabledReason={customerDisabledReason}
-      />
+      {customerFixed ? (
+        <>
+          <span className={`${LABEL_CLASS} mr-2`}>לקוח</span>
+          <span className={FACT_CLASS} data-testid="reports-customer-fixed">
+            כל הלקוחות
+          </span>
+        </>
+      ) : (
+        <>
+          <label className={`${LABEL_CLASS} mr-2`} htmlFor="reports-customer">
+            לקוח
+          </label>
+          <CustomerPicker
+            customers={customers}
+            customerId={customerId}
+            onCustomerChange={onCustomerChange}
+          />
+        </>
+      )}
 
       {/* ✏️ **צ'יפ-ניקוי-הקרוס-פילטר נמחק מכאן 16/09/2026 — הוא היה קוד-מת:** אף אתר-קריאה
           לא מסר `crossFilterLabel`/`onClearCrossFilter` (נמדד), והצ'יפ **החי** יושב

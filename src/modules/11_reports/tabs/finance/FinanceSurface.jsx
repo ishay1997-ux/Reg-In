@@ -87,17 +87,13 @@ function CurrentBucketTile({ currentTile, onOpen }) {
  * ב-`meta.open_invoice_count`. **שני המספרים מגיעים מה-payload ואף אחד אינו מוקלד.**
  * 🔤 החץ `→` הוא תקדים-קוד חי (`CustomerDetailsPage.jsx:1332`, *"לכרטיס →"*) ולא בחירה.
  */
-function RowCapAndDoor({ shown, total, onOpen }) {
+function RowCapAndDoor({ total, onOpen }) {
   if (!total) return null
   return (
-    <p className="mt-1 text-[12.5px] text-slate-500" data-testid="finance-row-cap">
-      {/* ⚠️ המשפט נאמר **רק כשבאמת קוצץ**. אילו הטבלה הציגה את כל החשבוניות, *"אלה 35 מתוך
-          35"* היה רעש — ו"אין צורך להציג למשתמש אובר מידע" (‏ishay-visual-taste, 01/08). */}
-      {shown < total && (
-        <>
-          אלה <Ltr>{shown}</Ltr> החשבוניות הישנות ביותר מתוך <Ltr>{total}</Ltr> הפתוחות.{' '}
-        </>
-      )}
+    <p className="mt-1 text-sm text-slate-500" data-testid="finance-row-cap">
+      {/* ✂️ **23/09/2026 — משפט *"אלה 4 החשבוניות הישנות ביותר מתוך 35 הפתוחות"* נמחק:** מאז
+          פזה ב׳ שלב 4 הטבלה נושאת כותרת-כנה (*"4 החשבוניות הישנות ביותר · מתוך 35"*, `surface.topN`),
+          ושתי ההצהרות היו אומרות את אותו הדבר זו מעל זו. הדלת נשארת. */}
       <button
         type="button"
         onClick={() => onOpen(AGING_TARGET)}
@@ -125,6 +121,7 @@ export default function FinanceSurface({ surface, spec, filters, drill, onDrill,
       onDrill={onDrill}
       onWindow={onWindow}
       transformPayload={transformPayload}
+      chartAction={spec.chartAction ? () => spec.chartAction : undefined}
       // 🔴 **`afterSoWhat` ולא `renderTop` — וזה עוגן-כרטיס, לא טעם:** §⑩ של ארבעת הכרטיסים
       // מעגן את רמז-ה-`whyAndFirst` *"אחרי שורת-'אז מה', מעל .tiles"*. עד שהמעטפת פתחה את
       // הנקודה הזו הוא נתלה מעל שורת-האוכלוסייה — קרוב, אבל לא מה שהכרטיס אומר.
@@ -143,7 +140,6 @@ export default function FinanceSurface({ surface, spec, filters, drill, onDrill,
         <>
           {spec.openInvoicesDoor && (
             <RowCapAndDoor
-              shown={payload.rows?.length ?? 0}
               total={payload.meta?.open_invoice_count ?? payload.population?.n}
               onOpen={onDrill}
             />

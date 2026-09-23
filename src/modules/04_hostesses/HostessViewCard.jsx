@@ -360,7 +360,7 @@ function CardBody({
             <KeyValue label="כתובת מלאה" value={hostess.address ?? '—'} />
           </div>
           {hostess.lat === null && (
-            <p className="mt-1 text-[11px] text-amber-700">
+            <p className="mt-1 text-xs text-amber-700">
               אין קואורדינטות — בחישוב הקרבה היא מקבלת ציון ניטרלי, לא אפס.
             </p>
           )}
@@ -401,7 +401,7 @@ function CardBody({
             hostess.hostess_unavailability.map((range) => (
               <div
                 key={range.unavailability_id}
-                className="mb-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[12.5px] text-amber-800"
+                className="mb-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-800"
               >
                 {unavailabilityLabel(range)?.replace('לא זמינה ', '')}
                 {range.note ? ` · ${range.note}` : ''}
@@ -455,7 +455,7 @@ function CardBody({
 // הוא מגיע מהטעינה שכבר קיימת בכרטיס (`getHostessScreenParams`) ואינו שליפה נוספת.
 function AssignmentTable({ rows, now, inviteValidityHours }) {
   return (
-    <table className="w-full border-collapse text-[12.5px]">
+    <table className="w-full border-collapse text-sm">
       <thead>
         <tr>
           {['תאריך', 'אירוע', 'לקוח', 'סטטוס'].map((h) => (
@@ -513,7 +513,7 @@ function AssignmentTable({ rows, now, inviteValidityHours }) {
 function Section({ title, note, children }) {
   return (
     <div className="mb-4">
-      <h3 className="mb-1.5 text-[12.5px] font-semibold text-slate-700">
+      <h3 className="mb-1.5 text-sm font-semibold text-slate-700">
         {title}
         {note && <span className="font-normal text-slate-500"> — {note}</span>}
       </h3>
@@ -525,9 +525,9 @@ function Section({ title, note, children }) {
 function KeyValue({ label, value, ltr }) {
   return (
     <div className="flex flex-col">
-      <span className="text-[11px] text-slate-500">{label}</span>
+      <span className="text-xs text-slate-500">{label}</span>
       <span
-        className={`text-[13px] text-slate-800 ${ltr ? 'text-right' : ''}`}
+        className={`text-sm text-slate-800 ${ltr ? 'text-right' : ''}`}
         dir={ltr ? 'ltr' : undefined}
       >
         {value}
@@ -538,7 +538,7 @@ function KeyValue({ label, value, ltr }) {
 
 function Muted({ children }) {
   return (
-    <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12.5px] text-slate-500">
+    <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-500">
       {children}
     </p>
   )

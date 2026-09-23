@@ -227,9 +227,9 @@ function FeedbackForm({
   return (
     <div className="flex flex-1 flex-col gap-4" data-testid="feedback-form">
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-[14.5px] font-bold">{page?.event_name}</p>
+        <p className="text-base font-bold">{page?.event_name}</p>
         {date ? (
-          <p className="mt-2 border-t border-dashed border-slate-300 pt-2 text-[12px] text-slate-500">
+          <p className="mt-2 border-t border-dashed border-slate-300 pt-2 text-sm text-slate-500">
             🕓 יום {weekday}, <Ltr>{date}</Ltr>
           </p>
         ) : null}
@@ -254,7 +254,7 @@ function FeedbackForm({
       {/* 🔴 הכיתוב היחיד מתחת לכוכבים, מילה-במילה מהמוקאפ המאושר — **ברבים**, כמו כל
           הדף. הוא גם נוסח-הסיבה לכפתור-"שלח" החסום (A-1), ולכן `hideCaption` למעלה
           אינו "מחיקת מידע": הוא מסיר כיתוב-מנהלת כפול ומשאיר את זה. */}
-      <p className="text-center text-[11px] text-slate-400">געו בכוכב כדי לדרג</p>
+      <p className="text-center text-xs text-slate-400">געו בכוכב כדי לדרג</p>
 
       {score != null ? (
         <div className="flex flex-col gap-2" data-testid="feedback-chips-section">
@@ -306,12 +306,12 @@ function FeedbackForm({
           value={notes}
           onChange={(event) => onNotesChange(event.target.value)}
           placeholder="לדוגמה: מה אהבתם, ומה כדאי לשפר בפעם הבאה"
-          className="resize-none rounded-lg border border-slate-200 bg-white p-2.5 text-[13.5px] text-slate-800"
+          className="resize-none rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-800"
         />
       </div>
 
       {inlineError ? (
-        <p className="text-center text-[11px] text-red-600" role="alert">
+        <p className="text-center text-xs text-red-600" role="alert">
           {inlineError}
         </p>
       ) : null}
@@ -324,7 +324,7 @@ function FeedbackForm({
         disabled={!score || submitting}
         onClick={onSubmit}
         data-testid="feedback-submit"
-        className="mt-auto h-auto rounded-xl bg-teal-700 py-3.5 text-[15px] font-bold text-white hover:bg-teal-800"
+        className="mt-auto h-auto rounded-xl bg-teal-700 py-3.5 text-base font-bold text-white hover:bg-teal-800"
       >
         שליחה
       </Button>
@@ -349,11 +349,11 @@ function Result({ state, onRetry }) {
       >
         {look.icon}
       </span>
-      <p className="max-w-[230px] text-[14px] font-bold leading-relaxed text-slate-700">
+      <p className="max-w-[230px] text-base font-bold leading-relaxed text-slate-700">
         {FEEDBACK_MESSAGE[state]}
       </p>
       {state === FEEDBACK_STATE.thankYou ? (
-        <p className="max-w-[230px] text-[12px] leading-relaxed text-slate-500">
+        <p className="max-w-[230px] text-sm leading-relaxed text-slate-500">
           המשוב שלכם נשמר ועוזר לנו להשתפר באירוע הבא.
         </p>
       ) : null}

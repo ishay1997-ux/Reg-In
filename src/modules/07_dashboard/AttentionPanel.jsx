@@ -39,7 +39,7 @@ export default function AttentionPanel({ summary }) {
             className="flex min-w-0 flex-col gap-1 rounded-lg border border-slate-200 p-2.5 hover:border-teal-300 hover:bg-teal-50/40"
             data-testid={`dashboard-attention-card-${cat.kind}`}
           >
-            <span className="flex items-center gap-1.5 text-[11px] text-slate-500">
+            <span className="flex items-center gap-1.5 text-xs text-slate-500">
               <span className={`size-[7px] shrink-0 rounded-full ${DOT_CLASS[cat.tone]}`} />
               {cat.label} · {cat.role}
             </span>
@@ -53,13 +53,13 @@ export default function AttentionPanel({ summary }) {
                 {cat.count === 0 ? (
                   <span className="text-sm font-semibold text-slate-400">✓ אין</span>
                 ) : (
-                  <span className="text-[13px] leading-snug text-slate-600">
+                  <span className="text-sm leading-snug text-slate-600">
                     <Ltr className="ml-1 text-xl font-bold text-slate-800">{cat.count}</Ltr>
                     {cat.noun}
                   </span>
                 )}
                 {cat.topLine && (
-                  <span className="block truncate text-[11.5px] text-slate-500">{cat.topLine}</span>
+                  <span className="block truncate text-xs text-slate-500">{cat.topLine}</span>
                 )}
               </>
             )}

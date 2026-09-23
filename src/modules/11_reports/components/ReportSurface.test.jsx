@@ -309,13 +309,19 @@ describe('ReportSurface — סינון-צולב (📐6 · 📐8 · 📐9)', () =
     expect(screen.getByTestId('report-table-announce').textContent).toBe('')
   })
 
-  // ת4 — *"בדיוק מה שעל המסך"*: הייצוא מקבל את השורות המסוננות ואת תווית-הבחירה.
-  it('ת4 — הייצוא יורד על השורות המסוננות, והתווית נכנסת לשם-הקובץ', async () => {
+  // ✏️ **נכתבה מחדש 17/09/2026 ע"י סשן-הייצוא — ת4 הופך (ת4ב · §7.103).** הבדיקה נעלה קודם
+  // את *"בדיוק מה שעל המסך"*: תווית-הסינון-הצולב נכנסת לשם-הקובץ, והכיתוב יושב מתחת לכפתור.
+  // **שניהם בוטלו בהכרעת-ישי** — הייצוא הוא כלי שליפה עצמאי, החלון שולף `drill: null`, ולכן
+  // שם שנושא רמה או בחירה **היה משקר**. הכיתוב עבר לתוך החלון עם אותו `testid`.
+  // 🔑 **ומה שהבדיקה שומרת עליו עכשיו הוא הצד השני של אותו מטבע:** הסינון-הצולב **אינו** נוגע
+  // עוד בייצוא, וכפתור-הייצוא אינו מושפע ממנו.
+  it('ת4ב — הסינון-הצולב אינו נוגע בייצוא, ואין עוד כיתוב מתחת לכפתור', async () => {
     callReport.mockResolvedValueOnce(crossPayload())
     renderCross()
     await screen.findAllByTestId('report-row')
     fireEvent.click(screen.getByTestId('chart-select-0'))
-    expect(screen.getByTestId('reports-export-file').textContent).toContain('דירוג-5')
+    expect(screen.queryByTestId('reports-export-file')).toBeNull()
+    expect(screen.getByTestId('reports-export-button')).toBeEnabled()
   })
 
   // ✏️ **הדאטום כאן נושא `n: 3` ולא `n: 0`, ומסיבה מדודה (16/09/2026):** מאז שכלל
@@ -332,7 +338,10 @@ describe('ReportSurface — סינון-צולב (📐6 · 📐8 · 📐9)', () =
     expect(screen.getByTestId('report-table-announce').textContent).toBe(
       'מסונן לדירוג 1; אין שורות',
     )
-    expect(screen.getByTestId('reports-export-button')).toBeDisabled()
+    // ✏️ **17/09/2026 — היה `toBeDisabled`.** הכפתור פעיל תמיד מרגע שהחלון מאפשר לבחור כל
+    // אחד מארבעת דוחות הלשונית: חסימה בגלל הדוח — או הבחירה — שבמקרה פתוח היא מחסום שרירותי.
+    // **החסימה לא נעלמה, היא עברה פנימה ונבדקת פר-דוח נבחר** (`ExportDialog`, מצב `blockedReason`).
+    expect(screen.getByTestId('reports-export-button')).toBeEnabled()
   })
 
   // 🔴 **נמדד 16/09/2026:** שורת-התקרה נגזרה מ-`payload.rows.length` בעוד הטבלה מתחתיה כבר
@@ -631,7 +640,15 @@ const DRILL_SURFACE = {
   drill: true,
 }
 
-// 🌱 צורת-המטען החי של מ9: העמודה מציגה **תווית** והדאטום נושא **מפתח**.
+// 🌱 צורת-המטען החי של מ9 *(אחרי מיגרציית-הטקסט L1, 23/09/2026)*: העמודה מציגה **תווית**,
+// והדאטום נושא את **הדלת** — `drill_key`, אותו שדה שהשורה נושאת. ‏`bucket_key` נשאר בשרת
+// לצידו (לקוח-האתר-החי הישן עוד קורא אותו), אבל הלקוח הזה כבר אינו קורא אותו.
+const agingDatum = (bucket, key, amount) => ({
+  bucket,
+  bucket_key: key,
+  drill_key: { bucket: key },
+  amount,
+})
 const agingPayload = (over = {}) =>
   payload({
     chart: {
@@ -640,9 +657,9 @@ const agingPayload = (over = {}) =>
       xKey: 'bucket',
       series: [{ key: 'amount', label: 'חוב' }],
       data: [
-        { bucket: '1–30', bucket_key: 'd1_30', amount: 82000 },
-        { bucket: '31–60', bucket_key: 'd31_60', amount: 57000 },
-        { bucket: '90+', bucket_key: 'd90p', amount: 0 },
+        agingDatum('1–30', 'd1_30', 82000),
+        agingDatum('31–60', 'd31_60', 57000),
+        agingDatum('90+', 'd90p', 0),
       ],
     },
     drill: { level: 0, levels: ['מדרג', 'לקוח'], crumbs: [{ label: 'הכול', drill: null }] },
@@ -680,6 +697,30 @@ describe('ReportSurface — 🚪 לחיצה על עמודה בדף-דריל יו
     const cells = screen.getAllByTestId('recharts-Cell').map((n) => JSON.parse(n.dataset.props))
     // העמודה הפתוחה נשארת טורקיז, השתיים האחרות יורדות ל-slate-300.
     expect(cells.filter((c) => c.fill === '#CAD5E2')).toHaveLength(2)
+  })
+
+  // ✏️ 23/09/2026 — הגיבוי המתוארך (`<xKey>_key`) נמחק: דלת אחת, `drill_key`. דאטום בלי
+  // `drill_key` אינו דלת, גם אם יש לו שדה בשם `bucket_key` — אחרת שני מנגנונים שוב קובעים יחד.
+  it('דאטום בלי drill_key אינו מוריד רמה, גם כשיש לו bucket_key', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(
+      agingPayload({
+        chart: {
+          type: 'stackedBar',
+          title: 'חוב לפי מדרג',
+          xKey: 'bucket',
+          series: [{ key: 'amount', label: 'חוב' }],
+          data: [{ bucket: '1–30', bucket_key: 'd1_30', amount: 82000 }],
+        },
+      }),
+    )
+    render(
+      <ReportSurface surface={DRILL_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    await screen.findByTestId('report-table-card')
+    const select = screen.queryByTestId('chart-select-0')
+    if (select) fireEvent.click(select)
+    expect(onDrill).not.toHaveBeenCalled()
   })
 
   // 🚫 מדרג שספירתו אפס אינו דלת — המגן של `ChartCard` ממשיך לחול על נתיב-הדריל.
@@ -768,6 +809,108 @@ describe('ReportSurface — 🚪 לחיצה על עמודה בדף-דריל יו
     )
     fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
     expect(onDrill.mock.calls[0][2]).toBeUndefined()
+  })
+})
+
+// ── 🔽 שבב-ההיקף — הכרעת-ישי א׳ (פזה ב׳ שלב 4, 23/09/2026) ─────────────────────────
+
+describe('ReportSurface — שבב-ההיקף במקום שורת-האוכלוסייה ושורת-ההגדרות', () => {
+  it('השבב אומר את ההיקף שהשרת מסר, והפירוט מקופל בתוכו', async () => {
+    callReport.mockResolvedValueOnce(
+      payload({
+        population: { n: 246, label: 'נכללים אירועים שהתקיימו', summary: '246 אירועים · מתוך 837' },
+        definitions: 'שולי-רווח = רווח חלקי הכנסה',
+      }),
+    )
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    const scope = await screen.findByTestId('report-scope')
+    expect(scope.tagName).toBe('DETAILS')
+    expect(scope.open).toBe(false)
+    expect(screen.getByTestId('report-scope-summary')).toHaveTextContent('246 אירועים · מתוך 837')
+    // התוכן זמין (ב-DOM ובלחיצה), אבל אינו גלוי עד שנפתח.
+    expect(scope).toContainElement(screen.getByTestId('report-population'))
+    expect(scope).toContainElement(screen.getByTestId('report-definitions'))
+  })
+
+  it('בלי `population.summary` — נוסח-שבב כללי, לא שבב ריק', async () => {
+    callReport.mockResolvedValueOnce(payload())
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
+    expect(await screen.findByTestId('report-scope-summary')).toHaveTextContent('מי נכלל בדוח')
+  })
+})
+
+// ── 🚪 הגרף והשורה — דלת אחת, שתי כניסות (פזה ב׳ שלב 8, 23/09/2026) ─────────────
+
+// 🌱 צורת-המטען החי של מ3 (`…j3….sql` — `'drill_key', jsonb_build_object('kind','year','year',yr)`):
+// הדאטום של הגרף נושא **אותו** `drill_key` שהשורה בטבלה נושאת. עד היום הגרף חיפש `year_key`,
+// שאינו קיים, ולכן שלוש העמודות בדף "מגמות רב-שנתיות" היו מתות.
+const trendsPayload = (over = {}) =>
+  payload({
+    chart: {
+      type: 'bar',
+      title: 'הכנסה לפי שנה',
+      xKey: 'year',
+      series: [{ key: 'revenue', label: 'הכנסה' }],
+      data: [
+        { year: 2024, revenue: 100, drill_key: { kind: 'year', year: 2024 } },
+        { year: 2025, revenue: 120, drill_key: { kind: 'year', year: 2025 } },
+      ],
+    },
+    rows: [{ row_key: 1, name: '2024', drill_key: { kind: 'year', year: 2024 } }],
+    drill: { level: 0, levels: ['כל השנים', 'שנה', 'חודש'], crumbs: [{ label: 'כל השנים' }] },
+    ...over,
+  })
+
+const TRENDS_SURFACE = { ...DRILL_SURFACE, id: 'm3', slug: 'trends', rpc: 'report_m03_trends' }
+
+describe('ReportSurface — 🚪 הגרף יורד רמה דרך ה-drill_key של הדאטום', () => {
+  it('לחיצה על עמודת-שנה מוסרת את מפתח-הדאטום עצמו, כמו לחיצה על השורה', async () => {
+    const onDrill = vi.fn()
+    callReport.mockResolvedValueOnce(trendsPayload())
+    render(
+      <ReportSurface surface={TRENDS_SURFACE} filters={filters} drill={null} onDrill={onDrill} />,
+    )
+    fireEvent.click(await screen.findByTestId('chart-select-1'))
+    expect(onDrill).toHaveBeenCalledWith({ kind: 'year', year: 2025 }, null, 'level')
+  })
+
+  it('ליד גרף שיורד רמה יש שורת-יכולת, ובנוסח שהמשטח מסר', async () => {
+    callReport.mockResolvedValueOnce(trendsPayload())
+    render(
+      <ReportSurface
+        surface={TRENDS_SURFACE}
+        filters={filters}
+        drill={null}
+        onDrill={vi.fn()}
+        chartAction={() => 'לחיצה על שנה בגרף יורדת לחודשים שלה'}
+      />,
+    )
+    expect(await screen.findByTestId('chart-action')).toHaveTextContent(
+      'לחיצה על שנה בגרף יורדת לחודשים שלה',
+    )
+  })
+
+  it('בגרף-קווים הנוסח אומר "נקודה", לא "עמודה"', async () => {
+    callReport.mockResolvedValueOnce(crossPayload({ ...CHART, type: 'line' }))
+    renderCross()
+    expect(await screen.findByTestId('chart-action')).toHaveTextContent(
+      'לחיצה על נקודה מסננת את הטבלה',
+    )
+  })
+
+  it('גרף שמסנן את הטבלה אומר זאת', async () => {
+    callReport.mockResolvedValueOnce(crossPayload())
+    renderCross()
+    expect(await screen.findByTestId('chart-action')).toHaveTextContent(
+      'לחיצה על עמודה מסננת את הטבלה',
+    )
+  })
+
+  it('גרף שאינו לחיץ אינו מבטיח דבר', async () => {
+    callReport.mockResolvedValueOnce(crossPayload({ ...CHART, filter_key: false }))
+    renderCross()
+    await screen.findAllByTestId('report-row')
+    expect(screen.queryByTestId('chart-action')).toBeNull()
   })
 })
 

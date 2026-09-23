@@ -12,7 +12,7 @@
 /ishay אני ממשיך את מודול 11 ב-REG-IN. C:\Users\ishay\Reg-In, ענף ishay/dashboard-legend-ucd.
 
 לפני שאתה עונה לי משהו — קרא במלואו:
-docs/specs/module_11_reports/HANDOFF-stage3-2026-09-10-02.md
+docs/specs/module_11_reports/archive/HANDOFF-stage3-2026-09-10-02.md
 ואז את רשימת-הקריאה שב-§4 שלו, לפי הסדר שכתוב שם.
 
 קרא אותם באמת — 100 שורות בכל פעם, לא גריפ. יש לך תקציב:

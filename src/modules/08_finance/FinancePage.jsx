@@ -43,8 +43,16 @@ import {
   parseWindowParam,
 } from '@/lib/listWindow'
 import { Button } from '@/components/ui/button'
+import { Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
+import ExportDialog from '@/components/ExportDialog'
+import {
+  buildExportFileName,
+  buildExportSheet,
+  EXPORT_LOCKED_MESSAGES,
+  exportReportRows,
+} from '@/lib/reportsExport'
 import { toAgorot, toShekels, parseVatPercent, PRICING_PARAM_NAMES } from '@/lib/pricing'
 import { PROJECT_STATUS_LABELS, resolveProjectTone, filteredOutSentence } from '@/lib/projects'
 import { CANCEL_TYPE_LABELS } from '@/lib/projectCard'
@@ -55,6 +63,7 @@ import {
   derivePercent,
   formatPercent,
   scoreTag,
+  scoreTagText,
 } from '@/lib/projectFinance'
 import { SATISFACTION_THRESHOLD_PARAM_NAME, needsSatisfactionAttention } from '@/lib/customers'
 import { getParamValues } from '@/api/params'
@@ -99,6 +108,10 @@ const DASH = '—'
 const SUMMARY_OPEN_LABEL = 'סה"כ ממתין לגבייה'
 const SUMMARY_OVERDUE_LABEL = 'מתוכו באיחור-תשלום'
 const SUMMARY_OPEN_UNKNOWN = 'לא ידוע — דמי-ביטול טרם נקבעו'
+// 🔤 נעול (`ui-copy-styleguide.md` §5) — משתנה רק יחד עם הבדיקה. עמודת "כולל מע"מ" ריקה
+// בקובץ שנראה שלם היא הכשל ש-`src/CLAUDE.md §3` אוסר; לכן חסימה עם סיבה, לא תא ריק.
+const EXPORT_BLOCKED_VAT = 'שיעור המע"מ לא נטען — לחצי "נסי שוב" ואז ייצאי'
+const EXPORT_VAT_FAILED_SHORT = 'שיעור המע"מ לא נטען'
 
 // שלוש הלשוניות, בשמן ובסדר שהמוקאפ מצייר. ‏`key` = הערך ש-`get_finance_overview` מחזיר
 // בעמודת `tab`, כדי שהשיוך יגיע מהמסד ולא ייגזר כאן שנית (B-9 חי במסד, לא כאן).
@@ -386,6 +399,191 @@ function summaryOpenSub(summary) {
   return `${base} · לא כולל ${missing} שטרם נקבעו`
 }
 
+// ── חלון-הייצוא: תיאור-עמודות פר-לשונית (23/09/2026) ─────────────────────────
+//
+// 🔴 **שלושה סטים של ליבה, לא אחד — כי הטבלה עצמה שונה בכל לשונית** (`COLUMNS` למטה, כרטיס
+// §⑧-3). הכלל שישי ניסח 23/09: *"בכל מסך שילחצו ייצוא ברירת המחדל תהיה מה שבמסך, ואם ירצה
+// יוכל להוסיף עוד"* — כאן "מה שבמסך" תלוי בלשונית, ולכן `core` נקבע פר-לשונית ולא פר-עמודה.
+// האכיפה ב-`defaultSelection` (`src/lib/exportColumns.js`); כאן רק מסמנים.
+//
+// 🔑 **השורות שהחלון מקבל הן ה-`entries` של `prepareRows`, לא השורות הגולמיות** — כלומר כל
+// `value` קורא לאותה גזירה שהטבלה כבר גזרה (`amount` · `amountWithVat` · `dueDate` ·
+// `daysOverdue` · `profitPercent` · `score`), ולעולם לא נוסחה שנייה (כלל 14). ⇒ **לכל עמודה
+// יש `value`**: המפתח הגולמי אינו על ה-entry, וקריאה ישירה הייתה מחזירה תא ריק בשקט.
+//
+// 📊 **22 השדות של `get_finance_overview` נשלפים כולם** (`OVERVIEW_FIELDS`) — אין כאן שדה שלא
+// נשלף ואין מיגרציה. תא ה"פרויקט" על המסך מציג שם + לקוח (+ הקשר-ביטול) ⇒ שלוש עמודות-נתונים,
+// לא משפט. **תאריכי `timestamptz` יוצאים דרך `stampDate`** (שעון ישראל), כי `formatIsraelDate`
+// של המנוע דוחה חותמת במכוון — ולכן `format: 'text'` ולא `'date'` עליהם.
+//
+// 🚧 **ואין `visible`, וגם זה נמדד:** המסך כולו מגודר 'כספים' ב-RPC (`42501` ⇒ מסך-חסימה), ואין
+// כאן מפתח ברשם-הרגישות. `permissions` אינו מועבר, כמו בשני המסכים הקודמים.
+// 🔑 שלוש עמודות ליבה **בכל לשונית** כי הן על המסך בכל לשונית — שורת-ההקשר של ביטול תחת שם
+// הפרויקט (`CANCEL_TYPE_LABELS`), התגית "הסתיים — לא שולם" ושורת "נדרשת חשבונית זיכוי"
+// (הסוכן-היריב 23/09: בלעדיהן שורת-ביטול שדמי-הביטול שלה נקבעו נקראת בקובץ כהכנסת-אירוע רגילה).
+const TAG_CORE = ['cancel_type', 'written_off', 'credit_note_flag']
+const FINANCE_EXPORT_CORE = {
+  // המסך מציג **תאריך אחד** לשורה (`rowDateIso`: ביטול או סגירה-תפעולית) + שורת-משנה שאומרת
+  // איזה — ולכן עמודה אחת + "מהות התאריך", ולא שתי עמודות שאחת מהן ריקה תמיד.
+  awaiting_invoice: [
+    'event_name',
+    'customer_name',
+    'context_date',
+    'context_date_kind',
+    'amount',
+    'amount_with_vat',
+    'project_status',
+    ...TAG_CORE,
+  ],
+  awaiting_payment: [
+    'event_name',
+    'customer_name',
+    'invoice_sent_at',
+    'due_date',
+    'payment_terms_days',
+    'days_overdue',
+    'payment_date',
+    'amount',
+    'amount_with_vat',
+    'project_status',
+    ...TAG_CORE,
+  ],
+  finished: [
+    'event_name',
+    'customer_name',
+    'archived_at',
+    'profit_percent',
+    'final_profit',
+    'score_label',
+    'project_status',
+    ...TAG_CORE,
+  ],
+}
+
+const yesNo = (flag) => (flag ? 'כן' : 'לא')
+
+function financeExportColumns(tab) {
+  const core = new Set(FINANCE_EXPORT_CORE[tab])
+  const amountLabel = tab === 'awaiting_payment' ? 'סכום לתשלום' : 'סכום'
+  return [
+    { key: 'project_id', label: 'מס׳ פרויקט', format: 'id', value: (e) => e.row.project_id },
+    { key: 'event_name', label: 'אירוע', format: 'text', value: (e) => e.row.event_name },
+    { key: 'customer_name', label: 'לקוח', format: 'text', value: (e) => e.row.customer_name },
+    // עמודת "תאריך" של לשונית ① — אותו `rowDateIso` שהתא על המסך מציג, ולצדו מהותו.
+    {
+      key: 'context_date',
+      label: 'תאריך',
+      format: 'text',
+      value: (e) => stampDate(rowDateIso(e.row, 'awaiting_invoice')),
+    },
+    {
+      key: 'context_date_kind',
+      label: 'מהות התאריך',
+      format: 'text',
+      value: (e) => (e.cancelled ? CANCELLED_DATE_NOTE : OPERATIONALLY_CLOSED_NOTE),
+    },
+    {
+      key: 'operationally_closed_at',
+      label: 'נסגר תפעולית',
+      format: 'text',
+      value: (e) => stampDate(e.row.operationally_closed_at),
+    },
+    {
+      key: 'cancelled_at',
+      label: 'תאריך ביטול',
+      format: 'text',
+      value: (e) => stampDate(e.row.cancelled_at),
+    },
+    {
+      key: 'invoice_sent_at',
+      label: 'חשבונית נשלחה',
+      format: 'text',
+      value: (e) => stampDate(e.row.invoice_sent_at),
+    },
+    { key: 'due_date', label: 'מועד פירעון', format: 'date', value: (e) => e.dueDate },
+    {
+      key: 'payment_terms_days',
+      label: 'תנאי תשלום (ימים)',
+      format: 'int',
+      value: (e) => e.row.payment_terms_days,
+    },
+    // המסך מציג את המונה **רק כל עוד החוב פתוח** (`OverdueCell`) — הקובץ נוהג זהה.
+    {
+      key: 'days_overdue',
+      label: 'ימי איחור',
+      format: 'int',
+      value: (e) => (e.debtOpen ? e.daysOverdue : null),
+    },
+    { key: 'payment_date', label: 'תאריך תשלום', format: 'date', value: (e) => e.row.payment_date },
+    {
+      key: 'archived_at',
+      label: 'הועבר לארכיון',
+      format: 'text',
+      value: (e) => stampDate(e.row.archived_at),
+    },
+    { key: 'amount', label: amountLabel, format: 'money', value: (e) => e.amount },
+    {
+      key: 'amount_with_vat',
+      label: 'כולל מע"מ',
+      format: 'money',
+      value: (e) => e.amountWithVat,
+    },
+    {
+      key: 'profit_percent',
+      label: 'רווח סופי %',
+      format: 'percent',
+      value: (e) => e.profitPercent,
+    },
+    { key: 'final_profit', label: 'רווח סופי', format: 'money', value: (e) => e.row.final_profit },
+    {
+      key: 'score_label',
+      label: 'שביעות רצון',
+      format: 'text',
+      value: (e) => scoreTagText(e.row.feedback_score) ?? '',
+    },
+    {
+      key: 'project_status',
+      label: 'סטטוס',
+      format: 'text',
+      value: (e) => PROJECT_STATUS_LABELS[e.row.project_status] ?? '',
+    },
+    // ⬇️ זמינות בבוחר, אינן ליבה באף לשונית — "ואם ירצה יוכל להוסיף עוד".
+    { key: 'revenue', label: 'הכנסה', format: 'money', value: (e) => e.row.revenue },
+    { key: 'gross_profit', label: 'רווח גולמי', format: 'money', value: (e) => e.row.gross_profit },
+    {
+      key: 'cancellation_fee',
+      label: 'דמי ביטול',
+      format: 'money',
+      value: (e) => e.row.cancellation_fee,
+    },
+    {
+      key: 'cancel_type',
+      label: 'סוג ביטול',
+      format: 'text',
+      value: (e) => CANCEL_TYPE_LABELS[e.row.cancel_type] ?? '',
+    },
+    {
+      key: 'feedback_score',
+      label: 'ציון משוב',
+      format: 'int',
+      value: (e) => e.row.feedback_score,
+    },
+    // 📄 התווית מאושרת: `rulings-2026-09-22.md` — *"חוב אבוד"*, כי התא מכיל כן/לא.
+    {
+      key: 'written_off',
+      label: 'חוב אבוד',
+      format: 'text',
+      value: (e) => yesNo(e.row.written_off),
+    },
+    {
+      key: 'credit_note_flag',
+      label: 'נדרשת חשבונית זיכוי',
+      format: 'text',
+      value: (e) => yesNo(e.row.credit_note_flag),
+    },
+  ].map((column) => (core.has(column.key) ? { ...column, core: true } : column))
+}
+
 // ── המסך ─────────────────────────────────────────────────────────────────────
 
 export default function FinancePage() {
@@ -455,12 +653,22 @@ export default function FinancePage() {
   // בפתיחה ואינו נשען על מה שהשורה נשאה.
   const [openProject, setOpenProject] = useState(null)
   const [salaryOpen, setSalaryOpen] = useState(false)
+  // חלון-הייצוא (23/09/2026). 🔴 שיעור-המע"מ נטען ב-effect נפרד, ו-`null` שלו הוא גם "בדרך"
+  // וגם "נכשל" — אותה מלכודת שנמדדה במסך-הלקוחות (קובץ שירד עם עמודה ריקה ובלי שגיאה).
+  // ⇒ `vatState` תלת-ערכי: `'loading'` מחזיק את החלון בטעינה · `'failed'` חוסם אותו עם סיבה ·
+  // `'ready'` משחרר. `הכרעתי, הפיך` — מנגנון, לא מוצר.
+  const [exportOpen, setExportOpen] = useState(false)
+  const [vatState, setVatState] = useState('loading')
   // מונה-פתיחות ל-`key` של S3 — ר' ההערה באתר-הרינדור.
   const [salaryMountKey, setSalaryMountKey] = useState(0)
 
-  const refresh = useCallback(() => setReloadTick((tick) => tick + 1), [])
+  const refresh = useCallback(() => {
+    setVatState('loading')
+    setReloadTick((tick) => tick + 1)
+  }, [])
   const retry = useCallback(() => {
     setLoading(true)
+    setVatState('loading')
     setReloadTick((tick) => tick + 1)
   }, [])
 
@@ -500,11 +708,15 @@ export default function FinancePage() {
     let cancelled = false
     getParamValue(PRICING_PARAM_NAMES.VAT_PERCENT)
       .then((value) => {
-        if (!cancelled) setVatPercent(parseVatPercent(value))
+        if (cancelled) return
+        setVatPercent(parseVatPercent(value))
+        setVatState('ready')
       })
       .catch((err) => {
         console.error('finance VAT param load failed:', err)
-        if (!cancelled) setVatPercent(null)
+        if (cancelled) return
+        setVatPercent(null)
+        setVatState('failed')
       })
     return () => {
       cancelled = true
@@ -586,6 +798,17 @@ export default function FinancePage() {
     setSalaryOpen(true)
   }, [])
 
+  // תיאור-העמודות מתחלף עם הלשונית ⇒ החלון מאפס סדר/בחירה/תנאים בעצמו (מפתח-העמודות משתנה).
+  const exportColumns = useMemo(() => financeExportColumns(tab), [tab])
+  const exportFileName = useMemo(
+    () =>
+      buildExportFileName({
+        reportName: 'כספים',
+        windowLabel: TABS.find((t) => t.key === tab)?.label,
+      }),
+    [tab],
+  )
+
   const header = <PageHeader onOpenSalary={openSalary} />
 
   if (loading) {
@@ -654,6 +877,18 @@ export default function FinancePage() {
             במסך-הפרויקטים (שם הוא יושב מתחת לגלולות-הסטטוס). */}
         <div className="flex flex-wrap items-center gap-2 pb-2.5">
           <WindowChips value={windowKey} onChange={setWindowKey} hiddenCount={hiddenCount} />
+          {/* ייצוא לאקסל (23/09/2026) — בשורת-המסננים, בקצה, כמו בפרויקטים. 🔑 **פעיל תמיד:**
+              החלון עצמאי ואומר בעצמו כשאין מה לייצא (הכרעת-ישי 17/09, ת4ב). */}
+          <Button
+            type="button"
+            variant="outline"
+            className="mr-auto gap-1.5"
+            onClick={() => setExportOpen(true)}
+            data-testid="finance-export-button"
+          >
+            <Download className="size-4" aria-hidden="true" />
+            ייצוא
+          </Button>
         </div>
         {visible.length === 0 ? (
           <EmptyRows
@@ -679,6 +914,39 @@ export default function FinancePage() {
           total={pageResult.total}
           onPage={setPage}
         />
+        {/*
+          🔑 **החלון מקבל `sortedEntries` ולא `visible`:** כל מה שעומד במסנן ובחלון-הזמן של
+          הלשונית, לא עמוד-הדפדוף (הכרעת-ישי 17/09 *"כל השורות שעומדות במסנן"*). אין שליפה שנייה —
+          `listFinanceOverview` כבר הביא הכול דרך `fetchAll`.
+        */}
+        {exportOpen && (
+          <ExportDialog
+            open={exportOpen}
+            onOpenChange={setExportOpen}
+            title="ייצוא כספים לאקסל"
+            columns={exportColumns}
+            rows={sortedEntries}
+            loading={vatState === 'loading'}
+            blockedReason={vatState === 'failed' ? EXPORT_BLOCKED_VAT : null}
+            // ההודעה מבטיחה "נסי שוב" — והחלון (מודאלי) הוא שחייב להציג את הכפתור; `error` הוא
+            // מה שמרנדר אותו בתצוגה-המקדימה (הסוכן-היריב 23/09: בלעדיו המשתמשת תקועה, כי `retry`
+            // של המסך מחובר רק למסך-השגיאה המלא שמאחורי החלון).
+            error={vatState === 'failed' ? EXPORT_VAT_FAILED_SHORT : null}
+            onRetry={retry}
+            buildSheet={buildExportSheet}
+            knownMessages={EXPORT_LOCKED_MESSAGES}
+            fileName={exportFileName}
+            onExport={({ columns: picked, rows: pickedRows, scope, count }) =>
+              exportReportRows({
+                fileName: exportFileName,
+                sheetName: TABS.find((t) => t.key === tab)?.label ?? 'כספים',
+                columns: picked,
+                rows: pickedRows,
+                meta: { scope, count, generatedAt: new Date() },
+              })
+            }
+          />
+        )}
       </Card>
 
       {/* 🔴 **היסטוריית-דוחות-השכר אינה כאן יותר — הכרעת-ישי `28/08/2026`.** היא עברה
@@ -720,7 +988,7 @@ function PageHeader({ onOpenSalary }) {
     <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-lg font-bold text-slate-800">{PAGE_TITLE}</h1>
-        <p className="mt-0.5 text-[12px] text-slate-500">{PAGE_SUBTITLE}</p>
+        <p className="mt-0.5 text-sm text-slate-500">{PAGE_SUBTITLE}</p>
       </div>
       <Button
         type="button"
@@ -806,7 +1074,7 @@ function FilterBar({ filters, onChange, onClear }) {
   const set = (patch) => onChange({ ...filters, ...patch })
   return (
     <div className="flex flex-wrap items-center gap-2.5 py-3" data-testid="finance-filter-bar">
-      <label className="text-[11.5px] text-slate-500" htmlFor="finance-filter-from">
+      <label className="text-xs text-slate-500" htmlFor="finance-filter-from">
         מ-
       </label>
       <input
@@ -815,10 +1083,10 @@ function FilterBar({ filters, onChange, onClear }) {
         dir="ltr"
         value={filters.from}
         onChange={(e) => set({ from: e.target.value })}
-        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-from"
       />
-      <label className="text-[12px] text-slate-400" htmlFor="finance-filter-to">
+      <label className="text-sm text-slate-400" htmlFor="finance-filter-to">
         עד
       </label>
       <input
@@ -827,7 +1095,7 @@ function FilterBar({ filters, onChange, onClear }) {
         dir="ltr"
         value={filters.to}
         onChange={(e) => set({ to: e.target.value })}
-        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-to"
       />
       <input
@@ -836,7 +1104,7 @@ function FilterBar({ filters, onChange, onClear }) {
         onChange={(e) => set({ company: e.target.value })}
         placeholder="שם חברה, לדוגמה: קמפוס טכנולוגי צפון"
         aria-label="סינון לפי שם חברה"
-        className="h-8 w-[190px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[190px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-company"
       />
       <input
@@ -846,14 +1114,14 @@ function FilterBar({ filters, onChange, onClear }) {
         onChange={(e) => set({ projectNumber: e.target.value })}
         placeholder="מס׳ פרויקט, לדוגמה: 15"
         aria-label="סינון לפי מספר פרויקט"
-        className="h-8 w-[160px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[160px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-number"
       />
       <Button
         type="button"
         variant="link"
         onClick={onClear}
-        className="mr-auto h-auto p-0 text-[12.5px] font-semibold text-teal-700"
+        className="mr-auto h-auto p-0 text-sm font-semibold text-teal-700"
         data-testid="finance-clear-filter"
       >
         {CLEAR_FILTER_LABEL}
@@ -884,7 +1152,7 @@ function EmptyRows({ filtered, tab, total, onClear }) {
             type="button"
             variant="link"
             onClick={onClear}
-            className="h-auto p-0 text-[12.5px] font-semibold text-teal-700"
+            className="h-auto p-0 text-sm font-semibold text-teal-700"
             data-testid="finance-empty-clear-filter"
           >
             {CLEAR_FILTER_LABEL}
@@ -1005,10 +1273,10 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
       data-testid={`finance-row-${row.project_id}`}
     >
       <Td>
-        <div className="text-[13.5px] font-semibold text-slate-800">{row.event_name}</div>
-        <div className="mt-px text-[11.5px] text-slate-500">{row.customer_name}</div>
+        <div className="text-sm font-semibold text-slate-800">{row.event_name}</div>
+        <div className="mt-px text-xs text-slate-500">{row.customer_name}</div>
         {/* שורת-ההקשר של שורה מבוטלת, במקום שבו המוקאפ המאושר מצייר אותה — תחת שם-הפרויקט
-            ושם-הלקוח, ב-`class="calm"` שהוא בדיוק `text-[11.5px] text-slate-500` שכאן.
+            ושם-הלקוח, ב-`class="calm"` שהוא בדיוק `text-xs text-slate-500` שכאן.
             🔤 **התווית עצמה אינה מנוסחת כאן**: `CANCEL_TYPE_LABELS` (S-30) היא אותה מילה
             שבדיאלוג-הביטול של מ6 ובכרטיס-הפרויקט (`ProjectCardPage.jsx` — שם היא עומדת
             בדיוק כך, לבדה, כשורת-משנה). ⚠️ **ומה שהמוקאפ מצייר וכאן חסר:** חצי-המשפט
@@ -1017,7 +1285,7 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
             לגזור ממנו, וכתיבת מספר משוער הייתה המצאה. **מדווח כפער-נתונים, לא הושלם בניחוש.** */}
         {entry.cancelled && row.cancel_type && (
           <div
-            className="mt-px text-[11.5px] text-slate-500"
+            className="mt-px text-xs text-slate-500"
             data-testid={`finance-cancel-context-${row.project_id}`}
           >
             {CANCEL_TYPE_LABELS[row.cancel_type]}
@@ -1026,13 +1294,13 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
         {/* אותו תנאי בדיוק כמו `isActionable` — הרקע והשורה מספרים סיפור אחד, ותיק
             מארוכב אינו מבקש בירור שכבר נעשה כתנאי לארכובו. */}
         {!row.archived_at && needsClarification && (
-          <div className="mt-0.5 text-[11.5px] font-semibold text-amber-700">
+          <div className="mt-0.5 text-xs font-semibold text-amber-700">
             ⚠ ציון-משוב <Ltr>{String(entry.score.score)}</Ltr> — נדרש בירור טלפוני
           </div>
         )}
         {row.credit_note_flag && (
           <div
-            className="mt-0.5 text-[11.5px] font-semibold text-amber-700"
+            className="mt-0.5 text-xs font-semibold text-amber-700"
             data-testid={`finance-credit-note-${row.project_id}`}
           >
             {CREDIT_NOTE_LINE}
@@ -1044,7 +1312,7 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
         <>
           <Td>
             <DateCell iso={rowDateIso(row, tab)} />
-            <div className="text-[11.5px] text-slate-500">
+            <div className="text-xs text-slate-500">
               {entry.cancelled ? CANCELLED_DATE_NOTE : OPERATIONALLY_CLOSED_NOTE}
             </div>
           </Td>
@@ -1062,8 +1330,8 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
           <Td>
             {entry.dueDate ? (
               <>
-                <Ltr className="text-[13px]">{formatDate(entry.dueDate)}</Ltr>
-                <div className="text-[11.5px] text-slate-500">
+                <Ltr className="text-sm">{formatDate(entry.dueDate)}</Ltr>
+                <div className="text-xs text-slate-500">
                   שוטף+<Ltr>{String(row.payment_terms_days)}</Ltr>
                 </div>
               </>
@@ -1093,10 +1361,10 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
           <Td>
             {/* §7.52 — ‏% נגזר לתצוגה כערך-ראשי, ‏₪ הנשמר יורד לשורת-המשנה (תיקון-הבקרה
                 26/08 בתוך המוקאפ עצמו, שגובר על בלוק-הפתיחה שלו). */}
-            <div className="text-[13.5px] font-bold text-slate-800">
+            <div className="text-sm font-bold text-slate-800">
               <Ltr>{formatPercent(entry.profitPercent)}</Ltr>
             </div>
-            <div className="mt-px text-[11px] text-slate-500">
+            <div className="mt-px text-xs text-slate-500">
               {row.final_profit === null ? DASH : <Money amount={Number(row.final_profit)} cents />}
             </div>
           </Td>
@@ -1134,7 +1402,7 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
 function DateCell({ iso }) {
   const text = stampDate(iso)
   if (!text) return <span className="text-slate-400">{DASH}</span>
-  return <Ltr className="text-[13px]">{text}</Ltr>
+  return <Ltr className="text-sm">{text}</Ltr>
 }
 
 // 🔴 שורה מבוטלת שדמי-הביטול שלה טרם נפתרו מציגה `—` ולא סכום: ההצעה התלת-רכיבית נגזרת
@@ -1144,9 +1412,9 @@ function AmountCell({ entry }) {
   if (entry.amount === null || entry.amount === undefined) {
     return (
       <>
-        <div className="text-[13.5px] font-bold text-slate-400">{DASH}</div>
+        <div className="text-sm font-bold text-slate-400">{DASH}</div>
         {entry.feeUnresolved && (
-          <div className="mt-px text-[11px] font-semibold text-amber-700">
+          <div className="mt-px text-xs font-semibold text-amber-700">
             {CANCELLATION_FEE_UNRESOLVED}
           </div>
         )}
@@ -1155,10 +1423,10 @@ function AmountCell({ entry }) {
   }
   return (
     <>
-      <div className="text-[13.5px] font-bold text-slate-800">
+      <div className="text-sm font-bold text-slate-800">
         <Money amount={Number(entry.amount)} cents />
       </div>
-      <div className="mt-px text-[11px] text-slate-500">
+      <div className="mt-px text-xs text-slate-500">
         {entry.amountWithVat === null ? (
           <Ltr>{DASH}</Ltr>
         ) : (
@@ -1191,18 +1459,18 @@ function OverdueCell({ days, debtOpen, paidOn, testId }) {
     return (
       <>
         <StatusTag label={PAID_TAG} tone="ok" testId={testId} />
-        <div className="mt-px text-[11.5px] text-slate-500">
+        <div className="mt-px text-xs text-slate-500">
           <Ltr>{formatDate(paidOn, DASH)}</Ltr>
         </div>
       </>
     )
   }
   if (days === null) return <span className="text-slate-400">{DASH}</span>
-  if (days === 0) return <Ltr className="text-[13px] text-slate-400">0</Ltr>
+  if (days === 0) return <Ltr className="text-sm text-slate-400">0</Ltr>
   return (
     <>
-      <Ltr className="text-[13.5px] font-bold text-red-600">{String(days)}</Ltr>{' '}
-      <span className="text-[11.5px] text-slate-500">ימים</span>
+      <Ltr className="text-sm font-bold text-red-600">{String(days)}</Ltr>{' '}
+      <span className="text-xs text-slate-500">ימים</span>
     </>
   )
 }

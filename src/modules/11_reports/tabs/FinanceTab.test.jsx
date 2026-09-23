@@ -125,7 +125,12 @@ const base = (extra) => ({
 
 const overviewPayload = () =>
   base({
-    population: { n: 35, label: 'אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · n=35', excluded: {} },
+    population: {
+      n: 35,
+      summary: '35 חשבוניות פתוחות',
+      label: 'אוכלוסייה: חשבוניות שנשלחו וטרם שולמו · n=35',
+      excluded: {},
+    },
     window: { from: '2026-01-01', to: '2026-09-16', label: '01/01–16/09/2026' },
     tiles: [
       {
@@ -133,7 +138,7 @@ const overviewPayload = () =>
         label: 'יתרת-חוב פתוחה',
         value: 236382,
         format: 'money',
-        window: 'נכון להיום · אינו מושפע ממסנן התקופה',
+        window: 'נכון להיום',
         compare: { label: 'לפני חודש', value: 206002, direction: 'up' },
         target: { tab: 'כספים', report: 'report_m09_aging', drill: null },
       },
@@ -472,9 +477,13 @@ describe('מ7 · מבט-על כספים', () => {
     expect(plain(tile)).toContain('236,382 ₪')
     // 📐1 — חצי-ההשוואה מעוצב ככסף ולא כמספר גולמי (ר' `withCompareFormat`).
     expect(plain(tile)).toContain('206,002 ₪')
-    // 📐3 — חלון-הזמן על האריח, כולל ההצהרה שהוא אינו מגיב למסנן.
-    expect(plain(tile)).toContain('אינו מושפע ממסנן התקופה')
+    // 📐3 — חלון-הזמן על האריח. ✏️ 23/09/2026 (L1): בלי "אינו מושפע ממסנן התקופה" — שורת-המסננים
+    // כבר אומרת זאת כעובדה (`תקופה  נכון להיום`), וההסתייגות ירדה מהשרת.
+    expect(plain(tile)).toContain('נכון להיום')
+    expect(plain(tile)).not.toContain('אינו מושפע')
 
+    // שבב-ההיקף מהשרת (`population.summary`); ההצהרה המלאה מקופלת בתוכו.
+    expect(plain(screen.getByTestId('report-scope-summary'))).toContain('35 חשבוניות פתוחות')
     expect(plain(screen.getByTestId('report-population'))).toContain('n=35')
     expect(plain(screen.getByTestId('report-so-what'))).toContain('מעל 60 יום')
     expect(plain(screen.getByTestId('report-definitions'))).toContain('יתרת-חוב פתוחה =')
@@ -508,11 +517,10 @@ describe('מ7 · מבט-על כספים', () => {
     callReport.mockResolvedValue(overviewPayload())
     const { onDrill } = renderTab({ slug: 'finance-overview' })
 
-    // 📐8 — הפאג'ר סופר את מה שמוצג; ההצהרה שלצידו נושאת את הסך האמיתי מ-`open_invoice_count`.
+    // ✏️ 23/09/2026 (פזה ב׳ שלב 4) — משפט *"אלה N החשבוניות הישנות ביותר מתוך 35"* נמחק: הכותרת-
+    // הכנה של רשימת-השיא (`surface.topN`) אומרת אותו, ושתי הצהרות זו מעל זו היו כפילות. הדלת נשארת.
     const cap = await screen.findByTestId('finance-row-cap')
-    expect(plain(cap)).toContain('אלה 2 החשבוניות הישנות ביותר מתוך 35 הפתוחות.')
-    // 🔴 **ושתי ההצהרות אינן יכולות להצטייר יחד:** ההערה המשותפת (§9 D-25) נקראת מ-
-    // `meta.row_total`, ומ7 אינו מחזיר אותו — נמדד חי אחרי H2 על ארבעת משטחי-הכספים.
+    expect(plain(cap)).not.toContain('אלה')
     expect(screen.queryByTestId('report-row-cap')).not.toBeInTheDocument()
     const door = screen.getByTestId('finance-open-invoices-door')
     expect(plain(door)).toBe('כל 35 החשבוניות הפתוחות →')
@@ -776,14 +784,17 @@ describe('חמשת המצבים והייצוא', () => {
     )
   })
 
-  it('טבלה בלי שורות ⇒ כפתור-הייצוא מנוטרל עם "אין שורות לייצא"', async () => {
+  it('טבלה בלי שורות ⇒ הכפתור נשאר פעיל, והחסימה עברה לתוך החלון', async () => {
     const payload = overviewPayload()
     payload.rows = []
     callReport.mockResolvedValue(payload)
     renderTab({ slug: 'finance-overview' })
     const button = await screen.findByTestId('reports-export-button')
-    expect(button).toBeDisabled()
-    expect(plain(screen.getByTestId('reports-export-file'))).toBe('אין שורות לייצא')
+    expect(button).toBeEnabled()
+    // ✏️ **17/09/2026 — ת4ב:** הכפתור פעיל תמיד והכיתוב עבר לתוך החלון; החסימה נבדקת
+    // פר-דוח נבחר. הנוסח הנעול עצמו נבדק ב-`reportsExport.test.js` (זהות-בייט) וב-
+    // `ExportDialog.test.jsx` (מוצג במקום שורת-הכמות, והייצוא מנוטרל).
+    expect(screen.queryByTestId('reports-export-file')).toBeNull()
   })
 })
 

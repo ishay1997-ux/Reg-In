@@ -312,7 +312,7 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
       renderBeforeTable={(payload) => (
         <>
           <h3
-            className="mb-1.5 text-[13px] font-semibold text-slate-700"
+            className="mb-1.5 text-sm font-semibold text-slate-700"
             data-testid="report-table-title"
           >
             {TABLE_TITLES[surface.slug]?.(payload, chips)}

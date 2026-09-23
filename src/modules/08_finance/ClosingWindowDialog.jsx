@@ -394,7 +394,7 @@ function Val({ children, className }) {
 
 function Sub({ children, className, testId }) {
   return (
-    <span className={cn('text-[11px] text-slate-500', className)} data-testid={testId}>
+    <span className={cn('text-xs text-slate-500', className)} data-testid={testId}>
       {children}
     </span>
   )
@@ -402,7 +402,7 @@ function Sub({ children, className, testId }) {
 
 function SectionTitle({ children }) {
   return (
-    <h3 className="mt-1 border-b border-slate-200 pb-1 text-[12.5px] font-semibold text-slate-600">
+    <h3 className="mt-1 border-b border-slate-200 pb-1 text-sm font-semibold text-slate-600">
       {children}
     </h3>
   )
@@ -418,7 +418,7 @@ function SectionTitle({ children }) {
 function GateNote({ children, testId, id, fullWidth = false }) {
   return (
     <span
-      className={cn('text-[11px] leading-relaxed text-amber-800', fullWidth && 'w-full')}
+      className={cn('text-xs leading-relaxed text-amber-800', fullWidth && 'w-full')}
       data-testid={testId}
       id={id}
     >
@@ -448,10 +448,7 @@ function BalanceRow({ label, amount, op, total, testId }) {
       data-testid={testId}
     >
       <span
-        className={cn(
-          'text-[12.5px] text-slate-600',
-          total && 'text-[13px] font-semibold text-slate-800',
-        )}
+        className={cn('text-sm text-slate-600', total && 'text-sm font-semibold text-slate-800')}
       >
         {op ? <span aria-hidden="true">{op} </span> : null}
         {label}
@@ -459,7 +456,7 @@ function BalanceRow({ label, amount, op, total, testId }) {
       <Money
         amount={amount}
         cents
-        className={cn('text-sm text-slate-800', total && 'text-[15px] font-bold')}
+        className={cn('text-sm text-slate-800', total && 'text-base font-bold')}
       />
     </div>
   )
@@ -607,10 +604,10 @@ function CompensationComponent({ proposal, cancelType }) {
   return (
     <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[12.5px] font-semibold text-slate-700">① פיצוי-צוות</span>
+        <span className="text-sm font-semibold text-slate-700">① פיצוי-צוות</span>
         {proposal?.team_compensation == null ? (
           <span
-            className="text-[12px] font-semibold text-amber-800"
+            className="text-sm font-semibold text-amber-800"
             data-testid={manualOnly ? 'closing-fee-comp-manual' : 'closing-fee-comp-missing'}
           >
             {manualOnly ? OTHER_NO_PROPOSAL_NOTE : NO_PLANNED_HOURS_NOTE}
@@ -635,7 +632,7 @@ function CompensationComponent({ proposal, cancelType }) {
           data-testid="closing-fee-payout-anchor"
         >
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[12.5px] font-semibold text-slate-700">
+            <span className="text-sm font-semibold text-slate-700">
               הצוות יקבל בפועל (משולם בדוח-השכר)
             </span>
             <Money
@@ -681,7 +678,7 @@ function CompensationComponent({ proposal, cancelType }) {
 function ManualServiceComponent({ label, amount, onLabel, onAmount }) {
   return (
     <div className="mt-2 rounded-lg border border-dashed border-slate-300 bg-white p-3">
-      <span className="text-[12.5px] font-semibold text-slate-700">③ שירותים שבוצעו</span>
+      <span className="text-sm font-semibold text-slate-700">③ שירותים שבוצעו</span>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <input
           type="text"
@@ -690,7 +687,7 @@ function ManualServiceComponent({ label, amount, onLabel, onAmount }) {
           placeholder="לדוגמה: עיצוב גרפי לבמה שכבר הופק"
           data-testid="closing-manual-label"
           onChange={(event) => onLabel(event.target.value)}
-          className="h-8 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-[13px] text-slate-800"
+          className="h-8 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-800"
         />
         <input
           type="number"
@@ -702,7 +699,7 @@ function ManualServiceComponent({ label, amount, onLabel, onAmount }) {
           data-testid="closing-manual-amount"
           onFocus={(event) => event.target.select()}
           onChange={(event) => onAmount(event.target.value)}
-          className="h-8 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-[13px] text-slate-800"
+          className="h-8 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-800"
         />
       </div>
       <Sub className="mt-1 block">
@@ -723,7 +720,7 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
       <SectionTitle>סכום דמי-הביטול הסופי</SectionTitle>
       {manualOnly && (
         <p
-          className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] leading-relaxed text-amber-800"
+          className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-relaxed text-amber-800"
           role="note"
           data-testid="closing-fee-manual-only"
         >
@@ -749,7 +746,7 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
             data-testid="closing-fee-amount"
             onFocus={(event) => event.target.select()}
             onChange={(event) => onAmount(event.target.value)}
-            className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-[13px] text-slate-800"
+            className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-800"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -763,7 +760,7 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
             placeholder="חופשי — יישמר לצד הסכום הסופי"
             data-testid="closing-fee-note"
             onChange={(event) => onNote(event.target.value)}
-            className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-[13px] text-slate-800"
+            className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-800"
           />
         </div>
       </div>
@@ -848,7 +845,7 @@ function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, action
 
       <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[12.5px] font-semibold text-slate-700">
+          <span className="text-sm font-semibold text-slate-700">
             ② סחורה שהוזמנה/הגיעה — במחיר מלא
           </span>
           <Money
@@ -873,7 +870,7 @@ function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, action
       />
 
       <div className="mt-2 flex items-baseline justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-        <span className="text-[12.5px] font-semibold text-slate-700">תת-סכום (① + ②)</span>
+        <span className="text-sm font-semibold text-slate-700">תת-סכום (① + ②)</span>
         <Money
           amount={proposal?.proposed_fee}
           cents
@@ -907,7 +904,7 @@ function FeeSavedBlock({ detail, creditNoteFlag }) {
       data-testid="closing-fee-saved"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[12.5px] font-semibold text-slate-700">דמי-ביטול שנקבעו</span>
+        <span className="text-sm font-semibold text-slate-700">דמי-ביטול שנקבעו</span>
         <Money
           amount={detail.cancellation_fee}
           cents
@@ -986,9 +983,9 @@ function InvoiceUploadBlock({
         <span aria-hidden="true" className="text-lg">
           📎
         </span>
-        <span className="text-[12px] text-slate-600">{DROPZONE_HINT}</span>
+        <span className="text-sm text-slate-600">{DROPZONE_HINT}</span>
         <label
-          className="cursor-pointer rounded-lg border border-slate-300 px-3 py-1 text-[12px] text-slate-700"
+          className="cursor-pointer rounded-lg border border-slate-300 px-3 py-1 text-sm text-slate-700"
           htmlFor="closing-file-input"
         >
           בחרי קובץ
@@ -1001,14 +998,14 @@ function InvoiceUploadBlock({
           data-testid="closing-file-input"
           onChange={onPick}
         />
-        <span className="text-[11px] text-slate-500" data-testid="closing-file-hint">
+        <span className="text-xs text-slate-500" data-testid="closing-file-hint">
           {file ? file.name : 'לא נבחר קובץ עדיין'}
         </span>
       </div>
 
       {fileError ? (
         <p
-          className="mt-1 text-[11.5px] font-semibold text-red-600"
+          className="mt-1 text-xs font-semibold text-red-600"
           role="alert"
           data-testid="closing-file-error"
         >
@@ -1061,7 +1058,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
             value={value}
             data-testid="closing-payment-date"
             onChange={(event) => onChange(event.target.value)}
-            className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-[13px] text-slate-800"
+            className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-800"
           />
         </div>
         <Button
@@ -1152,7 +1149,7 @@ function FeedbackEntry({ score, onScore, onNoResponse, busy, showNoResponse = tr
           variant="outline"
           disabled={busy !== ''}
           data-testid="closing-no-response"
-          className="h-auto rounded-lg border-slate-300 px-3 py-1.5 text-[12.5px] text-slate-700"
+          className="h-auto rounded-lg border-slate-300 px-3 py-1.5 text-sm text-slate-700"
           onClick={onNoResponse}
         >
           לא ענה לסקר
@@ -1286,7 +1283,7 @@ function FeedbackBlock({
               variant="link"
               disabled={busy !== ''}
               data-testid="closing-feedback-score-edit"
-              className="h-auto p-0 text-[12px] font-semibold text-slate-600 underline"
+              className="h-auto p-0 text-sm font-semibold text-slate-600 underline"
               onClick={onOpenScoreEdit}
             >
               שני ציון
