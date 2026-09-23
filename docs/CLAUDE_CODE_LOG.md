@@ -46,6 +46,18 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (03:2X) — the handoff updated, and a fourth Stop-hook catch
+
+**`66d1a885`.** Six rulings from 23/09 recorded with the wording that produced them, three new traps, sections 6 and 7 refreshed, and a corrected paste block.
+
+**Trap 23 — the horizontal scrollbar cannot be verified from headless.** 📊 `canScrollX: true`, 856px hidden, **and a measured bar height of 0 even with an explicit `::-webkit-scrollbar`**. ⇒ the handoff says plainly **not to claim a bar exists**, and points at the column count in the caption as the thing that does not depend on what the browser draws.
+
+**Trap 24 — you cannot export a field that was never fetched.** The projects mockup showed thirty; the RPC returns seventeen. Closing that gap is a migration. ⇒ the paste block now carries **Ishay's own question as an instruction**: *"המסך הזה מכיל מלא שדות, לא?"* — open the query and count.
+
+**Trap 25 — unicode escapes inside a python heredoc destroyed a source file twice tonight** (`ExportPreviewPanel`, `ProjectsPage`), leaving each at length 0; a third attempt then broke on a Windows path in a non-raw string, and a fourth on the very text describing the trap. 🔑 **Write Hebrew directly, or use an editing tool.** `git checkout --` recovers — **but only because the file was already committed.**
+
+🔴 **And the fourth Stop-hook catch, now the session's most repeated error.** Four blocks, one cause: code or docs pushed before `CLAUDE_CODE_LOG` and `STATUS` were updated. ⚠️ **`cbf160da` did it right** — code and docs in a single commit — **and the very next commit regressed.** ⇒ *"docs last"* keeps decaying into *"docs later"* under momentum. **The write-back belongs in the same commit as the change that caused it**; the hook is the backstop, not the process.
+
 ### 23/09/2026 (03:0X) — "default is what's on screen, and you can add more"
 
 **Ishay, 23/09:** *"בכל מסך שילחצו ייצוא נראלי שברירת המחדל תהיה מה שבמסך? ואם ירצה יוכל להוסיף עוד"*.
