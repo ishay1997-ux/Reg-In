@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 24/09/2026 night — system polish, session 1 of 2 (`ishay/system-polish`, plan `docs/plans/2026-09-24-system-polish.md`)
+- Packages 0 · A · C1 · C3 · B · F done, plus D1 (ahead of plan, Ishay: "continue as far as you can"). Commits in the plan's §12 row (handoff point, head `3b37b3d7`); pushed, not merged.
+- Verified: quality gate 0 · vitest green · e2e 187 ok / 6 x / 7 skipped — 5 failures identical by name to the baseline on `953b1cdc` (pre-existing, offered as a separate task), the 6th caused by package 0 (`?view=` reopens the dialog after reload) and fixed in the test. Live checks: H1 door → document #2317; rejected-quote edit → message, no form; hostess #438 preferences as recruitment manager and CEO; AI bar screenshots.
+- Gotchas learned: (1) the H1 bug's root cause was `setLoadError('')` placed *after* the branches that set the error (since `32858cd1`) — the plan had described it differently; (2) a scan agent's hint draft for the price catalog was false (`repriceLine` re-prices an edited line) — every hint claim was re-checked in code; (3) live data has 25–37 client preferences per hostess → grouped display; (4) a regex-based import inserter landed inside a multi-line import — lint caught it; (5) the shell-dialect hook blocks any command that mentions a test/lint/gate word and also pipes to `head`/`tail`: write output to a file and grep the file.
+- `הנחתי` logged in `module-2.md` (a customer's average → nearest-score band for §7.80). Not built: 0ב (deputy's addition, session 2), D2, axe expansion, per-state copy reviewers.
+
 ### 23–24/09/2026 night — M11 decision reports + card standard second half (`ishay/m11-decision-reports`)
 - Commits `11e725ed` (plan backup + STATUS) · `f8348f58` (density check + L5/L6 + M21 banner/S1 + hostess hints) · `4281d924` (ה1–ה3, seed, review fixes) · `d5ca2adb` (grid + L7/L7b). All pushed; not merged (merge is Ishay's).
 - DB: 11 migrations applied under Ishay's session grant ("לא לבקש אישור להכיל מיגרציות בסשן הזה"); every text round checked by live md5 == `expect-md5.mjs`; proacl has no anon on all 16. Seed: 106 feedback scores (backup table in `seed_snapshot`); M19 "satisfied return faster" kept its direction (28 vs 162 days).
