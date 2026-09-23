@@ -3,14 +3,23 @@
 // (so the SQL `replace()` matches the live pg_get_functiondef text byte for byte), prints it for
 // review, and emits: (1) the migration, (2) a read-only verify query that counts each span in
 // the LIVE function. Usage: node gen-migration.mjs <out.sql> <verify.sql> [--show]
+// ✏️ 23/09/2026 — a later round: `--ops ops-l2.mjs` takes its ops from that file and builds on the
+// body AFTER L1 (`bodies.mjs` postL1, proven == live), not on the j-file body. Without the flag the
+// output is exactly L1's, as before.
 import fs from 'fs'
 import path from 'path'
-import { OPS, FILES } from './ops.mjs'
+import { FILES } from './ops.mjs'
+import { postL1 } from './bodies.mjs'
 
 const REPO = 'C:/Users/ishay/Reg-In-copy-wt/supabase/migrations/'
-const [outFile, verifyFile, show] = process.argv.slice(2)
+const args = process.argv.slice(2)
+const opsArg = args.indexOf('--ops')
+const opsFile = opsArg >= 0 ? args.splice(opsArg, 2)[1] : null
+const [outFile, verifyFile, show] = args
+const { OPS } = await import(opsFile ? `./${opsFile}` : './ops.mjs')
 
 function bodyOf(fn) {
+  if (opsFile) return postL1(fn)
   const src = fs.readFileSync(path.join(REPO, FILES[fn]), 'utf8').replace(/\r\n/g, '\n')
   const start = src.lastIndexOf(`create or replace function public.${fn}(`)
   if (start < 0) throw new Error(`no body for ${fn}`)
