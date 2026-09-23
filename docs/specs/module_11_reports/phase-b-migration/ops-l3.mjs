@@ -3,8 +3,9 @@
 // visible payload field (so_what · tile sub/window/compare · chart title/note · meta.notes):
 // two compare labels still print statistician's "n=" — and in M17 the browser renders it "97=n" —
 // and two M08 footnotes carry internal accounting words ("רצפת-המהותיות", "רווח סופי קפוא").
-// 🔒 Deliberately NOT here: M21's "עמודות ואריחי ה-₪ בדף זה כפופים להרשאת מודול כספים." — the SQL
-// comment beside it ties it to §7.100 (Ishay, 17/09/2026). A ruled sentence is asked about, not cut.
+// 🔒 Deliberately NOT here: M21's "עמודות ואריחי ה-₪ בדף זה כפופים להרשאת מודול כספים." — a question
+// for Ishay. ✏️ Corrected 23/09: §7.100 (Ishay, 17/09/2026) ruled only that the masking moves into the DB;
+// keeping the sentence was the J3 writer's choice (its SQL comment says so), not Ishay's ruling.
 export const OPS = {
   report_m14_hostess_overview: [
     { why: 'gini compare: "n=" is statistician speak; the hint explains the pool changed', find: "'label', 'אשתקד (n=' || v_gini_prev_n || ')',", with: "'label', 'אשתקד'," },

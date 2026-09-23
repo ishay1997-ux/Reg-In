@@ -84,7 +84,10 @@
     - micro-guide D-45 has an as-built line.
     - Handoff: new block "🆕 בלוק 23/09/2026 לילה" (read-session: 78KB conversation, read from line 1).
     - The prompt file was rewritten for "after the close".
-    - A fresh-eyes Sonnet agent (~150K estimated) reviews both.
+    - A fresh-eyes Sonnet agent reviewed both: **~141K actual vs ~150K estimated.**
+      - All of ~20 claims verified except one should-fix: the §7.100/m21 attribution was corrected in the handoff but not at its sources.
+      - Fixed in `db_roadmap §10ב` (L3 row) and `ops-l3.mjs`.
+      - The applied L3 header is append-only, so the roadmap row is the correction of record.
   - **Open, all Ishay's:**
     - Merging to dev and then main.
     - The m21 permission sentence.
