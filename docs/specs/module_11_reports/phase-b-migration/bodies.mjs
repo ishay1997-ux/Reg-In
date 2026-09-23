@@ -8,7 +8,7 @@ import path from 'path'
 import crypto from 'crypto'
 import { FILES } from './ops.mjs'
 
-const MIGS = 'C:/Users/ishay/Reg-In-copy-wt/supabase/migrations/'
+const MIGS = 'C:/Users/ishay/Reg-In-dash-wt/supabase/migrations/'
 export const L1_FILE = path.join(MIGS, '20260923180000_module11_l1_report_copy.sql')
 
 // K1 patches — the same table as md5check.mjs (K1 edited these bodies after the j-files).
@@ -56,4 +56,10 @@ export const L3_FILE = path.join(MIGS, '20260923210000_module11_l3_compare_notes
 export const postL3 = (fn) => applyMigrationFile(L3_FILE, fn, postL2(fn))
 export const L4_FILE = path.join(MIGS, '20260923220000_module11_l4_frozen_note.sql')
 export const postL4 = (fn) => applyMigrationFile(L4_FILE, fn, postL3(fn))
+// ✏️ 23/09/2026 night — L5 applied (md5 9/9 changed == `expect-md5.mjs l5`, 4 unchanged); the decision reports build on this.
+export const L5_FILE = path.join(MIGS, '20260923230000_module11_l5_card_standard_copy.sql')
+export const postL5 = (fn) => applyMigrationFile(L5_FILE, fn, postL4(fn))
+// ✏️ L6 applied (md5 4/4 == `expect-md5.mjs l6`).
+export const L6_FILE = path.join(MIGS, '20260923233000_module11_l6_card_lines.sql')
+export const postL6 = (fn) => applyMigrationFile(L6_FILE, fn, postL5(fn))
 export const md5 = (s) => crypto.createHash('md5').update(s, 'utf8').digest('hex')

@@ -7,7 +7,7 @@
 // קומפילציה, בדיקות ושער-לינט** — הן נראות רק בעין, ולכן הן כתובות כאן.
 
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 
 // ⚠️ מלכודת `.env.local` מול CI — בלי המוק כל בדיקת-רכיב שנוגעת בשרשרת-ה-api קורסת ב-CI.
 vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
@@ -34,13 +34,45 @@ describe('KpiTile — 📑ב · שורת-המכנה-הגלוי (tiles[].sub)', (
     expect(screen.getByTestId('kpi-sub')).toHaveTextContent('35 חשבוניות פתוחות')
   })
 
-  // 🔴 **סדר-המוקאפ, נמדד על ארבעת הקבצים המאושרים:** `.lb · .vl · .sub · .cmp · .win`.
-  it('הסדר הוא ערך ⇐ sub ⇐ השוואה ⇐ חלון, ולא אחר', () => {
+  // 🔴 **תקן-הכרטיס (23/09/2026, כויל מול ישי):** השוואה + מכנה קצר גלויים; החלון עובר ל-ⓘ.
+  // ✏️ מחליף את בדיקת-הסדר *"ערך ⇐ sub ⇐ השוואה ⇐ חלון"* — ישי על האתר החי: *"ככה לא ניראת מערכת
+  // SAAS מקצועית"*, ועל כרטיס-החוב: *"אולי אשתקד זה כן נחמד"*.
+  it('מכנה קצר והשוואה בכרטיס — החלון ב-ⓘ', () => {
     render(<KpiTile tile={TILE} />)
-    const ids = ['kpi-sub', 'kpi-compare', 'kpi-window']
-    const all = Array.from(document.body.querySelectorAll('[data-testid]'))
-    const positions = ids.map((id) => all.indexOf(screen.getByTestId(id)))
-    expect([...positions].sort((a, b) => a - b)).toEqual(positions)
+    const card = screen.getByTestId('report-tile-open_debt')
+    expect(within(card).getByTestId('kpi-sub')).toHaveTextContent('35 חשבוניות פתוחות')
+    expect(within(card).getByTestId('kpi-compare')).toBeInTheDocument()
+    expect(within(card).queryByTestId('kpi-window')).toBeNull()
+    expect(within(screen.getByTestId('kpi-details')).getByTestId('kpi-window')).toHaveTextContent(
+      'נכון להיום',
+    )
+  })
+
+  it('מכנה ארוך (משפט) עובר ל-ⓘ', () => {
+    const sub = '0 מחמשת הגדולים (44.4% מההכנסה) מסומנים "מתרחק"'
+    render(<KpiTile tile={{ ...TILE, sub }} />)
+    const card = screen.getByTestId('report-tile-open_debt')
+    expect(within(card).queryByTestId('kpi-sub')).toBeNull()
+    expect(within(screen.getByTestId('kpi-details')).getByTestId('kpi-sub')).toHaveTextContent(
+      'מתרחק',
+    )
+  })
+
+  it('בלי השוואה-עם-ערך — המכנה הוא השורה הגלויה', () => {
+    const tile = { ...TILE, compare: { label: 'זו הערכה, לא סכום שצפוי להיאבד', value: null } }
+    render(<KpiTile tile={tile} />)
+    const card = screen.getByTestId('report-tile-open_debt')
+    expect(within(card).getByTestId('kpi-sub')).toBeInTheDocument()
+    expect(within(card).queryByTestId('kpi-compare')).toBeNull()
+    expect(within(screen.getByTestId('kpi-details')).getByTestId('kpi-compare')).toBeInTheDocument()
+  })
+
+  // ⚠️ ⓘ אח של כפתור-הדלת ולא בתוכו — אחרת לחיצה על ⓘ פותחת את הדוח במקום את הפירוט.
+  it('ה-ⓘ אינו בתוך כפתור-הדלת', () => {
+    const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
+    render(<KpiTile tile={{ ...TILE, target }} onOpenTarget={vi.fn()} />)
+    const door = screen.getByTestId('report-tile-link-open_debt')
+    expect(door.contains(screen.getByTestId('kpi-details'))).toBe(false)
   })
 
   it('אריח בלי sub אינו מייצר את השורה', () => {
@@ -154,12 +186,15 @@ describe('KpiTile — tiles[].compare.note', () => {
     expect(screen.getByTestId('kpi-compare-note')).toHaveTextContent('4 מתוך 18 אירועים')
   })
 
-  it('הסדר הוא sub ⇐ השוואה ⇐ הערת-השוואה ⇐ חלון', () => {
+  // ✏️ 23/09/2026 (תקן-הכרטיס): ההערה עוברת ל-ⓘ, לא לשורה שנייה בכרטיס.
+  it('הערת-ההשוואה נמצאת ב-ⓘ ולא בכרטיס', () => {
     render(<KpiTile tile={withNote} />)
-    const ids = ['kpi-sub', 'kpi-compare', 'kpi-compare-note', 'kpi-window']
-    const all = Array.from(document.body.querySelectorAll('[data-testid]'))
-    const positions = ids.map((id) => all.indexOf(screen.getByTestId(id)))
-    expect([...positions].sort((a, b) => a - b)).toEqual(positions)
+    expect(
+      within(screen.getByTestId('kpi-details')).getByTestId('kpi-compare-note'),
+    ).toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('report-tile-open_debt')).queryByTestId('kpi-compare-note'),
+    ).toBeNull()
   })
 
   it('השוואה בלי note אינה מייצרת שורה ריקה', () => {

@@ -63,11 +63,6 @@ export function SurfaceHint({ hintId }) {
   return hintId ? <Hint id={hintId} /> : null
 }
 
-/** ראש-המשטח — מה שאינו רמז: שורת-השבבים של מ4. */
-export function SurfaceLead({ children }) {
-  return <div className="mb-2">{children}</div>
-}
-
 /** רמזי-האריחים והגרף — כולם מתחת לרצועת-האריחים ולפני הגרף הראשון. */
 export function ChartLead({ hintIds = [] }) {
   return (

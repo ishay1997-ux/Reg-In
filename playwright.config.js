@@ -16,6 +16,10 @@ if (fs.existsSync(envLocalPath)) {
   }
 }
 
+// 🔌 **`E2E_BASE_URL` — לריצה מול שרת-פיתוח על פורט אחר** (למשל 5199 כשעל 5173 רץ פרויקט אחר).
+// בלי המשתנה — 5173, כמו תמיד.
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:5173'
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -31,7 +35,7 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     actionTimeout: 10_000,
@@ -39,7 +43,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
+    url: BASE_URL,
     reuseExistingServer: true,
     timeout: 30_000,
   },

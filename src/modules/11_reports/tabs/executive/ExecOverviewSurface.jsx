@@ -17,15 +17,12 @@ import { withCharts, withPartialMonth } from './chartShape'
 const ROW_ACTION = 'לחיצה על שורה פותחת את כרטיס האירוע'
 // 🔤 החץ נשאר `→` ואינו מתהפך — `m11-copy-rules §4.2` נועל אותו מול התקדים החי
 // `לכרטיס →` (`CustomerDetailsPage.jsx:1332`), ולא לפי כלל-הכיווניות הכללי (כ10).
-const TRENDS_LINK = 'כל השנים בדוח "מגמות רב-שנתיות" →'
-const TRENDS_TARGET = Object.freeze({ tab: 'הנהלה', report: 'report_m03_trends', drill: null })
 
 function transformPayload(payload) {
   return withCharts(payload, (chart) => withPartialMonth(chart, payload.window?.to))
 }
 
 export default function ExecOverviewSurface(props) {
-  const { onDrill } = props
   return (
     <ExecutiveSurface
       {...props}
@@ -39,18 +36,8 @@ export default function ExecOverviewSurface(props) {
       renderBeforeTable={() => (
         <TableLead rowAction={ROW_ACTION} hintId="reports.execOverview.topEventsSort" />
       )}
-      renderExtras={() => (
-        // ‏`.lnk[data-goto=p2]` של המוקאפ (סימון 7) — אותו יעד בדיוק שהאריח הראשון נושא,
-        // ולכן הוא נוסע באותו נתב-דלתות של המעטפת ולא בניווט שני.
-        <button
-          type="button"
-          onClick={() => onDrill(TRENDS_TARGET)}
-          className="mt-2 text-sm font-semibold text-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
-          data-testid="exec-overview-trends-link"
-        >
-          {TRENDS_LINK}
-        </button>
-      )}
+      // ✂️ 24/09/2026 — הקישור "כל השנים בדוח «מגמות רב-שנתיות» →" ירד: הדוח הוחלף ב"סגירת הצעות",
+      // ואין בו עוד ציר-שנים. אריח-ההכנסות עדיין פותח אותו (`tiles[].target` מהשרת).
     />
   )
 }

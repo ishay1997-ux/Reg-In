@@ -658,20 +658,40 @@ describe('מ20 · שביעות רצון', () => {
 })
 
 describe('מ21 · לקוחות מתרחקים', () => {
-  it('באנר שתי-השיטות הוא בסיס ונושא מספרים חיים; איש-הקשר נושא גם טלפון', async () => {
+  it('אין באנר-הסבר במצב 0 (תקן-הכרטיס §4ד); איש-הקשר נושא גם טלפון', async () => {
     callReport.mockResolvedValue(driftingPayload())
     renderTab(SURFACES.מ21)
-    const banner = await screen.findByTestId('drifting-two-methods')
-    expect(banner).toHaveTextContent('12')
-    expect(banner).toHaveTextContent('11')
-    expect(banner).toHaveTextContent('3')
-    const rows = screen.getAllByTestId('report-row-drillable')
+    const rows = await screen.findAllByTestId('report-row-drillable')
+    // ✂️ 23/09/2026 — באנר שתי-השיטות נמחק: מספריו בכרטיסים (L5), ההסבר ברמז `drifting.why`.
+    expect(screen.queryByTestId('drifting-two-methods')).toBeNull()
     expect(rows[0]).toHaveTextContent('ענבר אשכנזי')
     // 🔴 מקף בלתי-שביר (`‑`) ולא ASCII — נמדד בדפדפן שהתא הצר שבר את המספר לשתי
     // שורות (*"· -055"* / *"1794584"*). המספר נשאר שלם, והמקף נראה זהה.
     expect(rows[0]).toHaveTextContent('055‑1794584')
     expect(rows[0].textContent).not.toContain('055-1794584')
     expect(rows[0]).toHaveTextContent('מתרחק בלבד')
+  })
+
+  // 🔤 הכרעה ש1 (התוכנית §4ג): משפט-ההרשאה נאמר רק כשיש באמת סכום מוסתר.
+  const MONEY_GATE_NOTE = 'עמודות ואריחי ה-₪ בדף זה כפופים להרשאת מודול כספים.'
+  const withGateNote = () => {
+    const payload = driftingPayload()
+    return { ...payload, meta: { ...payload.meta, notes: ['הערה אחרת.', MONEY_GATE_NOTE] } }
+  }
+
+  it('ש1 · מי שרואה את הסכומים — משפט-ההרשאה אינו על המסך, והערה אחרת נשארת', async () => {
+    callReport.mockResolvedValue(withGateNote())
+    renderTab(SURFACES.מ21)
+    const notes = await screen.findByTestId('report-meta-notes')
+    expect(notes).toHaveTextContent('הערה אחרת.')
+    expect(notes).not.toHaveTextContent('כפופים להרשאת')
+  })
+
+  it('ש1 · מי שהסכומים מוסתרים ממנה — משפט-ההרשאה על המסך', async () => {
+    permissions = PROJECTS
+    callReport.mockResolvedValue(withGateNote())
+    renderTab(SURFACES.מ21)
+    expect(await screen.findByTestId('report-meta-notes')).toHaveTextContent('כפופים להרשאת')
   })
 
   it('🔒 ללא הרשאת כספים — האריח, שורת-המשנה שיש בה ₪, והעמודה ממוסכים, והמיון נופל למשני', async () => {
@@ -1125,7 +1145,7 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     expect(container.querySelectorAll('[data-testid^="hint-"]')).toHaveLength(0)
     expect(screen.getByTestId('report-so-what')).toBeInTheDocument()
     expect(screen.getByTestId('report-definitions')).toBeInTheDocument()
-    expect(screen.getByTestId('drifting-two-methods')).toBeInTheDocument()
+    expect(screen.queryByTestId('drifting-two-methods')).toBeNull()
     expect(screen.getByTestId('report-tiles')).toBeInTheDocument()
     expect(screen.getAllByTestId('report-row-drillable').length).toBeGreaterThan(0)
   })
@@ -1144,7 +1164,6 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
 
     const soWhat = screen.getByTestId('report-so-what')
     const tiles = screen.getByTestId('report-tiles')
-    const banner = screen.getByTestId('drifting-two-methods')
     const table = screen.getByTestId('report-table-card')
 
     // ⑩א · **שני חצאי-העוגן, סוף-סוף:** *"מתחת לשורת-אז-מה, מעל האריחים"*. עד
@@ -1153,9 +1172,8 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     // ו**זו הבדיקה שתתפוס אם מישהו יחזיר אותו ל-`renderTop`**.
     expect(follows(soWhat, why)).toBe(true)
     expect(follows(why, tiles)).toBe(true)
-    // ⑩ב · מתחת לאריחים ומעל הבאנר שהוא מסביר.
+    // ⑩ב · מתחת לאריחים.
     expect(follows(tiles, basis)).toBe(true)
-    expect(follows(basis, banner)).toBe(true)
     // ⑩ג · צמוד לטבלה שהוא מסביר, ולפניה.
     expect(follows(basis, tableSort)).toBe(true)
     expect(follows(tableSort, table)).toBe(true)

@@ -2,7 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 import { createRequire } from 'module'
-const require = createRequire('C:/Users/ishay/Reg-In-copy-wt/package.json')
+const require = createRequire('C:/Users/ishay/Reg-In-dash-wt/package.json')
 const { chromium } = require('@playwright/test')
 const [out, title, lLabel, lImg, rLabel, rImg] = process.argv.slice(2)
 const b64 = (p) => 'data:image/png;base64,' + fs.readFileSync(p).toString('base64')

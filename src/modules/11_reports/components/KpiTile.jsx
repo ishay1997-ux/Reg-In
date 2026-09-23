@@ -17,6 +17,7 @@ import Ltr from '@/components/Ltr'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { NO_VALUE, formatByType, formatDelta } from '@/lib/reportsFormat'
 import { useContext } from 'react'
+import { Info } from 'lucide-react'
 import { ReportsShellContext } from './reportsShellContext'
 
 // 🔑 מועתק מ-`KpiStrip.jsx` (מ7) — **התקדים המדויק לאריח-דוח ממוסך**, וההערה שם מסבירה
@@ -127,27 +128,96 @@ function CompareLine({ compare, fallbackFormat }) {
  * *הערך נשאר, הדלת נעלמת*): ההרשאה נשאלת מהמעטפת דרך `ReportsShellContext`, כי המשטח
  * אינו יודע מהן ההרשאות. ר' `reportsShellContext.js` למדידה שהולידה את זה.
  */
+/**
+ * 🔴 **תקן-הכרטיס (23/09/2026) — שם · ערך · שורה אחת · ⓘ.** ישי, על האתר החי: *"ככה לא ניראת
+ * מערכת SAAS מקצועית בכלל"*. ‏📏 נמדד על 6 דוחות חיים: 3–5 שורות מתחת לכל מספר — פירוקים,
+ * תאריכים, "כל הזמנים", ו"12 החודשים האחרונים" שחוזר בכל אריח בעוד התקופה כתובה בשורת-המסננים.
+ * ⇒ **שורה גלויה אחת בלבד**, לפי סדר-עדיפות: השוואה שיש לה ערך (*"אשתקד: 55.9%"*) — ואם אין,
+ * המכנה (`sub`). **כל השאר לא נמחק — הוא עובר ל-ⓘ** (`tileDetails`), כי פירוט שמבהיר מספר הוא
+ * מידע, רק לא מידע שצריך לקרוא כדי לקרוא את המספר. אותו עיקרון כמו שבב-ההיקף (`Disclosure.jsx`).
+ * ✅ מ02 — הדגם שישי אישר — כבר עמד בזה כמעט: השוואה אחת + חלון-זמן שחוזר על שורת-המסננים.
+ */
+// ✏️ **כויל מול ישי, 23/09 לילה**, על כרטיס "יתרת-חוב פתוחה" (*"235,382 ₪ · 35 חשבוניות פתוחות ·
+// ▼ לפני חודש · נכון להיום"*): *"אולי אשתקד זה כן נחמד"*. ⇒ לא "שורה אחת" אלא **השוואה + שורת-הקשר
+// אחת אם היא קצרה.** מה שיורד תמיד: חלון-הזמן (כתוב בשורת-המסננים) · הערת-השוואה · משפט-במקום-מספר.
+// 📏 **30 תווים גלויים** — "35 חשבוניות פתוחות" (18) נשאר; "0 מחמשת הגדולים (44.4% מההכנסה)
+// מסומנים 'מתרחק'" (52) עובר ל-ⓘ. תווי-הבידוד אינם נספרים — הם בלתי-נראים.
+const SUB_VISIBLE_MAX = 30
+const visibleLength = (text) => String(text ?? '').replace(/[⁦-⁩]/g, '').length
+
+function splitLines(tile, masked) {
+  if (masked) return { showSub: false, showCompare: false, details: { window: tile.window } }
+  const compare = tile.compare
+  const showCompare = Boolean(compare) && compare.value !== null && compare.value !== undefined
+  // ⚠️ **אריח בלי ערך מציג את המכנה בכל אורך** — "—" לבדו אינו אומר *למה* אין מספר (מ17: "טרם נמדד").
+  const noValue = tile.value === null || tile.value === undefined
+  const showSub = Boolean(tile.sub) && (noValue || visibleLength(tile.sub) <= SUB_VISIBLE_MAX)
+  return {
+    showSub,
+    showCompare,
+    details: {
+      sub: showSub ? null : tile.sub,
+      compare: showCompare ? null : compare,
+      note: compare?.note ?? null,
+      window: tile.window,
+    },
+  }
+}
+
+function TileDetails({ label, details, fallbackFormat }) {
+  const { sub, compare, note, window } = details
+  if (!sub && !compare && !note && !window) return null
+  return (
+    // 🔽 `<details>` מקומי — מקלדת מלידה, בלי portal ובלי מוקש-RTL (ר' `Disclosure.jsx`).
+    // ⚠️ **אח של הכפתור ולא בתוכו:** אריח-דלת הוא `<button>`, ואלמנט-אינטראקטיבי בתוך כפתור
+    // אינו HTML תקין — הלחיצה על ⓘ הייתה פותחת את הדוח במקום את הפירוט.
+    <details className="group absolute left-2 top-2 z-10" data-testid="kpi-details">
+      <summary
+        aria-label={`פירוט — ${label}`}
+        className="flex size-7 cursor-pointer list-none items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-700 [&::-webkit-details-marker]:hidden"
+      >
+        <Info aria-hidden="true" className="size-4" />
+      </summary>
+      <div className="absolute left-0 top-8 w-64 space-y-1 rounded-lg border border-slate-200 bg-white p-3 text-right shadow-lg">
+        <SubLine sub={sub} />
+        {compare && <CompareLine compare={compare} fallbackFormat={fallbackFormat} />}
+        {note && (
+          <span className="block text-sm text-slate-600" data-testid="kpi-compare-note">
+            {note}
+          </span>
+        )}
+        {window && (
+          <span className="block text-sm text-slate-600" data-testid="kpi-window">
+            {window}
+          </span>
+        )}
+      </div>
+    </details>
+  )
+}
+
 export default function KpiTile({ tile, masked = false, onOpenTarget }) {
   // ‏בלי מעטפת (בדיקת-לשונית, רינדור בודד) אין מי שיודע — וכל יעד נחשב פתיח.
   const canOpenTarget = useContext(ReportsShellContext)?.canOpenTarget
   const value = masked ? MASKED_NODE : renderValue(tile)
+  const { showSub, showCompare, details } = splitLines(tile, masked)
+  // ‏`pl-10` — מקום ל-ⓘ בפינה, כדי שתווית ארוכה (*"אימוץ המלצת Smart Match"*) לא תעבור מתחתיו (נמדד בצילום).
+  const hasDetails = Object.values(details).some(Boolean)
 
   const body = (
     <StatTile
       label={tile.label}
       value={value}
       sub={
-        <>
-          {/* 📑ב — שורת-המכנה-הגלוי, מתחת לערך ומעל ההשוואה (סדר-המוקאפ). */}
-          <SubLine sub={masked ? null : tile.sub} />
-          <CompareLine compare={masked ? null : tile.compare} fallbackFormat={tile.format} />
-          {/* 📐3: חלון-הזמן בכל אריח — ואריח שאינו מגיב למסנן נושא זאת במפורש. */}
-          {tile.window && (
-            <span className="block text-sm text-slate-600" data-testid="kpi-window">
-              {tile.window}
-            </span>
-          )}
-        </>
+        showSub || showCompare ? (
+          <>
+            {/* סדר-המוקאפ: המכנה ואז ההשוואה (`.sub · .cmp`). */}
+            {showSub && <SubLine sub={tile.sub} />}
+            {showCompare && (
+              <CompareLine compare={{ ...tile.compare, note: null }} fallbackFormat={tile.format} />
+            )}
+          </>
+        ) : null
       }
       emptyText={NO_VALUE}
       testId={`report-tile-${tile.key}`}
@@ -156,22 +226,33 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
 
   // 🚫 **לא `<button>` שאינו עושה דבר** — ר' הערת-הרכיב: דלת שאינה נפתחת גרועה מהיעדר דלת,
   // כי `aria-label` כבר הבטיח *"פתחי את הדוח"* וקוראת-מסך שמעה קישור.
-  if (!tile.target || !onOpenTarget || masked) return body
-  if (canOpenTarget && !canOpenTarget(tile.target)) return body
+  const isDoor =
+    tile.target && onOpenTarget && !masked && !(canOpenTarget && !canOpenTarget(tile.target))
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpenTarget(tile.target)}
-      // 🔑 התווית נאמרת במלואה לקורא-המסך: "פתחי" לבדו אינו אומר לאן.
-      aria-label={`${tile.label} — פתחי את הדוח`}
-      // 🖱️ `cursor-pointer` מפורש — Tailwind v4 משאיר `<button>` בברירת-המחדל של הדפדפן
-      // (`cursor:default`), בעוד שורה-נלחצת ב-`ReportTable` כן מציגה אצבע. הדלת נראתה כטקסט.
-      className="w-full cursor-pointer rounded-xl text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
-      data-testid={`report-tile-link-${tile.key}`}
+    // ⓘ יושב בפינה השמאלית-עליונה (סוף-השורה ב-RTL), מעל הכרטיס ולא בתוכו — ר' `TileDetails`.
+    <div
+      className={`relative h-full w-full [&>*:first-child]:h-full ${hasDetails ? '[&>*:first-child]:pl-10' : ''}`}
+      data-testid={`report-tile-box-${tile.key}`}
     >
-      {body}
-    </button>
+      {isDoor ? (
+        <button
+          type="button"
+          onClick={() => onOpenTarget(tile.target)}
+          // 🔑 התווית נאמרת במלואה לקורא-המסך: "פתחי" לבדו אינו אומר לאן.
+          aria-label={`${tile.label} — פתחי את הדוח`}
+          // 🖱️ `cursor-pointer` מפורש — Tailwind v4 משאיר `<button>` בברירת-המחדל של הדפדפן
+          // (`cursor:default`), בעוד שורה-נלחצת ב-`ReportTable` כן מציגה אצבע. הדלת נראתה כטקסט.
+          className="w-full cursor-pointer rounded-xl text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 [&>*]:h-full"
+          data-testid={`report-tile-link-${tile.key}`}
+        >
+          {body}
+        </button>
+      ) : (
+        body
+      )}
+      <TileDetails label={tile.label} details={details} fallbackFormat={tile.format} />
+    </div>
   )
 }
 
