@@ -77,6 +77,20 @@
     - The finance hint gets the same fix.
     - Found by a query over every visible payload field.
     - Deliberately left out: m21's permission sentence. §7.100 ruled only the DB masking, so whether the sentence stays is a question for Ishay (recommendation: show it only to a masked user). **L3 awaits Ishay typing its name.**
+  - **L3 applied** (Ishay typed the name) and **L4 written and applied** under his session-only grant *"מעכשיו בסשן הזה תכיל לבד וזהו"*. L4 makes the m08 frozen-profit note read by case, after the 2025 call returned "286 מתוך 286 … בשאר". Both: md5 == `expect-md5.mjs` and read back live (`7946bb0c`).
+  - **`e2e/reports.spec.js` failed 4/19:** it locked the pre-model world (a visible population line, "אוכלוסייה" in it, n living there). Session 1 ran only smoke. Fixed to the chip model, 19/19 (`ff461071`). Smoke 1/1 · gate 0.
+  - **Closing:**
+    - Plan rows 5 and 10 are ✅ with measurements.
+    - micro-guide D-45 has an as-built line.
+    - Handoff: new block "🆕 בלוק 23/09/2026 לילה" (read-session: 78KB conversation, read from line 1).
+    - The prompt file was rewritten for "after the close".
+    - A fresh-eyes Sonnet agent (~150K estimated) reviews both.
+  - **Open, all Ishay's:**
+    - Merging to dev and then main.
+    - The m21 permission sentence.
+    - m19 insight-tile density.
+    - The conference path order.
+    - The `.env.local` password comments and invalid access token.
 
 ### 23/09/2026 (13:XX) — dev merged into the branch, and the "all rows" toggle finally does something
 
