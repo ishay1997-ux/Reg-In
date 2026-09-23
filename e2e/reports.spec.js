@@ -223,7 +223,10 @@ test.describe('מודול 11 · מעטפת-הדוחות והמסעות שלה', 
     const surface = page.getByTestId('report-exec-overview')
     await expect(surface).toBeVisible()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('מבט-על הנהלה')
-    await expect(page.getByTestId('report-population')).toContainText('אוכלוסייה')
+    // ✏️ 23/09/2026 (טיפוגרפיה פזה ב׳, הדגם שישי אישר): האוכלוסייה וההגדרות מקופלות בשבב-ההיקף.
+    // גלוי: השבב, עם ה-n מתוך ה-N מהשרת (`population.summary`). בפנים: ההצהרה המלאה וההגדרות.
+    await expect(page.getByTestId('report-scope-summary')).toContainText('אירועים שהסתיימו')
+    await expect(page.getByTestId('report-population')).not.toBeEmpty()
     await expect(page.getByTestId('report-so-what')).not.toBeEmpty()
     await expect(page.getByTestId('report-definitions')).not.toBeEmpty()
     await expect(page.getByTestId('report-table-card')).toBeVisible()
@@ -257,7 +260,8 @@ test.describe('מודול 11 · מעטפת-הדוחות והמסעות שלה', 
       await openReport(page, surface.tab, surface.report)
       await expect(page.getByTestId(`report-${surface.report}`)).toBeVisible()
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(surface.name)
-      await expect(page.getByTestId('report-population')).toBeVisible()
+      // ✏️ 23/09/2026: ההיקף גלוי כשבב; ההצהרה המלאה בתוכו (ר' ①).
+      await expect(page.getByTestId('report-scope-summary')).toBeVisible()
       await expect(page.getByTestId('reports-export-button')).toBeVisible()
     }
     expect(consoleErrors, 'שגיאות-קונסול במסע הלשוניות').toEqual([])
@@ -272,7 +276,8 @@ test.describe('מודול 11 · מעטפת-הדוחות והמסעות שלה', 
     await openReport(page, 'exec', 'exec-overview')
 
     const windowBefore = await page.getByTestId('reports-window-label').textContent()
-    const populationBefore = await page.getByTestId('report-population').textContent()
+    // ✏️ 23/09/2026: ה-n חי בשבב-ההיקף (`population.summary`), לא בהצהרה המקופלת — שם בודקים שזז.
+    const populationBefore = await page.getByTestId('report-scope-summary').textContent()
     // 🔑 **גלולה אחת דלוקה, ולא "השנה" נעוצה בשמה** — ‏`defaultPeriod` הוא שדה-לשונית
     // (‏`reportsCatalog.js`, 16/09) ולשוניות שונות נפתחות על חלונות שונים. מה שמחייב הוא
     // שתמיד תהיה בדיוק אחת דלוקה, ושהיא **לא** זו שמיד נלחצת.
@@ -287,7 +292,7 @@ test.describe('מודול 11 · מעטפת-הדוחות והמסעות שלה', 
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByTestId('reports-window-label')).not.toHaveText(windowBefore)
-    await expect(page.getByTestId('report-population')).not.toHaveText(populationBefore)
+    await expect(page.getByTestId('report-scope-summary')).not.toHaveText(populationBefore)
   })
 
   // ④ מסנן-הלקוח מצמצם משטח שמסונן-לפי-לקוח. הלקוח נבחר **בזמן-ריצה** (כלל-ברזל של
@@ -622,8 +627,11 @@ test.describe('מודול 11 · מצב-הטמעה 0 מול 2 (C3 · מבחן-ה�
       await openReport(page, surface.tab, surface.report)
       await expect(page.locator('[data-testid^="hint-"]')).toHaveCount(0)
       // מבחן-המחיקה: מה שיורד ברמה 0 הוא **רק** שכבת-ההטמעה.
-      await expect(page.getByTestId('report-population')).toBeVisible()
+      // ✏️ 23/09/2026: האוכלוסייה וההגדרות הן עדיין בסיס — גלויות ברמה 0 בלחיצה על השבב, לא ברמז.
+      await expect(page.getByTestId('report-scope-summary')).toBeVisible()
       await expect(page.getByTestId('report-so-what')).toBeVisible()
+      await page.getByTestId('report-scope-summary').click()
+      await expect(page.getByTestId('report-population')).toBeVisible()
       await expect(page.getByTestId('report-definitions')).toBeVisible()
       await expect(page.getByTestId('report-table-card')).toBeVisible()
       expect(await page.getByTestId('report-tiles').locator('> *').count()).toBeGreaterThan(0)
