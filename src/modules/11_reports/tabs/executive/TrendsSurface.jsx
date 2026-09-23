@@ -31,7 +31,16 @@ const ROW_ACTION = [
   'זו הרמה האחרונה. לחיצה על שורה פותחת את כרטיס האירוע.',
 ]
 
+// 🔤 פזה ב׳ שלב 8 (23/09/2026) — שורת-היכולת של הגרף, אחת לכל רמה שיש ממנה לאן לרדת.
+// ברמה האחרונה הגרף אינו לחיץ, ולכן אין לה נוסח.
+// ⚠️ "שנה"/"חודש" ולא "עמודה" — ברמה 0 שני מתוך שלושת הגרפים הם קווים (נמדד על המסך).
+const CHART_ACTION = [
+  'לחיצה על שנה בגרף יורדת לחודשים שלה',
+  'לחיצה על חודש בגרף יורדת לאירועים שלו',
+]
+
 const levelOf = (payload) => payload.drill?.level ?? 0
+const chartAction = (payload) => CHART_ACTION[levelOf(payload)] ?? null
 const chartCount = (payload) =>
   Array.isArray(payload.chart) ? payload.chart.length : payload.chart ? 1 : 0
 
@@ -67,6 +76,7 @@ export default function TrendsSurface(props) {
     <ExecutiveSurface
       {...props}
       transformPayload={transformPayload}
+      chartAction={chartAction}
       renderAfterSoWhat={() => <SurfaceHint hintId="reports.trends.purpose" />}
       // §⑩ ב — הרמז מעוגן ל**הערת-הגרף** של גרף-השנים (הראשון), ו-⑩ ג ל-`.barkey` של
       // לוחות מחיר/עלות. 🔑 **ולמה "האחרון" ולא אינדקס קשיח:** במוקאפ ה-`.barkey` יושב

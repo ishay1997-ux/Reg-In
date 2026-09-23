@@ -899,6 +899,8 @@ export default function ChartCard({
   selected,
   aside,
   footer,
+  // 🔤 23/09/2026 — שורת-היכולת: מה לחיצה על עמודה עושה. ר' `ReportSurface` (`chartAction`).
+  actionHint,
   // ✏️ 17/09/2026 — משפט-הריקות מגיע מהמעטפת, שיודעת **איזה מסנן** רוקן את הדף (תקופה או
   // לקוח — `EMPTY_AFTER_CUSTOMER_FILTER`, כלל כ17); ברירת-המחדל נשארת משפט-התקופה הנעול,
   // כך שכל צרכן אחר של הגרף אינו משתנה. בלי זה מסך אחד אמר שני משפטים על אותו מסנן.
@@ -916,6 +918,11 @@ export default function ChartCard({
     >
       {/* §⑤ #2 — הכותרת העברית נשארת **מחוץ** לעטיפת-ה-LTR, ברמת הכרטיס. */}
       <h3 className="mb-2.5 text-sm font-semibold text-slate-700">{title}</h3>
+      {actionHint && data.length > 0 && (
+        <p className="-mt-1.5 mb-2 text-xs text-slate-500" data-testid="chart-action">
+          {actionHint}
+        </p>
+      )}
       {/* ‏`chart.note` (תוספת C8 16/09) — **שורת-פירוש מתחת לכותרת**: מה העמודות אומרות,
           מה קו-הייחוס מסמן, ואילו שורות נכללו. ⚠️ **בסיס ולא רמז** (📐2 · ⑩): הכרטיס של
           גרף-הגיול נוקב במפורש בשורת-פירוש לכל דלי, ובלי המקום הזה היא הייתה מומצאת

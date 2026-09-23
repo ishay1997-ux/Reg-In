@@ -1,14 +1,6 @@
 {
-  "src/modules/03_quotes/QuotesPage.jsx": {
-    "cls": 11,
-    "inline": 0
-  },
   "src/modules/03_quotes/quotePdf.jsx": {
     "cls": 0,
     "inline": 5
-  },
-  "src/modules/11_reports/components/ExportBar.jsx": {
-    "cls": 3,
-    "inline": 0
   }
 }

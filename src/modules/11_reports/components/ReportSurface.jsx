@@ -16,6 +16,7 @@
 
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import Disclosure from '@/components/Disclosure'
 import FilterPill from '@/components/FilterPill'
 import { formatByType } from '@/lib/reportsFormat'
 import { missingReportParamsMessage } from '@/lib/reportsParams'
@@ -47,14 +48,26 @@ function toScreenError(err) {
   return { kind: 'error' }
 }
 
-function PopulationLine({ population }) {
-  // 📐2 — **שורה קבועה בכל דף**: מי נכלל · מי הוצא · ה-`n`. היא **בסיס ולא רמז** (§3 של
-  // חוזה-ההטמעה): *"דוח שמחריג בשקט מדבר על עולם אחר מזה שהקורא מדמיין"*.
-  if (!population?.label) return null
+// 🔤 נוסח-השבב כשהשרת אינו מוסר `population.summary`. ✏️ 23/09/2026: מיגרציית-הטקסט L1 הוסיפה
+// אותו ל-13 פונקציות; נשארו בלעדיו רק מ3/מ4/מ6 — שיוחלפו בדוחות-החלטה (הכרעת-ישי 23/09).
+const SCOPE_FALLBACK = 'מי נכלל בדוח'
+
+/**
+ * 📐2 + 📐16 — **שבב-ההיקף: מי נכלל, ואיך כל מדד נמדד.**
+ * ✏️ **הכרעת-ישי א׳, 17/09/2026 — בוצע 23/09 (פזה ב׳ שלב 4):** עד כאן שורת-האוכלוסייה עמדה
+ * גלויה בראש כל דף, ושורת-ההגדרות בתחתיתו — יחד ~500 תווים בכל משטח במצב 0. עכשיו: **שבב אחד
+ * עם ההיקף** (*"246 אירועים שהסתיימו · מתוך 837"* — `population.summary` מהשרת), וההצהרה המלאה
+ * + ההגדרות נפתחות בלחיצה. 🔑 **הנימוק המקורי של 📐2 נשמר** — *"דוח שמחריג בשקט מדבר על עולם
+ * אחר"* — כי ה-`n` מתוך ה-`N` נשאר גלוי; רק **הפירוט** מתקפל (`onboarding-layer-contract.md §3`).
+ * ⚠️ `data-testid` הישנים נשמרים על הפסקאות שבפנים — התוכן ב-DOM גם כשהשבב סגור.
+ */
+function ScopeLine({ population, definitions }) {
+  if (!population?.label && !definitions) return null
   return (
-    <p className="mb-2 text-xs text-slate-500" data-testid="report-population">
-      {population.label}
-    </p>
+    <Disclosure summary={population?.summary ?? SCOPE_FALLBACK} testId="report-scope">
+      {population?.label && <p data-testid="report-population">{population.label}</p>}
+      {definitions && <p data-testid="report-definitions">{definitions}</p>}
+    </Disclosure>
   )
 }
 
@@ -104,22 +117,14 @@ function MissingParamsBanner({ names }) {
   )
 }
 
-function Footers({ definitions, notes }) {
+function Footers({ notes }) {
+  // ✏️ 23/09/2026 — שורת-ההגדרות עברה לשבב-ההיקף (`ScopeLine`). ‏**הסייגים נשארים גלויים:**
+  // `meta.notes` הם סייג-דאטה שהכרטיס מחייב על המסך (*"נמדד על N שורות מתוך M"*), לא הגדרה.
+  if (!notes?.length) return null
   return (
-    <>
-      {/* 📐16 — שורת-הגדרות-המדדים, בתחתית כל דף. **בסיס**, לא שכבת-הטמעה. */}
-      {definitions && (
-        <p className="mt-3 text-xs leading-relaxed text-slate-500" data-testid="report-definitions">
-          {definitions}
-        </p>
-      )}
-      {/* סייגי-דאטה שהכרטיס מחייב על המסך (C8 `meta.notes`) — למשל "נמדד על N שורות מתוך M". */}
-      {notes?.length > 0 && (
-        <p className="mt-2 text-xs text-slate-500" data-testid="report-meta-notes">
-          {notes.join(' · ')}
-        </p>
-      )}
-    </>
+    <p className="mt-2 text-xs text-slate-500" data-testid="report-meta-notes">
+      {notes.join(' · ')}
+    </p>
   )
 }
 
@@ -194,6 +199,21 @@ function RowCapNote({ rowTotal, shown }) {
 }
 
 /**
+ * 🏷️ **כותרת-כנה לרשימת-שיא** (הכרעת-ישי 4, 17/09/2026 — בוצע 23/09, פזה ב׳ שלב 4):
+ * *"8 האירועים הגדולים · מתוך 246"* — במקום פאג'ר שאומר *"1–8 מתוך 8"* ושורה שאומרת *"מוצגות 8
+ * מתוך 246 שורות"*, כלומר שני מונים שסותרים זה את זה על אותה טבלה. ⚠️ **רק כשהרשימה באמת
+ * קטנה מהאוכלוסייה** — לקוח מסונן עם 3 אירועים אינו "8 האירועים הגדולים".
+ */
+function TopNTitle({ label, rowTotal, shown }) {
+  if (rowTotal == null || rowTotal <= shown) return null
+  return (
+    <h3 className="mb-1.5 text-sm font-semibold text-slate-700" data-testid="report-topn-title">
+      {`${label} · מתוך ${formatByType(rowTotal, 'int')}`}
+    </h3>
+  )
+}
+
+/**
  * 📐6/📐9 · **מפתח-הסינון-הצולב של גרף — ואיך הוא נקבע, לפי סדר:**
  * ‏① `chart.filter_key === false` ⇒ **כבוי מפורשות** (משטח שהכרטיס שלו אומר *"לא לחיץ"*
  *    — מ2 · מ8 · מ12 · הפיזור של מ6 — מוסר זאת מהשרת או מה-`transformPayload` של הלשונית) ·
@@ -235,15 +255,24 @@ function announceSelection(label, count) {
 const datumLabel = (datum, xKey) => String(datum?.label ?? datum?.[xKey] ?? '')
 
 /**
- * 🚪 **שני השדות שקובעים איך עמודה בדף-דריל יורדת רמה** — שניהם אופציונליים, ושניהם
- * נגזרים מ-`chart.xKey` כשה-RPC לא הצהיר:
- * ‏`chart.drill_param` — שם-המפתח שנכתב למצב-הדריל (ברירת-מחדל: `xKey`, למשל `bucket`) ·
- * ‏`chart.drill_key` — שדה-הדאטום שמחזיק את **המפתח** (ברירת-מחדל: `<xKey>_key`).
- * 🔴 **וההפרדה אינה תיאורטית:** במ9 העמודה מציגה `bucket: "1–30"` (תווית) והשרת מצפה
- * ל-`d1_30` — המטען החי כבר נושא `bucket_key` בכל דאטום, וזה בדיוק הפער ש-D-30① מתעד.
+ * 🚪 **הדלת של עמודה בגרף היא ה-`drill_key` של הדאטום — אותו שדה בדיוק שהשורה בטבלה נושאת.**
+ * ✏️ **תוקן 23/09/2026 (פזה ב׳ שלב 8, תוכנית-הטיפוגרפיה §6ב):** עד כאן הגרף חיפש מוסכמת-שם
+ * משלו — `"<xKey>_key"` — ובמ3 הוא חיפש `year_key`, שאינו קיים: המטען נושא `drill_key` בלבד
+ * (`'drill_key', jsonb_build_object('kind','year','year',yr)` ב-`…j3….sql`). ⇒ **שלוש עמודות-השנים
+ * בדף "מגמות רב-שנתיות" היו מתות לגמרי**, והשורות שמתחתן עבדו. שני מנגנונים לאותה התנהגות
+ * הם בדיוק מחלקת-הפגם של D-30: ביום שהם נפרדו, איש לא ידע איזה מהם קובע.
+ * ✏️ **23/09/2026 — הגיבוי למוסכמה הישנה (`<xKey>_key`, מ9 בלבד) נמחק:** מיגרציית-הטקסט L1 הוסיפה
+ * `drill_key` לדאטום של מ9, ונמדד מהמסד שהוא שם. דאטום בלי `drill_key` אינו דלת.
  */
-const drillParamOf = (chart) => chart?.drill_param ?? chart?.xKey
-const drillKeyOf = (chart) => chart?.drill_key ?? `${chart?.xKey}_key`
+function datumDrillKey(datum) {
+  return datum?.drill_key && typeof datum.drill_key === 'object' ? datum.drill_key : null
+}
+
+/** האם מפתח-הדאטום הוא הרמה הפתוחה — השוואה על הממדים בלבד; `kind` הוא סוג, לא ממד. */
+const isOpenLevel = (key, drill) => {
+  const dims = Object.keys(key ?? {}).filter((dim) => dim !== 'kind')
+  return dims.length > 0 && dims.every((dim) => String(key[dim]) === String(drill?.[dim]))
+}
 
 /**
  * ‏`onSelect` של דף-דריל — **ירידת-רמה**, לא סינון. `null` כשאין לגרף מפתח-דריל בדאטה,
@@ -252,19 +281,25 @@ const drillKeyOf = (chart) => chart?.drill_key ?? `${chart?.xKey}_key`
  */
 function chartDrill(chart, onDrillLevel) {
   if (!onDrillLevel) return null
-  const param = drillParamOf(chart)
-  const keyField = drillKeyOf(chart)
-  if (!param) return null
-  // ⚠️ אין ולו דאטום אחד שנושא את המפתח ⇒ אין דלת. `{bucket: undefined}` היה נכתב
-  // לכתובת כ-`{}` ומחזיר את הדף לשורש בלי שאיש יבין למה.
-  const usable = (chart?.data ?? []).some((datum) => datum?.[keyField] != null)
+  // ⚠️ אין ולו דאטום אחד שנושא מפתח ⇒ אין דלת. מפתח ריק היה נכתב לכתובת כ-`{}` ומחזיר
+  // את הדף לשורש בלי שאיש יבין למה.
+  const usable = (chart?.data ?? []).some((datum) => datumDrillKey(datum) != null)
   if (!usable) return null
   return (datum) => {
-    const value = datum?.[keyField]
-    if (value == null) return
-    onDrillLevel({ [param]: value })
+    const key = datumDrillKey(datum)
+    if (key) onDrillLevel(key)
   }
 }
+
+// 🔤 **שורת-היכולת של גרף — פזה ב׳ שלב 8.** עד היום לא הייתה אף מילה על המסך שאומרת שאפשר
+// ללחוץ על גרף (לטבלה יש `ROW_ACTION`), ולכן היכולת הייתה בלתי-נראית גם היכן שעבדה.
+// המשטח מוסר נוסח ירידת-רמה משלו (`chartAction`); הסינון הוא אותו משפט בכל משטח.
+// ⚠️ **שם-האלמנט נגזר מסוג-הגרף** — נמדד על המסך: "לחיצה על עמודה" מעל גרף-קווים הוא הוראה
+// לדבר שאינו קיים.
+const CLICK_NOUN = Object.freeze({ line: 'נקודה', scatter: 'נקודה', pie: 'פלח' })
+const clickNoun = (chart) => CLICK_NOUN[chart?.type] ?? 'עמודה'
+const crossFilterAction = (chart) => `לחיצה על ${clickNoun(chart)} מסננת את הטבלה`
+const drillActionFallback = (chart) => `לחיצה על ${clickNoun(chart)} בגרף פותחת את הפירוט`
 
 /**
  * 🚪 **בדף-דריל שיש לו רמה נוספת, לחיצה היא ירידת-רמה — ולא דלת-ישות.**
@@ -301,11 +336,8 @@ function drillHandlers(surface, payload, onDrill, drill) {
 
 /** הדאטום של הרמה **הפתוחה** — כדי שהעמודה שנפתחה תישאר מסומנת (15-ד) גם אחרי הירידה. */
 function activeDrillLabel(chart, drill) {
-  const param = drillParamOf(chart)
-  const active = drill?.[param]
-  if (active == null) return undefined
-  const keyField = drillKeyOf(chart)
-  const datum = (chart?.data ?? []).find((row) => String(row?.[keyField]) === String(active))
+  if (!drill) return undefined
+  const datum = (chart?.data ?? []).find((row) => isOpenLevel(datumDrillKey(row), drill))
   return datum ? datum[chart.xKey] : undefined
 }
 
@@ -327,6 +359,7 @@ function SurfaceCharts({
   onToggle,
   renderChartAside,
   renderChartFooter,
+  chartAction,
   emptyText,
 }) {
   return charts.map((chart, index) => {
@@ -339,13 +372,20 @@ function SurfaceCharts({
     // מצפה ל**מפתח** (`"d1_30"`), והפער הזה הוא בדיוק מה ש-D-30① מתעד.
     // 🔑 המגן על עמודת-אפס ונתיב-המקלדת מגיעים מ-`ChartCard` בלי שינוי.
     const drillFromChart = chartDrill(chart, drillSurface)
+    const onSelect = drillFromChart ?? selectHandler(key, chart, index, onToggle)
+    const actionHint = drillFromChart
+      ? (chartAction?.(payload, index) ?? drillActionFallback(chart))
+      : onSelect
+        ? crossFilterAction(chart)
+        : null
     return (
       <ChartCard
         key={chart.title ?? index}
         chart={chart}
         // 🚫 **`onSelect` נמסר רק כשיש מפתח** — אחרת הגרף היה מקבל `cursor:pointer` וכפתורים
         // בטבלת-קורא-המסך על אינטראקציה שאינה קיימת (📐14ב③).
-        onSelect={drillFromChart ?? selectHandler(key, chart, index, onToggle)}
+        onSelect={onSelect}
+        actionHint={actionHint}
         // 15-ד — הגוון אומר **איפה** נבחר; הצ'יפ אומר **מה**. רק הגרף שהבחירה שייכת לו.
         // ➕ **ובדף-דריל — הרמה הפתוחה**: הדלי שנפתח נשאר טורקיז והשאר מעומעמים, אחרת
         // המשתמשת יורדת רמה והגרף נראה בדיוק כמו קודם.
@@ -454,6 +494,8 @@ function EmptyPage({
  * ‏`renderChartFooter(payload, index)` — **מתחת** לגרף, בתוך הכרטיס (רמזי-⑩ שהכרטיס מעגן
  *   *"מתחת ל-.legend/.barkey"*).
  * ⚠️ שתי האחרונות מקבלות גם את **מספר הגרף** — משטח עם שני גרפים צריך לבחור לאיזה מהם.
+ * ‏`chartAction(payload, index)` *(23/09/2026)* — נוסח שורת-היכולת של גרף שיורד רמה
+ *   (*"לחיצה על עמודה יורדת לחודשים של אותה שנה"*). בלעדיה — ניסוח כללי.
  *
  * כל השבע מקבלות את ה-payload **אחרי** `transformPayload`.
  */
@@ -471,6 +513,7 @@ export default function ReportSurface({
   renderChartFooter,
   renderBeforeTable,
   renderExtras,
+  chartAction,
 }) {
   // 🚪 המעטפת יודעת מה ממוסך ואיפה יושבת שורת-המסננים; המשטח אינו יודע אף אחד מהשניים.
   const shell = useContext(ReportsShellContext)
@@ -658,7 +701,7 @@ export default function ReportSurface({
       {/* 📐13① — פירורים **רק** בדפי-הדריל, ורק כשיש יותר מרמה אחת. */}
       {surface.drill && <DrillCrumbs crumbs={crumbs} onNavigate={(next) => onDrill(next)} />}
       {renderTop?.(payload)}
-      <PopulationLine population={payload.population} />
+      <ScopeLine population={payload.population} definitions={payload.definitions} />
       <MissingParamsBanner names={payload.meta?.missing_params} />
 
       {/* ת4 — *"בדיוק מה שעל המסך"*: הייצוא מקבל את השורות **אחרי** הבחירה-בגרף, ותווית
@@ -701,6 +744,7 @@ export default function ReportSurface({
         onToggle={toggleSelection}
         renderChartAside={renderChartAside}
         renderChartFooter={renderChartFooter}
+        chartAction={chartAction}
         // ✏️ 17/09/2026 — הגרף אומר את אותו משפט-ריקות שהמעטפת אומרת: לפי המסנן שרוקן (כ17).
         emptyText={customerId ? EMPTY_AFTER_CUSTOMER_FILTER : EMPTY_AFTER_FILTER}
       />
@@ -727,6 +771,15 @@ export default function ReportSurface({
         </div>
       )}
 
+      {/* 🏷️ הכותרת קודמת לשורת-הפעולה ולרמז — נמדד בצילום: שורת "לחיצה על שורה…" מעל
+          הכותרת נקראה כאילו היא הכותרת. */}
+      {!selection && surface.topN && (
+        <TopNTitle
+          label={surface.topN}
+          rowTotal={payload.meta?.row_total}
+          shown={rawPayload?.rows?.length ?? payload.rows.length}
+        />
+      )}
       {payload.columns?.length > 0 && renderBeforeTable?.(payload)}
       {/* 🔴 **והשורה נעלמת בזמן סינון-צולב — נמדד 16/09/2026, וזה היה שקר על המסך:**
           ‏`RowCapNote` נמדד תמיד מול `payload.rows.length` (התקרה שהשרת החזיר), בעוד הטבלה
@@ -740,13 +793,14 @@ export default function ReportSurface({
           שורות"* מעל פאג'ר שאומר *"1–17 מתוך 17"*. **צמצום-לקוח נקרא כתקרת-שרת**, והוא
           בדיוק ההפך: השרת מסר הכול. ⇒ המונה הוא `rawPayload.rows.length`, וסינון-לקוח
           פשוט מכבה את השורה. */}
-      {!selection && (
+      {!selection && !surface.topN && (
         <RowCapNote
           rowTotal={payload.meta?.row_total}
           shown={rawPayload?.rows?.length ?? payload.rows.length}
         />
       )}
       <ReportTable
+        hidePager={Boolean(surface.topN)}
         columns={payload.columns}
         rows={selectedRows}
         page={page}
@@ -760,7 +814,7 @@ export default function ReportSurface({
         <ExtraTable key={table.title} table={table} onDrill={rowDrill} />
       ))}
 
-      <Footers definitions={payload.definitions} notes={payload.meta?.notes} />
+      <Footers notes={payload.meta?.notes} />
       {renderExtras?.(payload)}
     </div>
   )

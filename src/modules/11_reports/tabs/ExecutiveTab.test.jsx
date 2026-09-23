@@ -123,6 +123,7 @@ const m2Payload = () =>
   base({
     population: {
       n: 241,
+      summary: '241 אירועים שהסתיימו · מתוך 837',
       label: 'אוכלוסייה: אירועים שכבר התקיימו וסגורים תפעולית · n=241',
       excluded: {},
     },
@@ -135,14 +136,14 @@ const m2Payload = () =>
         label: 'הכנסות מתחילת השנה',
         value: 1962981.47,
         format: 'money',
-        sub: '241 אירועים שהסתיימו',
+        sub: null,
         window: 'חלון-האריח',
         target: { tab: 'הנהלה', report: 'report_m03_trends', drill: null },
         compare: {
           value: 1425658.65,
           label: '2025 באותו טווח',
           direction: 'up',
-          note: '184 אירועים',
+          note: null,
         },
       },
       {
@@ -150,7 +151,7 @@ const m2Payload = () =>
         label: 'שולי-רווח גולמי',
         value: 58.613608308793665,
         format: 'percent',
-        sub: 'רווח מתוך הכנסה',
+        sub: null,
         window: 'חלון-האריח',
         target: { tab: 'הנהלה', report: 'report_m04_discounts', drill: null },
         compare: { value: 55.9443559648728, label: '2025 באותו טווח', direction: 'up', note: null },
@@ -160,7 +161,7 @@ const m2Payload = () =>
         label: 'אירועים שהסתיימו',
         value: 241,
         format: 'int',
-        sub: 'ארבעת המצבים',
+        sub: null,
         window: 'חלון-האריח',
         target: { tab: 'כספים', report: 'report_m08_profitability', drill: null },
         compare: { value: 184, label: '2025 באותו טווח', direction: 'up', note: null },
@@ -170,8 +171,8 @@ const m2Payload = () =>
         label: 'נתח 5 הלקוחות הגדולים',
         value: 45.65447369246654,
         format: 'percent',
-        sub: 'אצל 55 לקוחות עם הכנסה',
-        window: 'כל הזמנים · אינו מושפע ממסנן התקופה',
+        sub: null,
+        window: 'כל הזמנים',
         target: { tab: 'לקוחות', report: 'report_m21_drifting', drill: null },
         compare: {
           value: 47.53143924185967,
@@ -574,10 +575,11 @@ describe('מ2 · מבט-על הנהלה', () => {
     // 📐4 — ₪ בלי אגורות · אחוז בספרה אחת, שניהם מבודדים.
     expect(screen.getByText(isolateLtr('1,962,981 ₪'))).toBeInTheDocument()
     expect(screen.getByText(isolateLtr('58.6%'))).toBeInTheDocument()
-    // 📑ב — `tiles[].sub` מרונדר **פעם אחת**, ע"י `KpiTile` (GAP 1 של השכבה המשותפת).
-    // ⚠️ ‏`compare.note` עדיין אינו מרונדר ע"י אף רכיב — ר' הדיווח; הבדיקה אינה מתחזה לכך שכן.
-    expect(screen.getAllByTestId('kpi-sub')).toHaveLength(4)
-    expect(screen.getByText('241 אירועים שהסתיימו')).toBeInTheDocument()
+    // ✏️ 23/09/2026 (L1, הדגם שישי אישר): אריח = שם · מספר · השוואה — בלי תת-שורה. השרת מחזיר
+    // `sub: null` בארבעתם, וההיקף ("241 אירועים שהסתיימו · מתוך 837") עבר לשבב-ההיקף.
+    // (רינדור `tiles[].sub` כשיש כזה נעול ב-`KpiTile.test.jsx`.)
+    expect(screen.queryAllByTestId('kpi-sub')).toHaveLength(0)
+    expect(screen.getByTestId('report-scope-summary')).toHaveTextContent('241 אירועים שהסתיימו')
     // 📐4 — חצי-ההשוואה מעוצב כמו האריח, ולא נשפך כמספר גולמי (נמדד כפגם 16/09).
     expect(screen.getByText(isolateLtr('1,425,659 ₪'))).toBeInTheDocument()
     expect(screen.getByText(isolateLtr('55.9%'))).toBeInTheDocument()
@@ -587,23 +589,24 @@ describe('מ2 · מבט-על הנהלה', () => {
     expect(screen.getByTestId('report-definitions')).toBeInTheDocument()
   })
 
-  it('📐20 — החודש החלקי מצהיר על אורכו בתווית ובהערת-הגרף, ו-📐8 מצהיר על תקרת-השורות', async () => {
+  it('📐20 — החודש החלקי מצהיר על אורכו בתווית ובהערת-הגרף, והרשימה נושאת כותרת-כנה', async () => {
     callReport.mockResolvedValueOnce(m2Payload())
     renderTab('מ2')
 
     expect(await screen.findByTestId('chart-note')).toHaveTextContent(
-      `מכסה ${isolateLtr('16')} ימים ולא חודש שלם`,
+      `חלקי — ${isolateLtr('16')} ימים בלבד`,
     )
     // 📐20 ① — הערוץ שהשכבה המשותפת פתחה: העמודה החלקית מסומנת `is_today`.
     expect(chartProps('Cell').some((props) => props.strokeDasharray)).toBe(true)
     // ציר-הקטגוריה עבר ל-`label`, והתווית החלקית נושאת את אורך-החלון.
     expect(chartProps('XAxis')[0].dataKey).toBe('label')
     expect(screen.getByText(`ספטמבר (${isolateLtr('16')} ימים)`)).toBeInTheDocument()
-    // §9 D-25 — שורה אחת, בנוסח של השלד המשותף.
-    expect(screen.getAllByTestId('report-row-cap')).toHaveLength(1)
-    expect(screen.getByTestId('report-row-cap')).toHaveTextContent(
-      `מוצגות ${isolateLtr('1')} מתוך ${isolateLtr('241')} שורות`,
+    // ✏️ 23/09/2026 (פזה ב׳ שלב 4, הכרעת-ישי 4) — רשימת-שיא: כותרת-כנה, בלי פאג'ר ובלי שורת-תקרה.
+    expect(screen.getByTestId('report-topn-title')).toHaveTextContent(
+      `8 האירועים הגדולים · מתוך ${isolateLtr('241')}`,
     )
+    expect(screen.queryByTestId('report-row-cap')).toBeNull()
+    expect(screen.queryByTestId('report-pager')).toBeNull()
   })
 
   it('הכרעה 19 — לחיצה על שורה פותחת את כרטיס-האירוע, והשורה כולה היא הדלת', async () => {
@@ -689,7 +692,7 @@ describe('מ3 · מגמות רב-שנתיות', () => {
     await screen.findByTestId('report-population')
 
     expect(await screen.findByTestId('chart-note')).toHaveTextContent(
-      `מכסה ${isolateLtr('16')} ימים ולא חודש שלם`,
+      `חלקי — ${isolateLtr('16')} ימים בלבד`,
     )
     expect(screen.getByText(`ספטמבר (${isolateLtr('16')} ימים)`)).toBeInTheDocument()
     const dashedMonths = chartProps('Cell').filter((props) => props.strokeDasharray)

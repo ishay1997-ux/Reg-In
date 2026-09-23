@@ -756,15 +756,31 @@ describe('מ1 — 📐17: הכותרת מצהירה מה נמדד, ולא מה �
     expect(screen.getByTestId('reports-window-label')).not.toHaveTextContent('01/01/2026')
   })
 
-  // ㉚ — הפקד שאינו חל **מושבת ומנומק**, ולא נעלם.
-  it('גלולות-התקופה מושבתות שם, עם נימוק גלוי', async () => {
+  // ✏️ **הכרעת-ישי 5 (17/09, `processes-approved.md` §👤 טיפוגרפיה):** *"פקד-מת מוחלף בתווית
+  // עובדה"* — ולא גלולות מושבתות עם משפט "אינו מושפע". עד 23/09 הבדיקה כאן נעלה את ההפך (㉚).
+  it('במקום גלולות-התקופה — תווית-עובדה אחת, בלי פקד ובלי הסתייגות', async () => {
     callReport.mockResolvedValue(ignoresPeriod())
     renderPage()
     await waitFor(() => {
-      expect(screen.getByTestId('reports-period-month')).toBeDisabled()
+      expect(screen.getByTestId('reports-period-fixed')).toHaveTextContent('כל הזמנים')
     })
-    expect(screen.getByTestId('reports-period-disabled')).toBeInTheDocument()
+    expect(screen.queryByTestId('reports-period-month')).toBeNull()
+    expect(screen.queryByText(/אינו מושפע/)).toBeNull()
     expect(screen.getByTestId('reports-customer-filter')).not.toBeDisabled()
+  })
+
+  // 📏 נמדד חי: מ4/מ6/מ9 מצרפים את האוכלוסייה לתווית-החלון — תווית-התקופה לוקחת רק את התקופה.
+  it('תווית-העובדה של התקופה אינה חוזרת על "כל הלקוחות"', async () => {
+    callReport.mockResolvedValue(
+      payload({
+        window: { from: null, to: '2026-09-16', label: 'נכון להיום · כל הלקוחות' },
+        population: { n: 35, label: 'אוכלוסייה · n=35' },
+      }),
+    )
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByTestId('reports-period-fixed')).toHaveTextContent(/^נכון להיום$/)
+    })
   })
 
   // 🔑 **הצד השני, והוא זה שתופס רגרסיה:** משטח שכן מסונן-לפי-תקופה לא זז מילימטר.
@@ -775,7 +791,7 @@ describe('מ1 — 📐17: הכותרת מצהירה מה נמדד, ולא מה �
       expect(screen.getByTestId('reports-window-label')).toHaveTextContent('01/01/2026')
     })
     expect(screen.getByTestId('reports-period-month')).not.toBeDisabled()
-    expect(screen.queryByTestId('reports-period-disabled')).toBeNull()
+    expect(screen.queryByTestId('reports-period-fixed')).toBeNull()
   })
 })
 
@@ -789,10 +805,11 @@ describe('מ1 — משטח שאינו מחיל מסנן-לקוח (פריט [8])'
     callReport.mockResolvedValue(ignoresCustomer())
     renderPage('/reports?customer=414')
     await waitFor(() => {
-      expect(screen.getByTestId('reports-customer-filter')).toBeDisabled()
+      expect(screen.getByTestId('reports-customer-fixed')).toHaveTextContent('כל הלקוחות')
     })
+    expect(screen.queryByTestId('reports-customer-filter')).toBeNull()
     expect(screen.getByTestId('reports-window-label')).not.toHaveTextContent('בטא הפקות')
-    expect(screen.getByTestId('reports-customer-disabled')).toBeInTheDocument()
+    expect(screen.queryByText(/אינו מושפע/)).toBeNull()
   })
 
   // 🔑 **והכתובת ממשיכה לעבוד:** ‏`?customer=` נשאר, ולכן מעבר למשטח שכן מסנן לפיו
@@ -829,7 +846,7 @@ describe('מ1 — הכותרת לפני שיש מטען, עם לקוח בכתו�
     expect(label).toHaveTextContent('כל הלקוחות')
     // ⚠️ ולא ידוע עדיין שהבורר לא-רלוונטי ⇒ הוא פעיל, ואינו נושא נימוק-נטרול.
     expect(screen.getByTestId('reports-customer-filter')).not.toBeDisabled()
-    expect(screen.queryByTestId('reports-customer-disabled')).toBeNull()
+    expect(screen.queryByTestId('reports-customer-fixed')).toBeNull()
   })
 
   // 🔑 **והצד השני — ברגע שהמטען חוזר וממשטח שכן מסנן לפי לקוח, השם חוזר.** בלי הבדיקה

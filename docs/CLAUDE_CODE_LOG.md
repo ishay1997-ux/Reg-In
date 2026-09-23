@@ -46,6 +46,55 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (15:XX–) — typography phase B on `ishay/type-copy-phase-b` (M11 wording, counters, dead controls)
+
+**Rulings before code** (plan `docs/plans/2026-09-17-module-11-typography.md`, block "🗣️ אושר 23/09/2026"): every explanatory string of the 16 reports is built **inside the SQL bodies** (J1/J2/J3, patched by K1) — so the rewrite goes into **one text migration**, applied at a single stop with Ishay typing its name; new wording is Claude's call ("תחליט אתה") with the M02 model gate kept; the M20 "מה מכעיס" chart is deleted as approved; economical mode (no build army, Sonnet for scans).
+**Slices, newest last** (SHAs: `git log --oneline origin/dev..HEAD`):
+- Phase-A remainder: `QuotesPage.jsx` 11 sizes ⇒ `text-xs`, baseline ⇒ 5 (all `quotePdf.jsx`, print points). `/quotes` shot at 1024/1536, overflow 0. ⚠️ Trap hit: `prettier --write` on an explicit `.md` path formats it even though `*.md`/`docs` are in `.prettierignore` — reformatted two whole docs; reverted with `git checkout --` and re-applied. ⚠️ And PowerShell 5.1 `Out-File` has no `utf8NoBOM` — write commit messages with `[IO.File]::WriteAllText`.
+- Step 8 (chart click): `datumDrillKey` in `ReportSurface.jsx` reads the datum's own `drill_key` (the row's door), with a dated `"<xKey>_key"` fallback kept **only** for M09 until the text migration adds `drill_key` there. New `chartAction` extension point + `ChartCard` `actionHint` line; the noun follows the chart type. Live as CEO: M03 bar ⇒ `{"kind":"year","year":2025}` (was dead), M09 ⇒ `{"bucket":"d31_60"}`.
+- Step 9 (dead controls): `FiltersBar` takes `periodFixedLabel`/`customerFixed` — a surface that ignores a filter shows the fact (the first ` · ` segment of the server's window label; M04/M06/M09 append "· כל הלקוחות" to it, measured) instead of disabled pills + "אינו מושפע" (Ishay's ruling 5 of 17/09 — the ㉚ "disable-and-explain" tests were rewritten). Normalising `customer_filter_ignored` client-side proved unnecessary (arrays are per-tile partial exemptions). M15's dead pills wait for the migration flag.
+- Step 4 (M02 model, **awaiting Ishay's "מאשר"**): `Disclosure.jsx` · `ScopeLine` replaces `PopulationLine` + the definitions footer (old testids kept on the inner paragraphs; smoke asserts the chip now) · `surface.topN` in the catalog drives an honest table title + `hidePager` and feeds `exportFetch`'s `TOP_N_LABELS` (one home) · M07's duplicate "אלה 4 … מתוך 35" sentence removed · M02 hints rewritten. Measured M02 mode 0: 1,116 ⇒ 215 visible explanatory chars. **Preview technique:** the server strings of the future migration were injected into the live RPC response in the browser only (`page.route`), so the "after" shows real numbers with the planned wording and zero DB writes. ⚠️ A `git stash push -- src e2e` was needed to shoot the true "before" after the code had changed — applied by SHA and dropped by its re-found ref.
+- **Scope cut (~16:4X, relayed by the deputy session as Ishay's ruling, awaiting his direct confirmation):** M3/M4/M6 will be replaced by new decision reports — no rewrite, no M04/M06 paging, no migration text for them; step 8's TrendsSurface fix stays. Recorded in the plan (🔄 block + ✏️ on steps 5/7/10) and the handoff.
+- Step 10b + M11 hints: 24 system keys and 26 M11 keys cut to ≤220 visible chars (the 633-char `dashboard.attention` ⇒ ~210). New gate `npm run check:report-copy` = `src/lib/onboardingCopy.budget.test.js` (length budget + every `reports.*` key cited under `src/modules/11_reports` must exist; dated exemption for M3/M4/M6). ⚠️ Trap: `m11.hostesses.js` hints are template literals with `${ltr('3')}` — a regex that only knows `'`/`"` misses them; `scratchpad/apply-hints.mjs --ltr` handles it. The SQL-string extraction agent (Sonnet) cost ~324K tokens, above the ~150K announced.
+- Text migration `20260923180000_module11_l1_report_copy.sql` written (13 functions, 86 guarded replacements, generator in `docs/specs/module_11_reports/phase-b-migration/`), **not applied** — awaits Ishay typing its name. Pre-apply proof: live `md5(prosrc)` == file bodies (+K1) for all 13. No DDL dry-run (the migrations runbook forbids ad-hoc DDL via `execute_sql`); a syntax error would abort the whole `apply_migration` transaction.
+- Handoff: new dated block "🆕 בלוק 23/09/2026 ערב" at the top of `HANDOFF-typography-2026-09-17-01.md` (read-session run: 30KB conversation, all read) + prompt `~/.claude/plans/typography-phase-b-prompt.md` rewritten for session 2. Fresh-eyes (Sonnet, ~161K) fixed 5 items. Verification tools moved from scratchpad into `docs/specs/module_11_reports/phase-b-migration/tools/` (scratchpad does not survive the session).
+- **Where it stands (end of this turn):** M02 model sent to Ishay as screenshots, awaiting "מאשר"; next unblocked item is step 7 (server paging M04/M06). STATUS "עודכן לאחרונה" updated.
+- **Session 2 (same branch):**
+  - **L1 applied.** Ishay typed the name. The management-API route was denied by the permission classifier, then its token proved invalid (401). So the file went through MCP `apply_migration` in three verbatim parts (registry rows `module11_l1_report_copy_p1of3…p3of3`).
+  - **L1 proof:** live md5 == the md5 computed from the file's own replace pairs, 13/13. All 13 were called under a real identity with no error. Commit `d4dc1916`.
+  - **Code after L1 (`c5586d95`):** the dated M09 `<xKey>_key` fallback was removed (test first). Stale fixtures now mirror the new server. The two M20 hints that pointed at the deleted chart were rewritten. Ripples: 11_reports/CLAUDE.md inv. 4, onboarding-layer-contract §3, design-contract, cards-customers. Gate 0.
+  - **Live check (5173 = this worktree, verified by PID):** 12 reports × 1536/1024 × modes 0/2 as CEO, overflow 0 everywhere.
+  - **Visible text:** M02 215 and M08 185 are within target. The rest are 227–566, mostly the tile sub-lines, which were outside L1's scope.
+  - **L2 written, not applied (`ef041ba1`):** `20260923200000_module11_l2_tile_copy.sql`, 24 replacements in 8 RPCs. It is built on the post-L1 bodies (`bodies.mjs`, md5 13/13 == live), and `expect-md5.mjs l2` gives the post-apply check. Ishay approved the round ("אתה יכול להמשיך בסבב הזה"); **it awaits him typing the name.**
+  - **L2 applied (Ishay typed the name; one MCP call, 1 registry row; `53c8599f`).**
+    - Live md5 16/16 == `expect-md5.mjs l2`.
+    - ACL unchanged.
+    - All 13 run with every sub as intended.
+  - **Re-shot 12×2×2:** overflow 0, fonts 14px. Visible text: fairness 566⇒366, notes 269⇒167, satisfaction 246⇒201, quality-cost 301⇒234.
+  - **L3 written, not applied (`774f8b40`):** `20260923210000_module11_l3_compare_notes.sql`, 4 replacements, built on post-L2.
+    - The m14/m17 gini compare "n=" becomes "אשתקד" (M17 rendered "97=n").
+    - Two m08 footnotes ("רצפת-המהותיות", "רווח סופי קפוא") are rewritten in plain words.
+    - The finance hint gets the same fix.
+    - Found by a query over every visible payload field.
+    - Deliberately left out: m21's permission sentence. §7.100 ruled only the DB masking, so whether the sentence stays is a question for Ishay (recommendation: show it only to a masked user). **L3 awaits Ishay typing its name.**
+  - **L3 applied** (Ishay typed the name) and **L4 written and applied** under his session-only grant *"מעכשיו בסשן הזה תכיל לבד וזהו"*. L4 makes the m08 frozen-profit note read by case, after the 2025 call returned "286 מתוך 286 … בשאר". Both: md5 == `expect-md5.mjs` and read back live (`7946bb0c`).
+  - **`e2e/reports.spec.js` failed 4/19:** it locked the pre-model world (a visible population line, "אוכלוסייה" in it, n living there). Session 1 ran only smoke. Fixed to the chip model, 19/19 (`ff461071`). Smoke 1/1 · gate 0.
+  - **Closing:**
+    - Plan rows 5 and 10 are ✅ with measurements.
+    - micro-guide D-45 has an as-built line.
+    - Handoff: new block "🆕 בלוק 23/09/2026 לילה" (read-session: 78KB conversation, read from line 1).
+    - The prompt file was rewritten for "after the close".
+    - A fresh-eyes Sonnet agent reviewed both: **~141K actual vs ~150K estimated.**
+      - All of ~20 claims verified except one should-fix: the §7.100/m21 attribution was corrected in the handoff but not at its sources.
+      - Fixed in `db_roadmap §10ב` (L3 row) and `ops-l3.mjs`.
+      - The applied L3 header is append-only, so the roadmap row is the correction of record.
+  - **Open, all Ishay's:**
+    - Merging to dev and then main.
+    - The m21 permission sentence.
+    - m19 insight-tile density.
+    - The conference path order.
+    - The `.env.local` password comments and invalid access token.
+
 ### 23/09/2026 (13:XX) — dev merged into the branch, and the "all rows" toggle finally does something
 
 **Ishay released the permission** the tool's classifier had refused, and ruled the `hourly_rate` migration stays a debt for two more weeks (~07/10/2026) and the three small product questions stay as they are (`353e04d9`). **Merge `origin/dev` ⇒ `757ff3c3`:** 47 commits, four conflicts — STATUS and the log keep both sides, `module-11.md` keeps both ledger rows, `ProjectsPage.jsx` keeps the export button and takes dev's `text-sm` on the sort line (the branch side carried a `text-[12px]` that the newly-arrived `check:type-scale` refuses). Gate on the merged tree: exit 0, 125 files / 3,189 tests, 13 sub-steps now.
@@ -172,7 +221,7 @@ The hook blocked the turn **three times** for the same reason — code committed
 
 ### 23/09/2026 — the wage registry, a bucket that read backwards, and the first screen outside module 11
 
-**Continues the entry below.** Handoff: `docs/specs/module_11_reports/HANDOFF-export-dialog-2026-09-23.md`.
+**Continues the entry below.** Handoff: `docs/specs/module_11_reports/archive/HANDOFF-export-dialog-2026-09-23.md`.
 
 **The finding that reframed the item, verified link by link rather than accepted:** column descriptors for module 11 arrive as **JSON** from the RPC, and JSON cannot carry a function — so an RPC-declared column can never carry `visible`. The mechanism built the night before was sound and had no input. ⚠️ **The parallel session's wording was "it can have no producer at all"; that is too strong and both sides corrected it** — the §7.2 contract is a client-side JS literal where a function *is* the producer. The real gap is narrower and worse: `report_m16_quality_cost` returns `hourly_rate` to `view` users. 🔑 **And the detail that hides it from any search:** the screen calls the field `שכר שעתי`, the RPC calls it `תעריף שעתי`.
 
@@ -215,7 +264,7 @@ The hook blocked the turn **three times** for the same reason — code committed
 **Branch `ishay/export-build` (worktree `C:\Users\ishay\Reg-In-export-wt`), pushed on Ishay's explicit word.** Slices 1–4 were built by the previous session; this one did the acceptance test in the handoff §3, ran the full gate for the first time, flipped `e2e/reports.spec.js`, and fixed three layout bugs found by the eyes pass.
 
 📄 **The two files a new session reads first** — pointers created 18/09 00:0X, because `grep -rln "HANDOFF-export-dialog"` across the whole repo had returned **only the file itself**: a handoff nobody points to is a file, not a handoff.
-- `docs/specs/module_11_reports/HANDOFF-export-dialog-2026-09-17.md` — where we stand, the acceptance test, the traps, the next step. Signed 18/09 00:00.
+- `docs/specs/module_11_reports/archive/HANDOFF-export-dialog-2026-09-17.md` — where we stand, the acceptance test, the traps, the next step. Signed 18/09 00:00.
 - `C:\Users\ishay\.claude\plans\breezy-wibbling-sloth.md` — **outside the repo, so not in git**: why it was built this way, what was rejected and why, the full six-screen scope.
 
 **`npm run gate` had never been run whole in this work** — only its parts. Run twice here, **`GATE_EXIT=0`** both times, all 12 sub-stages verified present in the log one by one (not inferred): `lint` 0 errors / 1 pre-existing warning · `test:run` **3,100 in 120 files (193s)** · `check:docs-structure` 166 files 0 findings · `check:iron-rules` 17/17 · `check:declared-counts` 6/6. **~6 min wall clock** — recorded as a §1 candidate in `docs/guides/01_estimation_log.md` (`a84fbf4a`), because the existing `src/lib/**` row still prices the suite at "3.5 min for 2,399 tests" and it grew 29%.
@@ -3014,5 +3063,7 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
 ➕ מצביעי "שורה 896" ב-`PROJECT_MASTER` הוחלפו בחיפוש על `report_m16_quality_cost` — אחרי מיזוג `dev` השורה זזה ל-905, ומספר-שורה אינו כתובת.
 
 🔄 **מ11 טיפוגרפיה — רענון התוכנית והמסירה לפני פזה ב׳, 23/09/2026.** חלון-הייצוא מוזג (PR #150), ולכן כל "שטח הסשן המקביל" בתוכנית ובמסירה הפך להיסטוריה. במקום למחוק — בלוק-עדכון מתוארך בראש כל אחד משני הקבצים, וסימון ✏️ בכל מקום שהתיישן (§6ד · שלב 7 · §7ב · §7ג · §5 · §11 · §12). 🔑 **נקודת-המגע היחידה שנשארה:** שלב 7 (דפדוף מ04/מ06) מול תוויות "כל השורות" של הייצוא (`CAPPED_LABELS`). התוכנית בריפו היא עכשיו הסמכות.
+
+🗂️ **מ11 — מסירה אחת במקום שש, 23/09/2026.** בהכרעת-ישי (*"שיהיה מסמך מסירה אחד שמתעדכן בסוף סשן"*): ארבע מסירות ובלוק-הדבקה אחד שאינם קשורים לטיפוגרפיה עברו ל-`docs/specs/module_11_reports/archive/`, והנתיבים המצביעים אליהם עודכנו (קבצי-הראיות ב-`build-2026-09-16/` נשארו כפי שנכתבו). `HANDOFF-typography-2026-09-17-01.md` הוא המסירה החיה היחידה ומתעדכן במקום. **וענף אחד לכל פזה ב׳** — `ishay/type-copy-phase-b` — עם מיזוג אחד בסוף.
 
 </div>

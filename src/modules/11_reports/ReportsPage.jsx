@@ -123,9 +123,10 @@ const DOOR_PATHS = Object.freeze({
  *    (`jsonb_build_object('p_from', p_from, …)`). הסימן שכן קיים בכל ארבעת המשטחים
  *    שמתעלמים מהתקופה (מ3 · מ4 · מ6 · מ9) הוא `window.from = null` **בזמן שהמשתמשת בחרה
  *    תקופה** — ‏`'from', null` כתוב מפורשות בגוף כל אחד מהם.
- * 🚫 **ומ22 נשארת בחוץ ביודעין:** היא מהדהדת `'from', v_from` אף שאינה משתמשת בו (הוא
- * מחושב בשורה אחת ואינו מופיע באף שאילתה — `…i2_rpc_round3.sql:4142`). **זה פגם-RPC של
- * שורה אחת**, והמעטפת תרים אותו מעצמה ביום שהוא יתוקן. מדווח ולא מתוקן כאן.
+ * ✏️ **מ22 — תוקן בשרת (J2 מחזירה `'from', null`), והמעטפת הרימה אותו מעצמה, כפי שנכתב כאן.**
+ * 🔴 **ומ15 היא הפער שנשאר (נמדד 23/09/2026):** חלון קבוע של 12 חודשים שמתעלם מ-`p_from`
+ * (`…j2….sql`), אבל מחזיר `from` מלא ⇒ הגלולות שם נראות פעילות ואינן עושות דבר. ‏**התיקון
+ * בשרת — `meta.period_filter_ignored` במיגרציית-הטקסט של פזה ב׳**, ולא רשימה כתובה כאן.
  */
 function readScope(serverWindow, meta, rpc) {
   if (!rpc) return null
@@ -143,9 +144,14 @@ const sameScope = (a, b) =>
   a?.periodIgnored === b?.periodIgnored &&
   a?.customerIgnored === b?.customerIgnored
 
-// 🔤 שני הנימוקים שמופיעים ליד פקד מושבת — משפט אחד כל אחד, בלי ז'רגון ובלי שם-שדה.
-const PERIOD_IGNORED_REASON = 'הדף הזה אינו מושפע ממסנן התקופה'
-const CUSTOMER_IGNORED_REASON = 'הדף הזה אינו מושפע ממסנן הלקוח'
+// ✂️ **23/09/2026 — שני משפטי-ההסתייגות נמחקו** (*"הדף הזה אינו מושפע ממסנן…"*): הכרעת-ישי 5
+// מחליפה פקד-מת בתווית-עובדה (ר' `FiltersBar`). ⚠️ ותווית-העובדה של התקופה היא **תווית-החלון
+// שהשרת מדד** — אותה עובדה שהכותרת כבר אומרת, ולא ניסוח נוסף.
+const FIXED_PERIOD_FALLBACK = 'כל הזמנים'
+// ⚠️ **רק הסעיף הראשון של תווית-השרת** — נמדד חי 23/09: חלק מהמשטחים מצרפים לה את
+// האוכלוסייה (*"כל הזמנים · כל הלקוחות"* במ4/מ6, *"נכון להיום · כל הלקוחות"* במ9), ותווית-
+// תקופה שאומרת "כל הלקוחות" ליד בורר-הלקוח היא שתי הצהרות על אותו דבר.
+const periodFact = (label) => label?.split(' · ')[0] || FIXED_PERIOD_FALLBACK
 
 function TabButton({ tab, active, masked, onSelect }) {
   return (
@@ -489,15 +495,15 @@ export default function ReportsPage() {
         onPeriodChange={(next) =>
           writeParams({ period: next === tabDefaultPeriod ? undefined : next })
         }
-        // ✏️ **הפקד מושבת על המשטח שאינו מחיל אותו** (17/09/2026) — ר' `readScope`.
+        // ✏️ **המשטח שאינו מחיל מסנן — עובדה במקום פקד** (הכרעת-ישי 5; ר' `readScope`).
         // 🔑 **והכתובת ממשיכה לעבוד:** ‏`?period=`/`?customer=` נשמרים כפי שהם ונשארים
-        // בתוקף ברגע שהמשתמשת עוברת למשטח שכן מסנן לפיהם. מה שנחסם הוא **השינוי מכאן**,
-        // לא המצב עצמו — קישור-לדוח-מסונן ששותף נפתח בדיוק כפי שנשלח.
-        periodDisabledReason={periodIgnored ? PERIOD_IGNORED_REASON : null}
+        // בתוקף ברגע שהמשתמשת עוברת למשטח שכן מסנן לפיהם — קישור-לדוח-מסונן ששותף נפתח
+        // בדיוק כפי שנשלח.
+        periodFixedLabel={periodIgnored ? periodFact(scope.label) : null}
         customers={customers}
         customerId={customerId}
         onCustomerChange={(next) => writeParams({ customer: next })}
-        customerDisabledReason={customerIgnored ? CUSTOMER_IGNORED_REASON : null}
+        customerFixed={customerIgnored}
         exportSlot={<div ref={setExportSlotEl} data-testid="reports-export-slot" />}
       />
       {/* 🚫 **אין כאן `<Hint>`, ובכוונה.** ‏§2ב C3 מחייב שכל מפתח-הטמעה של מ11 **מועתק

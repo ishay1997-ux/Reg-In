@@ -84,7 +84,9 @@ export function withPartialMonth(chart, windowTo) {
   if (!days) return chart
   return withPartialSegment(chart, {
     labelOf: (row, label) => `${label} (${isolateLtr(String(days))} ימים)`,
-    note: `החודש האחרון מכסה ${isolateLtr(String(days))} ימים ולא חודש שלם — הוא מסומן בדפוס מקווקו, ואינו בר-השוואה לשאר החודשים; כן אפשר להשוות אותו לאותו חודש בשנה שעברה.`,
+    // ✏️ 23/09/2026 (פזה ב׳) — קוצר מ-~150 תווים: הערוץ השלישי של 📐20 צריך לומר **למה העמודה
+    // נמוכה**, לא לתאר את הציור (כ7: הצדקה-לחריגה נשארת, הצהרת-ציות יורדת).
+    note: `החודש האחרון חלקי — ${isolateLtr(String(days))} ימים בלבד, ולכן העמודה שלו נמוכה.`,
   })
 }
 

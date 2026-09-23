@@ -128,8 +128,8 @@ const overviewPayload = () =>
         label: 'שביעות-רצון מנבאת חזרה',
         value: 16,
         format: 'days',
-        sub: 'חציון ימים מאז האירוע האחרון: לקוחות מרוצים מול לקוחות לא-מרוצים',
-        window: 'כל הזמנים · אינו מושפע ממסנן התקופה',
+        sub: 'ימים מאז האירוע האחרון (חציון) — מרוצים מול לא-מרוצים',
+        window: 'כל הזמנים',
         compare: { value: 212, label: 'לקוחות לא-מרוצים', direction: 'flat' },
         target: { tab: 'לקוחות', report: 'report_m20_satisfaction', drill: null },
       },
@@ -220,12 +220,13 @@ const overviewPayload = () =>
         last_event: '2026-09-15',
       },
     ],
-    so_what: 'לפתוח את "שביעות רצון" ולראות מה מכעיס את 10 הלקוחות הלא-מרוצים.',
+    so_what:
+      'לפתוח את "שביעות רצון" — 10 הלקוחות הלא-מרוצים לא הזמינו כבר 219 ימים, מול 22 אצל המרוצים.',
     definitions: 'הגדרות: ממוצע שביעות-רצון = ממוצע ציון 1–5.',
   })
 
-// G3/I1: שני גרפי-הסיבות חוזרים `layout: 'horizontal'`, ולגרף-השליליות `filter_key`
-// שמצטלב עם עמודת-שורה (`negative_reason`) — כלומר סינון-צולב דרך המעטפת.
+// G3/I1: גרף-הסיבות חוזר `layout: 'horizontal'`. ✏️ 23/09/2026 (מיגרציית-הטקסט L1): גרף-השליליות
+// ("מה מכעיס") וגרף "שיעור המרוצים לפי שנה" נמחקו מהשרת בהכרעת-ישי — המטען כאן משקף את השרת החדש.
 const chartOf = (title, extra = {}) => ({
   type: 'bar',
   title,
@@ -255,22 +256,7 @@ const satisfactionPayload = () =>
     ],
     chart: [
       chartOf('התפלגות הציונים', { xKey: 'score', filter_key: false, data: [{ score: 2, n: 3 }] }),
-      chartOf('מה משמח', {
-        layout: 'horizontal',
-        filter_key: false,
-        note: 'הסולם כאן עצמאי ואינו משותף לגרף השלילי שלצידו',
-      }),
-      chartOf('מה מכעיס', {
-        layout: 'horizontal',
-        filter_key: 'negative_reason',
-        note: 'הסולם כאן עצמאי ואינו משותף לגרף החיובי שלצידו',
-      }),
-      chartOf('שיעור המרוצים לפי שנה', {
-        xKey: 'year',
-        filter_key: false,
-        unit: '%',
-        data: [{ year: 2026, satisfied_share: 88.3 }],
-      }),
+      chartOf('מה משמח', { layout: 'horizontal', filter_key: false }),
     ],
     columns: [
       { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
@@ -291,7 +277,7 @@ const satisfactionPayload = () =>
         feedback_notes: null,
       },
     ],
-    so_what: 'לפתוח את 10 המשובים שתויגו "אחר".',
+    so_what: 'לקרוא את 10 המשובים שתויגו "אחר" — יותר מכל הסיבות האחרות יחד, ואיש עוד לא קרא אותם.',
     definitions: 'הגדרות: שיעור המרוצים = משובים בציון 4 או 5.',
   })
 
@@ -645,12 +631,14 @@ describe('מ19 · מבט-על לקוחות', () => {
 })
 
 describe('מ20 · שביעות רצון', () => {
-  it('מצייר את ארבעת הגרפים של המוקאפ המאושר', async () => {
+  // ✏️ 23/09/2026 — ארבעה ⇐ שניים: "מה מכעיס" ו"שיעור המרוצים לפי שנה" נמחקו (הכרעת-ישי, תוכנית §6).
+  it('מצייר את שני הגרפים שנשארו', async () => {
     callReport.mockResolvedValue(satisfactionPayload())
     renderTab(SURFACES.מ20)
-    for (const title of ['התפלגות הציונים', 'מה משמח', 'מה מכעיס', 'שיעור המרוצים לפי שנה']) {
+    for (const title of ['התפלגות הציונים', 'מה משמח']) {
       expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
     }
+    expect(screen.queryByRole('heading', { name: 'מה מכעיס' })).toBeNull()
   })
 
   it('רשימת-סיבות מוצגת כטקסט אחד, והערה ריקה אינה תא ריק', async () => {
