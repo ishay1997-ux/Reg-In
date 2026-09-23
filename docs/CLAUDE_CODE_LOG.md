@@ -66,6 +66,17 @@
   - **Live check (5173 = this worktree, verified by PID):** 12 reports × 1536/1024 × modes 0/2 as CEO, overflow 0 everywhere.
   - **Visible text:** M02 215 and M08 185 are within target. The rest are 227–566, mostly the tile sub-lines, which were outside L1's scope.
   - **L2 written, not applied (`ef041ba1`):** `20260923200000_module11_l2_tile_copy.sql`, 24 replacements in 8 RPCs. It is built on the post-L1 bodies (`bodies.mjs`, md5 13/13 == live), and `expect-md5.mjs l2` gives the post-apply check. Ishay approved the round ("אתה יכול להמשיך בסבב הזה"); **it awaits him typing the name.**
+  - **L2 applied (Ishay typed the name; one MCP call, 1 registry row; `53c8599f`).**
+    - Live md5 16/16 == `expect-md5.mjs l2`.
+    - ACL unchanged.
+    - All 13 run with every sub as intended.
+  - **Re-shot 12×2×2:** overflow 0, fonts 14px. Visible text: fairness 566⇒366, notes 269⇒167, satisfaction 246⇒201, quality-cost 301⇒234.
+  - **L3 written, not applied (`774f8b40`):** `20260923210000_module11_l3_compare_notes.sql`, 4 replacements, built on post-L2.
+    - The m14/m17 gini compare "n=" becomes "אשתקד" (M17 rendered "97=n").
+    - Two m08 footnotes ("רצפת-המהותיות", "רווח סופי קפוא") are rewritten in plain words.
+    - The finance hint gets the same fix.
+    - Found by a query over every visible payload field.
+    - Deliberately left out: m21's permission sentence. §7.100 ruled only the DB masking, so whether the sentence stays is a question for Ishay (recommendation: show it only to a masked user). **L3 awaits Ishay typing its name.**
 
 ### 23/09/2026 (13:XX) — dev merged into the branch, and the "all rows" toggle finally does something
 
