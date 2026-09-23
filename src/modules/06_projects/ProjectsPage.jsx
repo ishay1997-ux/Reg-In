@@ -100,35 +100,76 @@ function todayIso() {
 // "סטטוס" הוא תווית מ-`PROJECT_STATUS_LABELS`. **מימוש שני היה מפצל את המסך מהקובץ**
 // ביום שאחת מהנגזרות תשתנה, והפער היה שקט — א׳לא שגיאה וא׳לא בדיקה שנופלת.
 //
-// 🚧 **אין כאן `visible`, וזו עובדה שנמדדה ולא השמטה:** למסך-הפרויקטים
-// **אין אף עמודת-כסף מרונדרת** (תוכנית §7.4), ולכן אין שדה שההרשאה מסתירה.
-// ⚠️ **וזו בדיוק הסיבה שהוא נבחר כמסך המוכיח הראשון** — הוא בודק את החוזה
-// בלי לערבב אותו עם דליפת-שכר, שנשארת חוב פתוח ב-`PROJECT_MASTER §6`.
+// ⚠️ **17 שדות, לא 30 — וזה גבול שנמדד ולא השמטה.** המוקאפ הראה 30 שדות מטבלת
+// `projects`, אבל **השליפה שהמסך מריץ מחזירה 17**: `list_projects_overview()`
+// (`20260814142439_module6_rpcs_reads_and_close.sql:138-157`).
+// 🔑 **אי-אפשר לייצא שדה שלא נשלף.** שלושה-עשר הנותרים דורשים שינוי ב-RPC,
+// כלומר **מיגרציה ⇒ כלל-ברזל 4, הכרעת-ישי בלבד.** נרשם ולא בוצע בשקט.
+//
+// 🚧 **ואין כאן `visible`, וגם זה נמדד:** עמודת-הכסף היחידה היא `planned_revenue`,
+// **והיא ממוסכת במסד** ולא בלקוח — ר' ההערה שלידה. ⇒ אין כאן שדה שהלקוח צריך להסתיר.
 const EXPORT_COLUMNS = [
-  { key: 'project_id', label: 'מס׳ פרויקט', format: 'id' },
-  { key: 'event_name', label: 'אירוע', format: 'text' },
-  { key: 'customer_name', label: 'לקוח', format: 'text' },
-  { key: 'final_event_date', label: 'תאריך האירוע', format: 'date' },
+  { key: 'project_id', label: 'מס׳ פרויקט', format: 'id', core: true },
+  { key: 'event_name', label: 'אירוע', format: 'text', core: true },
+  { key: 'customer_name', label: 'לקוח', format: 'text', core: true },
+  { key: 'final_event_date', label: 'תאריך האירוע', format: 'date', core: true },
   {
     key: 'staffing',
     label: 'דיילות',
     format: 'text',
+    core: true,
     value: (project) => staffingCell(project).ratio ?? '',
   },
   {
     key: 'logistics',
     label: 'לוגיסטיקה',
     format: 'text',
+    core: true,
     value: (project) => logisticsCell(project).ratio ?? '',
   },
   {
     key: 'project_status',
     label: 'סטטוס',
     format: 'text',
+    core: true,
     value: (project) => PROJECT_STATUS_LABELS[project.project_status] ?? '',
   },
+  // 🔴 **מחוץ לברירת-המחדל במכוון — החריג היחיד לכלל "מה שבמסך".**
+  // הקריטריון שישי נתן (23/09): *"אם זה לא עוזר להם בניתוח באקסל אז מיותר"*.
+  // 🔑 **והמשפט הזה הוא תרגום-למילים של עמודות שכבר בקובץ** — *"2 זימונים ממתינים
+  // למענה"* הוא אותו נתון שב"דיילות" (2/3). באקסל אי-אפשר למיין, לסנן או לעשות
+  // טבלת-ציר על משפט — **והנתון כבר שם בצורה שכן אפשר.**
+  // ⚠️ **ונשאר זמין ולא נמחק** — שלילה היא הכרעת-מוצר, והוא הכריע להשאיר.
+  // 🚫 **וזה החריג היחיד:** ברגע שנתחיל לבחור ידנית אילו עמודות-מסך "שימושיות" —
+  // איבדנו את הכלל, וכל מסך יהפוך להכרעה מחדש. **הקריטריון צר בכוונה:
+  // עמודה שהיא ניסוח-מילולי של עמודות אחרות באותו קובץ.**
   { key: 'gap', label: 'מה חסר', format: 'text', value: (project) => gapSentence(project) },
+
+  // ⬇️ **זמינות בבוחר, אינן מסומנות** — "ואם ירצה יוכל להוסיף עוד" (הכרעת-ישי 23/09).
+  { key: 'final_location', label: 'מיקום', format: 'text' },
+  { key: 'final_start_time', label: 'שעת התחלה', format: 'text' },
+  { key: 'final_end_time', label: 'שעת סיום', format: 'text' },
+  { key: 'required_hostess_count', label: 'דיילות נדרשות', format: 'int' },
+  { key: 'hostesses_confirmed', label: 'דיילות שאושרו', format: 'int' },
+  { key: 'pending_invites', label: 'זימונים ממתינים', format: 'int' },
+  { key: 'logistics_ready', label: 'לוגיסטיקה מוכנה', format: 'int' },
+  { key: 'logistics_total', label: 'פריטי לוגיסטיקה', format: 'int' },
+  // 📄 התווית מאושרת ב-`rulings-2026-09-22.md`: *"תאריך ביטול"*, ולא *"בוטל בתאריך"*.
+  { key: 'cancelled_at', label: 'תאריך ביטול', format: 'date' },
+  { key: 'cancel_type', label: 'סוג ביטול', format: 'text' },
+  // 💰 **כסף — ובטוח להצעה, כי המיסוך במסד ולא בלקוח.** `list_projects_overview`
+  // מחשבת את ראות-הקוראת על 'הצעות מחיר' ומחזירה **`NULL` למי שאין לה**
+  // (`20260814142439_module6_rpcs_reads_and_close.sql:103-108`).
+  // ⇒ אינו בברירת-המחדל (אינו על המסך), וכן זמין למי שיסמן אותו.
+  { key: 'planned_revenue', label: 'הכנסה מתוכננת', format: 'money' },
 ]
+
+// 🔑 **ברירת-המחדל היא בדיוק מה שהטבלה על המסך מראה** — הכרעת-ישי 23/09/2026:
+// *"בכל מסך שילחצו ייצוא ברירת המחדל תהיה מה שבמסך, ואם ירצה יוכל להוסיף עוד"*.
+// ✅ **וזה אינו שינוי מההכרעה מ-18/09** — היא אמרה *"8 עמודות-הליבה **שמופיעות
+// בטבלת המסך**"*; הניסוח החדש רק הפך אותה לכלל כללי שאינו דורש הכרעה מחדש פר-מסך.
+// 📌 **והאכיפה עצמה יושבת ב-`defaultSelection` (`src/lib/exportColumns.js`)** ולא כאן —
+// כדי שכל מסך שיחובר יקבל את אותה התנהגות בלי לחזור על הלוגיקה. **כלל-ברזל 14.**
 
 export default function ProjectsPage() {
   const navigate = useNavigate()

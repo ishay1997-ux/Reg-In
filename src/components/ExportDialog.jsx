@@ -28,6 +28,7 @@ import {
 import {
   applyColumnOrder,
   defaultOrder,
+  defaultSelection,
   isVisible,
   moveKey,
   moveToTop,
@@ -87,7 +88,7 @@ export default function ExportDialog({
   )
 
   const [order, setOrder] = useState(() => defaultOrder(permitted, permissions))
-  const [selected, setSelected] = useState(() => new Set(defaultOrder(permitted, permissions)))
+  const [selected, setSelected] = useState(() => new Set(defaultSelection(permitted, permissions)))
   const [conditions, setConditions] = useState([])
   const [busy, setBusy] = useState(false)
   const [exportError, setExportError] = useState(null)
@@ -108,7 +109,7 @@ export default function ExportDialog({
     const keys = defaultOrder(permitted, permissions)
     setSeenKey(columnsKey)
     setOrder(keys)
-    setSelected(new Set(keys))
+    setSelected(new Set(defaultSelection(permitted, permissions)))
     setConditions([])
     setExportError(null)
   }
@@ -201,10 +202,14 @@ export default function ExportDialog({
   }
 
   function reset() {
-    const keys = defaultOrder(permitted, permissions)
-    setOrder(keys)
-    setSelected(new Set(keys))
+    setOrder(defaultOrder(permitted, permissions))
+    setSelected(new Set(defaultSelection(permitted, permissions)))
     setConditions([])
+  }
+
+  // װ"סמני הכול" — החצי השני של הכלל: *"ואם ירצה יוכל להוסיף עוד"*.
+  function selectAll() {
+    setSelected(new Set(defaultOrder(permitted, permissions)))
   }
 
   async function handleExport() {
@@ -305,6 +310,8 @@ export default function ExportDialog({
             conditions={conditions}
             onConditions={setConditions}
             onReset={reset}
+            onSelectAll={selectAll}
+            allSelected={selected.size >= permitted.length}
             topN={topN}
             showAll={showAll}
             onShowAllChange={onShowAllChange}

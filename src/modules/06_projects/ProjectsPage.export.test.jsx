@@ -16,7 +16,7 @@ const listProjectsOverview = vi.fn()
 vi.mock('./api', () => ({ listProjectsOverview: (...a) => listProjectsOverview(...a) }))
 
 import ProjectsPage from './ProjectsPage'
-import { gapSentence, staffingCell, PROJECT_STATUS_LABELS } from '@/lib/projects'
+import { staffingCell, PROJECT_STATUS_LABELS } from '@/lib/projects'
 
 // שורות בצורת `listProjectsOverview` — נגזרות, לא ערכים גולמיים. זו כל הנקודה.
 const project = (over = {}) => ({
@@ -57,7 +57,9 @@ describe('ProjectsPage — חיבור לחלון-הייצוא', () => {
     const expected = PROJECT_STATUS_LABELS[row.project_status]
     expect(expected).toBeTruthy()
     await waitFor(() => expect(preview.getByText(expected)).toBeInTheDocument())
-    expect(preview.getByText(gapSentence(row))).toBeInTheDocument()
+    // ⚠️ װ`gapSentence` אינה נבדקת כאן יותר — "מה חסר" יצאה מברירת-המחדל
+    // בהכרעת-ישי 23/09. החוזה נבדק על `staffingCell`, שהיא נגזרת **ובברירת-המחדל**.
+    expect(preview.getByText(staffingCell(row).ratio)).toBeInTheDocument()
   })
 
   it('שורת-הכמות סופרת את כל מה שעומד במסנן, לא את עמוד-הדפדוף', async () => {
@@ -78,8 +80,8 @@ describe('ProjectsPage — חיבור לחלון-הייצוא', () => {
       .getAllByRole('columnheader')
       .map((c) => c.textContent)
     expect(heads).toContain('אירוע')
-    expect(heads).toContain('מה חסר')
     expect(heads).toContain('סטטוס')
+    expect(heads).toContain('דיילות')
     // 🚫 עמודת "פעולות" לעולם אינה מיוצאת (תוכנית §7.2)
     expect(heads.join(' ')).not.toContain('לכרטיס')
   })
@@ -99,5 +101,60 @@ describe('ProjectsPage — חיבור לחלון-הייצוא', () => {
   it('staffingCell נקראת פעם אחת בלבד לכל שורה — אותה נגזרת, לא מימוש שני', () => {
     const row = project({ required_hostess_count: 4 })
     expect(staffingCell(row)).toEqual(staffingCell(row))
+  })
+})
+
+// 🔴🔴 **הכלל שישי ניסח 23/09/2026:** *"בכל מסך שילחצו ייצוא ברירת המחדל
+// תהיה מה שבמסך, ואם ירצה יוכל להוסיף עוד"*.
+// 🔴 **עד 23/09 מומש רק החצי הראשון** — היו שמונה עמודות ונקודה, ולא היה מה להוסיף.
+describe('🔴 ברירת-מחדל = מה שבמסך, ואפשר להוסיף עוד', () => {
+  it('נפתח עם עמודות-המסך בלבד — לא עם כולן', async () => {
+    setup([project()])
+    fireEvent.click(await screen.findByTestId('projects-export-button'))
+    const heads = () =>
+      within(screen.getByTestId('export-preview'))
+        .getAllByRole('columnheader')
+        .map((c) => c.textContent)
+    await waitFor(() => expect(heads()).toContain('אירוע'))
+    // שבע עמודות-מסך, ו**לא** כל 17 הזמינות
+    expect(heads()).not.toContain('מיקום')
+    expect(heads()).not.toContain('הכנסה מתוכננת')
+  })
+
+  it('העמודות הנוספות **זמינות בבוחר** גם כשאינן מסומנות', async () => {
+    setup([project()])
+    fireEvent.click(await screen.findByTestId('projects-export-button'))
+    await screen.findByTestId('export-column-list')
+    expect(screen.getByTestId('export-column-final_location')).toBeInTheDocument()
+    expect(screen.getByTestId('export-column-planned_revenue')).toBeInTheDocument()
+  })
+
+  it('🔴 "סמני הכול" מכניס את השאר לקובץ', async () => {
+    setup([project()])
+    fireEvent.click(await screen.findByTestId('projects-export-button'))
+    fireEvent.click(await screen.findByTestId('export-select-all'))
+    const heads = within(screen.getByTestId('export-preview'))
+      .getAllByRole('columnheader')
+      .map((c) => c.textContent)
+    expect(heads).toContain('מיקום')
+    expect(heads).toContain('הכנסה מתוכננת')
+  })
+
+  it('אחרי "סמני הכול" הכפתור נעלם — כפתור שאינו עושה דבר הוא רעש', async () => {
+    setup([project()])
+    fireEvent.click(await screen.findByTestId('projects-export-button'))
+    fireEvent.click(await screen.findByTestId('export-select-all'))
+    expect(screen.queryByTestId('export-select-all')).toBeNull()
+  })
+
+  it('װ"מה חסר" זמינה אך אינה בברירת-המחדל — החריג שישי אישר', async () => {
+    setup([project()])
+    fireEvent.click(await screen.findByTestId('projects-export-button'))
+    await screen.findByTestId('export-column-list')
+    expect(screen.getByTestId('export-column-gap')).toBeInTheDocument()
+    const heads = within(screen.getByTestId('export-preview'))
+      .getAllByRole('columnheader')
+      .map((c) => c.textContent)
+    expect(heads).not.toContain('מה חסר')
   })
 })

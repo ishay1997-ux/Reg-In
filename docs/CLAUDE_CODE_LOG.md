@@ -46,6 +46,26 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (03:0X) — "default is what's on screen, and you can add more"
+
+**Ishay, 23/09:** *"בכל מסך שילחצו ייצוא נראלי שברירת המחדל תהיה מה שבמסך? ואם ירצה יוכל להוסיף עוד"*.
+
+✅ **It is not a change — it is his 18/09 ruling stated generally.** That one said *"8 עמודות-הליבה **שמופיעות בטבלת המסך**"*. The new wording turns it into a rule that does not need re-deciding per screen.
+
+🔴 **And it exposed that the projects export implemented only half of it:** seven columns **and nothing else**. The default was right; **the ability to add was never built.** He found it by asking a plain question — *"דוח פרויקטים מכיל מלא לא?"* — which is the kind of check no gate performs.
+
+**What it is now:** `defaultSelection()` in `exportColumns.js` — a screen marks `core: true` on what its table shows, and only those are ticked. ⚠️ **When no column declares `core`, everything is ticked, deliberately:** m11's sixteen reports get their columns as **JSON from the RPC, and JSON cannot carry `core`** — a "nothing ticked" default would have silently emptied them. **The old behaviour survives exactly where nothing distinguishes it.** Plus a `סמני הכול` control, hidden once everything is ticked.
+
+📊 **Verified live at 1440:** default ⇒ **7 ticked, 19 available**, caption *"· 7 עמודות"* · after `סמני הכול` ⇒ **19 ticked**, caption *"· 19 עמודות"*.
+
+⚠️ **17 fields, not the 30 the mockup showed — measured, not omitted.** `list_projects_overview()` returns 17 (`20260814142439_module6_rpcs_reads_and_close.sql:138-157`), and **you cannot export a field that was never fetched.** The other thirteen need an RPC change ⇒ **migration ⇒ iron rule 4, Ishay only.** Recorded rather than done quietly. *(19 in the picker = 17 fetched fields + the two derived ones.)*
+
+💰 **`planned_revenue` is money and is safe to offer:** the RPC computes the caller's visibility on `'הצעות מחיר'` and returns **`NULL` to whoever lacks it** — masked **in the database, not the client**. ⇒ not in the default (not on screen), available to anyone who ticks it.
+
+🔴 **The one exception to the rule, and it is narrow on purpose:** `מה חסר` left the default. His criterion — *"אם זה לא עוזר להם בניתוח באקסל אז מיותר"* — and the sentence is a **wording of columns already in the file** (*"2 זימונים ממתינים למענה"* is the same datum as `דיילות` 2/3). Excel cannot sort, filter or pivot a sentence, and the datum is already there in a form it can. **It stays available; removal would be a product call and he chose to keep it.** 🚫 **And it must stay the only exception** — hand-picking which screen columns are "useful" destroys the rule.
+
+⚠️ **Two existing tests asserted the old behaviour and were updated, not deleted** — they locked `מה חסר` into the default. The contract assertion moved to `staffingCell`, which is derived **and** in the default.
+
 ### 23/09/2026 (02:4X) — the preview scrolled sideways and gave no sign that it did
 
 **`6570c7da`.** Ishay: *"צריך בתצוגה מקדימה גלילה ימינה שמאלה לראות את העמודות"*.

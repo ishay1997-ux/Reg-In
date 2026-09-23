@@ -92,6 +92,23 @@ export function applyColumnOrder(columns, order, selected, permissions) {
   return picked.length > 0 ? picked : merged
 }
 
+/**
+ * אילו עמודות מסומנות כשהחלון נפתח.
+ *
+ * 🔑 **הכלל שישי ניסח 23/09/2026:** *"בכל מסך שילחצו ייצוא ברירת המחדל
+ * תהיה מה שבמסך, ואם ירצה יוכל להוסיף עוד"*. מסך מסמן `core: true` על מה שעל המסך.
+ *
+ * ⚠️ **וכשאף עמודה אינה מצהירה `core` — הכל מסומן, וזה במכוון:**
+ * 16 הדוחות של מ11 מקבלים את עמודותיהם מה-RPC כ-JSON, **ו-JSON אינו נושא `core`**.
+ * ברירת-מחדל של "כלום מסומן" היתה מרוקנת אותם בשקט. ⇒ **ההתנהגות הישנה נשמרת
+ * בדיוק כשאין מה להבדיל בינו.**
+ */
+export function defaultSelection(columns, permissions) {
+  const list = (Array.isArray(columns) ? columns : []).filter((c) => isVisible(c, permissions))
+  const core = list.filter((column) => column.core === true)
+  return (core.length > 0 ? core : list).map((column) => column.key)
+}
+
 /** סדר-הפתיחה: כפי שה-RPC הכריז. **הוא גם מה ש"איפוס" חוזר אליו.** */
 export function defaultOrder(columns, permissions) {
   // עמודה שהוסתרה אינה נכנסת לסדר ולכן **גם אינה מופיעה בבוחר** —

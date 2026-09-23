@@ -226,6 +226,8 @@ export default function ExportConfigPanel({
   conditions,
   onConditions,
   onReset,
+  onSelectAll,
+  allSelected,
   topN,
   showAll,
   onShowAllChange,
@@ -361,15 +363,35 @@ export default function ExportConfigPanel({
           <span className="text-xs text-slate-600">
             עמודות ({selected.size}/{columns.length})
           </span>
-          <Button
-            type="button"
-            variant="link"
-            className="h-auto p-0 text-xs"
-            onClick={onReset}
-            data-testid="export-reset"
-          >
-            איפוס
-          </Button>
+          <span className="flex items-center gap-2">
+            {/*
+              🔑 **"סמני הכול" הוא החצי השני של הכלל, ובלעדיו הכלל אינו קיים.**
+              הכרעת-ישי 23/09/2026: *"ברירת המחדל תהיה מה שבמסך, **ואם ירצה
+              יוכל להוסיף עוד**"*. װ🔴 **עד 23/09 מומש רק החצי הראשון** — ברירת-המחדל
+              היתה נכונה והאפשרות להוסיף לא היתה קיימת.
+              ⚠️ **מוסתר כשהכל מסומן** — כפתור שאינו עושה דבר הוא רעש (`src/CLAUDE.md §4.2`).
+            */}
+            {onSelectAll && !allSelected && (
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-xs"
+                onClick={onSelectAll}
+                data-testid="export-select-all"
+              >
+                סמני הכול
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0 text-xs"
+              onClick={onReset}
+              data-testid="export-reset"
+            >
+              איפוס
+            </Button>
+          </span>
         </div>
         {/*
           🔴 **גובה נגזר-מסך ולא 224px קבוע.** ‏`max-h-56` הראה **6 שורות**, כלומר בגיול-חובות
