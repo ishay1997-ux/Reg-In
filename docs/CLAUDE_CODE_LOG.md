@@ -172,7 +172,7 @@ The hook blocked the turn **three times** for the same reason — code committed
 
 ### 23/09/2026 — the wage registry, a bucket that read backwards, and the first screen outside module 11
 
-**Continues the entry below.** Handoff: `docs/specs/module_11_reports/HANDOFF-export-dialog-2026-09-23.md`.
+**Continues the entry below.** Handoff: `docs/specs/module_11_reports/archive/HANDOFF-export-dialog-2026-09-23.md`.
 
 **The finding that reframed the item, verified link by link rather than accepted:** column descriptors for module 11 arrive as **JSON** from the RPC, and JSON cannot carry a function — so an RPC-declared column can never carry `visible`. The mechanism built the night before was sound and had no input. ⚠️ **The parallel session's wording was "it can have no producer at all"; that is too strong and both sides corrected it** — the §7.2 contract is a client-side JS literal where a function *is* the producer. The real gap is narrower and worse: `report_m16_quality_cost` returns `hourly_rate` to `view` users. 🔑 **And the detail that hides it from any search:** the screen calls the field `שכר שעתי`, the RPC calls it `תעריף שעתי`.
 
@@ -215,7 +215,7 @@ The hook blocked the turn **three times** for the same reason — code committed
 **Branch `ishay/export-build` (worktree `C:\Users\ishay\Reg-In-export-wt`), pushed on Ishay's explicit word.** Slices 1–4 were built by the previous session; this one did the acceptance test in the handoff §3, ran the full gate for the first time, flipped `e2e/reports.spec.js`, and fixed three layout bugs found by the eyes pass.
 
 📄 **The two files a new session reads first** — pointers created 18/09 00:0X, because `grep -rln "HANDOFF-export-dialog"` across the whole repo had returned **only the file itself**: a handoff nobody points to is a file, not a handoff.
-- `docs/specs/module_11_reports/HANDOFF-export-dialog-2026-09-17.md` — where we stand, the acceptance test, the traps, the next step. Signed 18/09 00:00.
+- `docs/specs/module_11_reports/archive/HANDOFF-export-dialog-2026-09-17.md` — where we stand, the acceptance test, the traps, the next step. Signed 18/09 00:00.
 - `C:\Users\ishay\.claude\plans\breezy-wibbling-sloth.md` — **outside the repo, so not in git**: why it was built this way, what was rejected and why, the full six-screen scope.
 
 **`npm run gate` had never been run whole in this work** — only its parts. Run twice here, **`GATE_EXIT=0`** both times, all 12 sub-stages verified present in the log one by one (not inferred): `lint` 0 errors / 1 pre-existing warning · `test:run` **3,100 in 120 files (193s)** · `check:docs-structure` 166 files 0 findings · `check:iron-rules` 17/17 · `check:declared-counts` 6/6. **~6 min wall clock** — recorded as a §1 candidate in `docs/guides/01_estimation_log.md` (`a84fbf4a`), because the existing `src/lib/**` row still prices the suite at "3.5 min for 2,399 tests" and it grew 29%.
@@ -3014,5 +3014,7 @@ Sessions up to and including 15/07/2026 (M3 blueprint, milestone-1 promotion, mo
 ➕ מצביעי "שורה 896" ב-`PROJECT_MASTER` הוחלפו בחיפוש על `report_m16_quality_cost` — אחרי מיזוג `dev` השורה זזה ל-905, ומספר-שורה אינו כתובת.
 
 🔄 **מ11 טיפוגרפיה — רענון התוכנית והמסירה לפני פזה ב׳, 23/09/2026.** חלון-הייצוא מוזג (PR #150), ולכן כל "שטח הסשן המקביל" בתוכנית ובמסירה הפך להיסטוריה. במקום למחוק — בלוק-עדכון מתוארך בראש כל אחד משני הקבצים, וסימון ✏️ בכל מקום שהתיישן (§6ד · שלב 7 · §7ב · §7ג · §5 · §11 · §12). 🔑 **נקודת-המגע היחידה שנשארה:** שלב 7 (דפדוף מ04/מ06) מול תוויות "כל השורות" של הייצוא (`CAPPED_LABELS`). התוכנית בריפו היא עכשיו הסמכות.
+
+🗂️ **מ11 — מסירה אחת במקום שש, 23/09/2026.** בהכרעת-ישי (*"שיהיה מסמך מסירה אחד שמתעדכן בסוף סשן"*): ארבע מסירות ובלוק-הדבקה אחד שאינם קשורים לטיפוגרפיה עברו ל-`docs/specs/module_11_reports/archive/`, והנתיבים המצביעים אליהם עודכנו (קבצי-הראיות ב-`build-2026-09-16/` נשארו כפי שנכתבו). `HANDOFF-typography-2026-09-17-01.md` הוא המסירה החיה היחידה ומתעדכן במקום. **וענף אחד לכל פזה ב׳** — `ishay/type-copy-phase-b` — עם מיזוג אחד בסוף.
 
 </div>
