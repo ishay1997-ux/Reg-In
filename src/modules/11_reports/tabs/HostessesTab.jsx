@@ -35,70 +35,41 @@ import {
   mapChartLabels,
 } from './hostesses/payloadTransforms'
 
-// 🔒 **שלושים ושמונה המפתחות של הלשונית, מועתקים מטבלאות §⑩ של ארבעת הכרטיסים** — ארבעה
-// עוגנים במ14/מ15 ושלושה במ16/מ17, ועוד שישה מונחים בכל דף. 🚫 **לא מהמוקאפ**: ארבעת
+// 🔒 **ארבעה-עשר המפתחות של הלשונית** (✏️ 23/09/2026 — היו 38; ששת המונחים בכל דף ירדו,
+// ר׳ `onboardingCopy.m11.hostesses.js`). המפתחות עצמם מטבלאות §⑩ של ארבעת הכרטיסים.
 // המוקאפים נושאים ארבע קונבנציות-סימון, ואף אחת מהן אינה הצורה שמגיעה לייצור.
 // ⚠️ **מפתח שגוי מרנדר `null` בשקט** — ולכן הרשימה הזו היא גם מה שהבדיקה מייבאת ומוודאת
 // מול `onboardingCopy.m11.hostesses.js`, מפתח-מפתח.
 const HINTS = {
+  // ✏️ 23/09/2026 — 3–4 רמזים לדף, כל אחד צמוד לרכיב שעליו השאלה (התוכנית §4ה, 2.1 · 2.3 · 2.10).
+  // ‏`extras` מחזיק רק את מה שיושב מתחת לטבלה-הנוספת (זמני-התגובה של מ17) — לא מילון-מונחים.
   'hostess-overview': {
     afterSoWhat: ['reports.hostessOverview.purpose'],
     beforeChart: ['reports.hostessOverview.redCount', 'reports.hostessOverview.gini'],
     chartFooter: [],
     beforeTable: ['reports.hostessOverview.redTableSort'],
-    extras: [
-      'reports.hostessOverview.term.onTime',
-      'reports.hostessOverview.term.redHostess',
-      'reports.hostessOverview.term.gini',
-      'reports.hostessOverview.term.activeHostess',
-      'reports.hostessOverview.term.gapEvent',
-      'reports.hostessOverview.term.missingMonth',
-    ],
+    extras: [],
   },
   reliability: {
     afterSoWhat: ['reports.reliability.purpose'],
-    beforeChart: [],
+    beforeChart: ['reports.reliability.scoreBasis'],
     chartFooter: [],
-    beforeTable: ['reports.reliability.absenceColumns'],
-    extras: [
-      'reports.reliability.scoreBasis',
-      'reports.reliability.queuePopulation',
-      'reports.reliability.term.score',
-      'reports.reliability.term.noShow',
-      'reports.reliability.term.latenessLevels',
-      'reports.reliability.term.withdrew',
-      'reports.reliability.term.frozenWindow',
-      'reports.reliability.term.scoreVisibility',
-    ],
+    beforeTable: ['reports.reliability.absenceColumns', 'reports.reliability.queuePopulation'],
+    extras: [],
   },
   'quality-cost': {
     afterSoWhat: ['reports.qualityCost.purpose'],
     beforeChart: [],
     chartFooter: ['reports.qualityCost.scatterBasis'],
     beforeTable: ['reports.qualityCost.tableSort'],
-    extras: [
-      'reports.qualityCost.term.hourlyRate',
-      'reports.qualityCost.term.rating',
-      'reports.qualityCost.term.median',
-      'reports.qualityCost.term.clientMarks',
-      'reports.qualityCost.term.quadrants',
-      'reports.qualityCost.term.noRatingBand',
-    ],
+    extras: [],
   },
   fairness: {
     afterSoWhat: ['reports.fairness.purpose'],
     beforeChart: [],
     chartFooter: ['reports.fairness.giniBasis'],
     beforeTable: [],
-    extras: [
-      'reports.fairness.responseTime',
-      'reports.fairness.term.gini',
-      'reports.fairness.term.lorenz',
-      'reports.fairness.term.shift',
-      'reports.fairness.term.responseTime',
-      'reports.fairness.term.p90',
-      'reports.fairness.term.rank1',
-    ],
+    extras: ['reports.fairness.responseTime'],
   },
 }
 

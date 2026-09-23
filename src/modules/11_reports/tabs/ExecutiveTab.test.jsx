@@ -225,319 +225,255 @@ const m2Payload = () =>
     meta: { measured_at: null, missing_params: [], notes: [], row_total: 241, run: null },
   })
 
-const m3Root = () =>
+// ✏️ 24/09/2026 — **מ3/מ4/מ6 שודרגו במקום לדוחות-החלטה** (`docs/plans/2026-09-23-module-11-decision-reports.md`).
+// הפיקסצ'רים הבאים מקוצרים מהמטען החי שנמדד 24/09 כמנכ"ל (`execute_sql` + הזרקת-claims) — המספרים הם של
+// המסד, לא הומצאו, והמבנה הוא בדיוק C8 שהפונקציות החדשות מחזירות.
+const h1Payload = (extra = {}) =>
   base({
-    population: { n: 736, label: 'אוכלוסייה: כל השנים · n=736', excluded: {} },
-    so_what:
-      'לשים לב שהמחיר לשעה עלה מהר מהעלות — מ-260 ₪ ל-305 ₪ לשעה, מול עלייה מ-46 ₪ ל-47 ₪ בעלות; זו הסיבה ששולי-הרווח עמדו על 58.6%.',
+    population: {
+      n: 355,
+      summary: `${isolateLtr('355')} הצעות שהוכרעו · מתוך ${isolateLtr('390')}`,
+      label: 'נכללות הצעות שהופקו בתקופה והוכרעו: אושרו או נדחו.',
+      excluded: { 'הצעות פתוחות': 27, 'נפתחה בטעות': 8 },
+    },
+    window: { from: '2026-01-01', to: '2026-09-23', label: 'חלון' },
     tiles: [
       {
-        key: 'price_per_hour',
-        label: 'מחיר לשעה',
-        value: 305.11874873707933,
-        format: 'money',
-        sub: 'לפי שעות-בפועל',
-        window: 'שנת 2026',
+        key: 'close_rate',
+        label: 'שיעור סגירה',
+        value: 71.3,
+        format: 'percent',
+        sub: `${isolateLtr('253')} מתוך ${isolateLtr('355')}`,
+        window: 'לפי תאריך הפקת ההצעה',
+        compare: { value: 72.9, label: 'אשתקד', direction: 'down' },
         target: null,
-        compare: { value: 259.7790478394169, label: '2025', direction: 'up', note: null },
+      },
+      {
+        key: 'lost_value',
+        label: 'כסף שאבד',
+        value: 724690,
+        format: 'money',
+        sub: `${isolateLtr('102')} הצעות שנדחו`,
+        window: 'אחרי הנחה, לפני מע"מ',
+        compare: { value: 616801, label: 'אשתקד', direction: 'up' },
+        target: null,
+      },
+      {
+        key: 'expired_value',
+        label: 'פגו בלי מענה',
+        value: 53024,
+        format: 'money',
+        sub: `${isolateLtr('10')} הצעות`,
+        window: 'הצעות שהמערכת סגרה',
+        compare: { value: 73571, label: 'אשתקד', direction: 'down' },
+        target: null,
+      },
+      {
+        key: 'new_customer_rate',
+        label: 'סגירה, לקוח חדש',
+        value: null,
+        format: 'percent',
+        sub: `אין מספיק נתונים (${isolateLtr('12')})`,
+        window: 'לקוח חדש = עוד לא אישר אף הצעה לפני זו',
+        compare: null,
+        target: null,
       },
     ],
     chart: [
       {
         type: 'bar',
-        unit: '₪',
-        xKey: 'year',
-        title: 'הכנסה, רווח ושולי-רווח לפי שנה',
-        domain: null,
-        refLines: [],
+        title: 'כסף שאבד לפי סיבה',
         series: [
-          { key: 'revenue', label: 'הכנסה', kind: 'bar', axis: 'left' },
-          { key: 'profit', label: 'רווח גולמי', kind: 'bar', axis: 'left' },
-          { key: 'margin', label: 'שולי-רווח', kind: 'line', axis: 'right' },
+          { key: 'lost_sum', label: 'כסף שאבד', kind: 'bar', axis: 'left', format: 'money' },
         ],
         data: [
-          {
-            year: 2024,
-            revenue: 1625646.64,
-            profit: 892706.34,
-            margin: 54.91392274522833,
-            partial: false,
-          },
-          {
-            year: 2026,
-            revenue: 1962981.47,
-            profit: 1150574.27,
-            margin: 58.613608308793665,
-            partial: true,
-          },
+          { reason: 'מחיר', lost_sum: 287782, lost_n: 41 },
+          { reason: 'פג תוקף', lost_sum: 53024, lost_n: 10 },
         ],
-      },
-      // ✏️ **נמדד חי 16/09 20:2X, אחרי שמיגרציית `i2` נחתה** — הלוח המשולב פוצל לשני
-      // לוחות **מאפסים** (⑧ 3.1), ו**לוח-העלות הוא האחרון**. 🔑 זה מה שהופך את עוגן
-      // ה-`costPerHour` (*"הגרף האחרון"*) לנכון, וזו הייתה נקודת-העיוורון המוצהרת של
-      // הסבב הקודם: הפיקסצ'ר היה פיצול שבניתי ביד, והכותרות כאן מועתקות מהמטען.
-      {
-        type: 'line',
+        xKey: 'reason',
+        refLines: [],
         unit: 'money',
-        xKey: 'year',
-        title: 'מחיר לשעה ומרווח לשעה, לפי שנה',
-        domain: null,
-        refLines: [],
-        series: [
-          {
-            key: 'price_per_hour',
-            label: 'מחיר לשעה',
-            format: 'money',
-            kind: 'line',
-            axis: 'left',
-          },
-          {
-            key: 'margin_per_hour',
-            label: 'מרווח לשעה',
-            format: 'money',
-            kind: 'line',
-            axis: 'left',
-          },
-        ],
-        data: [
-          { year: 2024, price_per_hour: 253.67, margin_per_hour: 209.48, partial: false },
-          { year: 2026, price_per_hour: 305.12, margin_per_hour: 257.75, partial: true },
-        ],
       },
       {
-        type: 'line',
-        unit: 'money',
-        xKey: 'year',
-        title: 'עלות לשעה, לפי שנה',
-        domain: null,
-        refLines: [],
+        type: 'bar',
+        title: 'שיעור סגירה לפי מאפיין',
         series: [
-          { key: 'cost_per_hour', label: 'עלות לשעה', format: 'money', kind: 'line', axis: 'left' },
+          { key: 'rate', label: 'שיעור סגירה', kind: 'bar', axis: 'left', format: 'percent' },
         ],
         data: [
-          { year: 2024, cost_per_hour: 44.19, partial: false },
-          { year: 2026, cost_per_hour: 47.37, partial: true },
+          { segment: 'לקוח חדש', rate: null, n: 12 },
+          { segment: 'לקוח חוזר', rate: 72, n: 343 },
         ],
+        xKey: 'segment',
+        filter_key: false,
+        domain: [0, 100],
+        refLines: [],
+        unit: 'percent',
       },
     ],
     columns: [
-      // ✏️ ‏`text` ולא `int` — ‏i1 תיקנה זאת בשרת אחרי שנמדד על המסך `2,024` (📐4 שם
-      // מפריד-אלפים בכל `int`). הפיקסצ'ר עוקב אחרי המטען החי, ולא להפך.
-      { key: 'year', label: 'שנה', format: 'text', align: 'start', sorted: 'asc' },
-      { key: 'revenue', label: 'הכנסה', format: 'money', align: 'end', sorted: null },
-    ],
-    rows: [{ year: 2024, revenue: 1625646.64, drill_key: { kind: 'year', year: 2024 } }],
-    drill: {
-      level: 0,
-      levels: ['כל השנים', 'שנה', 'חודש'],
-      crumbs: [{ label: 'כל השנים', drill: null }],
-      echo: null,
-    },
-    meta: { measured_at: null, missing_params: [], notes: [], row_total: 3, run: null },
-  })
-
-// רמה 1 — חודשי ⁦2026⁩, ובהם ספטמבר החלקי. מבנה מהמטען החי (16/09 18:3X).
-const m3Year = () =>
-  base({
-    population: { n: 241, label: 'אוכלוסייה: ⁦2026⁩', excluded: {} },
-    so_what: 'לשים לב ששולי-הרווח עמדו על 58.6%.',
-    tiles: [
-      {
-        key: 'revenue',
-        label: 'הכנסה בשנה',
-        value: 1962981.47,
-        format: 'money',
-        sub: null,
-        window: 'שנת 2026',
-        target: null,
-        compare: null,
-      },
-    ],
-    chart: {
-      type: 'bar',
-      unit: 'money',
-      xKey: 'label',
-      title: 'הכנסה ורווח לפי חודש',
-      domain: null,
-      refLines: [],
-      series: [
-        { key: 'revenue', label: 'הכנסה', format: 'money', kind: 'bar', axis: 'left' },
-        { key: 'profit', label: 'רווח גולמי', format: 'money', kind: 'bar', axis: 'left' },
-      ],
-      data: [
-        { label: 'אוגוסט', month: 8, revenue: 141027.05, profit: 82038.75, partial: false },
-        { label: 'ספטמבר', month: 9, revenue: 143148.18, profit: 106247.18, partial: true },
-      ],
-    },
-    columns: [
-      { key: 'label', label: 'חודש', format: 'text', align: 'start', sorted: 'asc' },
-      { key: 'revenue', label: 'הכנסה', format: 'money', align: 'end', sorted: null },
+      { key: 'quote_id', label: 'הצעה', format: 'id', align: 'start' },
+      { key: 'customer_name', label: 'לקוח', format: 'text', align: 'start' },
+      { key: 'reason', label: 'סיבה', format: 'text', align: 'start' },
+      { key: 'value', label: 'ערך ההצעה', format: 'money', align: 'end', sorted: 'desc' },
     ],
     rows: [
-      { label: 'ינואר', revenue: 237414.51, drill_key: { kind: 'month', year: 2026, month: 1 } },
-    ],
-    drill: {
-      level: 1,
-      levels: ['כל השנים', 'שנה', 'חודש'],
-      crumbs: [
-        { label: 'כל השנים', drill: null },
-        { label: '2026', drill: { year: 2026 } },
-      ],
-      echo: { year: 2026 },
-    },
-    meta: { measured_at: null, missing_params: [], notes: [], row_total: 9, run: null },
-  })
-
-const m3Month = () =>
-  base({
-    population: { n: 35, label: 'אוכלוסייה: פברואר 2026', excluded: {} },
-    so_what: 'לשים לב ששולי-הרווח בפברואר עמדו על 57.1%.',
-    tiles: [
       {
-        key: 'revenue',
-        label: 'הכנסה בחודש',
-        value: 325119.19,
-        format: 'money',
-        sub: null,
-        window: 'פברואר 2026',
-        target: null,
-        compare: null,
+        quote_id: 1201,
+        customer_name: 'אלפא סיסטמס',
+        reason: 'מחיר',
+        value: 21000,
+        drill_key: { kind: 'quote', id: 1201 },
+      },
+      {
+        quote_id: 1188,
+        customer_name: 'עיריית נתניה',
+        reason: 'פג תוקף',
+        value: 9000,
+        drill_key: { kind: 'quote', id: 1188 },
       },
     ],
-    columns: [
-      { key: 'event_name', label: 'אירוע', format: 'text', align: 'start', sorted: null },
-      { key: 'revenue', label: 'הכנסה', format: 'money', align: 'end', sorted: 'desc' },
-    ],
-    rows: [
-      { event_name: 'כנס חינוך שנתי', revenue: 18692, drill_key: { kind: 'project', id: 1395 } },
-    ],
-    drill: {
-      level: 2,
-      levels: ['כל השנים', 'שנה', 'חודש'],
-      crumbs: [
-        { label: 'כל השנים', drill: null },
-        { label: '2026', drill: { year: 2026 } },
-        { label: 'פברואר 2026', drill: { year: 2026, month: 2 } },
-      ],
-      echo: { year: 2026, month: 2 },
-    },
-    meta: { measured_at: null, missing_params: [], notes: [], row_total: 35, run: null },
-  })
-
-const m4Payload = (extra = {}) =>
-  base({
-    population: { n: 736, label: 'שתי אוכלוסיות שונות בדף אחד · n=736', excluded: {} },
-    so_what: 'לשים לב שכל מדרג-הנחה עמוק יותר מוריד את שולי-הרווח.',
-    tiles: [
-      {
-        key: 'approval_rate',
-        label: 'שיעור אישור הצעות',
-        value: 71.26760563380282,
-        format: 'percent',
-        sub: '253 אושרו מתוך 355 שהוכרעו השנה',
-        window: 'חלון-האריח',
-        target: null,
-        compare: {
-          value: 73.2394366197183,
-          label: '2025 באותו טווח',
-          direction: 'down',
-          note: null,
-        },
-      },
-    ],
-    chart: {
-      type: 'bar',
-      unit: '%',
-      xKey: 'tier',
-      title: 'שולי-רווח לפי מדרג-הנחה',
-      domain: [0, 100],
-      refLines: [],
-      series: [{ key: 'margin', label: 'שולי-רווח', kind: 'bar', axis: 'left' }],
-      data: [
-        { tier: '0', label: '0%', margin: 57.76, event_count: 305 },
-        { tier: '1-5', label: '1–5%', margin: 56.83, event_count: 270 },
-        { tier: '6-10', label: '6–10%', margin: 54.65, event_count: 110 },
-        { tier: '10+', label: '10%+ (פתוח)', margin: 50.69, event_count: 51 },
-      ],
-    },
-    columns: [
-      // ✏️ 17/09/2026 — החוזה (C8) מצהיר `format:'id'` על עמודת-מזהה; הפיקסטורה משקפת את מיגרציית J2.
-      { key: 'quote_id', label: 'הצעה', format: 'id', align: 'start', sorted: null },
-      { key: 'discount', label: 'הנחה', format: 'percent', align: 'end', sorted: 'desc' },
-    ],
-    rows: [{ quote_id: 1907, discount: 22, tier: '10+', drill_key: { kind: 'quote', id: 1907 } }],
-    meta: { measured_at: null, missing_params: [], notes: [], row_total: 736, run: null },
+    so_what: `לעקוב אחרי הצעות פתוחות לפני שהן פגות — ${isolateLtr('10')} פגו בלי מענה, ${isolateLtr('53,024 ₪')}.`,
+    definitions: 'שיעור סגירה = אושרו חלקי (אושרו + נדחו)',
+    meta: { measured_at: null, missing_params: [], notes: [], row_total: 102, run: null },
     ...extra,
   })
 
-const m6Payload = (extra = {}) =>
+const h2Payload = (extra = {}) =>
   base({
-    population: { n: 717, label: 'אוכלוסייה: n=717 מתוך 736', excluded: {} },
-    so_what: 'לשים לב שהאיוש בפועל נדיב מהתכנון ולא הפוך.',
+    population: {
+      n: 1174,
+      summary: `${isolateLtr('1,174')} הצעות שהוכרעו · ${isolateLtr('741')} אירועים`,
+      label: 'שתי אוכלוסיות',
+      excluded: {},
+    },
+    window: { from: null, to: '2026-09-23', label: 'כל הזמנים · כל הלקוחות' },
     tiles: [
       {
-        key: 'median_ratio',
-        label: 'יחס חציוני: אורחים לדיילת',
-        value: 40.8,
-        format: 'ratio',
-        sub: 'נמדד על 717 אירועים',
-        window: 'כל הזמנים',
+        key: 'close_deep',
+        label: 'סגירה בהנחה מעל 10%',
+        value: 58.1,
+        format: 'percent',
+        sub: `${isolateLtr('31')} הצעות`,
+        window: 'לקוחות ישירים',
+        compare: { value: 74, label: 'בלי הנחה', direction: 'down' },
         target: null,
-        compare: { value: 41.1, label: 'לפני שנה, אותו חישוב', direction: 'down', note: null },
-      },
-    ],
-    chart: [
-      {
-        type: 'scatter',
-        unit: 'אורחים',
-        xKey: 'estimated',
-        title: 'אורחים שהוערכו מול אורחים שהגיעו',
-        domain: null,
-        refLines: [{ axis: 'diagonal', label: 'ההערכה התקיימה בדיוק', value: 1 }],
-        // ✏️ זוג-סדרות, כפי ש-`d2` מחזיר; הנפילה-לאחור לסדרה בודדת נבדקת בנפרד למטה.
-        series: [
-          {
-            key: 'estimated',
-            label: 'אורחים שהוערכו',
-            format: 'int',
-            kind: 'scatter',
-            axis: 'left',
-          },
-          { key: 'actual', label: 'אורחים שהגיעו', format: 'int', kind: 'scatter', axis: 'left' },
-        ],
-        data: [
-          { estimated: 40, actual: 35, ratio: 35, project_id: 830 },
-          { estimated: 50, actual: 520, ratio: 52, project_id: 12 },
-        ],
       },
       {
-        type: 'histogram',
-        unit: 'אירועים',
-        xKey: 'label',
-        title: 'התפלגות היחס',
-        domain: null,
-        refLines: [{ axis: 'x', label: 'פרמטר-תכנון — לא יעד', value: 50 }],
-        series: [{ key: 'count', label: 'אירועים', kind: 'bar', axis: 'left' }],
-        data: [
-          { bucket: '45-50', label: '45–50', count: 148 },
-          { bucket: '50-55', label: '50–55', count: 28 },
-        ],
+        key: 'margin_deep',
+        label: 'שולי-רווח בהנחה מעל 10%',
+        value: null,
+        format: 'percent',
+        sub: `אין מספיק נתונים (${isolateLtr('17')})`,
+        window: 'לקוחות ישירים',
+        compare: null,
+        target: null,
+      },
+      {
+        key: 'score_deep',
+        label: 'משוב בהנחה מעל 10%',
+        value: null,
+        format: 'ratio',
+        sub: `אין מספיק נתונים (${isolateLtr('16')})`,
+        window: 'לקוחות ישירים',
+        compare: null,
+        target: null,
       },
     ],
+    chart: {
+      type: 'bar',
+      title: 'סגירה ורווח לפי הנחה',
+      series: [
+        { key: 'close_rate', label: 'שיעור סגירה', kind: 'bar', axis: 'left', format: 'percent' },
+        { key: 'margin', label: 'שולי-רווח', kind: 'bar', axis: 'left', format: 'percent' },
+      ],
+      data: [
+        { band: '0%', close_rate: 74, margin: 57.9, n: 477 },
+        { band: '10%+', close_rate: 58.1, margin: null, n: 31 },
+      ],
+      xKey: 'band',
+      domain: [0, 100],
+      refLines: [],
+      unit: 'percent',
+    },
     columns: [
-      { key: 'event_name', label: 'אירוע', format: 'text', align: 'start', sorted: null },
-      { key: 'estimated', label: 'הוערכו', format: 'int', align: 'end', sorted: null },
-      { key: 'gap', label: 'פער', format: 'int', align: 'end', sorted: 'desc' },
+      { key: 'band', label: 'הנחה', format: 'textLtr', align: 'start' },
+      { key: 'group', label: 'סוג לקוח', format: 'text', align: 'start' },
+      { key: 'close_rate', label: 'שיעור סגירה', format: 'percent', align: 'end' },
+      { key: 'score', label: 'ציון משוב', format: 'ratio', align: 'end' },
+    ],
+    rows: [
+      { band: '0%', group: 'לקוחות ישירים', close_rate: 74, score: 4.05 },
+      { band: '10%+', group: 'לקוחות ישירים', close_rate: 58.1, score: 4.31 },
+      { band: '10%+', group: 'חברות הפקה', close_rate: 67.8, score: 4.15 },
+    ],
+    so_what: `לא לתת מעל ${isolateLtr('10%')} הנחה כדי לסגור — הסגירה בה ${isolateLtr('58.1%')} מול ${isolateLtr('74.0%')} בלי הנחה.`,
+    definitions: 'הנחה = ההנחה הקבועה של הלקוח ועוד ההנחה הידנית',
+    meta: { measured_at: null, missing_params: [], notes: [], row_total: 8, run: null },
+    ...extra,
+  })
+
+const h3Payload = (extra = {}) =>
+  base({
+    population: {
+      n: 552,
+      summary: `${isolateLtr('552')} אירועים עם משוב · מתוך ${isolateLtr('741')} שהתקיימו`,
+      label: 'נכללים אירועים שהתקיימו',
+      excluded: {},
+    },
+    window: { from: null, to: '2026-09-23', label: 'כל הזמנים · כל הלקוחות' },
+    tiles: [
+      {
+        key: 'score_no_lead',
+        label: 'ציון בלי ראש-משמרת',
+        value: 2.07,
+        format: 'ratio',
+        sub: `${isolateLtr('27')} אירועים`,
+        window: 'ממוצע',
+        compare: { value: 4.18, label: 'עם ראש-משמרת', format: 'ratio', direction: 'down' },
+        target: null,
+      },
+      {
+        key: 'score_late',
+        label: 'ציון באיחור בינוני-כבד',
+        value: 4.26,
+        format: 'ratio',
+        sub: `${isolateLtr('103')} אירועים`,
+        window: 'ממוצע',
+        compare: { value: 4.04, label: 'בשאר האירועים', format: 'ratio', direction: 'up' },
+        target: null,
+      },
+    ],
+    chart: {
+      type: 'bar',
+      title: 'ציון המשוב לפי גורם',
+      series: [
+        { key: 'with_avg', label: 'כשהגורם קיים', kind: 'bar', axis: 'left', format: 'ratio' },
+        { key: 'without_avg', label: 'בלעדיו', kind: 'bar', axis: 'left', format: 'ratio' },
+      ],
+      data: [{ factor: 'בלי ראש-משמרת', with_avg: 2.07, without_avg: 4.18, n: 27 }],
+      xKey: 'factor',
+      filter_key: false,
+      domain: [0, 5],
+      refLines: [],
+      unit: 'ratio',
+    },
+    columns: [
+      { key: 'event_date', label: 'תאריך', format: 'date', align: 'start', sorted: 'asc' },
+      { key: 'event_name', label: 'אירוע', format: 'text', align: 'start' },
+      { key: 'risk', label: 'מה חסר', format: 'text', align: 'start' },
     ],
     rows: [
       {
-        event_name: 'כנס משקיעים שנתי',
-        estimated: 50,
-        gap: 50,
-        drill_key: { kind: 'project', id: 12 },
+        event_date: '2026-09-28',
+        event_name: 'מפגש משקיעים רבעוני',
+        risk: 'יותר מ-50 אורחים לדיילת',
+        drill_key: { kind: 'project', id: 1597 },
       },
     ],
-    meta: { measured_at: null, missing_params: [], notes: [], row_total: 135, run: null },
+    so_what: `לשבץ ראש-משמרת בכל אירוע — בלעדיה הציון ${isolateLtr('2.1')} מול ${isolateLtr('4.2')}.`,
+    definitions: 'ציון משוב = ממוצע הציונים (1–5) במשובים שהושלמו',
+    meta: { measured_at: null, missing_params: [], notes: [], row_total: 1, run: null },
     ...extra,
   })
 
@@ -634,233 +570,119 @@ describe('מ2 · מבט-על הנהלה', () => {
     })
   })
 
-  it('הקישור "כל השנים" נוסע באותו נתב-דלתות, ולא בניווט שני', async () => {
+  it('✂️ הקישור "כל השנים בדוח «מגמות רב-שנתיות»" ירד — הדוח הוחלף ב"סגירת הצעות"', async () => {
     callReport.mockResolvedValueOnce(m2Payload())
-    const { onDrill } = renderTab('מ2')
+    renderTab('מ2')
 
-    fireEvent.click(await screen.findByTestId('exec-overview-trends-link'))
-    expect(onDrill).toHaveBeenCalledWith({
-      tab: 'הנהלה',
-      report: 'report_m03_trends',
-      drill: null,
-    })
+    await screen.findByTestId('report-so-what')
+    expect(screen.queryByTestId('exec-overview-trends-link')).toBeNull()
   })
 })
 
-// ── מ3 · מגמות רב-שנתיות ─────────────────────────────────────────────────────
+// ── ה1 · סגירת הצעות (report_m03_trends) ─────────────────────────────────────
 
-describe('מ3 · מגמות רב-שנתיות', () => {
-  it('גרף-השנים מצויר ע"י `ComposedBody` — שתי עמודות-₪ וקו-אחוזים על ציר ימני נעול', async () => {
-    callReport.mockResolvedValueOnce(m3Root())
+describe('ה1 · סגירת הצעות', () => {
+  it('ארבעת הכרטיסים, שורת-ההחלטה והקישור למסך-הבית — והשם שעל המסך הוא החדש', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
     renderTab('מ3')
 
-    await screen.findAllByText('מחיר לשעה')
-    // 🔴 הרגרסיה שהבדיקה הזו שומרת עליה: עד 16/09 הלשונית המירה את הגרף ל-`pareto`
-    // **ואיבדה את עמודת-הרווח**. שלוש הסדרות מצוירות עכשיו, ואף אחת אינה נופלת.
-    expect(screen.getAllByTestId('recharts-ComposedChart')).toHaveLength(1)
-    expect(chartProps('Bar').map((props) => props.dataKey)).toEqual(['revenue', 'profit'])
-    expect(chartProps('Line').map((props) => props.dataKey)).toContain('margin')
-    const right = chartProps('YAxis').find((props) => props.yAxisId === 'right')
-    expect(right.domain).toEqual([0, 100])
-    const left = chartProps('YAxis').find((props) => props.yAxisId === 'left')
-    expect(left.domain).toEqual([0, 'auto'])
-  })
-
-  it('📐20 — השנה החלקית מוצהרת בשלושת הערוצים: עמודה מקווקוות · תווית-ציר · הערת-גרף', async () => {
-    callReport.mockResolvedValueOnce(m3Root())
-    renderTab('מ3')
-    await screen.findAllByText('מחיר לשעה')
-
-    // ① הצורה — `is_today` על השורה החלקית בלבד, ובלי לשנות גוון (📐19).
-    // **עמודה אחת מקווקוות בכל סדרת-עמודות**, כלומר כל הסדרות של אותה שנה מסומנות יחד
-    // (זה מה שממצא #5 דרש למ2, והשלד מיישם אותו לכל הסדרות).
-    const dashed = chartProps('Cell').filter((props) => props.strokeDasharray)
-    expect(dashed).toHaveLength(chartProps('Bar').length)
-    expect(dashed.length).toBeGreaterThan(0)
-    // ② התווית — אורך-החלון על הציר, בנוסח המוקאפ המאושר (שורה 628).
-    expect(chartProps('XAxis')[0].dataKey).toBe('label')
-    expect(screen.getAllByText(`2026 — עד ${isolateLtr('16/09')}`).length).toBeGreaterThan(0)
-    // ③ המילים — בתוך כרטיס-הגרף, שם `.chart-note` יושב במוקאפ.
-    const note = screen.getAllByTestId('chart-note')[0]
-    expect(note).toHaveTextContent('אין כאן «קצב שנתי» משוער')
-    expect(note).toHaveTextContent('מסומנת בדפוס מקווקו')
-  })
-
-  it('ברמת-החודשים אותה הצהרה נמדדת בימים, ולא בשנה', async () => {
-    callReport.mockResolvedValueOnce(m3Year())
-    renderTab('מ3', { drill: { year: 2026 } })
-    await screen.findByTestId('report-population')
-
-    expect(await screen.findByTestId('chart-note')).toHaveTextContent(
-      `חלקי — ${isolateLtr('16')} ימים בלבד`,
+    expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לעקוב אחרי הצעות פתוחות')
+    for (const label of ['שיעור סגירה', 'כסף שאבד', 'פגו בלי מענה', 'סגירה, לקוח חדש']) {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0)
+    }
+    // 🔑 "פגות בקרוב" אינה נבנית שוב — הקישור שולח לרשימה הקיימת (כלל-ברזל 14).
+    expect(screen.getByTestId('trends-expiring-link').querySelector('a')).toHaveAttribute(
+      'href',
+      '/',
     )
-    expect(screen.getByText(`ספטמבר (${isolateLtr('16')} ימים)`)).toBeInTheDocument()
-    const dashedMonths = chartProps('Cell').filter((props) => props.strokeDasharray)
-    expect(dashedMonths).toHaveLength(chartProps('Bar').length)
-    expect(dashedMonths.length).toBeGreaterThan(0)
+    expect(surfaceOf('מ3')).toMatchObject({ name: 'סגירת הצעות', drill: false })
   })
 
-  it('📐13 — שורת-הפעולה משתנה עם הרמה, והשורה יורדת רמה', async () => {
-    callReport.mockResolvedValueOnce(m3Root())
+  it('סף-n — קבוצה מתחת ל-20 אינה מקבלת אחוז: "אין מספיק נתונים" ולא 0', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
+    renderTab('מ3')
+
+    const tile = await screen.findByTestId('report-tile-new_customer_rate')
+    expect(tile).toHaveTextContent('אין מספיק נתונים')
+    expect(tile.textContent).not.toMatch(/0(\.0)?%/)
+  })
+
+  it('לחיצה על עמודת-סיבה מסננת את טבלת-ההצעות שאבדו (סינון-צולב, לא קידוח)', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
+    renderTab('מ3')
+
+    await screen.findAllByTestId('report-row-drillable')
+    const select = screen.getAllByTestId('chart-select-1')[0]
+    fireEvent.click(select)
+    const rows = screen.getAllByTestId('report-row-drillable')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toHaveTextContent('פג תוקף')
+  })
+
+  it('שורה פותחת את הצעת-המחיר', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
     const { onDrill } = renderTab('מ3')
 
-    expect(await screen.findByTestId('report-row-action')).toHaveTextContent(
-      'לחיצה על שורה יורדת לחודשים של אותה שנה',
-    )
-    fireEvent.click(screen.getByText('שנה').closest('table').querySelector('tbody tr'))
-    expect(firstDrillArg(onDrill)).toEqual({ kind: 'year', year: 2024 })
-  })
-
-  it('ברמה האחרונה יש פירורים, אין גרף, והשורה פותחת את כרטיס-האירוע', async () => {
-    callReport.mockResolvedValueOnce(m3Month())
-    const { onDrill } = renderTab('מ3', { drill: { year: 2026, month: 2 } })
-
-    expect(await screen.findByTestId('report-crumbs')).toHaveTextContent('כל השנים')
-    expect(screen.getByTestId('report-row-action')).toHaveTextContent('זו הרמה האחרונה')
-    expect(screen.queryByTestId('recharts-ComposedChart')).toBeNull()
-    fireEvent.click(screen.getByText('כנס חינוך שנתי').closest('tr'))
-    expect(firstDrillArg(onDrill)).toEqual({ kind: 'project', id: 1395 })
+    fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
+    expect(firstDrillArg(onDrill)).toEqual({ kind: 'quote', id: 1201 })
   })
 })
 
-// ── מ4 · הנחות ורווחיות ──────────────────────────────────────────────────────
+// ── ה2 · הנחה מול סגירה (report_m04_discounts) ─────────────────────────────────
 
-describe('מ4 · הנחות ורווחיות', () => {
-  it('הכרעה 39 — ארבעת המדרגים כשבבים, כל אחד עם ה-`n` שלו', async () => {
-    callReport.mockResolvedValueOnce(m4Payload())
+describe('ה2 · הנחה מול סגירה', () => {
+  it('שורת-ההחלטה, שלושת הכרטיסים וטבלת-הסיכום — בלי שבבי-מדרג', async () => {
+    callReport.mockResolvedValueOnce(h2Payload())
     renderTab('מ4')
 
-    const chips = within(await screen.findByTestId('discount-tier-chips'))
-    expect(chips.getAllByRole('button')).toHaveLength(4)
-    const expected = [
-      ['0', '0%', '305'],
-      ['1-5', '1–5%', '270'],
-      ['6-10', '6–10%', '110'],
-      ['10+', '10%+ (פתוח)', '51'],
-    ]
-    for (const [tier, label, count] of expected) {
-      expect(screen.getByTestId(`discount-tier-${tier}`)).toHaveTextContent(
-        `${label} · ${isolateLtr(count)}`,
-      )
-    }
+    expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לא לתת מעל')
+    expect(screen.getByTestId('report-tile-close_deep')).toHaveTextContent('בלי הנחה')
+    expect(screen.getByTestId('report-tile-margin_deep')).toHaveTextContent('אין מספיק נתונים')
+    expect(screen.queryByTestId('discount-tier-chips')).toBeNull()
+    expect(screen.getAllByText('חברות הפקה').length).toBeGreaterThan(0)
   })
 
-  it('בחירת מדרג נכתבת לכתובת, לחיצה חוזרת מבטלת, וההכרזה קיימת מראש', async () => {
-    callReport.mockResolvedValueOnce(m4Payload())
-    const { onDrill } = renderTab('מ4')
-
-    expect(await screen.findByTestId('discount-tier-announce')).toHaveTextContent('')
-    fireEvent.click(screen.getByTestId('discount-tier-6-10'))
-    expect(onDrill).toHaveBeenCalledWith({ tier: '6-10' })
-  })
-
-  it('מדרג נבחר — השבב לחוץ, ההכרזה אומרת כמה שורות, ו"נקי בחירה" מנקה', async () => {
-    callReport.mockResolvedValueOnce(
-      m4Payload({ meta: { row_total: 110, notes: [], missing_params: [] } }),
-    )
-    const { onDrill } = renderTab('מ4', { drill: { tier: '6-10' } })
-
-    const chip = await screen.findByTestId('discount-tier-6-10')
-    expect(chip).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByTestId('discount-tier-announce')).toHaveTextContent('מסונן למדרג 6–10%')
-    fireEvent.click(screen.getByTestId('discount-tier-clear'))
-    expect(onDrill).toHaveBeenCalledWith(null)
-  })
-
-  it('שורה פותחת את הצעת-המחיר, וייצוא בלי שורות מנוטרל עם הנוסח הנעול', async () => {
-    callReport.mockResolvedValueOnce(m4Payload({ rows: [] }))
+  it('לחיצה על מדרג בגרף מסננת את הטבלה לאותו מדרג — בשני סוגי-הלקוח', async () => {
+    callReport.mockResolvedValueOnce(h2Payload())
     renderTab('מ4')
 
-    expect(await screen.findByTestId('reports-export-button')).toBeEnabled()
-    // ✏️ **17/09/2026 — ת4ב:** הכפתור פעיל תמיד והכיתוב עבר לתוך החלון; החסימה נבדקת
-    // פר-דוח נבחר. הנוסח הנעול עצמו נבדק ב-`reportsExport.test.js` (זהות-בייט) וב-
-    // `ExportDialog.test.jsx` (מוצג במקום שורת-הכמות, והייצוא מנוטרל).
-    expect(screen.queryByTestId('reports-export-file')).toBeNull()
-
-    callReport.mockResolvedValueOnce(m4Payload())
-    const { onDrill } = renderTab('מ4')
-    // ✏️ 17/09/2026 — מזהה-הצעה מרונדר כמזהה (format:'id' — ספרות בלי מפריד-אלפים), לא ככמות.
-    const rows = await screen.findAllByText(isolateLtr('1907'))
-    fireEvent.click(rows[0].closest('tr'))
-    expect(firstDrillArg(onDrill)).toEqual({ kind: 'quote', id: 1907 })
-  })
-
-  it('הקרוס-פילטר האוטומטי כבוי במפורש — הסינון של מ4 רץ בשרת, ולא פעמיים', async () => {
-    callReport.mockResolvedValueOnce(m4Payload())
-    renderTab('מ4')
-
-    await screen.findByTestId('discount-tier-chips')
-    // ‏`ReportSurface` מוסר `onSelect` לגרף **רק** כשיש מפתח-סינון; `filter_key:false` מכבה.
-    expect(chartProps('Bar').every((props) => props.cursor === undefined)).toBe(true)
-    expect(screen.queryByTestId('report-clear-crossfilter')).toBeNull()
+    await screen.findByTestId('report-table-card')
+    fireEvent.click(screen.getAllByTestId('chart-select-1')[0])
+    const table = screen.getByTestId('report-table-card')
+    expect(within(table).getAllByRole('row').length - 1).toBe(2)
   })
 })
 
-// ── מ6 · קהל מול צוות ────────────────────────────────────────────────────────
+// ── ה3 · איכות אירועים (report_m06_staffing) ───────────────────────────────────
 
-describe('מ6 · קהל מול צוות', () => {
-  it('הפיזור מקבל את שני הצירים, והאלכסון נמתח על טווח-הדאטה', async () => {
-    callReport.mockResolvedValueOnce(m6Payload())
-    renderTab('מ6')
+describe('ה3 · איכות אירועים', () => {
+  it('כרטיס לכל גורם עם השוואה לבלעדיו, ושורה פותחת את כרטיס-האירוע', async () => {
+    callReport.mockResolvedValueOnce(h3Payload())
+    const { onDrill } = renderTab('מ6')
 
-    await screen.findByText('יחס חציוני: אורחים לדיילת')
-    const axes = chartProps('XAxis')
-    expect(axes.some((props) => props.dataKey === 'estimated' && props.type === 'number')).toBe(
-      true,
-    )
-    expect(chartProps('YAxis').some((props) => props.dataKey === 'actual')).toBe(true)
-    const diagonal = chartProps('ReferenceLine').find((props) => Array.isArray(props.segment))
-    expect(diagonal.segment).toEqual([
-      { x: 0, y: 0 },
-      { x: 520, y: 520 },
-    ])
+    expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לשבץ ראש-משמרת')
+    expect(screen.getByTestId('report-tile-score_no_lead')).toHaveTextContent('עם ראש-משמרת')
+    fireEvent.click(screen.getAllByTestId('report-row-drillable')[0])
+    expect(firstDrillArg(onDrill)).toEqual({ kind: 'project', id: 1597 })
   })
 
-  it('📑ב#10 — הסטייה מקודדת בצורה (משולש / עיגול-חלול) ולא בגודל ולא בגוון', async () => {
-    callReport.mockResolvedValueOnce(m6Payload())
+  it('🔒 אגרגטים בלבד — אין במטען ובמסך אף עמודת-דיילת ואף תעריף', async () => {
+    callReport.mockResolvedValueOnce(h3Payload())
     renderTab('מ6')
 
-    await screen.findByText('יחס חציוני: אורחים לדיילת')
-    const shapes = chartProps('Scatter').map((props) => props.shape)
-    expect(shapes).toEqual(['triangle', 'circle'])
-    // עיגול **חלול**: מתאר בלבד. ‏`fill:'none'` הוא ההבחנה, ולא גוון שני (📐19).
-    expect(chartProps('Scatter').find((props) => props.shape === 'circle').fill).toBe('none')
-    const legend = screen.getByTestId('chart-shape-legend')
-    expect(legend).toHaveTextContent('הגיעו יותר אורחים מהצפי')
-    expect(legend).toHaveTextContent('הגיעו כמו הצפי או פחות')
-  })
-
-  it('אין במ6 סינון-צולב — הכרטיס מתעד זאת, והכיבוי מפורש', async () => {
-    callReport.mockResolvedValueOnce(m6Payload())
-    renderTab('מ6')
-
-    await screen.findByText('יחס חציוני: אורחים לדיילת')
-    expect(chartProps('Scatter').every((props) => props.cursor === undefined)).toBe(true)
-    expect(screen.queryByTestId('report-clear-crossfilter')).toBeNull()
-  })
-
-  it('קו-הפרמטר ממופה לדלי שלו, והמשפט "אינו יעד" נשאר בבסיס', async () => {
-    callReport.mockResolvedValueOnce(m6Payload())
-    renderTab('מ6')
-
-    await screen.findByText('יחס חציוני: אורחים לדיילת')
-    const categoryLine = chartProps('ReferenceLine').find((props) => props.x !== undefined)
-    expect(categoryLine.x).toBe('50–55')
-    expect(screen.getByTestId('report-not-a-target')).toHaveTextContent(
-      'פרמטר-התכנון אינו יעד ואינו סף',
-    )
+    await screen.findByTestId('report-table-card')
+    const keys = h3Payload().columns.map((column) => column.key)
+    expect(keys.some((key) => /hostess|rate/.test(key))).toBe(false)
   })
 
   it('§7.83 — פרמטר חסר מוצהר על המסך ואינו הופך לאפס שקט', async () => {
     callReport.mockResolvedValueOnce(
-      m6Payload({
-        meta: { missing_params: ['יחס_אורחים_לדיילת'], notes: [], row_total: 135 },
-      }),
+      h3Payload({ meta: { missing_params: ['סף_שביעות_רצון'], notes: [], row_total: 1 } }),
     )
     renderTab('מ6')
 
     expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-      'חסר פרמטר מערכת: יחס_אורחים_לדיילת',
+      'חסר פרמטר מערכת: סף_שביעות_רצון',
     )
   })
 })
@@ -945,36 +767,21 @@ describe('מצבים ושכבת-הטמעה', () => {
     expect(tiles.querySelector('[data-testid^="hint-"]')).toBeNull()
   })
 
-  it('🔴 רמזי-הגרף יושבים בכרטיס שהם מסבירים — וה-`barkey` על לוח-העלות, האחרון', async () => {
-    // 🪤 **הרגרסיה שהבדיקה נועלת:** ‏`i2` פיצלה את לוח מחיר/עלות לשני לוחות מאפסים
-    // (⁦2⁩ גרפים ⇐ ⁦3⁩). אינדקס קשיח `=== 1` היה מצמיד את רמז-ה-`barkey` ללוח **המחיר**
-    // בעוד הוא מסביר את ה**עלות**; במוקאפ ה-`.barkey` יושב אחרי שני הלוחות (שורות 708–713),
-    // ולכן העוגן הוא "הגרף האחרון".
-    // ✅ **והפיקסצ'ר הוא המטען החי** (נמדד 16/09 20:2X, אחרי ש-i2 נחתה) ולא פיצול שבניתי
-    // ביד — זו בדיוק נקודת-העיוורון שהסבב הקודם הצהיר עליה: סדר-הלוחות הוא של השרת,
-    // ולוח-העלות הוא **האחרון** בפועל.
-    callReport.mockResolvedValueOnce(m3Root())
+  it('🔴 ה1 — רמז-הסיבות לפני הגרף, רמז-הטבלה לפני הטבלה, והקישור מעל האריחים', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
     renderTab('מ3')
-    await screen.findAllByText('מחיר לשעה')
+    await screen.findByTestId('report-population')
 
-    const cards = screen.getAllByTestId(/^chart-card-/)
-    expect(cards).toHaveLength(3)
-    expect(cards.map((card) => card.querySelector('h3')?.textContent)).toEqual([
-      'הכנסה, רווח ושולי-רווח לפי שנה',
-      'מחיר לשעה ומרווח לשעה, לפי שנה',
-      'עלות לשעה, לפי שנה',
-    ])
-    // ⑩ ב — הערת-גרף-השנים ⇒ הכרטיס הראשון.
-    expect(cards[0].querySelector('[data-testid="hint-reports.trends.partialYear"]')).not.toBeNull()
-    // ⑩ ג — ה-`barkey` ⇒ הכרטיס האחרון (העלות), ולא זה שלפניו.
-    expect(cards[1].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).toBeNull()
-    expect(cards[2].querySelector('[data-testid="hint-reports.trends.costPerHour"]')).not.toBeNull()
-    // ושני לוחות-הקצב **מאפסים**: `domain: null` ⇒ `[0,'auto']` ב-`ChartCard.valueDomain`.
-    const leftAxes = chartProps('YAxis').filter((props) => props.yAxisId !== 'right')
-    expect(leftAxes.every((props) => props.domain[0] === 0)).toBe(true)
-    // ושניהם **מתחת** לגרף שבכרטיסם (F10), לא מעליו.
-    const footer = cards[0].querySelector('[data-testid="chart-footer"]')
-    expect(comesBefore(cards[0].querySelector('[data-testid="chart-figure"]'), footer)).toBe(true)
+    const link = screen.getByTestId('trends-expiring-link')
+    const tiles = screen.getByTestId('report-tiles')
+    const reasons = screen.getByTestId('hint-reports.trends.reasons')
+    const figure = screen.getAllByTestId('chart-figure')[0]
+    const tableHint = screen.getByTestId('hint-reports.trends.table')
+    const table = screen.getByTestId('report-table-card')
+    expect(comesBefore(link, tiles)).toBe(true)
+    expect(comesBefore(tiles, reasons)).toBe(true)
+    expect(comesBefore(reasons, figure)).toBe(true)
+    expect(comesBefore(tableHint, table)).toBe(true)
   })
 
   it('🔴 כל מפתח-רמז שנכתב בקבצי הלשונית קיים בקובץ-הקופי, ואין בו מפתח מת', () => {
@@ -997,7 +804,8 @@ describe('מצבים ושכבת-הטמעה', () => {
     }
 
     const authored = Object.keys(M11_EXEC_COPY)
-    expect(authored).toHaveLength(15)
+    // ✏️ 24/09/2026 — 15 ⇒ 13: מ2 ארבעה + שלושה לכל אחד מדוחות-ההחלטה.
+    expect(authored).toHaveLength(13)
     expect([...used].sort()).toEqual([...authored].sort())
     for (const key of authored) {
       expect(typeof M11_EXEC_COPY[key].guided).toBe('string')

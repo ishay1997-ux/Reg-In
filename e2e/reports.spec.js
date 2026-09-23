@@ -390,49 +390,20 @@ test.describe('מודול 11 · מיסוך לפי תפקיד (התוצאה הנ�
   })
 })
 
-test.describe('מודול 11 · קידוח (📐13) — מ3 ומ9 בלבד', () => {
+test.describe('מודול 11 · קידוח (📐13) — מ9 בלבד', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_* לא הוגדרו ב-.env.local')
 
-  test('מ3: שורה פותחת רמה, הרענון שומר עליה, והפירור חוזר לשורש', async ({ page }) => {
+  // ✏️ 24/09/2026 — **מ3 כבר אינו דוח-קידוח.** הוא שודרג במקום ל"סגירת הצעות" (דוח-החלטה, אותו slug):
+  // אין בו ציר-שנים לרדת בו, ולכן במקום בדיקת-הקידוח — הבדיקה שהשורה היא דלת להצעה עצמה ואין פירורים.
+  test('ה1 (מ3): אין פירורים, ושורה פותחת את הצעת-המחיר שאבדה', async ({ page }) => {
     test.setTimeout(120_000)
     await login(page, CEO_EMAIL, CEO_PASSWORD)
     await openReport(page, 'exec', 'trends')
-    // 📐13① — ברמת-השורש אין פירורים בכלל.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('סגירת הצעות')
     await expect(page.getByTestId('report-crumbs')).toHaveCount(0)
-    // ⚠️ `textContent` ולא `innerText` בכל מקום שהערך חוזר אל `toHaveText` — ‏`toHaveText`
-    // משווה מול `textContent`, ו-`innerText` מוסיף שורות-חדשות מהפריסה (נמדד על הפירורים:
-    // `"כל השנים\n|\n2024"` מול `"כל השנים|2024"`). השוואה בין השניים נכשלת תמיד.
-    const exportAtRoot = await promisedFileName(page)
-
+    await expect(page.getByTestId('report-so-what')).toBeVisible()
     await clickCentered(page.getByTestId('report-row-drillable').first())
-    await page.waitForLoadState('networkidle')
-
-    // הכתובת נושאת את הרמה (📐13④ · S-18), והפירורים מופיעים עם שתי רמות.
-    await expect(page).toHaveURL(/drill=/)
-    await expect(page.getByTestId('report-crumbs')).toBeVisible()
-    await expect(page.getByTestId('report-crumb-0')).toBeVisible()
-    // 📐13② — האריחים והטבלה מדברים על הרמה הפתוחה.
-    await expect(page.getByTestId('report-tiles')).toBeVisible()
-    expect(await page.getByTestId('report-tiles').locator('> *').count()).toBeGreaterThan(0)
-
-    // 🔁 **📐13③ הפוך מאז ת4ב, והטענה כאן היא ההיפוך — לא מחיקה.** קודם נעול היה
-    // *"שם-הקובץ משתנה עם הדריל"*; מרגע שהחלון שולף בעצמו `drill: null`, **שם שנושא רמה
-    // היה משקר.** ⇒ נועלים את ההתנהגות שהוכרעה: **השם אינו זז.**
-    // 🔑 והשוויון הוא הטענה החזקה מבין השתיים — הוא כולל את *"אינו מכיל את התווית"* ואינו
-    // תלוי בשאלה אם התווית מופיעה ממילא בחלון-הזמן (למשל `2024`).
-    const exportAtLevel = await promisedFileName(page)
-    expect(exportAtLevel, 'שם-הקובץ זז עם הדריל — ת4ב קובע שהחלון עצמאי ממנו').toBe(exportAtRoot)
-
-    const crumbsAtLevel = await page.getByTestId('report-crumbs').textContent()
-    await page.reload()
-    await page.waitForLoadState('networkidle')
-    await expect(page.getByTestId('report-crumbs')).toHaveText(crumbsAtLevel)
-
-    await clickCentered(page.getByTestId('report-crumb-0'))
-    await page.waitForLoadState('networkidle')
-    await expect(page).not.toHaveURL(/drill=/)
-    await expect(page.getByTestId('report-crumbs')).toHaveCount(0)
-    expect(await promisedFileName(page)).toBe(exportAtRoot)
+    await expect(page).toHaveURL(/\/quotes\/\d+\/edit/)
   })
 
   test('מ9: אריח-דלת פותח מדרג, הפירורים נוקבים בו — והייצוא דווקא לא', async ({ page }) => {

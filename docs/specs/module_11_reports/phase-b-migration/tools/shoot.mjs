@@ -6,7 +6,7 @@
 import fs from 'fs'
 import path from 'path'
 import { createRequire } from 'module'
-const REPO = 'C:/Users/ishay/Reg-In-copy-wt'
+const REPO = 'C:/Users/ishay/Reg-In-dash-wt'
 const require = createRequire(path.join(REPO, 'package.json'))
 const { chromium } = require('@playwright/test')
 

@@ -960,14 +960,15 @@ describe('ReportSurface — נוסח הצ׳יפ', () => {
 describe('ReportSurface — גבולות-רוחב של האריח', () => {
   // 🔴 נמדד במ19: משפט-השוואה ארוך ניפח אריח אחד ושבר את השורה ל-2+2 ב-1280px, בעוד
   // המוקאפ מצייר ארבעה על שורה אחת (`min-width:210px; flex:1 1 210px; max-width:340px`).
-  it('כל אריח נושא את גבולות-הרוחב, והרצועה נשארת flex-wrap', async () => {
+  // ✏️ 23/09/2026 לילה — רשת ברוחב אחיד (הכרעת-ישי). ‏`auto-fill` ולא `auto-fit`: כרטיס בודד
+  // אינו נמתח לכל הרוחב (המטרה של הכרעת 08/08 נשמרת). רוחב-שווה בשורה נמדד חי בבדיקת-הצפיפות.
+  it('הרצועה היא רשת auto-fill של עמודות שוות (240px לפחות), והכרטיס אינו נושא גבולות-flex', async () => {
     callReport.mockResolvedValueOnce(payload())
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)
     const strip = await screen.findByTestId('report-tiles')
-    expect(strip.className).toContain('flex-wrap')
-    const box = strip.firstElementChild
-    expect(box.className).toContain('min-w-[210px]')
-    expect(box.className).toContain('max-w-[340px]')
-    expect(box.className).toContain('basis-[210px]')
+    expect(strip.className).toContain('grid-cols-[repeat(auto-fill,minmax(240px,1fr))]')
+    expect(strip.className).not.toContain('auto-fit')
+    expect(strip.className).not.toContain('flex-wrap')
+    expect(strip.firstElementChild.className).not.toContain('basis-')
   })
 })

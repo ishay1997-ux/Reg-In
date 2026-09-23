@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 23–24/09/2026 night — M11 decision reports + card standard second half (`ishay/m11-decision-reports`)
+- Commits `11e725ed` (plan backup + STATUS) · `f8348f58` (density check + L5/L6 + M21 banner/S1 + hostess hints) · `4281d924` (ה1–ה3, seed, review fixes) · `d5ca2adb` (grid + L7/L7b). All pushed; not merged (merge is Ishay's).
+- DB: 11 migrations applied under Ishay's session grant ("לא לבקש אישור להכיל מיגרציות בסשן הזה"); every text round checked by live md5 == `expect-md5.mjs`; proacl has no anon on all 16. Seed: 106 feedback scores (backup table in `seed_snapshot`); M19 "satisfied return faster" kept its direction (28 vs 162 days).
+- Verified: `npm run verify` 0 · vitest green (+ `src/lib/decisionReportsSql.test.js`, mutation-checked) · density 16×2 = 0 · `e2e/reports.spec.js` 19/19 (not skipped — E2E_* copied from Reg-In-export-wt; `Reg-In/.env.local` has none). Adversarial Opus reviewer re-derived every number: all matched; its fixes applied. Live verification + screenshots: the deputy session (read-only, separate worktree), per the split agreed 23/09 night.
+- Traps found: phase-B tools hard-coded `Reg-In-copy-wt` (repointed) · a STABLE plpgsql function cannot create a temp table (use a jsonb base) · the H2 first version left 2 of 3 cards "not enough data" (sample fix h2b).
+
 ### 23/09/2026 (15:XX–) — typography phase B on `ishay/type-copy-phase-b` (M11 wording, counters, dead controls)
 
 **Rulings before code** (plan `docs/plans/2026-09-17-module-11-typography.md`, block "🗣️ אושר 23/09/2026"): every explanatory string of the 16 reports is built **inside the SQL bodies** (J1/J2/J3, patched by K1) — so the rewrite goes into **one text migration**, applied at a single stop with Ishay typing its name; new wording is Claude's call ("תחליט אתה") with the M02 model gate kept; the M20 "מה מכעיס" chart is deleted as approved; economical mode (no build army, Sonnet for scans).

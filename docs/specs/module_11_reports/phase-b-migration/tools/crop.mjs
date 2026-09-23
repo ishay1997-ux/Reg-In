@@ -2,7 +2,7 @@
 // usage: node crop.mjs <in.png> <out.png> <height=900> [width=1536]
 import fs from 'fs'
 import { createRequire } from 'module'
-const require = createRequire('C:/Users/ishay/Reg-In-copy-wt/package.json')
+const require = createRequire('C:/Users/ishay/Reg-In-dash-wt/package.json')
 const { chromium } = require('@playwright/test')
 const [input, out, h = '900', w = '1536'] = process.argv.slice(2)
 const src = 'data:image/png;base64,' + fs.readFileSync(input).toString('base64')

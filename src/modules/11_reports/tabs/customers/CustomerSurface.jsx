@@ -6,8 +6,7 @@
 // renderExtras>` היו ארבעה עותקים של אותו שלד. **מה ששונה בין המשטחים הוא דאטה** (מפתחות
 // ההטמעה) **ושלושה בלוקי-בסיס** — ולכן זה טבלה ותנאים, לא העתקה.
 //
-// 🔴 **מה שנמצא כאן הוא *בסיס* ולא שכבת-הטמעה** (מבחן-המחיקה של §⑩): באנר שתי-השיטות של
-// מ21 ובלוק "טרם אושרה ריצת-ניתוח" של מ22 חייבים להיות גלויים **ברמה 0** — הכרטיס אומר
+// 🔴 **מה שנמצא כאן הוא *בסיס* ולא שכבת-הטמעה** (מבחן-המחיקה של §⑩): בלוק "טרם אושרה ריצת-ניתוח" של מ22 חייב להיות גלוי **ברמה 0** — הכרטיס אומר
 // זאת במפורש (*"הורדת ה-`basebanner` לשכבה תשבור את המבחן"*). הרמזים, ורק הם, יושבים
 // ב-`<Hint>` ונעלמים ברמה 0.
 //
@@ -56,32 +55,11 @@ const HINTS = {
 
 const findTile = (payload, key) => (payload.tiles ?? []).find((tile) => tile.key === key) ?? null
 
-/**
- * מ21 · **באנר שתי-השיטות — בסיס, לא רמז** (⑩א: *"`div.basebanner` מציג את ההשוואה
- * המלאה… הורדתו לשכבה תשבור את המבחן"*): בלי ההשוואה, המילה *"מתרחק"* בעמודת-הדגל היא
- * מונח בלי הגדרה על המסך.
- * 🔴 **כל שלושת המספרים נגזרים מהמטען בכל טעינה** ואינם מוקלדים — זה בדיוק ההבדל בין
- * *"ארבעה מתוך שנים-עשר"* שנכתב פעם ורקב (נמדד 16/09: שלושה, לא ארבעה) לבין מספר חי.
- * ההגדרה המספרית של שתי השיטות יושבת בשורת-ההגדרות (📐16) שבתחתית הדף, ולכן אינה נכפלת כאן.
- */
-function TwoMethodsBanner({ payload }) {
-  const drifting = findTile(payload, 'drifting_count')
-  const personal = findTile(payload, 'only_personal_cadence')
-  if (!drifting || !personal) return null
-  const dormant = personal.detail?.dormant_rule_finds
-  return (
-    <p
-      className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-relaxed text-slate-700"
-      data-testid="drifting-two-methods"
-    >
-      <b>שתי שיטות לאותה שאלה, וההפרש הוא הדף הזה.</b> <b>&quot;רדום&quot;</b> — הדגל שכבר קיים
-      במערכת — שואל את אותה שאלה על כל הלקוחות. <b>&quot;מתרחק&quot;</b> שואל כל לקוח ביחס לקצב של
-      עצמו. המדידה היום: {isolateLtr(String(drifting.value))} מתרחקים מול{' '}
-      {isolateLtr(String(dormant ?? 0))} רדומים, ו-{isolateLtr(String(personal.value))} לקוחות נראים
-      רק בשיטה האישית.
-    </p>
-  )
-}
+// ✂️ **באנר שתי-השיטות של מ21 נמחק (23/09/2026, תקן-הכרטיס — התוכנית §4ד #5).** הוא היה הסבר
+// צהוב במצב 0, בעוד ישי קבע: *"מצב 0 זה מצב מוצר הייטק בוגר… כל ההסברים יהיו שם"* (בשכבה).
+// 🔑 **ושום דבר לא אבד:** שלושת המספרים שלו גלויים עכשיו בכרטיסים (*"לקוחות מתרחקים"* · *"כלל
+// «רדום» מוצא"* · *"נתפסים רק בקצב האישי"* — מיגרציית-הטקסט L5), וההסבר עצמו — למה "מתרחק" ולא
+// "רדום" — הוא רמז `reports.drifting.why` במצב 2.
 
 /**
  * מ19 · אריח ④ — `tiles[].detail` **כגילוי (disclosure) ולא כאריח שני** (C8, תוספת
@@ -164,7 +142,6 @@ export default function CustomerSurface({
 }) {
   const hints = HINTS[surface.id] ?? {}
   const isNotes = surface.id === 'מ22'
-  const isDrifting = surface.id === 'מ21'
 
   return (
     <ReportSurface
@@ -192,12 +169,7 @@ export default function CustomerSurface({
           )}
         </>
       )}
-      renderBeforeChart={(payload) => (
-        <>
-          {hints.basis && <Hint id={hints.basis} />}
-          {isDrifting && <TwoMethodsBanner payload={payload} />}
-        </>
-      )}
+      renderBeforeChart={() => (hints.basis ? <Hint id={hints.basis} /> : null)}
       // 🔴 **בלוק "טרם אושרה ריצת-ניתוח" עבר לכאן מ-`renderExtras`** (סבב-ביקורת 16/09,
       // ממצא 16): ‏`renderExtras` מרונדר **אחרון** — אחרי הטבלה, שורת-ההגדרות
       // ו-`meta.notes` — ולכן ההסבר על *למה* הדף ריק נחת מתחת לטבלה הריקה שהוא מסביר.

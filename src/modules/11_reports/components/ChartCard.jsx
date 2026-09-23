@@ -972,8 +972,10 @@ export default function ChartCard({
                 />
               </ResponsiveContainer>
             </div>
+            {/* ✏️ 23/09/2026 — 210 ⇒ 240: אריח-הצד ("שוטף" במ9) נושא ⓘ בפינה, ו-210 שבר את שורת-ההשוואה
+                שלו לשתי שורות (בדיקת-הצפיפות, כלל 0.3 "שורה אחת"). */}
             {aside && (
-              <div className="mt-2 md:mt-0 md:w-[210px] md:shrink-0" data-testid="chart-aside">
+              <div className="mt-2 md:mt-0 md:w-[240px] md:shrink-0" data-testid="chart-aside">
                 {aside}
               </div>
             )}
