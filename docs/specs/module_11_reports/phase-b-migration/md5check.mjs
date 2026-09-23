@@ -1,4 +1,10 @@
 // md5check.mjs — does the file body (prosrc) equal the live one? K1 patches applied locally for m02/m07/m19.
+// Run from this folder: `node md5check.mjs`. The LIVE values below were measured 23/09/2026 with
+// (read-only, Supabase MCP execute_sql):
+//   select p.proname, md5(p.prosrc) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+//    where n.nspname = 'public' and p.proname like 'report_m%' order by 1;
+// Re-measure and paste the new values before trusting "SAME". AFTER the l1 migration is applied the
+// live bodies differ by design — this script is a pre-apply check only.
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
