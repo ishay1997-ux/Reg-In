@@ -46,6 +46,22 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (10:0X) — customers screen wired to the export dialog, and a blank money column caught live
+
+**Second screen outside module 11, on the projects pattern** (`src/modules/02_customers/CustomersPage.jsx` + `api.js` + a new `CustomersPage.export.test.jsx`). Full record in `docs/micro_guides/module-2.md` §9 (dated line) and the export handoff §6/§7.
+
+**What the acceptance question answered before code:** Ishay's *"המסך הזה מכיל מלא שדות, לא?"* — **no.** `customers` is 9 columns, `select('*')` fetches all of them; there is no RPC gap on this screen and no migration to record. 11 on-screen columns are the default, 4 more available (`טעון בירור` · `רדום` · `מס׳ לקוח` · `תאריך הוספה`).
+
+🔴 **The defect the live measurement found, and no unit test would have:** opening the dialog the moment the table rendered — before the second fetch (quotes) settled — downloaded a 60-row file whose money column was blank in every row, with no error. `null` means both *"not loaded yet"* and *"no permission"*, and the screen shows `—` for both, so nothing looked wrong. ⇒ `derivedLoading` keeps the dialog in its loading state (skeleton + disabled run) until the revenue and projects fetches settle. Re-measured after the fix: **59/60 money cells filled, max 1,782,917.02 = the screen's top customer; 54 ratings; sheets `לקוחות` + `פרטי הדוח`.** ⚠️ **This is a trap for every screen that loads derived data after its list** — recorded in the handoff §6 as the next screen's entry condition.
+
+**Measured, not assumed:** roles without *'הצעות מחיר'* (PROJECTS · FINANCE) see `—` on screen and a blank money column in the file — the quotes RLS path returns `[]`, not an error, so the client-side masking holds. RECRUIT · STAFF are blocked on `/customers` entirely.
+
+**Three `הכרעתי, הפיך`:** *"טעון בירור"* available-not-default (Ishay's *"מה חסר"* criterion on a second screen) · `created_at` = *"תאריך הוספה"* · file-name label = status view. All one line to flip; all in the micro-guide.
+
+**The adversarial reviewer (one Opus agent, read-only, ~110K tokens, `שומש כפי שהוא`) found what neither the tests nor the live run did:** after a *failed* quotes or screen-params fetch the dialog still exported — money blank, and `רדום`/`טעון בירור` as a literal *"לא"* (a missing threshold makes both predicates `false`). Fixed with the dialog's own `blockedReason` (`EXPORT_BLOCKED_PARTIAL_DATA`), two tests pin it; the extraction into a module-level helper is what kept `CustomersPage` under SonarJS's complexity cap (it hit 21). It also named two ceremonial tests (the "no salary word" and "button enabled" cases cannot fail on this constant) — kept for parity with the projects file, noted as low-value — and one product question left to Ishay: the screen shows `10%`, the file carries `10.0` under a `% הנחה` header.
+
+**Gates:** module-2 suites 59/59 (14 in the new file) + projects-export + dialog green · eslint 0 · prettier ✓ · `npm run gate` — `GATE_EXIT` on the STATUS line.
+
 ### 23/09/2026 (03:2X) — the handoff updated, and a fourth Stop-hook catch
 
 **`66d1a885`.** Six rulings from 23/09 recorded with the wording that produced them, three new traps, sections 6 and 7 refreshed, and a corrected paste block.

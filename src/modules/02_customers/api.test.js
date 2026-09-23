@@ -44,7 +44,9 @@ import {
 function selectSpyBuilder(finalResult) {
   const builder = {}
   let capturedSelect = null
-  for (const method of ['eq', 'order']) {
+  // `range` — `fetchAll` מדפדף דרכו (23/09/2026, `listCustomers`); בלעדיו הבילדר היה זורק
+  // `range is not a function` ומסתיר את מה שהבדיקה באמת רוצה לראות.
+  for (const method of ['eq', 'order', 'range']) {
     builder[method] = vi.fn(() => builder)
   }
   builder.select = vi.fn((arg) => {
@@ -80,6 +82,20 @@ describe('קריאות — ה-select-ים מצרפים customer_contacts עם is
     // ⚠️ לא רק "יש is_primary איפשהו במחרוזת" — צריך שהוא יהיה *בתוך* ה-embed של
     // customer_contacts, לא עמודה שטוחה בטעות על customers עצמה.
     expect(select).toMatch(/customer_contacts\([^)]*is_primary[^)]*\)/)
+  })
+
+  // 🔴 23/09/2026 — תנאי-הכניסה לחלון-הייצוא (`PROJECT_MASTER §6`): הרשימה עוברת דרך `fetchAll`.
+  // ההוכחה היא `.range()` ושובר-שוויון ייחודי — לא "הקוד קורא ל-fetchAll", שהיה בדיקה על שם.
+  it('listCustomers מדפדפת דרך fetchAll — `.range()` נקרא, והסדר נושא שובר-שוויון ייחודי', async () => {
+    const { builder } = selectSpyBuilder({ data: [], error: null })
+    supabase.from.mockImplementation(() => builder)
+
+    await listCustomers()
+
+    expect(builder.range).toHaveBeenCalledWith(0, 999)
+    // `company_name` אינו ייחודי; בלי `customer_id` אחריו דפדוף מחזיר שורה פעמיים ומדלג על אחרת.
+    const orderKeys = builder.order.mock.calls.map((call) => call[0])
+    expect(orderKeys).toEqual(['company_name', 'customer_id'])
   })
 
   it('getCustomer מצרפת את אותו embed — עד N2 היא לא צירפה אנשי-קשר בכלל', async () => {
