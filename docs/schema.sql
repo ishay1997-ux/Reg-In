@@ -24,7 +24,7 @@
 --    **הספירות החיות:** 38 טבלאות-בסיס · 67 פונקציות · 65 מדיניות (53 ב-`public`, 12 על `storage.objects`) ·
 --    77 אינדקסים · 29 טריגרים. **השאילתה שמחזירה את חמשתן בשורה אחת יושבת בסעיף 24, מעל ספירת-הפונקציות** —
 --    כדי שהמספר הבא שייכתב כאן יימדד ולא ייגזר מהקודם.
---    ✏️ **23/09/2026 — L1 ו-L2 (מיגרציות-הטקסט של מ11 פזה ב׳) הוחלו: גופי-פונקציה בלבד ⇒ הספירות לא זזו.**
+--    ✏️ **23/09/2026 — L1 · L2 · L3 · L4 (מיגרציות-הטקסט של מ11 פזה ב׳) הוחלו: גופי-פונקציה בלבד ⇒ הספירות לא זזו.**
 --    הפירוט בסעיף 24, בלוק מודול 11 (מעל `report_m02_exec_overview`).
 --    ✅ ✏️ **תוקן-במקום 17/09/2026 (סבב J2):** הפסקה שעמדה כאן אמרה
 --    ש-`20260916194500_module11_i2_rpc_round3.sql` **טרם הוחל**. הוא הוחל באותו ערב ב-20:4X,
@@ -2569,6 +2569,8 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 -- ✏️ **23/09/2026 — וסבב-הטקסט השני L2 הוחל** (`supabase/migrations/20260923200000_module11_l2_tile_copy.sql`, שורה אחת
 --    במסד): תת-שורות אריחים ב-m07 · m14 · m15 · m16 · m17 · m19 · m20 · m22. ⇒ **"הגוף החי" של שמונתן = … + L1 + L2.**
 --    חתימות · ACL · הערות — ללא שינוי (נמדד). מצב-הגוף המדויק ניתן לשחזור: `phase-b-migration/bodies.mjs` + `expect-md5.mjs`.
+-- ✏️ **23/09/2026 — ו-L3 (`…210000_module11_l3_compare_notes.sql`: m08 · m14 · m17) ו-L4 (`…220000_module11_l4_frozen_note.sql`:
+--    m08) הוחלו.** ⇒ הגוף החי = … + L1 + L2 + L3 + L4 (`bodies.mjs` postL4). חתימות · ACL — ללא שינוי.
 -- report_m02_exec_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb, p_page integer, p_page_size integer) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
 --   → supabase/migrations/20260916052600_module11_d_rpcs_executive.sql (המקור)

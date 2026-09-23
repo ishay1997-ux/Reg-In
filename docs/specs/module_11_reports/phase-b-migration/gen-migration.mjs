@@ -9,7 +9,7 @@
 import fs from 'fs'
 import path from 'path'
 import { FILES } from './ops.mjs'
-import { postL1, postL2 } from './bodies.mjs'
+import { postL1, postL2, postL3 } from './bodies.mjs'
 
 const REPO = 'C:/Users/ishay/Reg-In-copy-wt/supabase/migrations/'
 const args = process.argv.slice(2)
@@ -20,6 +20,7 @@ const { OPS } = await import(opsFile ? `./${opsFile}` : './ops.mjs')
 
 function bodyOf(fn) {
   // ops-l2 builds on the body after L1; ops-l3 on the body after L2 (each round on the one before).
+  if (opsFile === 'ops-l4.mjs') return postL3(fn)
   if (opsFile === 'ops-l3.mjs') return postL2(fn)
   if (opsFile) return postL1(fn)
   const src = fs.readFileSync(path.join(REPO, FILES[fn]), 'utf8').replace(/\r\n/g, '\n')
