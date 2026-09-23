@@ -47,7 +47,7 @@ export default function SegmentedControl({
             className={cn(
               // מאפיינים פיזיים בלבד (`src/CLAUDE.md`): המפריד הוא `border-l` על כל כפתור
               // פרט לאחרון — בדיוק כמו במוקאפ המאושר, ולא `border-s`/`border-e` לוגי.
-              'h-auto whitespace-nowrap px-2.5 py-1 text-[11px] font-medium text-slate-600',
+              'h-auto whitespace-nowrap px-2.5 py-1 text-xs font-medium text-slate-600',
               'focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:outline-hidden focus-visible:ring-inset',
               index < options.length - 1 && 'border-l border-slate-200',
               selected && 'bg-teal-50 font-semibold text-teal-700',

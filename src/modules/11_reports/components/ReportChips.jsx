@@ -35,7 +35,7 @@ export default function ReportChips({ tabLabel, surfaces, activeSlug, onSelect }
             aria-current={on ? 'true' : undefined}
             data-testid={`reports-chip-${surface.slug}`}
             className={cn(
-              'whitespace-nowrap rounded-full border px-3 py-1 text-[12.5px] leading-tight',
+              'whitespace-nowrap rounded-full border px-3 py-1 text-sm leading-tight',
               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700',
               on
                 ? 'border-teal-200 bg-teal-50 font-semibold text-teal-700'

@@ -17,7 +17,7 @@ import { WINDOW_OPTIONS } from '@/lib/listWindow'
 export function WindowChips({ value, onChange, hiddenCount = 0, testId = 'list-window' }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5" data-testid={testId} role="group">
-      <span className="text-[12px] text-slate-500">מציג</span>
+      <span className="text-sm text-slate-500">מציג</span>
       {WINDOW_OPTIONS.map((option) => (
         <FilterPill
           key={option.key}
@@ -29,7 +29,7 @@ export function WindowChips({ value, onChange, hiddenCount = 0, testId = 'list-w
         </FilterPill>
       ))}
       {value !== 'all' && hiddenCount > 0 && (
-        <span className="text-[12px] text-slate-400" data-testid={`${testId}-hidden`}>
+        <span className="text-sm text-slate-400" data-testid={`${testId}-hidden`}>
           (עוד {hiddenCount} מחוץ לחלון)
         </span>
       )}
@@ -44,7 +44,7 @@ export function Pager({ page, pageCount, from, to, total, onPage, testId = 'list
   if (total === 0) return null
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-3 py-2 text-[12.5px] text-slate-500"
+      className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-3 py-2 text-sm text-slate-500"
       data-testid={testId}
     >
       <span data-testid={`${testId}-range`}>
@@ -58,7 +58,7 @@ export function Pager({ page, pageCount, from, to, total, onPage, testId = 'list
           <Button
             type="button"
             variant="outline"
-            className="h-auto px-3 py-1 text-[12.5px]"
+            className="h-auto px-3 py-1 text-sm"
             disabled={page <= 1}
             onClick={() => onPage(page - 1)}
             data-testid={`${testId}-prev`}
@@ -74,7 +74,7 @@ export function Pager({ page, pageCount, from, to, total, onPage, testId = 'list
           <Button
             type="button"
             variant="outline"
-            className="h-auto px-3 py-1 text-[12.5px]"
+            className="h-auto px-3 py-1 text-sm"
             disabled={page >= pageCount}
             onClick={() => onPage(page + 1)}
             data-testid={`${testId}-next`}

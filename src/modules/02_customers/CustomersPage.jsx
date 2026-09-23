@@ -1056,7 +1056,7 @@ export default function CustomersPage() {
                                 האלמנט שנושא את הערך עצמו, לא על עוטף: תווית-RTL שנפרדת מערך-LTR
                                 היא הכשל שחזר שלוש פעמים (src/CLAUDE.md). */}
                               {contact?.phone && (
-                                <div dir="ltr" className="text-[11.5px] text-slate-500 text-right">
+                                <div dir="ltr" className="text-xs text-slate-500 text-right">
                                   {contact.phone}
                                 </div>
                               )}
@@ -1072,7 +1072,7 @@ export default function CustomersPage() {
                                   href={`mailto:${encodeURIComponent(contact.email)}`}
                                   title={`מייל ל${contact.contact_name || 'איש הקשר'}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="inline-block mt-1 text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
+                                  className="inline-block mt-1 text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-md px-1.5 py-0.5"
                                   data-testid={`customer-mailto-${customer.customer_id}`}
                                 >
                                   ✉ מייל

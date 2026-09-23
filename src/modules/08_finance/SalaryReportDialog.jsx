@@ -200,7 +200,7 @@ function Th({ children, className, style }) {
     <th
       style={style}
       className={cn(
-        'border-b border-slate-200 px-2 py-1.5 text-right text-[11px] font-semibold whitespace-nowrap text-slate-500 align-bottom',
+        'border-b border-slate-200 px-2 py-1.5 text-right text-xs font-semibold whitespace-nowrap text-slate-500 align-bottom',
         className,
       )}
     >
@@ -461,7 +461,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
 
         {phase !== 'result' && (
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-            <span className="text-[11.5px] text-slate-500">חודש להפקה:</span>
+            <span className="text-xs text-slate-500">חודש להפקה:</span>
             {pickerOpen ? (
               <div className="flex items-center gap-1.5" data-testid="salary-report-month-picker">
                 {/* בורר-חודש: אין תקדים-קוד לרכיב הזה בכלל (design-contract §S3 — "נבנה
@@ -476,7 +476,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                       month: Number(e.target.value),
                     }))
                   }
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-[13px] text-slate-800"
+                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-800"
                   aria-label="חודש"
                   data-testid="salary-report-month-select"
                 >
@@ -497,7 +497,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                       year: Number(e.target.value),
                     }))
                   }}
-                  className="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-[13px] text-slate-800"
+                  className="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-800"
                   data-testid="salary-report-year-input"
                   aria-label="שנה"
                 />
@@ -522,7 +522,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                 </Button>
                 {pickerError && (
                   <span
-                    className="text-[11.5px] text-amber-700"
+                    className="text-xs text-amber-700"
                     role="alert"
                     data-testid="salary-report-month-error"
                   >
@@ -535,7 +535,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                 type="button"
                 onClick={openPicker}
                 aria-haspopup="true"
-                className="inline-flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold text-slate-800"
+                className="inline-flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800"
                 data-testid="salary-report-month-button"
               >
                 <Calendar className="size-3.5" aria-hidden="true" />
@@ -571,7 +571,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
             T19) — כשל בטעינת ההיסטוריה לא חוסם, אבל נאמר בקול כדי שהמנהלת לא תניח שקיבלה
             בדיקה שלא בוצעה. */}
         {phase === 'select' && historyError && (
-          <p className="text-[11.5px] text-amber-700" role="status">
+          <p className="text-xs text-amber-700" role="status">
             לא ניתן היה לבדוק אם החודש כבר הופק ({historyError}) — הבדיקה הסופית תמיד תתבצע במסד
             בלחיצה על "ייצאי ושלחי".
           </p>
@@ -579,11 +579,11 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
 
         {phase === 'select' && existingForSelected && (
           <div
-            className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12.5px] leading-relaxed text-amber-800"
+            className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-relaxed text-amber-800"
             role="alert"
             data-testid="salary-report-blocked-banner"
           >
-            <b className="mb-0.5 block text-[13.5px]">{blockedBannerText}</b>
+            <b className="mb-0.5 block text-sm">{blockedBannerText}</b>
             <Button
               type="button"
               variant="outline"
@@ -700,14 +700,14 @@ function PreflightPanel({
 
   return (
     <div
-      className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-[12.5px] leading-relaxed text-slate-700"
+      className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm leading-relaxed text-slate-700"
       data-testid="salary-report-preflight"
     >
-      <b className="mb-2 block text-[13.5px] text-slate-800">מה ייכלל בדוח של {periodLabel}</b>
+      <b className="mb-2 block text-sm text-slate-800">מה ייכלל בדוח של {periodLabel}</b>
 
       <div className="mb-2.5 flex flex-wrap gap-x-6 gap-y-1">
         <span>
-          <span className="text-[11.5px] text-slate-500">נשלח אל:</span>{' '}
+          <span className="text-xs text-slate-500">נשלח אל:</span>{' '}
           {accountantEmail ? (
             <Ltr>{accountantEmail}</Ltr>
           ) : (
@@ -715,10 +715,10 @@ function PreflightPanel({
           )}
         </span>
         <span>
-          <span className="text-[11.5px] text-slate-500">שם הקובץ:</span> <Ltr>{fileName}</Ltr>
+          <span className="text-xs text-slate-500">שם הקובץ:</span> <Ltr>{fileName}</Ltr>
         </span>
         <span>
-          <span className="text-[11.5px] text-slate-500">נאסף עד:</span> <Ltr>{collectUntil}</Ltr>
+          <span className="text-xs text-slate-500">נאסף עד:</span> <Ltr>{collectUntil}</Ltr>
         </span>
       </div>
 
@@ -834,9 +834,9 @@ function ResultView({ result }) {
 
   return (
     <div data-testid="salary-report-result">
-      <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px]">
+      <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
         <span>
-          <span className="text-[11.5px] text-slate-500">חודש שהופק:</span>{' '}
+          <span className="text-xs text-slate-500">חודש שהופק:</span>{' '}
           {/* ‏`periodLabel` הוא `null` כשההרכבה נפלה — והתקופה עצמה **כן** ידועה, היא חוזרת
               מהמסד. נגזרת דרך אותה SSOT שמייצרת את הכותרת בכל מסלול אחר, ולא כמחרוזת שנייה. */}
           <b>{result.periodLabel ?? safePeriodLabel(result.period)}</b>
@@ -849,7 +849,7 @@ function ResultView({ result }) {
               🔴 **ובלי `?? lines.length`**: הנפילה-לאחור הזו הפכה "המסמך לא נבנה ולכן אין
               ספירה" ל-**0**, שנקרא כ"לא היה מה לשלם". אין-ספירה מוצג כ-`—`, כמו כל ערך חסום
               אחר במודול. */}
-          <span className="text-[11.5px] text-slate-500">שורות בדוח:</span>{' '}
+          <span className="text-xs text-slate-500">שורות בדוח:</span>{' '}
           {typeof totals?.lineCount === 'number' ? (
             <Ltr>{totals.lineCount}</Ltr>
           ) : (
@@ -857,7 +857,7 @@ function ResultView({ result }) {
           )}
         </span>
         <span>
-          <span className="text-[11.5px] text-slate-500">סה"כ לתשלום:</span>{' '}
+          <span className="text-xs text-slate-500">סה"כ לתשלום:</span>{' '}
           <b>
             <Money amount={totals?.total} cents />
           </b>
@@ -867,11 +867,11 @@ function ResultView({ result }) {
 
       {assemblyFailed ? (
         <div
-          className="rounded-lg border border-red-200 bg-red-50 p-3.5 text-[12.5px] leading-relaxed text-red-800"
+          className="rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm leading-relaxed text-red-800"
           role="alert"
           data-testid="salary-report-assembly-failure"
         >
-          <b className="mb-1 block text-[13.5px]">הדוח לא הורכב — אך השורות כבר נחתמו.</b>
+          <b className="mb-1 block text-sm">הדוח לא הורכב — אך השורות כבר נחתמו.</b>
           <p>
             דוח מספר <Ltr>{result.reportId}</Ltr> נרשם, וכל שורות-השכר שנאספו אליו כבר נחתמו על-שמו
             — הן <b>לא ייאספו שוב</b> לדוח הבא, ואי-אפשר להפיק את אותו חודש פעמיים.
@@ -898,10 +898,7 @@ function ResultView({ result }) {
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table
-            className="w-full table-fixed text-[13.5px]"
-            data-testid="salary-report-result-table"
-          >
+          <table className="w-full table-fixed text-sm" data-testid="salary-report-result-table">
             <thead>
               <tr>
                 {['דיילת', 'ת"ז', 'פרטי-בנק', 'שעות', 'תעריף', 'בונוס', 'נסיעות', 'סה"כ'].map(
@@ -920,7 +917,7 @@ function ResultView({ result }) {
                   <tr key={`${line.hostessId}-${line.sourceProjectId}-${i}`}>
                     <Td>
                       <div className="font-semibold text-slate-800">{line.hostessName}</div>
-                      <div className="mt-0.5 text-[11px] text-slate-500">
+                      <div className="mt-0.5 text-xs text-slate-500">
                         פרויקט <Ltr>#{line.sourceProjectId}</Ltr> · {line.basisLabel}
                       </div>
                     </Td>
@@ -940,7 +937,7 @@ function ResultView({ result }) {
                       <div className="font-semibold">
                         <Ltr>{Number(line.hours).toFixed(2)}</Ltr>
                       </div>
-                      <div className="mt-0.5 text-[10.5px] text-slate-500">{line.hoursLabel}</div>
+                      <div className="mt-0.5 text-xs text-slate-500">{line.hoursLabel}</div>
                     </Td>
                     <Td>
                       {/* `exact` ולא ברירת-המחדל: `formatShekelWhole` **מעגל** (`Math.round`),
@@ -995,7 +992,7 @@ function ResultView({ result }) {
             </tbody>
           </table>
 
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-[11.5px] leading-relaxed text-slate-600">
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs leading-relaxed text-slate-600">
             {/* §7.69: הסכום נכון לרגע ההפקה מהפרמטר החי, וטרם אומת מול רואה-החשבון. */}
             {hasTravel && (
               <p>
@@ -1034,7 +1031,7 @@ function ResultView({ result }) {
 
       {result.linesMissingBankDetails?.length > 0 && (
         <p
-          className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[12px] text-amber-800"
+          className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-sm text-amber-800"
           data-testid="salary-report-missing-bank"
         >
           לדיילות הבאות אין פרטי-בנק שמורים בדוח שנשלח — {result.linesMissingBankDetails.join(', ')}
@@ -1160,12 +1157,12 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
           className="flex flex-col items-center gap-1 py-8 text-center"
           data-testid="salary-history-empty"
         >
-          <p className="text-[13.5px] font-medium text-slate-600">עדיין לא הופקו דוחות</p>
+          <p className="text-sm font-medium text-slate-600">עדיין לא הופקו דוחות</p>
           <p className="text-xs text-slate-500">דוחות שיופקו ויישלחו יופיעו כאן</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-[13.5px]">
+          <table className="w-full table-fixed text-sm">
             <thead>
               <tr>
                 <Th style={{ width: '18%' }}>תקופה</Th>
@@ -1219,7 +1216,7 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                         disabled={!row.report_file_url}
                         title={row.report_file_url ? fileNameOf(row.report_file_url) : undefined}
                         onClick={() => handleDownload(row)}
-                        className="h-auto rounded-lg px-2 py-1 text-[11px] font-semibold"
+                        className="h-auto rounded-lg px-2 py-1 text-xs font-semibold"
                         data-testid={`salary-history-download-${row.report_id}`}
                       >
                         <Download className="size-3.5" aria-hidden="true" />
@@ -1232,7 +1229,7 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                           size="sm"
                           disabled={!row.report_file_url || resendingId === row.report_id}
                           onClick={() => handleResend(row)}
-                          className="h-auto rounded-lg px-2 py-1 text-[11px] font-semibold"
+                          className="h-auto rounded-lg px-2 py-1 text-xs font-semibold"
                           data-testid={`salary-history-resend-${row.report_id}`}
                         >
                           {resendingId === row.report_id ? 'שולחת…' : 'שלחי שוב'}
@@ -1243,7 +1240,7 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                         עולה לטקסט גלוי, פעם אחת לשתי הכפתורים, כי שתיהן חסומות מאותה סיבה. */}
                     {!row.report_file_url && (
                       <div
-                        className="mt-1 text-[10px] text-slate-400"
+                        className="mt-1 text-xs text-slate-400"
                         data-testid={`salary-history-no-file-${row.report_id}`}
                       >
                         אין קובץ שמור

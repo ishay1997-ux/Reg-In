@@ -988,7 +988,7 @@ function PageHeader({ onOpenSalary }) {
     <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-lg font-bold text-slate-800">{PAGE_TITLE}</h1>
-        <p className="mt-0.5 text-[12px] text-slate-500">{PAGE_SUBTITLE}</p>
+        <p className="mt-0.5 text-sm text-slate-500">{PAGE_SUBTITLE}</p>
       </div>
       <Button
         type="button"
@@ -1074,7 +1074,7 @@ function FilterBar({ filters, onChange, onClear }) {
   const set = (patch) => onChange({ ...filters, ...patch })
   return (
     <div className="flex flex-wrap items-center gap-2.5 py-3" data-testid="finance-filter-bar">
-      <label className="text-[11.5px] text-slate-500" htmlFor="finance-filter-from">
+      <label className="text-xs text-slate-500" htmlFor="finance-filter-from">
         מ-
       </label>
       <input
@@ -1083,10 +1083,10 @@ function FilterBar({ filters, onChange, onClear }) {
         dir="ltr"
         value={filters.from}
         onChange={(e) => set({ from: e.target.value })}
-        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-from"
       />
-      <label className="text-[12px] text-slate-400" htmlFor="finance-filter-to">
+      <label className="text-sm text-slate-400" htmlFor="finance-filter-to">
         עד
       </label>
       <input
@@ -1095,7 +1095,7 @@ function FilterBar({ filters, onChange, onClear }) {
         dir="ltr"
         value={filters.to}
         onChange={(e) => set({ to: e.target.value })}
-        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-to"
       />
       <input
@@ -1104,7 +1104,7 @@ function FilterBar({ filters, onChange, onClear }) {
         onChange={(e) => set({ company: e.target.value })}
         placeholder="שם חברה, לדוגמה: קמפוס טכנולוגי צפון"
         aria-label="סינון לפי שם חברה"
-        className="h-8 w-[190px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[190px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-company"
       />
       <input
@@ -1114,14 +1114,14 @@ function FilterBar({ filters, onChange, onClear }) {
         onChange={(e) => set({ projectNumber: e.target.value })}
         placeholder="מס׳ פרויקט, לדוגמה: 15"
         aria-label="סינון לפי מספר פרויקט"
-        className="h-8 w-[160px] rounded-lg border border-slate-200 bg-white px-2.5 text-[12.5px] text-slate-700"
+        className="h-8 w-[160px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-number"
       />
       <Button
         type="button"
         variant="link"
         onClick={onClear}
-        className="mr-auto h-auto p-0 text-[12.5px] font-semibold text-teal-700"
+        className="mr-auto h-auto p-0 text-sm font-semibold text-teal-700"
         data-testid="finance-clear-filter"
       >
         {CLEAR_FILTER_LABEL}
@@ -1152,7 +1152,7 @@ function EmptyRows({ filtered, tab, total, onClear }) {
             type="button"
             variant="link"
             onClick={onClear}
-            className="h-auto p-0 text-[12.5px] font-semibold text-teal-700"
+            className="h-auto p-0 text-sm font-semibold text-teal-700"
             data-testid="finance-empty-clear-filter"
           >
             {CLEAR_FILTER_LABEL}
@@ -1273,10 +1273,10 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
       data-testid={`finance-row-${row.project_id}`}
     >
       <Td>
-        <div className="text-[13.5px] font-semibold text-slate-800">{row.event_name}</div>
-        <div className="mt-px text-[11.5px] text-slate-500">{row.customer_name}</div>
+        <div className="text-sm font-semibold text-slate-800">{row.event_name}</div>
+        <div className="mt-px text-xs text-slate-500">{row.customer_name}</div>
         {/* שורת-ההקשר של שורה מבוטלת, במקום שבו המוקאפ המאושר מצייר אותה — תחת שם-הפרויקט
-            ושם-הלקוח, ב-`class="calm"` שהוא בדיוק `text-[11.5px] text-slate-500` שכאן.
+            ושם-הלקוח, ב-`class="calm"` שהוא בדיוק `text-xs text-slate-500` שכאן.
             🔤 **התווית עצמה אינה מנוסחת כאן**: `CANCEL_TYPE_LABELS` (S-30) היא אותה מילה
             שבדיאלוג-הביטול של מ6 ובכרטיס-הפרויקט (`ProjectCardPage.jsx` — שם היא עומדת
             בדיוק כך, לבדה, כשורת-משנה). ⚠️ **ומה שהמוקאפ מצייר וכאן חסר:** חצי-המשפט
@@ -1285,7 +1285,7 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
             לגזור ממנו, וכתיבת מספר משוער הייתה המצאה. **מדווח כפער-נתונים, לא הושלם בניחוש.** */}
         {entry.cancelled && row.cancel_type && (
           <div
-            className="mt-px text-[11.5px] text-slate-500"
+            className="mt-px text-xs text-slate-500"
             data-testid={`finance-cancel-context-${row.project_id}`}
           >
             {CANCEL_TYPE_LABELS[row.cancel_type]}
@@ -1294,13 +1294,13 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
         {/* אותו תנאי בדיוק כמו `isActionable` — הרקע והשורה מספרים סיפור אחד, ותיק
             מארוכב אינו מבקש בירור שכבר נעשה כתנאי לארכובו. */}
         {!row.archived_at && needsClarification && (
-          <div className="mt-0.5 text-[11.5px] font-semibold text-amber-700">
+          <div className="mt-0.5 text-xs font-semibold text-amber-700">
             ⚠ ציון-משוב <Ltr>{String(entry.score.score)}</Ltr> — נדרש בירור טלפוני
           </div>
         )}
         {row.credit_note_flag && (
           <div
-            className="mt-0.5 text-[11.5px] font-semibold text-amber-700"
+            className="mt-0.5 text-xs font-semibold text-amber-700"
             data-testid={`finance-credit-note-${row.project_id}`}
           >
             {CREDIT_NOTE_LINE}
@@ -1312,7 +1312,7 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
         <>
           <Td>
             <DateCell iso={rowDateIso(row, tab)} />
-            <div className="text-[11.5px] text-slate-500">
+            <div className="text-xs text-slate-500">
               {entry.cancelled ? CANCELLED_DATE_NOTE : OPERATIONALLY_CLOSED_NOTE}
             </div>
           </Td>
@@ -1330,8 +1330,8 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
           <Td>
             {entry.dueDate ? (
               <>
-                <Ltr className="text-[13px]">{formatDate(entry.dueDate)}</Ltr>
-                <div className="text-[11.5px] text-slate-500">
+                <Ltr className="text-sm">{formatDate(entry.dueDate)}</Ltr>
+                <div className="text-xs text-slate-500">
                   שוטף+<Ltr>{String(row.payment_terms_days)}</Ltr>
                 </div>
               </>
@@ -1361,10 +1361,10 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
           <Td>
             {/* §7.52 — ‏% נגזר לתצוגה כערך-ראשי, ‏₪ הנשמר יורד לשורת-המשנה (תיקון-הבקרה
                 26/08 בתוך המוקאפ עצמו, שגובר על בלוק-הפתיחה שלו). */}
-            <div className="text-[13.5px] font-bold text-slate-800">
+            <div className="text-sm font-bold text-slate-800">
               <Ltr>{formatPercent(entry.profitPercent)}</Ltr>
             </div>
-            <div className="mt-px text-[11px] text-slate-500">
+            <div className="mt-px text-xs text-slate-500">
               {row.final_profit === null ? DASH : <Money amount={Number(row.final_profit)} cents />}
             </div>
           </Td>
@@ -1402,7 +1402,7 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
 function DateCell({ iso }) {
   const text = stampDate(iso)
   if (!text) return <span className="text-slate-400">{DASH}</span>
-  return <Ltr className="text-[13px]">{text}</Ltr>
+  return <Ltr className="text-sm">{text}</Ltr>
 }
 
 // 🔴 שורה מבוטלת שדמי-הביטול שלה טרם נפתרו מציגה `—` ולא סכום: ההצעה התלת-רכיבית נגזרת
@@ -1412,9 +1412,9 @@ function AmountCell({ entry }) {
   if (entry.amount === null || entry.amount === undefined) {
     return (
       <>
-        <div className="text-[13.5px] font-bold text-slate-400">{DASH}</div>
+        <div className="text-sm font-bold text-slate-400">{DASH}</div>
         {entry.feeUnresolved && (
-          <div className="mt-px text-[11px] font-semibold text-amber-700">
+          <div className="mt-px text-xs font-semibold text-amber-700">
             {CANCELLATION_FEE_UNRESOLVED}
           </div>
         )}
@@ -1423,10 +1423,10 @@ function AmountCell({ entry }) {
   }
   return (
     <>
-      <div className="text-[13.5px] font-bold text-slate-800">
+      <div className="text-sm font-bold text-slate-800">
         <Money amount={Number(entry.amount)} cents />
       </div>
-      <div className="mt-px text-[11px] text-slate-500">
+      <div className="mt-px text-xs text-slate-500">
         {entry.amountWithVat === null ? (
           <Ltr>{DASH}</Ltr>
         ) : (
@@ -1459,18 +1459,18 @@ function OverdueCell({ days, debtOpen, paidOn, testId }) {
     return (
       <>
         <StatusTag label={PAID_TAG} tone="ok" testId={testId} />
-        <div className="mt-px text-[11.5px] text-slate-500">
+        <div className="mt-px text-xs text-slate-500">
           <Ltr>{formatDate(paidOn, DASH)}</Ltr>
         </div>
       </>
     )
   }
   if (days === null) return <span className="text-slate-400">{DASH}</span>
-  if (days === 0) return <Ltr className="text-[13px] text-slate-400">0</Ltr>
+  if (days === 0) return <Ltr className="text-sm text-slate-400">0</Ltr>
   return (
     <>
-      <Ltr className="text-[13.5px] font-bold text-red-600">{String(days)}</Ltr>{' '}
-      <span className="text-[11.5px] text-slate-500">ימים</span>
+      <Ltr className="text-sm font-bold text-red-600">{String(days)}</Ltr>{' '}
+      <span className="text-xs text-slate-500">ימים</span>
     </>
   )
 }

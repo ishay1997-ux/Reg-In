@@ -76,7 +76,7 @@ export default function RatingStars({
 
   if (onChange) {
     return (
-      <div className="flex items-center gap-1 text-[17px]" data-testid={testId}>
+      <div className="flex items-center gap-1 text-xl" data-testid={testId}>
         {Array.from({ length: STAR_COUNT }, (_, index) => {
           const star = index + 1
           return (
@@ -99,7 +99,7 @@ export default function RatingStars({
           )
         })}
         {hideCaption ? null : (
-          <span className="mr-1.5 text-[11.5px] text-slate-500">
+          <span className="mr-1.5 text-xs text-slate-500">
             {rating === null ? 'טרם התרשמת' : `${rating} מתוך ${STAR_COUNT}`}
           </span>
         )}
@@ -130,7 +130,7 @@ export default function RatingStars({
   }
 
   return (
-    <span className="text-[17px]" data-testid={testId}>
+    <span className="text-xl" data-testid={testId}>
       <Glyphs value={rating} filled={filled} />
     </span>
   )

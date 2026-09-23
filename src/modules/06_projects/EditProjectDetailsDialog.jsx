@@ -240,7 +240,7 @@ export default function EditProjectDetailsDialog({
       <DialogContent dir="rtl" data-testid="edit-project-dialog">
         <DialogHeader>
           <DialogTitle>עריכת פרטי האירוע</DialogTitle>
-          <DialogDescription className="text-[12.5px] text-slate-500">
+          <DialogDescription className="text-sm text-slate-500">
             {project?.event_name} · {project?.customer_name}. שינוי כאן משנה את הפרויקט בלבד — ההצעה
             שהלקוח אישר נשארת כפי שהיא.
           </DialogDescription>
@@ -279,12 +279,12 @@ export default function EditProjectDetailsDialog({
               placeholder="DD/MM/YYYY"
               data-testid="edit-project-date-input"
             />
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               התאריך הנוכחי: <Ltr>{isoToDmy(project?.final_event_date)}</Ltr>
             </span>
             {/* תאריך בעבר — מודיע ברוגע, לעולם לא חוסם (S-17). */}
             {pastDate && (
-              <span className="text-[11.5px] text-slate-400" data-testid="edit-project-past-date">
+              <span className="text-xs text-slate-400" data-testid="edit-project-past-date">
                 {PAST_DATE_NOTICE}
               </span>
             )}
@@ -305,7 +305,7 @@ export default function EditProjectDetailsDialog({
             {/* 🧹 היה שני משפטים, כולל "והנקודה על המפה נקבעת מחדש" — מנגנון-גיאוקוד
                 פנימי (R10/B8, מועמד-שכבה). מה שנשאר: האישורים לא מתאפסים (הבטחה) + הדיילות
                 מקבלות עדכון (⑥ — יוצא-החוצה לאדם אמיתי, לעולם לא נעלם מהבסיס). */}
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               שינוי מיקום אינו מבטל אישורים — הדיילות מקבלות עדכון.
             </span>
             <FieldError name="location" message={errors.location} />
@@ -337,13 +337,13 @@ export default function EditProjectDetailsDialog({
               />
             </div>
             {/* 🧹 מוזג לשתי-משפטים לאחד (R13, קו-מפריד אינו משפט שני) — אותו תוכן. */}
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               שינוי שעות אינו מבטל אישורים — הדיילות מקבלות עדכון עם השעות החדשות.
             </span>
             {/* חוצה-חצות — ענבר, מודיע ואינו חוסם: 22:00–02:00 חוקי לגמרי בענף (S-17). */}
             {crossMidnight && (
               <span
-                className="text-[11px] font-semibold text-amber-700"
+                className="text-xs font-semibold text-amber-700"
                 data-testid="edit-project-cross-midnight"
               >
                 {CROSS_MIDNIGHT_NOTICE}

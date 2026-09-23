@@ -372,18 +372,18 @@ function MainTable({ rows, changes, productName }) {
                   <td className="px-2.5 py-2.5">
                     <div className="font-semibold text-slate-800">{productName(row.sku)}</div>
                     {/* מקור-השורה אינו מוצג — בחירה מוצרית, לא היעדר דאטה. ר' הערת-הראש. */}
-                    <div className="mt-0.5 text-[11.5px] text-slate-500">
+                    <div className="mt-0.5 text-xs text-slate-500">
                       <Ltr>{row.sku}</Ltr>
                     </div>
                   </td>
                   <td className="px-2.5 py-2.5">
-                    <div className="text-[13.5px] font-bold text-slate-800">
+                    <div className="text-sm font-bold text-slate-800">
                       <Ltr>{String(row.planned_qty)}</Ltr>
                     </div>
                     {note && (
                       <div
                         className={cn(
-                          'text-[11px]',
+                          'text-xs',
                           note.tone === 'hint' ? 'font-semibold text-amber-700' : 'text-slate-400',
                         )}
                         data-testid={`logistics-change-note-${row.sku}-${row.serial_number}`}
@@ -415,7 +415,7 @@ function MainTable({ rows, changes, productName }) {
                   >
                     <td
                       colSpan={4}
-                      className="px-2.5 pb-2.5 text-[11.5px] leading-relaxed text-slate-500"
+                      className="px-2.5 pb-2.5 text-xs leading-relaxed text-slate-500"
                     >
                       <span className="font-semibold text-slate-600">{NOTE_LABEL}</span> {noteText}
                     </td>
@@ -426,7 +426,7 @@ function MainTable({ rows, changes, productName }) {
           })}
         </tbody>
       </table>
-      <div className="mt-2 text-[11.5px] text-slate-400">
+      <div className="mt-2 text-xs text-slate-400">
         הסטטוסים כאן לקריאה בלבד — מעדכנת אותם מנהלת הלוגיסטיקה, במסך שלה.
       </div>
       <Hint id="project.logisticsStatuses" />
@@ -450,7 +450,7 @@ function HistorySection({ changes, rows, project, productName, hidden, money }) 
       <div className="mb-2.5 mt-0.5 text-xs text-slate-500">{HISTORY_LEAD}</div>
 
       {changes.length === 0 ? (
-        <div className="text-[12.5px] text-slate-400" data-testid="logistics-history-empty">
+        <div className="text-sm text-slate-400" data-testid="logistics-history-empty">
           אין שינויים עדיין.
         </div>
       ) : (
@@ -482,11 +482,11 @@ function HistorySection({ changes, rows, project, productName, hidden, money }) 
                       : productName(change.sku)}
                   </td>
                   <td className="px-2.5 py-2.5">
-                    <div className="text-[13.5px] font-bold text-slate-800">
+                    <div className="text-sm font-bold text-slate-800">
                       <Ltr>{signedDelta(change.delta_qty)}</Ltr>
                     </div>
                     {from != null && to != null && (
-                      <div className="text-[11.5px] text-slate-400">
+                      <div className="text-xs text-slate-400">
                         <Ltr>{`${from} → ${to}`}</Ltr>
                       </div>
                     )}
@@ -517,14 +517,14 @@ function HistorySection({ changes, rows, project, productName, hidden, money }) 
 
           {hidden ? (
             <div
-              className="mt-2.5 border-t border-slate-200 pt-2.5 text-[12.5px] text-slate-500"
+              className="mt-2.5 border-t border-slate-200 pt-2.5 text-sm text-slate-500"
               data-testid="logistics-totals-no-permission"
             >
               🔒 {MONEY_HIDDEN_SENTENCE} עמודת ההשפעה על ההכנסה וסך-השינויים מוצגים כ״—״.
             </div>
           ) : (
             <div
-              className="mt-2.5 border-t border-slate-200 pt-2.5 text-[12.5px] text-slate-600"
+              className="mt-2.5 border-t border-slate-200 pt-2.5 text-sm text-slate-600"
               data-testid="logistics-totals"
             >
               {/* ✏️ שלב 4 — קו-מפריד ולא נקודתיים (R2), עקבי עם שאר הקובץ; לא נמצא תקדים

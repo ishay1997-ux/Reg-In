@@ -480,7 +480,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
         type="button"
         variant="link"
         onClick={onBack}
-        className="mb-2 h-auto p-0 text-[12.5px] font-semibold text-teal-700"
+        className="mb-2 h-auto p-0 text-sm font-semibold text-teal-700"
         data-testid="smart-match-back"
       >
         ← חזרה למבט-על
@@ -552,7 +552,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
               הסבירה למשתמשת היעדר של דבר שמעולם לא ראתה — `src/CLAUDE.md` מעבר-מלאי: אין תפקיד ⇒ נמחק. */}
       {params?.reliabilityEnabled === false && (
         <div
-          className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] leading-relaxed text-slate-600"
+          className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-relaxed text-slate-600"
           data-testid="sm-reliability-off"
         >
           {/* 🔴 **איפוס 09/09/2026 — `מרכיב-האמינות`, לא `מרכיב "אמינות הגעה"`** (R11/R30):
@@ -576,14 +576,14 @@ export default function SmartMatchPage({ projectId, onBack }) {
         {/* ── טור ימני: מי כבר בפנים ─────────────────────────────────────── */}
         <section className="flex-1" data-testid="sm-event-column">
           <h2 className="text-sm font-bold text-slate-800">דיילות באירוע</h2>
-          <p className="mb-2 text-[11.5px] text-slate-500">
+          <p className="mb-2 text-xs text-slate-500">
             {`${counts.finallyApproved} מתוך ${required} אושרו סופית`}
             {waitingCount > 0 ? ` · ${waitingCount} אישרו זמינות וממתינות לאישורך` : ''}
           </p>
 
           {eventRows.length === 0 ? (
             <p
-              className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-[12.5px] text-slate-500"
+              className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-500"
               data-testid="sm-event-empty"
             >
               עדיין לא נשלח אף זימון לאירוע הזה — בחרי מועמדות מהטור השני ושלחי.
@@ -618,7 +618,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
               type="button"
               disabled={busy}
               onClick={approveAll}
-              className="mt-3 h-auto w-full rounded-lg bg-green-700 px-4 py-2 text-[13px] font-semibold text-white"
+              className="mt-3 h-auto w-full rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white"
               data-testid="sm-approve-all"
             >
               {`שלחי אישור סופי לכל מי שאישרה זמינות (${waitingCount})`}
@@ -632,7 +632,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
           {/* 🔴 שני ניסוחים שונים לאותה עובדה לא מוצגים יחד — כשאין מועמדות, ההסבר המפורט
               (`sm-candidates-empty` למטה) מכסה את זה לבד; שורה זו מוצגת רק כשיש מה לספור. */}
           {candidates.length > 0 && (
-            <p className="mb-2 text-[11.5px] text-slate-500">
+            <p className="mb-2 text-xs text-slate-500">
               {`${Math.min(VISIBLE_CANDIDATES, candidates.length)} ראשונות מתוך ${candidates.length} שעברו את הסינון · השאר בגלילה`}
             </p>
           )}
@@ -652,7 +652,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
                   type="button"
                   disabled={!available}
                   onClick={() => setAngle(key)}
-                  className={`rounded-lg border px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                  className={`rounded-lg border px-2.5 py-1 text-sm font-medium transition-colors ${
                     activeAngle === key
                       ? 'border-teal-600 bg-teal-50 font-semibold text-teal-700'
                       : 'border-slate-200 bg-white text-slate-600'
@@ -661,13 +661,13 @@ export default function SmartMatchPage({ projectId, onBack }) {
                 >
                   {meta.label}
                   {/* 🔴 **מכובה ומנומקת — לא נעלמת ולא ממיינת שגוי** (§⑥). */}
-                  {!available && <span className="text-[10.5px]"> — כבוי</span>}
+                  {!available && <span className="text-xs"> — כבוי</span>}
                 </button>
               )
             })}
           </div>
           {!isAngleAvailable('fastest', availability) && (
-            <p className="mb-2 text-[11px] text-slate-400" data-testid="sm-angle-note">
+            <p className="mb-2 text-xs text-slate-400" data-testid="sm-angle-note">
               {SORT_ANGLES.fastest.disabledNote}
             </p>
           )}
@@ -677,7 +677,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
           {candidates.length === 0 ? (
             <>
               <p
-                className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-[12.5px] text-slate-500"
+                className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-500"
                 data-testid="sm-candidates-empty"
               >
                 {/* 🔴 **איפוס 09/09/2026 — חמשת חוקי-הפסילה ירדו לשכבת-ההסבר** (`research-onboarding-content.md`
@@ -719,7 +719,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
                 type="button"
                 disabled={selected.length === 0 || busy}
                 onClick={sendInvites}
-                className="mt-3 h-auto w-full rounded-lg bg-teal-700 px-4 py-2 text-[13px] font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
+                className="mt-3 h-auto w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
                 data-testid="sm-send-invites"
               >
                 {`שלחי מייל תיאום (${selected.length} נבחרו)`}
@@ -729,7 +729,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
                   אמיתית, לעולם לא מאחורי המתג). הנימוק *"למה אין מספר"* ⑤ עבר לשכבה כמועמד
                   (`onboardingCopy.js smartMatch.roundsWhy`, לא נכתב כאן) — כולל התיקון שהמשקל
                   אינו קבוע (`0.62/0.38` הוא המחשה, `activeWeights`). */}
-              <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
                 כל זימון עודף שייסגר ישלח לדיילת הודעה ש&apos;המשרה כבר אוישה&apos;.
               </p>
               <Hint id="smartMatch.roundsWhy" />
@@ -764,7 +764,7 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
       data-testid={`sm-event-row-${row.hostess_id}`}
     >
       <div className="flex items-center gap-2">
-        <b className="flex-1 text-[13px] text-slate-800">{row.hostesses?.full_name}</b>
+        <b className="flex-1 text-sm text-slate-800">{row.hostesses?.full_name}</b>
         <StatusTag label={label} testId={`sm-status-${row.hostess_id}`} />
         <AssignmentRowMenu
           row={row}
@@ -780,7 +780,7 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
       {row.hostesses?.phone && (
         <a
           href={`tel:${row.hostesses.phone}`}
-          className="mt-0.5 block text-[11.5px] text-teal-700 hover:underline"
+          className="mt-0.5 block text-xs text-teal-700 hover:underline"
           dir="ltr"
           style={{ unicodeBidi: 'isolate', textAlign: 'right' }}
           data-testid={`sm-phone-${row.hostess_id}`}
@@ -792,7 +792,7 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
           🔴 **"נותרו N שעות" ולא תאריך-פקיעה** — המנהלת מחליטה לפי כמה זמן נשאר, לא
           לפי מתי בדיוק הקישור ימות. ⚠️ `null` = השאלה אינה רלוונטית (הדיילת כבר ענתה),
           ואז לא מוצג שעון כלל — שעון על שורה שנענתה נקרא כאילו משהו עוד תלוי ועומד. */}
-      <div className="mt-0.5 text-[11px] text-slate-400">
+      <div className="mt-0.5 text-xs text-slate-400">
         {/* 🐞 **`formatTimestamp` ולא `formatDate`** — `invite_sent_at` הוא חותמת-זמן, ולא
             תאריך. הגרסה הראשונה הציגה `09T20:33:42.432+00:00/08/2026` על המסך; נתפס
             בצילום-מסך ולא בבדיקה. ‏`formatDate` דוחה עכשיו קלט כזה במקום לפלוט זבל. */}
@@ -802,7 +802,7 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
       </div>
 
       {row.is_shift_lead && (
-        <span className="mt-1 block text-[11px] font-semibold text-green-700">★ אחראית משמרת</span>
+        <span className="mt-1 block text-xs font-semibold text-green-700">★ אחראית משמרת</span>
       )}
     </li>
   )
@@ -823,7 +823,7 @@ const CHIP_CLASS = {
 function Chip({ family = 'ctx', children, testId, title }) {
   return (
     <span
-      className={`rounded-full border px-2 py-0.5 text-[11px] ${CHIP_CLASS[family]}`}
+      className={`rounded-full border px-2 py-0.5 text-xs ${CHIP_CLASS[family]}`}
       data-testid={testId}
       title={title}
     >
@@ -869,12 +869,12 @@ function CandidateCard({
 
       <div className="flex-1">
         <div className="flex items-center gap-1.5">
-          <b className="text-[13px] text-slate-800">{candidate.full_name}</b>
+          <b className="text-sm text-slate-800">{candidate.full_name}</b>
           {candidate.pinned && <Chip family="pin">מצוינת אצל הלקוח הזה</Chip>}
         </div>
         {/* בידוד-כיווניות: מספר-טלפון בתוך טקסט עברי מתהפך בלי זה — אותה משפחה בדיוק
             כמו ה-₪ ב-`Money` (המופעים השביעי והשמיני, `src/CLAUDE.md`). */}
-        <div className="mt-0.5 text-[11.5px] text-slate-500">
+        <div className="mt-0.5 text-xs text-slate-500">
           <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
             {candidate.phone}
           </span>

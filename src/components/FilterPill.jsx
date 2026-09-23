@@ -30,7 +30,7 @@ export default function FilterPill({ on, tone, onClick, disabled, title, childre
       disabled={disabled}
       aria-pressed={on}
       title={title}
-      className={`h-auto rounded-full border px-3 py-1 text-[12.5px] ${on ? active : off} ${
+      className={`h-auto rounded-full border px-3 py-1 text-sm ${on ? active : off} ${
         disabled ? 'opacity-50' : ''
       }`}
       data-testid={testId}

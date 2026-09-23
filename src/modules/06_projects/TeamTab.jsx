@@ -232,7 +232,7 @@ export default function TeamTab({
 
       {/* המשפט האדום היחיד של המסך — המילים נושאות אותו גם בלי הצבע (§3.4). */}
       {!noInvites && headline && (
-        <p className="mb-3.5 text-[13px] leading-relaxed" data-testid="team-headline">
+        <p className="mb-3.5 text-sm leading-relaxed" data-testid="team-headline">
           <span className="font-semibold text-red-600">{headline.lead}</span>{' '}
           <span className="text-slate-600">{headline.rest}</span>
         </p>
@@ -321,7 +321,7 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             title={blockedTitle}
             onClick={() => onScopeChange?.()}
             className={cn(
-              'rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50',
+              'rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50',
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
             data-testid="team-scope-button"
@@ -349,9 +349,7 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
           (הזוג היחיד עם canEdit במטריצה — מנכ"ל ומנהלת פרויקטים — גם קורא 'דיילות' תמיד,
           screens-approved.md §⑤). */}
       {canReadHostesses && (
-        <p className="mb-3 text-[11.5px] leading-relaxed text-slate-400">
-          {SMART_MATCH_CLARIFICATION}
-        </p>
+        <p className="mb-3 text-xs leading-relaxed text-slate-400">{SMART_MATCH_CLARIFICATION}</p>
       )}
     </>
   )
@@ -410,7 +408,7 @@ function MainTable({ finalRows, now, inviteValidityHours }) {
               </td>
               <td className="px-2.5 py-2.5 text-xs text-slate-500">{whenCell(row)}</td>
               <td
-                className="px-2.5 py-2.5 text-[12.5px] leading-relaxed text-slate-600"
+                className="px-2.5 py-2.5 text-sm leading-relaxed text-slate-600"
                 data-testid={`team-meaning-${row.hostess_id}`}
               >
                 {meaning}
@@ -439,7 +437,7 @@ function ScopeChangesSection({ project, hostessChanges, required }) {
     <div className="mt-6" data-testid="team-scope-changes">
       <h2 className="text-sm font-bold text-slate-700">שינויי-תכולה בכמות הדיילות</h2>
       {hostessChanges.length === 0 ? (
-        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-slate-600">
+        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-600">
           <b>אין.</b>{' '}
           {scopeFactSentence({
             required,
@@ -452,7 +450,7 @@ function ScopeChangesSection({ project, hostessChanges, required }) {
           {hostessChanges.map((change) => (
             <div
               key={change.change_id}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12.5px] text-slate-600"
+              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
               data-testid={`team-scope-change-${change.change_id}`}
             >
               <b>
@@ -536,10 +534,7 @@ function RoundsHistory({ rows, finalCount, open, onToggle }) {
               ))}
             </tbody>
           </table>
-          <p
-            className="px-0.5 pt-2 text-[11.5px] text-slate-400"
-            data-testid="team-history-footnote"
-          >
+          <p className="px-0.5 pt-2 text-xs text-slate-400" data-testid="team-history-footnote">
             {historyFootnote(rows.length, finalCount)}
           </p>
         </div>
@@ -555,7 +550,7 @@ function CancelledVariant({ project, finalRows, canEdit, canReadHostesses }) {
   return (
     <div className="pt-3" data-testid="team-tab">
       <div
-        className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-slate-600"
+        className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-600"
         data-testid="team-cancelled-fact"
       >
         {/* הטון דרך resolveProjectTone — SSOT יחיד לתווית/צבע-סטטוס-פרויקט (כלל ברזל 14), אותו
@@ -602,12 +597,12 @@ function CancelledVariant({ project, finalRows, canEdit, canReadHostesses }) {
           <button
             type="button"
             disabled
-            className="cursor-not-allowed rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-[13px] font-medium text-slate-700 opacity-50"
+            className="cursor-not-allowed rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 opacity-50"
             data-testid="team-scope-button"
           >
             שני כמות דיילות
           </button>
-          <span className="text-[11.5px] text-slate-400" data-testid="team-cancelled-reason">
+          <span className="text-xs text-slate-400" data-testid="team-cancelled-reason">
             {CANCELLED_SCOPE_REASON}
           </span>
         </p>

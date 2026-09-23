@@ -63,6 +63,21 @@ export function agingBucketForInvoice({ invoiceSentAt, termsDays, today }) {
 }
 
 /**
+ * ‏₪ שלמים לשורה בודדת — **הבית היחיד של "איך מעגלים שורת-כסף אחת" במודול.**
+ *
+ * 🔴 **נולדה 18/09/2026, סגן-לילה:** `roundedShekelSum` ו-`addTo` (למטה) עיגלו כל אחת
+ * בנפרד עם `Math.round` משלה — אותה נוסחה, בשני מקומות, בלי בית משותף. היום שתיהן
+ * מסכימות (📊 נבדק ב-`summariseAging` מול `roundedShekelSum` על אותם פיקסצ'רים — זהות),
+ * אבל שני מימושים עצמאיים לאותה הגדרה הם בדיוק מה שכלל-ברזל 14 (SSOT ללוגיקה עסקית)
+ * קיים כדי למנוע: מי שיתקן אחד ולא את השני לא יגלה מהבדיקות הקיימות, כי אין בדיקה
+ * שמשווה בין השניים ישירות. אין כאן שינוי-התנהגות — שתי הקריאות הישנות מוחלפות בקריאה
+ * לפונקציה הזו, בית-בבית.
+ */
+function roundShekelRow(value) {
+  return Math.round(value)
+}
+
+/**
  * ‏₪ שלמים: **מעגלים כל שורה ואז מסכמים** — ולא להפך.
  *
  * 🔴 **סדר-העיגול הוא חלק מההגדרה, לא פרט-מימוש.** נמדד חי 16/09/2026 על 35 החשבוניות
@@ -73,7 +88,7 @@ export function agingBucketForInvoice({ invoiceSentAt, termsDays, today }) {
 export function roundedShekelSum(amounts) {
   return amounts.reduce((sum, value) => {
     const n = toFinanceNumber(value, 'amount')
-    return n === null ? sum : sum + Math.round(n)
+    return n === null ? sum : sum + roundShekelRow(n)
   }, 0)
 }
 
@@ -81,7 +96,7 @@ const emptyTotals = () => ({ n: 0, amount: 0 })
 
 const addTo = (totals, amount) => {
   totals.n += 1
-  totals.amount += Math.round(amount)
+  totals.amount += roundShekelRow(amount)
 }
 
 /**

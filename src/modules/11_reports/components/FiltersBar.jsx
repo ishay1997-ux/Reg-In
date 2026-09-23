@@ -45,7 +45,7 @@ function CustomerPicker({ customers, customerId, onCustomerChange, disabledReaso
         disabled={Boolean(disabledReason)}
         title={disabledReason || undefined}
         data-testid="reports-customer-filter"
-        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[12.5px] text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:opacity-50"
+        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:opacity-50"
       >
         <option value="">כל הלקוחות</option>
         {customers.map((c) => (

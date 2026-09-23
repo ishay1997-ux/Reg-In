@@ -201,7 +201,7 @@ function CompensationRow({ cancelType, percent, standardPercent, reasonLine, lad
         פיצוי לדיילות: <Ltr>{percent === null ? '—' : `${percent}%`}</Ltr>
       </b>
       {reasonLine ? <> — {reasonLine}</> : null}
-      <span className="mt-0.5 block text-[11px] text-slate-500" data-testid="cancel-ladder">
+      <span className="mt-0.5 block text-xs text-slate-500" data-testid="cancel-ladder">
         {subLine}
       </span>
     </>
@@ -222,7 +222,7 @@ function TypeOption({ type, selected, submitting, onSelect }) {
       onClick={() => onSelect(type.value)}
     >
       <span
-        className={`w-3.5 flex-none text-center text-[13px] ${
+        className={`w-3.5 flex-none text-center text-sm ${
           selected ? 'text-teal-700' : 'text-slate-400'
         }`}
         aria-hidden="true"
@@ -230,11 +230,11 @@ function TypeOption({ type, selected, submitting, onSelect }) {
         {selected ? '⦿' : '○'}
       </span>
       <span className="flex-1">
-        <span className="block text-[13.5px] font-semibold text-slate-800">{type.title}</span>
-        <span className="mt-0.5 block text-[11.5px] leading-relaxed text-slate-500">
+        <span className="block text-sm font-semibold text-slate-800">{type.title}</span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
           {type.description}
         </span>
-        <span className="mt-0.5 block text-[11.5px] leading-relaxed font-semibold text-amber-700">
+        <span className="mt-0.5 block text-xs leading-relaxed font-semibold text-amber-700">
           {type.moneyLine}
         </span>
       </span>
@@ -482,14 +482,14 @@ function CancelProjectBody({ project, onOpenChange, onCancelled, now }) {
         />
         {reasonEmpty && cancelType ? (
           <span
-            className="text-[11px] font-semibold text-red-600"
+            className="text-xs font-semibold text-red-600"
             role="alert"
             data-testid="cancel-reason-error"
           >
             {EMPTY_CANCEL_REASON_MESSAGE}
           </span>
         ) : (
-          <span className="text-[11px] text-slate-500">
+          <span className="text-xs text-slate-500">
             נשמרת בכרטיס הפרויקט וזמינה לדו"חות — חובה בכל אחד משלושת הסוגים.
           </span>
         )}

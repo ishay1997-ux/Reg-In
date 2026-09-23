@@ -188,7 +188,10 @@ function HebrewTooltip({ active, payload, label, unit }) {
 
 function axisProps(extra = {}) {
   return {
-    tick: { fontSize: 11, fill: AXIS_TEXT },
+    // 🔤 13 ולא 11: רצפת-הסקאלה (`--text-xs`, src/index.css). Recharts מצייר SVG ולכן
+    // אינו יורש מחלקת-Tailwind — הגודל נמסר כאן במספר, וזה בדיוק למה הריפקטור המכני
+    // של 422 המחלקות פסח עליו. התוכנית §2 נוקבת בשורה הזו במפורש.
+    tick: { fontSize: 13, fill: AXIS_TEXT },
     stroke: AXIS_COLOR,
     ...extra,
   }
@@ -225,7 +228,8 @@ function renderRefLines(refLines, yAxisId) {
     // בלי השם שלו. ‏📐6 דורש תווית נקובה (*"חלוקה שווה"* על קו-השוויון), ולכן זה פגם
     // ולא קישוט. **הצורה שעובדת היא רכיב-ילד.**
     const labelNode = ref.label ? (
-      <Label value={ref.label} position="insideTopRight" fill={AXIS_TEXT} fontSize={11} />
+      // 🔤 13 — אותה רצפה כמו צירי-הגרף למעלה; תווית בתוך SVG, לא מחלקת-Tailwind.
+      <Label value={ref.label} position="insideTopRight" fill={AXIS_TEXT} fontSize={13} />
     ) : null
     const common = {
       stroke: AXIS_COLOR,
@@ -791,10 +795,7 @@ function swatchStyle(s, index) {
 function ChartLegend({ series }) {
   if (series.length < 2) return null
   return (
-    <ul
-      className="mb-2 flex flex-wrap gap-3 text-[11.5px] text-slate-600"
-      data-testid="chart-legend"
-    >
+    <ul className="mb-2 flex flex-wrap gap-3 text-xs text-slate-600" data-testid="chart-legend">
       {series.map((s, index) => (
         <li key={s.key} className="flex items-center gap-1.5">
           <span
@@ -820,7 +821,7 @@ function ShapeLegend({ chart }) {
   const labels = { ...SHAPE_FALLBACK, ...(chart.shape_labels ?? {}) }
   return (
     <ul
-      className="mb-2 flex flex-wrap gap-3 text-[11.5px] text-slate-600"
+      className="mb-2 flex flex-wrap gap-3 text-xs text-slate-600"
       data-testid="chart-shape-legend"
     >
       <li className="flex items-center gap-1.5">
@@ -853,7 +854,7 @@ function DiagonalLegend({ refLines }) {
   if (diagonals.length === 0) return null
   return (
     <ul
-      className="mb-2 flex flex-wrap gap-3 text-[11.5px] text-slate-600"
+      className="mb-2 flex flex-wrap gap-3 text-xs text-slate-600"
       data-testid="chart-refline-legend"
     >
       {diagonals.map((ref) => (
@@ -914,13 +915,13 @@ export default function ChartCard({
       data-testid={`chart-card-${chart.type}`}
     >
       {/* §⑤ #2 — הכותרת העברית נשארת **מחוץ** לעטיפת-ה-LTR, ברמת הכרטיס. */}
-      <h3 className="mb-2.5 text-[13.5px] font-semibold text-slate-700">{title}</h3>
+      <h3 className="mb-2.5 text-sm font-semibold text-slate-700">{title}</h3>
       {/* ‏`chart.note` (תוספת C8 16/09) — **שורת-פירוש מתחת לכותרת**: מה העמודות אומרות,
           מה קו-הייחוס מסמן, ואילו שורות נכללו. ⚠️ **בסיס ולא רמז** (📐2 · ⑩): הכרטיס של
           גרף-הגיול נוקב במפורש בשורת-פירוש לכל דלי, ובלי המקום הזה היא הייתה מומצאת
           שוב בכל לשונית. שכבת-ההטמעה (`<Hint>`) היא שכבה נפרדת ואינה מחליפה אותה. */}
       {chart.note && (
-        <p className="mb-2 text-[11px] leading-relaxed text-slate-500" data-testid="chart-note">
+        <p className="mb-2 text-xs leading-relaxed text-slate-500" data-testid="chart-note">
           {chart.note}
         </p>
       )}
@@ -930,7 +931,7 @@ export default function ChartCard({
           כותרת + המשפט הנעול, ו**בלי** מקרא/עטיפת-LTR/טבלה — שלושתם מתארים דאטה שאינה שם.
           🔤 הנוסח מגיע מ-`reportsCopy.js`, אותו משפט בדיוק שהמעטפת אומרת. */}
       {data.length === 0 ? (
-        <p className="py-6 text-center text-[12.5px] text-slate-500" data-testid="chart-empty">
+        <p className="py-6 text-center text-sm text-slate-500" data-testid="chart-empty">
           {emptyText}
         </p>
       ) : (
@@ -990,7 +991,7 @@ export default function ChartCard({
       {soWhat && (
         // 📐23 · הכרעה 15-ג: שורת-"אז מה" — **בלי מילוי-רקע**, קו-ימני דק בלבד.
         <p
-          className="mt-3 border-r-[3px] border-teal-600 px-3.5 py-1.5 text-[13px] font-semibold text-teal-700"
+          className="mt-3 border-r-[3px] border-teal-600 px-3.5 py-1.5 text-sm font-semibold text-teal-700"
           data-testid="chart-so-what"
         >
           {soWhat}
