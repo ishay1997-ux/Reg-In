@@ -24,7 +24,7 @@
 --    **הספירות החיות:** 38 טבלאות-בסיס · 67 פונקציות · 65 מדיניות (53 ב-`public`, 12 על `storage.objects`) ·
 --    77 אינדקסים · 29 טריגרים. **השאילתה שמחזירה את חמשתן בשורה אחת יושבת בסעיף 24, מעל ספירת-הפונקציות** —
 --    כדי שהמספר הבא שייכתב כאן יימדד ולא ייגזר מהקודם.
---    ✏️ **23/09/2026 — L1 (מיגרציית-הטקסט של מ11 פזה ב׳) הוחלה: גופי-פונקציה בלבד ⇒ הספירות לא זזו.**
+--    ✏️ **23/09/2026 — L1 ו-L2 (מיגרציות-הטקסט של מ11 פזה ב׳) הוחלו: גופי-פונקציה בלבד ⇒ הספירות לא זזו.**
 --    הפירוט בסעיף 24, בלוק מודול 11 (מעל `report_m02_exec_overview`).
 --    ✅ ✏️ **תוקן-במקום 17/09/2026 (סבב J2):** הפסקה שעמדה כאן אמרה
 --    ש-`20260916194500_module11_i2_rpc_round3.sql` **טרם הוחל**. הוא הוחל באותו ערב ב-20:4X,
@@ -2566,6 +2566,9 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --    חתימות · ACL · הערות-פונקציה — ללא שינוי (נמדד: 16 פונקציות, 0 כפילויות, proacl זהה).
 --    חדש במטען: `population.summary` (שבב-ההיקף) בכל 13 · `drill_key` בדאטום-הגרף של m09 ·
 --    `meta.period_filter_ignored` ב-m15 · m20 = 2 גרפים · m22 = 3 אריחים.
+-- ✏️ **23/09/2026 — וסבב-הטקסט השני L2 הוחל** (`supabase/migrations/20260923200000_module11_l2_tile_copy.sql`, שורה אחת
+--    במסד): תת-שורות אריחים ב-m07 · m14 · m15 · m16 · m17 · m19 · m20 · m22. ⇒ **"הגוף החי" של שמונתן = … + L1 + L2.**
+--    חתימות · ACL · הערות — ללא שינוי (נמדד). מצב-הגוף המדויק ניתן לשחזור: `phase-b-migration/bodies.mjs` + `expect-md5.mjs`.
 -- report_m02_exec_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb, p_page integer, p_page_size integer) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'כספים'
 --   → supabase/migrations/20260916052600_module11_d_rpcs_executive.sql (המקור)
