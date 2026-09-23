@@ -166,7 +166,7 @@ describe('CustomerDetailsPage — חיבור לחלון-הייצוא', () => {
     const { total } = deriveQuoteAmount(q, 18)
     expect(total).toBeGreaterThan(0)
     const cells = () => preview.getAllByRole('cell').map((c) => c.textContent)
-    await waitFor(() => expect(cells()).toContain(String(Math.round(total))))
+    await waitFor(() => expect(cells()).toContain(Math.round(total).toLocaleString('en-US')))
     expect(cells()).toContain(QUOTE_STATUS_LABELS.approved)
     expect(cells()).toContain('כן') // נשלחה ללקוח — sentIds מכיל 901
   })

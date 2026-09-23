@@ -229,9 +229,12 @@ export default function ExportConfigPanel({
   onSelectAll,
   allSelected,
   topN,
+  cap,
   showAll,
   onShowAllChange,
 }) {
+  // רשימת-שיא (מ02·מ07·מ19) ותקרה (מ04·מ06) הן שני דברים שונים — אבל מציעות אותה בחירה.
+  const allRowsOffer = topN ?? cap
   const ordered = order.map((key) => columns.find((item) => item.key === key)).filter(Boolean)
 
   return (
@@ -306,7 +309,7 @@ export default function ExportConfigPanel({
       )}
 
       {/* 🔴 רשימת-שיא היא הדוח, לא חיתוך — ולכן היא ברירת-המחדל, והנוסח נוקב במספר האוכלוסייה. */}
-      {topN && (
+      {allRowsOffer && (
         <label className="flex items-center gap-2 text-xs text-slate-600">
           <input
             type="checkbox"
@@ -314,7 +317,7 @@ export default function ExportConfigPanel({
             onChange={(event) => onShowAllChange?.(event.target.checked)}
             data-testid="export-show-all"
           />
-          {`כל ${topN.total} השורות, ולא רק ${topN.label}`}
+          {`כל ${allRowsOffer.total} השורות, ולא רק ${allRowsOffer.label}`}
         </label>
       )}
 

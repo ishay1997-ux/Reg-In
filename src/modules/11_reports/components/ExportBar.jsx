@@ -190,6 +190,7 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
           rows={data?.rows ?? []}
           rowTotal={data?.rowTotal ?? null}
           topN={data?.topN ?? null}
+          cap={data?.cap ?? null}
           loading={loading}
           error={error}
           onRetry={() => setTick((value) => value + 1)}

@@ -40,8 +40,25 @@ import { Filter } from 'lucide-react'
 const HEAD_CELL = 'sticky top-0 bg-slate-50 px-2 py-1 text-right font-medium text-slate-600'
 const BODY_CELL = 'whitespace-nowrap border-t border-slate-200 px-2 py-1 text-right'
 
+// 🔴 **"כך ייראה הקובץ" — ולכן מספר מוצג בפורמט שהקובץ נושא, לא בערך הגולמי.**
+// 📊 נמדד 23/09/2026 בדוח "הנחות ורווחיות": התצוגה הראתה `52.3095131596135` ו-`7578.87`,
+// ובקובץ עצמו אותם תאים נקראים `52.3` ו-`7,579` (`PERCENT_FORMAT` · `MONEY_FORMAT` ב-`reportsExport.js`).
+// ⇒ התצוגה סתרה את הקובץ שהיא מבטיחה להראות. הערך עצמו נשאר מספר מלא בקובץ — רק התצוגה מעוגלת.
+// מוכרים כאן רק פורמטים בצורת `0` · `0.0` · `#,##0` וכו'; כל פורמט אחר ⇒ הערך הגולמי, כמו קודם.
+function formatLikeExcel(n, format) {
+  const match = /^(#,##)?0(?:\.(0+))?$/.exec(format ?? '')
+  if (!match) return String(n)
+  const digits = match[2]?.length ?? 0
+  return n.toLocaleString('en-US', {
+    useGrouping: Boolean(match[1]),
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })
+}
+
 function cellValue(cell) {
   if (cell === null || cell === undefined) return ''
+  if (typeof cell.value === 'number' && cell.format) return formatLikeExcel(cell.value, cell.format)
   return String(cell.value ?? '')
 }
 

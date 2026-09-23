@@ -26,6 +26,16 @@ const TOP_N_LABELS = Object.freeze({
   report_m19_customers_overview: '8 הלקוחות הגדולים',
 })
 
+// 🔴 **ושני אלה כן חתוכים — תקרה של 50, לא רשימת-שיא** (כותרת K1: *"תקרה אמיתית, 50 מתוך n"*).
+// התווית נגזרת מהמיון ב-SQL (`order by d desc` · `order by gap desc`), כדי שהתיבה תאמר **אילו**
+// 50 נכנסו. ✅ הכרעת-ישי 23/09/2026 — *"מאשר לפי המלצתך"* — על הוספת התיבה לשניהם.
+// 📊 נבדק לפני החיבור: `row_total` של שניהם סופר בדיוק את האוכלוסייה שממנה נחתכות השורות
+// (מ04: `events` אחרי סינון-המדרג · מ06: `paired where ag > eg`) ⇒ `p_page_size = row_total` מחזיר הכול.
+const CAPPED_LABELS = Object.freeze({
+  report_m04_discounts: '50 ההנחות הגבוהות',
+  report_m06_staffing: '50 הפערים הגדולים',
+})
+
 // 🔴 **חמשת הדוחות שהשרת חותך, ולכן היחידים שמקבלים `p_page_size`** (מיגרציית K1, 17/09/2026 —
 // `20260917150000_module11_k1_pagination_params.sql`, הכותרת). 11 האחרים מחזירים הכול ממילא,
 // ופרמטר שאינו בחתימה שלהם היה מפיל את הקריאה. **"כל השורות" = `p_page_size` בגודל האוכלוסייה
@@ -75,17 +85,24 @@ export async function fetchExportData({
 
   const total = payload?.meta?.row_total ?? null
   const label = TOP_N_LABELS[rpc] ?? null
+  const capLabel = CAPPED_LABELS[rpc] ?? null
+  const rows = payload?.rows ?? []
 
   return {
     // מזהה-הדוח נוסע עם הנתונים — `ExportBar` משתמש ב-`row_total` רק כשהוא של אותו דוח.
     rpc,
     columns: payload?.columns ?? [],
-    rows: payload?.rows ?? [],
+    rows,
     // ⚠️ `row_total` שאינו גדול ממספר השורות אינו "חיתוך" — ולכן לא נאמר עליו דבר.
     rowTotal: total,
     windowLabel: payload?.window?.label ?? null,
     blockedReason: payload?.meta?.export_blocked_reason ?? null,
     // רשימת-שיא מוצהרת רק כשידוע גם גודל האוכלוסייה — אחרת המשפט היה נוקב במספר שאין לו מקור.
     topN: label && total !== null ? { label, total } : null,
+    // תקרה מוצעת רק כשבאמת נחתך משהו — אבל נשארת גם אחרי ששלפנו הכול, כדי שאפשר יהיה לבטל.
+    cap:
+      capLabel && total !== null && (wantsAll || total > rows.length)
+        ? { label: capLabel, total }
+        : null,
   }
 }

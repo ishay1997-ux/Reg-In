@@ -139,7 +139,8 @@ describe('CustomersPage — חיבור לחלון-הייצוא', () => {
     expect(typeof totalRevenue).toBe('number')
     expect(totalRevenue).toBeGreaterThan(0)
     // התא בתצוגה-המקדימה הוא מספר מעוצב (`#,##0`) — משווים לאותו מספר, מעוגל כמו המנוע.
-    const cellText = String(Math.round(totalRevenue))
+    // ✏️ 23/09/2026: מאז שהתצוגה מציגה את הפורמט של הקובץ — עם מפריד-אלפים, כמו באקסל.
+    const cellText = Math.round(totalRevenue).toLocaleString('en-US')
     await waitFor(() =>
       expect(preview.getAllByRole('cell').some((c) => c.textContent === cellText)).toBe(true),
     )

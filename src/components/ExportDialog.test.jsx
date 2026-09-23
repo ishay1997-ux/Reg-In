@@ -50,6 +50,21 @@ const headers = () =>
     .map((cell) => cell.textContent)
 
 describe('ExportDialog — התצוגה המקדימה היא הקובץ', () => {
+  // 📊 23/09/2026: "הנחות ורווחיות" הראה בתצוגה `52.3095131596135` בעוד הקובץ מציג `52.3`.
+  it('🔴 מספר מוצג בפורמט שהקובץ נושא — כסף עם מפריד-אלפים, אחוז בספרה אחת', () => {
+    setup({
+      columns: [
+        { key: 'amount', label: 'סכום', format: 'money' },
+        { key: 'margin', label: 'שולי-רווח', format: 'percent' },
+      ],
+      rows: [{ amount: 7578.87, margin: 52.3095131596135 }],
+    })
+    const preview = screen.getByTestId('export-preview')
+    expect(preview).toHaveTextContent('7,579')
+    expect(preview).toHaveTextContent('52.3')
+    expect(preview).not.toHaveTextContent('52.3095')
+  })
+
   it('מציג את העמודות שהוכרזו, בסדר שהוכרז', () => {
     setup()
     expect(headers()).toEqual(['פרויקט', 'לקוח', 'סכום', 'ימי איחור'])

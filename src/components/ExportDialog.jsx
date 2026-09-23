@@ -61,6 +61,7 @@ export default function ExportDialog({
   rows = [],
   rowTotal = null,
   topN = null,
+  cap = null,
   showAll = false,
   onShowAllChange,
   loading = false,
@@ -98,6 +99,8 @@ export default function ExportDialog({
   // ‏why: `report_m09_aging` מכריזה עמודות שונות לרמה 0 ולרמה 1. העדפה ששרדה מעבר היא בדיוק
   // המצב שבו מפתחות זרים נכנסים לסדר — ומ-`applyColumnOrder` הם ייזרקו, אבל **התנאים** היו
   // נשארים ומסננים על עמודה שאינה קיימת. ⇒ מאפסים את שלושתם יחד.
+  // ✏️ 23/09/2026: היום רמת-דריל **אינה נגישה** מהחלון — `fetchExportData` שולח תמיד `drill: null`.
+  // המקרה החי הוא החלפת-דוח; הדריל נשאר כאן כנימוק לכך שהאיפוס נקשר לעמודות ולא לשם-הדוח.
   //
   // 🔑 **האיפוס נעשה **בזמן הרינדור** ולא ב-`useEffect`, וזה לא סגנון:** ‏`setState` בתוך אפקט
   // מרנדר פעם אחת עם המצב הישן ואז שוב עם החדש — כלומר **התצוגה-המקדימה הייתה מהבהבת בעמודות
@@ -313,6 +316,7 @@ export default function ExportDialog({
             onSelectAll={selectAll}
             allSelected={selected.size >= permitted.length}
             topN={topN}
+            cap={cap}
             showAll={showAll}
             onShowAllChange={onShowAllChange}
           />

@@ -164,3 +164,42 @@ describe('ExportBar — "כל השורות" מתאפסת עם כל שינוי-מ
     expect(screen.getByTestId('export-show-all')).not.toBeChecked()
   })
 })
+
+// 🔴 הכרעת-ישי 23/09/2026 — *"מאשר לפי המלצתך"*: התיבה גם במ04/מ06, שבהם השרת חותך ב-50 (תקרה, לא רשימת-שיא).
+describe('ExportBar — "כל השורות" בדוחות עם תקרה (מ04 · מ06)', () => {
+  const capped = (n, total) => ({
+    ...PAYLOAD,
+    rows: Array.from({ length: n }, (_, i) => ({ project_id: 1000 + i, amount: 100 + i })),
+    meta: { row_total: total },
+  })
+
+  it('נחתך ⇒ התיבה נוקבת באילו 50 נכנסו, וסימון שולף הכול ונשאר ניתן לביטול', async () => {
+    callReport.mockResolvedValue(capped(50, 80))
+    renderBar({}, '/reports?tab=exec&report=discounts')
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    const box = await screen.findByTestId('export-show-all')
+    expect(box.closest('label')).toHaveTextContent('כל 80 השורות, ולא רק 50 ההנחות הגבוהות')
+    expect(screen.getByTestId('export-count')).toHaveTextContent('הקובץ יכלול 50 שורות מתוך 80')
+    callReport.mockResolvedValue(capped(80, 80))
+    fireEvent.click(box)
+    await waitFor(() => expect(callReport).toHaveBeenCalledTimes(2))
+    expect(callReport.mock.calls[1]).toEqual([
+      'report_m04_discounts',
+      expect.objectContaining({ pageSize: 80 }),
+    ])
+    await waitFor(() =>
+      expect(screen.getByTestId('export-count')).toHaveTextContent('הקובץ יכלול 80 שורות'),
+    )
+    expect(screen.getByTestId('export-show-all')).toBeChecked()
+  })
+
+  it('לא נחתך (≤50) ⇒ אין תיבה — אין מה להוסיף', async () => {
+    callReport.mockResolvedValue(capped(12, 12))
+    renderBar({}, '/reports?tab=exec&report=staffing')
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    await waitFor(() =>
+      expect(screen.getByTestId('export-count')).toHaveTextContent('הקובץ יכלול 12 שורות'),
+    )
+    expect(screen.queryByTestId('export-show-all')).not.toBeInTheDocument()
+  })
+})
