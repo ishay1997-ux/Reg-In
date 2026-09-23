@@ -403,7 +403,13 @@ test.describe('מודול 11 · קידוח (📐13) — מ9 בלבד', () => {
     await expect(page.getByTestId('report-crumbs')).toHaveCount(0)
     await expect(page.getByTestId('report-so-what')).toBeVisible()
     await clickCentered(page.getByTestId('report-row-drillable').first())
-    await expect(page).toHaveURL(/\/quotes\/\d+\/edit/)
+    // ✏️ 24/09/2026 (ליטושי-הכנס, חבילה 0): **בודקים תוכן, לא רק כתובת.** הבדיקה הקודמת וידאה
+    // `/quotes/N/edit` בלבד — ועברה ירוק בזמן שבייצור נפתח טופס-עריכה **ריק ופעיל** על הצעה שנדחתה.
+    // הדלת היא עכשיו חלון-המסמך, והוא חייב לשאת את **מספר ההצעה שבכתובת**.
+    await expect(page).toHaveURL(/\/quotes\?view=\d+/)
+    const quoteId = new URL(page.url()).searchParams.get('view')
+    await expect(page.getByTestId('quote-document-title')).toContainText(`הצעת מחיר ${quoteId}`)
+    await expect(page.getByTestId('quote-builder-document')).toHaveCount(0)
   })
 
   test('מ9: אריח-דלת פותח מדרג, הפירורים נוקבים בו — והייצוא דווקא לא', async ({ page }) => {

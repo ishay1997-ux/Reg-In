@@ -72,6 +72,40 @@ const EMPTY_FORM = {
   notes: '',
 }
 
+// 🚪 **הצעה שאי-אפשר לערוך — הודעה ודרך-קדימה, לעולם לא טופס** (ליטושי-הכנס, חבילה 0, 24/09/2026).
+// ‏`closed`: הדרך קדימה היא **מסמך ההצעה** — אותו חלון שרשימת-ההצעות פותחת (`/quotes?view=`),
+// ולא "נסי שוב" שלא ישנה דבר. ‏`missing`: חזרה לרשימה, בנוסח של `customer-missing`
+// (`CustomerDetailsPage.jsx`) — R30, אותו רכיב = אותו נוסח. הנוסח "לא נמצאה, או שאין לך הרשאה
+// אליה" הוא זה של ארבעת אתרי-"לא נמצא/ה" במודול 4.
+const CLOSED_VERB = { approved: 'אושרה', rejected: 'נדחתה' }
+
+function QuoteUnavailable({ kind, status, quoteId }) {
+  const navigate = useNavigate()
+  const closed = kind === 'closed'
+  return (
+    <div
+      className="rounded-2xl bg-white p-8 text-center shadow-md"
+      role="alert"
+      data-testid="quote-unavailable"
+    >
+      <p className="mb-4 font-medium text-slate-600">
+        {closed
+          ? `ההצעה כבר ${CLOSED_VERB[status] ?? 'נסגרה'}, ולכן אי-אפשר לערוך אותה.`
+          : 'ההצעה לא נמצאה, או שאין לך הרשאה אליה.'}
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => navigate(closed ? `/quotes?view=${quoteId}` : '/quotes')}
+        className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
+        data-testid={closed ? 'quote-unavailable-view' : 'quote-unavailable-back'}
+      >
+        {closed ? 'פתחי את מסמך ההצעה' : 'חזרה לרשימת ההצעות'}
+      </Button>
+    </div>
+  )
+}
+
 // שדה-טופס רגיל (תווית מעל, הודעת-שגיאה מתחת) — קומפוננטה עליונה (react-hooks/static-components).
 // ⚠️ הסימון מוזרק לשדה עצמו ולא נכתב באתר-הקריאה (סקירת 3.7): עד 31/07/2026 רק בוחר-הלקוח
 // סימן את עצמו, ושם-האירוע/תאריך/מיקום קיבלו טקסט אדום מתחת ומסגרת אפורה רגילה — כלומר
@@ -122,6 +156,8 @@ export default function QuoteBuilderPage() {
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
+  // ‏`{kind:'missing'}` · `{kind:'closed', status}` · null — ר' `QuoteUnavailable`.
+  const [unavailable, setUnavailable] = useState(null)
   const [saving, setSaving] = useState(false)
   const [customers, setCustomers] = useState([])
   const [catalog, setCatalog] = useState({ products: [], tiers: [], params: [] })
@@ -168,6 +204,12 @@ export default function QuoteBuilderPage() {
           getQuoteScreenParams(),
         ])
         if (cancelled) return
+        // 🔴 **הניקוי כאן, לפני הענפים — ולא אחריהם.** עד 24/09/2026 היה `setLoadError('')` בסוף
+        // הבלוק, **אחרי** שענפי "לא נמצאה" / "אינה בתהליך" קבעו את השגיאה — ומחק אותה. התוצאה
+        // שנמדדה בייצור (דוח ה1, הצעה #2317 נדחתה): "עריכת הצעה #2317" עם טופס **ריק** וכפתור
+        // `עדכני ושלחי` פעיל. הבאג חי מהקומיט הראשון של המסך (`32858cd1`).
+        setLoadError('')
+        setUnavailable(null)
         setScreenParams(Object.fromEntries(paramRows.map((p) => [p.param_name, p.param_value])))
         setSavedQuote(quote)
 
@@ -180,13 +222,13 @@ export default function QuoteBuilderPage() {
         setCatalog(catalogData)
 
         if (isEditMode) {
+          // ⚠️ "לא נמצאה" / "כבר נסגרה" **אינן** `loadError`: כפתור "נסי שוב" לא ישנה דבר באף אחת
+          // מהן. לכל אחת דרך-קדימה משלה (`QuoteUnavailable` למטה) — והטופס **אינו** מרונדר.
           if (!quote) {
-            // R30: אותו נוסח כמו ארבעת אתרי-"לא נמצא/ה" של מודול 4 (HostessFormDialog.jsx,
-            // HostessViewCard.jsx, api.js×2) — "X לא נמצא/ה, או שאין לך הרשאה אליו/ה".
-            setLoadError('ההצעה לא נמצאה, או שאין לך הרשאה אליה.')
+            setUnavailable({ kind: 'missing' })
           } else if (quote.quote_status !== 'in_progress') {
             // טריגר-הנעילה (§7.50) יסרב לעדכון ממילא — עדיף לומר זאת לפני שממלאים טופס שלם.
-            setLoadError('לא ניתן לערוך הצעה שאינה בסטטוס "בתהליך".')
+            setUnavailable({ kind: 'closed', status: quote.quote_status })
           } else {
             const productsBySku = Object.fromEntries(catalogData.products.map((p) => [p.sku, p]))
             const state = quoteToFormState(quote, productsBySku, defaultRatio)
@@ -212,7 +254,6 @@ export default function QuoteBuilderPage() {
             appliedDiscount: Number(preselected?.discount_percent ?? 0),
           })
         }
-        setLoadError('')
       } catch {
         if (!cancelled) setLoadError('שגיאה בטעינת נתוני ההצעה.')
       } finally {
@@ -400,6 +441,7 @@ export default function QuoteBuilderPage() {
       />
     )
   }
+  if (unavailable) return <QuoteUnavailable {...unavailable} quoteId={quoteId} />
   if (!canEdit) {
     return (
       <div className="rounded-2xl bg-white p-8 text-center shadow-md">

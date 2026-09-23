@@ -478,6 +478,18 @@ function HostessDoorScreen() {
   )
 }
 
+// ✏️ 24/09/2026 (ליטושי-הכנס, חבילה 0): דלת-ההצעה היא `/quotes?view=<id>` — חלון-המסמך — ולא
+// `/quotes/:id/edit`, שעורך רק הצעה פתוחה ושבר בייצור על שורות "סגירת הצעות" שכבר הוכרעו.
+function QuoteDoorScreen() {
+  const [params] = useSearchParams()
+  return (
+    <>
+      <p>מסך הצעות מחיר</p>
+      <p data-testid="quote-door-param">{params.get('view') ?? ''}</p>
+    </>
+  )
+}
+
 function renderDoors(initialEntry = '/reports?tab=hostesses') {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -486,7 +498,7 @@ function renderDoors(initialEntry = '/reports?tab=hostesses') {
         <Route path="/projects/:id" element={<p>מסך פרויקט</p>} />
         <Route path="/customers/:customerId" element={<p>מסך לקוח</p>} />
         <Route path="/hostesses" element={<HostessDoorScreen />} />
-        <Route path="/quotes/:quoteId/edit" element={<p>מסך הצעת מחיר</p>} />
+        <Route path="/quotes" element={<QuoteDoorScreen />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -596,7 +608,7 @@ describe('מ1 — מנתב-הדלתות', () => {
 
   // 🌱 שורת-מ4 — `cards-management` שורה 8: *"יעד-הקידוח היחיד: הצעת-המחיר"*. נמדד ⁦50⁩
   // שורות כאלה בכל מטען-מ4 חי, וכולן `{kind:'quote', id}`.
-  it('② דלת-הצעה נוחתת על ההצעה עצמה, לא על רשימת-ההצעות', async () => {
+  it('② דלת-הצעה פותחת את מסמך-ההצעה עצמה (`?view=`), לא את מסך-העריכה', async () => {
     permissions = CEO
     callReport.mockResolvedValue(
       doorPayload({
@@ -605,7 +617,8 @@ describe('מ1 — מנתב-הדלתות', () => {
     )
     renderDoors()
     await click((await screen.findAllByTestId('report-row-drillable'))[0])
-    expect(await screen.findByText('מסך הצעת מחיר')).toBeInTheDocument()
+    expect(await screen.findByText('מסך הצעות מחיר')).toBeInTheDocument()
+    expect(screen.getByTestId('quote-door-param')).toHaveTextContent('1907')
   })
 
   it('③ כל השאר נשאר מצב-דריל של הדוח הנוכחי, ונשלח כ-p_drill', async () => {

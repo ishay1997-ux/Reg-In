@@ -162,7 +162,6 @@ export default function QuotesPage() {
   // ובמקומם נאמר שאי-אפשר לדעת. ⛔ כשל-יומן לעולם אינו "טרם נשלחה" — זו הטענה ההפוכה,
   // והיא הייתה שולחת את המשתמש לשלוח מייל שהלקוח אולי כבר קיבל.
   const [sentIds, setSentIds] = useState(null)
-  const [documentQuote, setDocumentQuote] = useState(null)
   const [approveTarget, setApproveTarget] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
 
@@ -215,6 +214,30 @@ export default function QuotesPage() {
   }
 
   const windowKey = parseWindowParam(searchParams.get('window'))
+
+  // 📄 **חלון-המסמך חי בכתובת (`?view=<quoteId>`), לא ב-state** (ליטושי-הכנס, חבילה 0, 24/09/2026).
+  // ‏למה: דלת-השורה בדוח "סגירת הצעות" (מ11 ה1) מובילה להצעה **שכבר הוכרעה** — ולה אין מסך-עריכה.
+  // המסך הקיים שמציג הצעה בכל סטטוס הוא החלון הזה, ולכן הדלת היא `/quotes?view=`. ‏`CLAUDE.md` §4.2:
+  // מצב פתוח = כתובת, ו"חזור" בדפדפן סוגר אותו. ההצעה נמצאת בין **כל** ההצעות שנטענו (לא רק בחלון
+  // או בלשונית), כי הדלת יכולה להוביל להצעה ישנה או נדחתה.
+  const viewParam = searchParams.get('view')
+  const documentQuote = viewParam
+    ? (quotes.find((q) => String(q.quote_id) === viewParam) ?? null)
+    : null
+  // מזהה שאינו ברשימה (נמחק · אין הרשאה · קישור ישן) — נאמר במפורש, ולא נבלע כחלון שלא נפתח.
+  const viewMissing = Boolean(viewParam) && !loading && !loadError && documentQuote === null
+
+  function setDocumentQuote(quote) {
+    setSearchParams(
+      (prev) => {
+        const p = new URLSearchParams(prev)
+        if (quote) p.set('view', String(quote.quote_id))
+        else p.delete('view')
+        return p
+      },
+      { replace: !quote },
+    )
+  }
   const pageParam = parsePageParam(searchParams.get('page'))
 
   function stripPage(sp) {
@@ -433,6 +456,16 @@ export default function QuotesPage() {
           data-testid="quotes-missing-params"
         >
           {missingParamsMessage}
+        </p>
+      )}
+
+      {viewMissing && (
+        <p
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 mb-4"
+          role="alert"
+          data-testid="quotes-view-missing"
+        >
+          ההצעה לא נמצאה, או שאין לך הרשאה אליה.
         </p>
       )}
 
