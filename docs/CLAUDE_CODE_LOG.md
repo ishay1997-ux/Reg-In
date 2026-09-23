@@ -59,6 +59,13 @@
 - Text migration `20260923180000_module11_l1_report_copy.sql` written (13 functions, 86 guarded replacements, generator in `docs/specs/module_11_reports/phase-b-migration/`), **not applied** — awaits Ishay typing its name. Pre-apply proof: live `md5(prosrc)` == file bodies (+K1) for all 13. No DDL dry-run (the migrations runbook forbids ad-hoc DDL via `execute_sql`); a syntax error would abort the whole `apply_migration` transaction.
 - Handoff: new dated block "🆕 בלוק 23/09/2026 ערב" at the top of `HANDOFF-typography-2026-09-17-01.md` (read-session run: 30KB conversation, all read) + prompt `~/.claude/plans/typography-phase-b-prompt.md` rewritten for session 2. Fresh-eyes (Sonnet, ~161K) fixed 5 items. Verification tools moved from scratchpad into `docs/specs/module_11_reports/phase-b-migration/tools/` (scratchpad does not survive the session).
 - **Where it stands (end of this turn):** M02 model sent to Ishay as screenshots, awaiting "מאשר"; next unblocked item is step 7 (server paging M04/M06). STATUS "עודכן לאחרונה" updated.
+- **Session 2 (same branch):**
+  - **L1 applied.** Ishay typed the name. The management-API route was denied by the permission classifier, then its token proved invalid (401). So the file went through MCP `apply_migration` in three verbatim parts (registry rows `module11_l1_report_copy_p1of3…p3of3`).
+  - **L1 proof:** live md5 == the md5 computed from the file's own replace pairs, 13/13. All 13 were called under a real identity with no error. Commit `d4dc1916`.
+  - **Code after L1 (`c5586d95`):** the dated M09 `<xKey>_key` fallback was removed (test first). Stale fixtures now mirror the new server. The two M20 hints that pointed at the deleted chart were rewritten. Ripples: 11_reports/CLAUDE.md inv. 4, onboarding-layer-contract §3, design-contract, cards-customers. Gate 0.
+  - **Live check (5173 = this worktree, verified by PID):** 12 reports × 1536/1024 × modes 0/2 as CEO, overflow 0 everywhere.
+  - **Visible text:** M02 215 and M08 185 are within target. The rest are 227–566, mostly the tile sub-lines, which were outside L1's scope.
+  - **L2 written, not applied (`ef041ba1`):** `20260923200000_module11_l2_tile_copy.sql`, 24 replacements in 8 RPCs. It is built on the post-L1 bodies (`bodies.mjs`, md5 13/13 == live), and `expect-md5.mjs l2` gives the post-apply check. Ishay approved the round ("אתה יכול להמשיך בסבב הזה"); **it awaits him typing the name.**
 
 ### 23/09/2026 (13:XX) — dev merged into the branch, and the "all rows" toggle finally does something
 
