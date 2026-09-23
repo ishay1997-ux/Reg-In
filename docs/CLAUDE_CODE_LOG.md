@@ -46,6 +46,18 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (11:XX) — finance screen wired to the export dialog: three core sets, one per tab
+
+**Third screen outside module 11** (`src/modules/08_finance/FinancePage.jsx` + a new `FinancePage.export.test.jsx`, 9 tests). Full record: `docs/micro_guides/module-8.md` §10 (dated line).
+
+**What is new in this screen:** the on-screen table differs per tab, so *"default = what's on screen"* becomes `FINANCE_EXPORT_CORE` — one key list per tab — and the dialog rebuilds its column set when the tab changes. Rows are the `prepareRows` entries (filtered → windowed → sorted), so every column has a `value` reading the screen's own derivation; timestamps go through `stampDate` because the engine's date formatter rejects timestamps by design. The VAT rate loads separately ⇒ a tri-state `vatState` keeps the dialog loading or blocks it.
+
+**The adversarial reviewer (Opus, read-only, ~116K, `שומש כפי שהוא`) moved three things before commit:** ① the tags the screen draws — cancel context, "הסתיים — לא שולם", "נדרשת חשבונית זיכוי" — are now core in every tab; without them a cancelled row whose fee was set read as ordinary revenue · ② tab ① exports one date + "מהות התאריך" instead of two half-empty columns · ③ the blocked-export message promised *"נסי שוב"* and the only such button sat behind the modal — the dialog now gets `error` + `onRetry`. **The third finding applied to the customers screen too and was fixed there in the same commit.**
+
+📊 **Live on 5199 as CEO:** tab ② 26 rows / 13 default columns, ③ 48 / 10, ① 9 / 10; the downloaded xlsx has 27 rows incl. header, 26/26 amount cells filled, first row identical to the screen's. **Left to Ishay:** a null date-format cell exports as `—` while a null number is blank (engine, pinned by `reportsExport.test.js:178`) · `percent` prints `69.0` vs the screen's `69%` · blocking the whole export on a VAT failure even with "כולל מע"מ" unticked.
+
+**Gates:** finance + customers suites 337/337 · eslint 0 · `npm run gate` — `GATE_EXIT` on the STATUS line.
+
 ### 23/09/2026 (10:0X) — customers screen wired to the export dialog, and a blank money column caught live
 
 **Second screen outside module 11, on the projects pattern** (`src/modules/02_customers/CustomersPage.jsx` + `api.js` + a new `CustomersPage.export.test.jsx`). Full record in `docs/micro_guides/module-2.md` §9 (dated line) and the export handoff §6/§7.

@@ -168,8 +168,11 @@ const EXPORT_COLUMNS = [
 // 🔤 נוסח נעול (`ui-copy-styleguide.md` §5) — משתנה רק יחד עם הבדיקה שטוענת עליו.
 // מחוץ לרכיב כי הרכיב כבר על רף-המורכבות של SonarJS (20), לא מטעמי סגנון.
 const EXPORT_BLOCKED_PARTIAL_DATA = 'חלק מנתוני הרשימה לא נטענו — לחצי "נסי שוב" ואז ייצאי'
-function exportBlockedReasonFor(revenueFailed, paramsFailed) {
-  return revenueFailed || paramsFailed ? EXPORT_BLOCKED_PARTIAL_DATA : null
+const EXPORT_PARTIAL_DATA_SHORT = 'חלק מנתוני הרשימה לא נטענו'
+// `reason` חוסם את הייצוא (שורת-הכמות) · `error` מרנדר את "נסי שוב" בתצוגה-המקדימה. שניהם `null` כשהכול נטען.
+function exportBlockFor(revenueFailed, paramsFailed) {
+  if (!revenueFailed && !paramsFailed) return { reason: null, error: null }
+  return { reason: EXPORT_BLOCKED_PARTIAL_DATA, error: EXPORT_PARTIAL_DATA_SHORT }
 }
 
 // שביעות-רצון (§7.80, הכרעת P13): כוכבים + "אין נתונים עדיין" — **בלי תג-טקסט** ("מצוין").
@@ -580,7 +583,7 @@ export default function CustomersPage() {
   // בעמודות "רדום"/"טעון בירור" ומרוקן את "שביעות רצון" — בלי שום סימן בקובץ. הבאנר על המסך
   // אינו נוסע עם ה-xlsx. ⇒ החלון נחסם עם הסיבה (אותו מנגנון של מודול 11, `blockedReason`), ו"נסי
   // שוב" שבבאנר פותח אותו מחדש. `הכרעתי, הפיך` — הדוקטרינה של `src/CLAUDE.md §3` (כשל ≠ ריק).
-  const exportBlockedReason = exportBlockedReasonFor(revenueLoadFailed, screenParamsFailed)
+  const exportBlock = exportBlockFor(revenueLoadFailed, screenParamsFailed)
   const exportFileName = useMemo(
     () =>
       buildExportFileName({
@@ -1204,7 +1207,11 @@ export default function CustomersPage() {
                 columns={EXPORT_COLUMNS}
                 rows={visibleCustomers}
                 loading={derivedLoading}
-                blockedReason={exportBlockedReason}
+                blockedReason={exportBlock.reason}
+                // החלון מודאלי, והבאנר עם "נסי שוב" נשאר מאחוריו ⇒ הכפתור חייב להיות גם כאן
+                // (`error` הוא מה שמרנדר אותו בתצוגה-המקדימה). נמצא במסך-הכספים, תוקן בשניהם.
+                error={exportBlock.error}
+                onRetry={reloadCustomers}
                 buildSheet={buildExportSheet}
                 knownMessages={EXPORT_LOCKED_MESSAGES}
                 fileName={exportFileName}

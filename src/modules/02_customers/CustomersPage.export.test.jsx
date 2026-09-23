@@ -197,6 +197,12 @@ describe('CustomersPage — חיבור לחלון-הייצוא', () => {
     fireEvent.click(screen.getByTestId('customers-export-button'))
     await waitFor(() => expect(screen.getByTestId('export-count')).toHaveTextContent('לא נטענו'))
     expect(screen.getByTestId('export-dialog-run')).toBeDisabled()
+    // ההודעה מבטיחה "נסי שוב" — והבאנר עם הכפתור נשאר מאחורי החלון המודאלי ⇒ הכפתור בחלון.
+    listQuotes.mockResolvedValue([])
+    fireEvent.click(
+      within(screen.getByTestId('export-preview')).getByRole('button', { name: 'נסי שוב' }),
+    )
+    await waitFor(() => expect(screen.getByTestId('export-dialog-run')).toBeEnabled())
   })
 
   it('🔴 כשל בהגדרות-המסך — אותה חסימה: "רדום"/"טעון בירור" לא יורדים כ"לא" מומצא', async () => {
