@@ -52,6 +52,7 @@
 **Slices, newest last** (SHAs: `git log --oneline origin/dev..HEAD`):
 - Phase-A remainder: `QuotesPage.jsx` 11 sizes ⇒ `text-xs`, baseline ⇒ 5 (all `quotePdf.jsx`, print points). `/quotes` shot at 1024/1536, overflow 0. ⚠️ Trap hit: `prettier --write` on an explicit `.md` path formats it even though `*.md`/`docs` are in `.prettierignore` — reformatted two whole docs; reverted with `git checkout --` and re-applied. ⚠️ And PowerShell 5.1 `Out-File` has no `utf8NoBOM` — write commit messages with `[IO.File]::WriteAllText`.
 - Step 8 (chart click): `datumDrillKey` in `ReportSurface.jsx` reads the datum's own `drill_key` (the row's door), with a dated `"<xKey>_key"` fallback kept **only** for M09 until the text migration adds `drill_key` there. New `chartAction` extension point + `ChartCard` `actionHint` line; the noun follows the chart type. Live as CEO: M03 bar ⇒ `{"kind":"year","year":2025}` (was dead), M09 ⇒ `{"bucket":"d31_60"}`.
+- Step 9 (dead controls): `FiltersBar` takes `periodFixedLabel`/`customerFixed` — a surface that ignores a filter shows the fact (the first ` · ` segment of the server's window label; M04/M06/M09 append "· כל הלקוחות" to it, measured) instead of disabled pills + "אינו מושפע" (Ishay's ruling 5 of 17/09 — the ㉚ "disable-and-explain" tests were rewritten). Normalising `customer_filter_ignored` client-side proved unnecessary (arrays are per-tile partial exemptions). M15's dead pills wait for the migration flag.
 
 ### 23/09/2026 (13:XX) — dev merged into the branch, and the "all rows" toggle finally does something
 
