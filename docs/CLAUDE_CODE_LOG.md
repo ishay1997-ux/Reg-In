@@ -46,6 +46,22 @@
 
 ## Session Log (newest first)
 
+### 23/09/2026 (01:5X-02:1X) — four design rulings, and a filter that emptied the table before you typed
+
+**`77317f94`.** Ishay reviewed the screenshots and ruled on four things; each is recorded with the reasoning, not just the outcome.
+
+**The button.** *"ייצוא לאקסל"* — his words: *"נשמע קצת מערכת שנות ה-90"*. It also bound the label to a **format** when the format is an implementation detail: the file can change, the action cannot. Now a download icon plus the word ייצוא, on both screens. 🚫 **Not an icon alone** — market research on data tables is consistent that icons need labels, and this is a **rare action hunted by eye**, not a daily one the hand learns.
+
+**The filter row wrapped.** 📊 Measured in a screenshot: `w-28`/`w-24` overflowed a 320px panel, the three controls stacked one per line and the remove button dangled alone — **and Ishay could not tell it was a single condition.** On one line it reads as a sentence. `min-w-0` per item is what allows it; without it `flex-1` keeps `min-width:auto`, the same flexbox trap that caught the date fields.
+
+**Right-click to filter a column — his idea, and it was right but not alone.** 📊 Checked what real grids do: **AG Grid** and **MUI X** both offer right-click as a **shortcut** and always pair it with a **visible header icon** (MUI adds `Ctrl+Enter`). 🔑 **The reason is discovery, not capability:** right-click has no sign it exists, and no keyboard equivalent. ⇒ both. 🔴 **And it is not a second filter system (iron rule 14)** — it appends to the same `conditions` list the right panel owns. Clicking an already-filtered column is a no-op, because two conditions on one column AND together and would narrow the file unasked.
+
+**The glyph.** `⤒` is a text character, so its weight was font-dependent and mismatched the `▲▼` beside it. Now `chevrons-up` / `chevron-up` / `chevron-down` from lucide — double-versus-single reads without explanation, and it aligns with `src/CLAUDE.md §4.3`.
+
+🔴 **And then eyes on the screen caught a defect the gate could not.** Clicking the header filter created a condition with **no value yet**; `passesNumeric` returned `false` for every row; the preview emptied instantly with *"הסינון לא הותיר שורות"* and the export disabled — **before the user typed anything.** 🔑 **The contradiction predates this change and was merely invisible:** `scopeLine` already skipped a valueless condition, so **the screen said "no filter" at the moment the engine filtered everything out.** An unfilled condition is now inactive in both places, which also fixes the existing `+ מסנן` button. 📊 Verified live at 1440: 35 rows → 35 after the click → 9 after typing 60.
+
+⚠️ **One fact worth carrying:** all 3,143 tests passed **before** these changes too — **no test locked the old label or the old glyph.** Button copy is not protected here.
+
 ### 23/09/2026 — the wage registry, a bucket that read backwards, and the first screen outside module 11
 
 **Continues the entry below.** Handoff: `docs/specs/module_11_reports/HANDOFF-export-dialog-2026-09-23.md`.
