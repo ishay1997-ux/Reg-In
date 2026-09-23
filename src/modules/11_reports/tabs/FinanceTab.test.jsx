@@ -776,14 +776,17 @@ describe('חמשת המצבים והייצוא', () => {
     )
   })
 
-  it('טבלה בלי שורות ⇒ כפתור-הייצוא מנוטרל עם "אין שורות לייצא"', async () => {
+  it('טבלה בלי שורות ⇒ הכפתור נשאר פעיל, והחסימה עברה לתוך החלון', async () => {
     const payload = overviewPayload()
     payload.rows = []
     callReport.mockResolvedValue(payload)
     renderTab({ slug: 'finance-overview' })
     const button = await screen.findByTestId('reports-export-button')
-    expect(button).toBeDisabled()
-    expect(plain(screen.getByTestId('reports-export-file'))).toBe('אין שורות לייצא')
+    expect(button).toBeEnabled()
+    // ✏️ **17/09/2026 — ת4ב:** הכפתור פעיל תמיד והכיתוב עבר לתוך החלון; החסימה נבדקת
+    // פר-דוח נבחר. הנוסח הנעול עצמו נבדק ב-`reportsExport.test.js` (זהות-בייט) וב-
+    // `ExportDialog.test.jsx` (מוצג במקום שורת-הכמות, והייצוא מנוטרל).
+    expect(screen.queryByTestId('reports-export-file')).toBeNull()
   })
 })
 

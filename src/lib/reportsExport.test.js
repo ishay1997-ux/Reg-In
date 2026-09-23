@@ -10,12 +10,14 @@ vi.mock('write-excel-file', () => ({ default: vi.fn(() => Promise.resolve()) }))
 
 import writeXlsxFile from 'write-excel-file'
 import {
+  EXPORT_LOCKED_MESSAGES,
+  META_SHEET_NAME,
   EXPORT_NO_APPROVED_RUN,
   EXPORT_NO_ROWS,
   EXPORT_NO_TABLE,
   buildExportFileName,
   buildExportSheet,
-  exportCaption,
+  buildMetaSheet,
   exportReportRows,
   sanitizeSheetName,
 } from '@/lib/reportsExport'
@@ -34,6 +36,77 @@ const ROWS = [
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe('buildMetaSheet · הגיליון השני — ההקשר שהקובץ נושא איתו', () => {
+  const AT = new Date('2026-09-17T15:45:00Z')
+
+  it('ארבע שורות: דוח · חל על הקובץ · שורות · הופק', () => {
+    const sheet = buildMetaSheet({
+      reportName: 'גיול חובות',
+      scope: 'תקופה 01/01/2026–17/09/2026 · כל הלקוחות',
+      count: 'הקובץ יכלול 35 שורות',
+      generatedAt: AT,
+    })
+    expect(sheet.map((row) => row[0].value)).toEqual(['דוח', 'חל על הקובץ', 'שורות בקובץ', 'הופק'])
+    expect(sheet[1][1].value).toBe('תקופה 01/01/2026–17/09/2026 · כל הלקוחות')
+    expect(sheet[2][1].value).toBe('הקובץ יכלול 35 שורות')
+  })
+
+  it('🔴 תווי-כיווניות בלתי-נראים נמחקים גם כאן', () => {
+    const sheet = buildMetaSheet({ scope: '⁦תקופה 2026⁩', generatedAt: AT })
+    expect(sheet[1][1].value).toBe('תקופה 2026')
+  })
+
+  it('שדה חסר אינו מרנדר "undefined"', () => {
+    const sheet = buildMetaSheet({ generatedAt: AT })
+    expect(sheet[0][1].value).toBe('—')
+    expect(sheet[1][1].value).toBe('—')
+  })
+
+  it('חותמת-זמן פסולה אינה מפילה ואינה ממציאה תאריך', () => {
+    const sheet = buildMetaSheet({ generatedAt: 'not-a-date' })
+    expect(sheet[3][1].value).toBe('—')
+  })
+})
+
+describe('exportReportRows · שני גיליונות', () => {
+  it('🔴 הגיליון הראשון נשאר טבלה טהורה, והשני נושא את הפרטים', async () => {
+    writeXlsxFile.mockClear()
+    await exportReportRows({
+      fileName: 'x.xlsx',
+      sheetName: 'גיול חובות',
+      columns: COLUMNS,
+      rows: ROWS,
+      meta: { scope: 'כל התקופות · כל הלקוחות', count: 'הקובץ יכלול 2 שורות' },
+    })
+    const [data, options] = writeXlsxFile.mock.calls[0]
+    expect(data).toHaveLength(2)
+    // שורה 1 של גיליון-הנתונים היא הכותרות — בלי שום שורת-מטא מעליה, אחרת VLOOKUP נשבר.
+    expect(data[0][0].map((cell) => cell.value)).toEqual(COLUMNS.map((c) => c.label))
+    expect(data[1][0][0].value).toBe('דוח')
+    expect(options.sheets).toEqual(['גיול חובות', META_SHEET_NAME])
+    // 🔴 האופציה שכל הייצוא העברי תלוי בה — חלה על שני הגיליונות.
+    expect(options.rightToLeft).toBe(true)
+    expect(options.columns).toHaveLength(2)
+  })
+})
+
+describe('שלוש המחרוזות הנעולות — החוזה שהחלון והבדיקות נשענים עליו', () => {
+  // 🔴 הן לא "טקסט" אלא **גבול**: `exportReportRows` זורקת אותן, `ExportBar` מזין את הסט
+  // ל-`ExportDialog`, ו-`e2e/reports.spec.js` טוען על שתיים מהן. שינוי-נוסח כאן הוא
+  // שינוי-מוצר, ולכן הוא חייב להפיל בדיקה ולא לעבור בשקט (`ui-copy-styleguide.md` §5).
+  it('הסט מחזיק בדיוק את שלושתן', () => {
+    expect([...EXPORT_LOCKED_MESSAGES].sort()).toEqual(
+      [EXPORT_NO_ROWS, EXPORT_NO_TABLE, EXPORT_NO_APPROVED_RUN].sort(),
+    )
+  })
+
+  it('הנוסחים זהים-בייט', () => {
+    expect(EXPORT_NO_ROWS).toBe('אין שורות לייצא')
+    expect(EXPORT_NO_TABLE).toBe('אין טבלה לייצוא בדף הזה')
+    expect(EXPORT_NO_APPROVED_RUN).toBe('אין שורות לייצא — טרם אושרה ריצת-ניתוח')
+  })
 })
 
 describe('buildExportFileName — 📐13③: שם-הקובץ נושא את הרמה הנוכחית', () => {
@@ -77,46 +150,6 @@ describe('sanitizeSheetName — מגבלת-הפורמט של אקסל', () => {
   })
 })
 
-describe('exportCaption — שתי השורות שעל המסך לפני הלחיצה (ת4)', () => {
-  it('מצב רגיל: שם-הקובץ ושמות-העמודות, והכפתור פעיל', () => {
-    const caption = exportCaption({
-      fileName: 'גיול-חובות_2026.xlsx',
-      columns: COLUMNS,
-      rowCount: 2,
-    })
-    expect(caption.file).toBe('יירד: גיול-חובות_2026.xlsx')
-    expect(caption.columns).toBe('עמודות: לקוח · יתרת-חוב פתוחה · ימי איחור · מועד פירעון')
-    expect(caption.disabled).toBe(false)
-  })
-
-  // 🔤 שלושת המצבים הנעולים, מילה-במילה מת4 ומ-`cards-customers.md` G-ל8.
-  it('טבלה בלי שורות ⇒ הנוסח הנעול, והכפתור מנוטרל', () => {
-    const caption = exportCaption({ fileName: 'x.xlsx', columns: COLUMNS, rowCount: 0 })
-    expect(caption.file).toBe(EXPORT_NO_ROWS)
-    expect(caption.disabled).toBe(true)
-    // העמודות עדיין נאמרות — הדף **יש** בו טבלה, היא פשוט ריקה בתקופה הזו.
-    expect(caption.columns).toContain('לקוח')
-  })
-
-  it('דף בלי טבלה בכלל ⇒ הנוסח האחר, ובלי שורת-עמודות', () => {
-    const caption = exportCaption({ fileName: 'x.xlsx', columns: [], rowCount: 0 })
-    expect(caption.file).toBe(EXPORT_NO_TABLE)
-    expect(caption.columns).toBeNull()
-    expect(caption.disabled).toBe(true)
-  })
-
-  it('דוח 20 לפני ריצה מאושרת ⇒ הנוסח שלו גובר על כל השאר', () => {
-    const caption = exportCaption({
-      fileName: 'x.xlsx',
-      columns: COLUMNS,
-      rowCount: 5,
-      blockedReason: EXPORT_NO_APPROVED_RUN,
-    })
-    expect(caption.file).toBe(EXPORT_NO_APPROVED_RUN)
-    expect(caption.disabled).toBe(true)
-  })
-})
-
 describe('buildExportSheet — מיפוי שורה→תא לפי ה-format של C8', () => {
   const sheet = buildExportSheet({ columns: COLUMNS, rows: ROWS })
 
@@ -155,11 +188,15 @@ describe('exportReportRows — הקריאה לספרייה', () => {
       rows: ROWS,
     })
     expect(writeXlsxFile).toHaveBeenCalledTimes(1)
-    const [sheet, options] = writeXlsxFile.mock.calls[0]
+    const [sheets, options] = writeXlsxFile.mock.calls[0]
     expect(options.rightToLeft).toBe(true)
     expect(options.fileName).toBe('גיול-חובות_2026.xlsx')
-    expect(options.sheet).toBe('גיול חובות')
-    expect(sheet).toHaveLength(3)
+    // ✏️ **17/09/2026 — היו `options.sheet` ו-`sheet` יחיד.** נוסף גיליון "פרטי הדוח"
+    // (הכרעת-ישי), ולכן החתימה היא הרב-גיליונית של הספרייה: מערך-גיליונות + `sheets`.
+    // 🔑 **מה שהבדיקה שמרה עליו לא השתנה:** `rightToLeft` ושם-הקובץ, וגיליון-הנתונים
+    // שעדיין נושא שורת-כותרת ועוד שתי שורות — **בלי שום שורת-מטא מעליו.**
+    expect(options.sheets[0]).toBe('גיול חובות')
+    expect(sheets[0]).toHaveLength(3)
   })
 
   // 🔴 קובץ בן שורת-כותרת בלבד נראה כמו ייצוא שהצליח. זריקה, לא הורדה שקטה.
@@ -175,6 +212,22 @@ describe('exportReportRows — הקריאה לספרייה', () => {
   it('בלי עמודות ⇒ זורק את הנוסח האחר', () => {
     expect(() =>
       exportReportRows({ fileName: 'x.xlsx', sheetName: 'x', columns: [], rows: ROWS }),
+    ).toThrow(EXPORT_NO_TABLE)
+    expect(writeXlsxFile).not.toHaveBeenCalled()
+  })
+
+  // 🔴 **כל העמודות מוסתרות — השומר חייב לזרוק, לא להוריד קובץ ריק.**
+  // עד 22/09/2026 השומר מדד את `columns` הגולמי ⇒ הרשימה נראתה לא-ריקה,
+  // הגיליון יצא בלי אף עמודה, **והקובץ ירד כאילו הצליח** — בדיוק ההטעיה
+  // ש-`EXPORT_NO_TABLE` נולד כדי למנוע. *(נמצא על-ידי סוכן-יריב, אומת ותוקן.)*
+  it('🔴 כל העמודות מוסתרות ⇒ זורק, ולא מוריד קובץ בלי עמודות', () => {
+    expect(() =>
+      exportReportRows({
+        fileName: 'x.xlsx',
+        sheetName: 'x',
+        columns: [{ key: 'hourly_wage', label: 'שכר שעתי', format: 'money', visible: () => false }],
+        rows: ROWS,
+      }),
     ).toThrow(EXPORT_NO_TABLE)
     expect(writeXlsxFile).not.toHaveBeenCalled()
   })

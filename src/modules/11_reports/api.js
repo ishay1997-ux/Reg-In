@@ -149,13 +149,19 @@ export function normalizeCharts(chart) {
  * אבל השמטת מפתח מ-`supabase.rpc` היא הצורה שבה חתימה-שהשתנתה נעלמת בשקט: פרמטר שנשלח
  * ושמו השתנה מחזיר שגיאה קולנית, ופרמטר שלא נשלח מחזיר תשובה על התקופה הלא-נכונה.
  */
-export async function callReport(rpcName, { from, to, customerId, drill } = {}) {
-  const { data, error } = await supabase.rpc(rpcName, {
+export async function callReport(rpcName, { from, to, customerId, drill, pageSize } = {}) {
+  // 🔴 `p_page_size` נשלח **רק כשנמסר מספר** — ורק חמש פונקציות מקבלות אותו (מיגרציית K1:
+  // m02 · m19 · m07 · m04 · m06). קריאה בשם עם פרמטר שהפונקציה אינה מכירה נופלת ב-PostgREST
+  // ("function … does not exist"), ולכן שליחה גורפת הייתה שוברת את 11 הדוחות האחרים.
+  // הבורר מי-מקבל יושב ב-`exportFetch.js` (`PAGED_RPCS`), לא כאן.
+  const params = {
     p_from: from ?? null,
     p_to: to ?? null,
     p_customer_id: customerId ?? null,
     p_drill: drill ?? null,
-  })
+  }
+  if (Number.isInteger(pageSize) && pageSize > 0) params.p_page_size = pageSize
+  const { data, error } = await supabase.rpc(rpcName, params)
   if (error) throw toError(error, 'שגיאה בטעינת הדוח.')
   return assertReportShape(data)
 }

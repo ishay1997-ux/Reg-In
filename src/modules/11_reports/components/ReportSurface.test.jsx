@@ -309,13 +309,19 @@ describe('ReportSurface — סינון-צולב (📐6 · 📐8 · 📐9)', () =
     expect(screen.getByTestId('report-table-announce').textContent).toBe('')
   })
 
-  // ת4 — *"בדיוק מה שעל המסך"*: הייצוא מקבל את השורות המסוננות ואת תווית-הבחירה.
-  it('ת4 — הייצוא יורד על השורות המסוננות, והתווית נכנסת לשם-הקובץ', async () => {
+  // ✏️ **נכתבה מחדש 17/09/2026 ע"י סשן-הייצוא — ת4 הופך (ת4ב · §7.103).** הבדיקה נעלה קודם
+  // את *"בדיוק מה שעל המסך"*: תווית-הסינון-הצולב נכנסת לשם-הקובץ, והכיתוב יושב מתחת לכפתור.
+  // **שניהם בוטלו בהכרעת-ישי** — הייצוא הוא כלי שליפה עצמאי, החלון שולף `drill: null`, ולכן
+  // שם שנושא רמה או בחירה **היה משקר**. הכיתוב עבר לתוך החלון עם אותו `testid`.
+  // 🔑 **ומה שהבדיקה שומרת עליו עכשיו הוא הצד השני של אותו מטבע:** הסינון-הצולב **אינו** נוגע
+  // עוד בייצוא, וכפתור-הייצוא אינו מושפע ממנו.
+  it('ת4ב — הסינון-הצולב אינו נוגע בייצוא, ואין עוד כיתוב מתחת לכפתור', async () => {
     callReport.mockResolvedValueOnce(crossPayload())
     renderCross()
     await screen.findAllByTestId('report-row')
     fireEvent.click(screen.getByTestId('chart-select-0'))
-    expect(screen.getByTestId('reports-export-file').textContent).toContain('דירוג-5')
+    expect(screen.queryByTestId('reports-export-file')).toBeNull()
+    expect(screen.getByTestId('reports-export-button')).toBeEnabled()
   })
 
   // ✏️ **הדאטום כאן נושא `n: 3` ולא `n: 0`, ומסיבה מדודה (16/09/2026):** מאז שכלל
@@ -332,7 +338,10 @@ describe('ReportSurface — סינון-צולב (📐6 · 📐8 · 📐9)', () =
     expect(screen.getByTestId('report-table-announce').textContent).toBe(
       'מסונן לדירוג 1; אין שורות',
     )
-    expect(screen.getByTestId('reports-export-button')).toBeDisabled()
+    // ✏️ **17/09/2026 — היה `toBeDisabled`.** הכפתור פעיל תמיד מרגע שהחלון מאפשר לבחור כל
+    // אחד מארבעת דוחות הלשונית: חסימה בגלל הדוח — או הבחירה — שבמקרה פתוח היא מחסום שרירותי.
+    // **החסימה לא נעלמה, היא עברה פנימה ונבדקת פר-דוח נבחר** (`ExportDialog`, מצב `blockedReason`).
+    expect(screen.getByTestId('reports-export-button')).toBeEnabled()
   })
 
   // 🔴 **נמדד 16/09/2026:** שורת-התקרה נגזרה מ-`payload.rows.length` בעוד הטבלה מתחתיה כבר

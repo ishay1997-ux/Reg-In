@@ -944,8 +944,11 @@ describe('רצפת-המשטח — כל ארבעת המשטחים', () => {
     async (_name, surface, make) => {
       callReport.mockResolvedValue({ ...make(), rows: [] })
       renderTab(surface)
-      expect(await screen.findByTestId('reports-export-button')).toBeDisabled()
-      expect(screen.getByTestId('reports-export-file')).toHaveTextContent('אין שורות לייצא')
+      expect(await screen.findByTestId('reports-export-button')).toBeEnabled()
+      // ✏️ **17/09/2026 — ת4ב:** הכפתור פעיל תמיד והכיתוב עבר לתוך החלון; החסימה נבדקת
+      // פר-דוח נבחר. הנוסח הנעול עצמו נבדק ב-`reportsExport.test.js` (זהות-בייט) וב-
+      // `ExportDialog.test.jsx` (מוצג במקום שורת-הכמות, והייצוא מנוטרל).
+      expect(screen.queryByTestId('reports-export-file')).toBeNull()
     },
   )
 

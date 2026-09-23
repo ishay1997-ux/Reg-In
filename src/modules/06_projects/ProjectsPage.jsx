@@ -36,6 +36,7 @@ import {
   parsePageParam,
   parseWindowParam,
 } from '@/lib/listWindow'
+import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/dates'
@@ -57,6 +58,13 @@ import {
   filteredOutSentence,
 } from '@/lib/projects'
 import { listProjectsOverview } from './api'
+import ExportDialog from '@/components/ExportDialog'
+import {
+  buildExportFileName,
+  buildExportSheet,
+  EXPORT_LOCKED_MESSAGES,
+  exportReportRows,
+} from '@/lib/reportsExport'
 
 // שלוש הלשוניות על שם מה שדנה עושה, לא על שם סטטוס (⑰). המונה בכל לשונית הוא היישום
 // של ⑦ — עבודה שממתינה בלשונית אחרת אינה נעלמת, ומונה 0 נשאר על המסך ואינו מוסתר.
@@ -85,6 +93,84 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10)
 }
 
+// 🔴 **תיאור-העמודות לחלון-הייצוא — החוזה ש-`PROJECT_MASTER §6` מבטיח, והמסך הראשון שצורך אותו.**
+//
+// 🔑 **כל `value` קורא לאותה פונקציית-נגזרת שהטבלה קוראת לה — לעולם לא מימוש שני.**
+// התאים כאן אינם ערכים גולמיים: "דיילות" הוא `staffingCell(p).ratio` · "מה חסר" הוא `gapSentence(p)` ·
+// "סטטוס" הוא תווית מ-`PROJECT_STATUS_LABELS`. **מימוש שני היה מפצל את המסך מהקובץ**
+// ביום שאחת מהנגזרות תשתנה, והפער היה שקט — א׳לא שגיאה וא׳לא בדיקה שנופלת.
+//
+// ⚠️ **17 שדות, לא 30 — וזה גבול שנמדד ולא השמטה.** המוקאפ הראה 30 שדות מטבלת
+// `projects`, אבל **השליפה שהמסך מריץ מחזירה 17**: `list_projects_overview()`
+// (`20260814142439_module6_rpcs_reads_and_close.sql:138-157`).
+// 🔑 **אי-אפשר לייצא שדה שלא נשלף.** שלושה-עשר הנותרים דורשים שינוי ב-RPC,
+// כלומר **מיגרציה ⇒ כלל-ברזל 4, הכרעת-ישי בלבד.** נרשם ולא בוצע בשקט.
+//
+// 🚧 **ואין כאן `visible`, וגם זה נמדד:** עמודת-הכסף היחידה היא `planned_revenue`,
+// **והיא ממוסכת במסד** ולא בלקוח — ר' ההערה שלידה. ⇒ אין כאן שדה שהלקוח צריך להסתיר.
+const EXPORT_COLUMNS = [
+  { key: 'project_id', label: 'מס׳ פרויקט', format: 'id', core: true },
+  { key: 'event_name', label: 'אירוע', format: 'text', core: true },
+  { key: 'customer_name', label: 'לקוח', format: 'text', core: true },
+  { key: 'final_event_date', label: 'תאריך האירוע', format: 'date', core: true },
+  {
+    key: 'staffing',
+    label: 'דיילות',
+    format: 'text',
+    core: true,
+    value: (project) => staffingCell(project).ratio ?? '',
+  },
+  {
+    key: 'logistics',
+    label: 'לוגיסטיקה',
+    format: 'text',
+    core: true,
+    value: (project) => logisticsCell(project).ratio ?? '',
+  },
+  {
+    key: 'project_status',
+    label: 'סטטוס',
+    format: 'text',
+    core: true,
+    value: (project) => PROJECT_STATUS_LABELS[project.project_status] ?? '',
+  },
+  // 🔴 **מחוץ לברירת-המחדל במכוון — החריג היחיד לכלל "מה שבמסך".**
+  // הקריטריון שישי נתן (23/09): *"אם זה לא עוזר להם בניתוח באקסל אז מיותר"*.
+  // 🔑 **והמשפט הזה הוא תרגום-למילים של עמודות שכבר בקובץ** — *"2 זימונים ממתינים
+  // למענה"* הוא אותו נתון שב"דיילות" (2/3). באקסל אי-אפשר למיין, לסנן או לעשות
+  // טבלת-ציר על משפט — **והנתון כבר שם בצורה שכן אפשר.**
+  // ⚠️ **ונשאר זמין ולא נמחק** — שלילה היא הכרעת-מוצר, והוא הכריע להשאיר.
+  // 🚫 **וזה החריג היחיד:** ברגע שנתחיל לבחור ידנית אילו עמודות-מסך "שימושיות" —
+  // איבדנו את הכלל, וכל מסך יהפוך להכרעה מחדש. **הקריטריון צר בכוונה:
+  // עמודה שהיא ניסוח-מילולי של עמודות אחרות באותו קובץ.**
+  { key: 'gap', label: 'מה חסר', format: 'text', value: (project) => gapSentence(project) },
+
+  // ⬇️ **זמינות בבוחר, אינן מסומנות** — "ואם ירצה יוכל להוסיף עוד" (הכרעת-ישי 23/09).
+  { key: 'final_location', label: 'מיקום', format: 'text' },
+  { key: 'final_start_time', label: 'שעת התחלה', format: 'text' },
+  { key: 'final_end_time', label: 'שעת סיום', format: 'text' },
+  { key: 'required_hostess_count', label: 'דיילות נדרשות', format: 'int' },
+  { key: 'hostesses_confirmed', label: 'דיילות שאושרו', format: 'int' },
+  { key: 'pending_invites', label: 'זימונים ממתינים', format: 'int' },
+  { key: 'logistics_ready', label: 'לוגיסטיקה מוכנה', format: 'int' },
+  { key: 'logistics_total', label: 'פריטי לוגיסטיקה', format: 'int' },
+  // 📄 התווית מאושרת ב-`rulings-2026-09-22.md`: *"תאריך ביטול"*, ולא *"בוטל בתאריך"*.
+  { key: 'cancelled_at', label: 'תאריך ביטול', format: 'date' },
+  { key: 'cancel_type', label: 'סוג ביטול', format: 'text' },
+  // 💰 **כסף — ובטוח להצעה, כי המיסוך במסד ולא בלקוח.** `list_projects_overview`
+  // מחשבת את ראות-הקוראת על 'הצעות מחיר' ומחזירה **`NULL` למי שאין לה**
+  // (`20260814142439_module6_rpcs_reads_and_close.sql:103-108`).
+  // ⇒ אינו בברירת-המחדל (אינו על המסך), וכן זמין למי שיסמן אותו.
+  { key: 'planned_revenue', label: 'הכנסה מתוכננת', format: 'money' },
+]
+
+// 🔑 **ברירת-המחדל היא בדיוק מה שהטבלה על המסך מראה** — הכרעת-ישי 23/09/2026:
+// *"בכל מסך שילחצו ייצוא ברירת המחדל תהיה מה שבמסך, ואם ירצה יוכל להוסיף עוד"*.
+// ✅ **וזה אינו שינוי מההכרעה מ-18/09** — היא אמרה *"8 עמודות-הליבה **שמופיעות
+// בטבלת המסך**"*; הניסוח החדש רק הפך אותה לכלל כללי שאינו דורש הכרעה מחדש פר-מסך.
+// 📌 **והאכיפה עצמה יושבת ב-`defaultSelection` (`src/lib/exportColumns.js`)** ולא כאן —
+// כדי שכל מסך שיחובר יקבל את אותה התנהגות בלי לחזור על הלוגיקה. **כלל-ברזל 14.**
+
 export default function ProjectsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -93,6 +179,7 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [today, setToday] = useState(todayIso)
+  const [exportOpen, setExportOpen] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
 
   const refresh = useCallback(() => {
@@ -229,6 +316,17 @@ export default function ProjectsPage() {
   )
   const hiddenCount = preWindowVisible.length - windowedVisible.length
 
+  // שם-הקובץ נגזר מאותו `buildExportFileName` שמודול 11 משתמש בו — **בונה אחד לשם-קובץ**,
+  // ולא ניסוח שני שיתפצל ביום שהכלל ישתנה (הוא גם מנקה תווים אסורים ותווי-בידוד).
+  const exportFileName = useMemo(
+    () =>
+      buildExportFileName({
+        reportName: 'פרויקטים',
+        windowLabel: TABS.find((t) => t.key === tab)?.label,
+      }),
+    [tab],
+  )
+
   const pageResult = useMemo(
     () => paginate(windowedVisible, page, PAGE_SIZE),
     [windowedVisible, page],
@@ -316,6 +414,19 @@ export default function ProjectsPage() {
                   המסכים (חוזה §4). */}
               <WindowChips value={windowKey} onChange={setWindowKey} hiddenCount={hiddenCount} />
               <span className="mr-auto text-sm text-slate-400">{SORT_LINE}</span>
+              {/* הכפתור יושב בשורת-המסננים, בדיוק כמו במודול 11 — אותו מיקום בכל מסך
+                  שמחובר לחלון. 🔑 **פעיל תמיד**: החלון עצמאי ואומר בעצמו כשאין מה לייצא
+                  (הכרעת-ישי 17/09, ת4ב) — כפתור מנוטרל אינו אומר למשתמשת למה. */}
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => setExportOpen(true)}
+                data-testid="projects-export-button"
+              >
+                <Download className="size-4" aria-hidden="true" />
+                ייצוא
+              </Button>
             </div>
             {visible.length > 0 && <Hint id="projects.sort" />}
             {visible.length === 0 ? (
@@ -331,6 +442,38 @@ export default function ProjectsPage() {
                 closing={tab === 'closing'}
                 today={today}
                 onOpen={(id) => navigate(`/projects/${id}`)}
+              />
+            )}
+            {/*
+              🔑 **החלון מקבל `windowedVisible` ולא `visible`, וזה ההבדל היחיד שחשוב כאן:**
+              `visible` הוא **עמוד אחד** (`paginate`), ו-`windowedVisible` הוא כל מה שעומד במסנן.
+              װ**הכרעת-ישי 17/09: *"כל השורות שעומדות במסנן"*** — קובץ שמכיל עמוד
+              אחד מתוך שלושה הוא בדיוק החיתוך-השקט שכל המנגנון הזה נבנה כדי למנוע.
+              🚧 **ואין כאן שליפה שנייה**, בשונה ממודול 11: װ`listProjectsOverview` כבר הביא את הכול
+              לזיכרון והדפדוף כולו בלקוח (תוכנית §7.1) ⇒ החלון מקבל שורות, לא פונקציית-שליפה.
+              ⚠️ **ו-`permissions` אינו מועבר במכוון:** אף מפתח כאן אינו ברשם-העמודות-הרגישות,
+              ו-`isVisible` נופל **סגור** על מפתח רשום כשאין הרשאות ⇒ אם מישהו יוסיף כאן
+              עמודת-שכר בעתיד, היא **תיחסם ולא תדלוף**, עד שיועברו הרשאות במפורש.
+            */}
+            {exportOpen && (
+              <ExportDialog
+                open={exportOpen}
+                onOpenChange={setExportOpen}
+                title="ייצוא פרויקטים לאקסל"
+                columns={EXPORT_COLUMNS}
+                rows={windowedVisible}
+                buildSheet={buildExportSheet}
+                knownMessages={EXPORT_LOCKED_MESSAGES}
+                fileName={exportFileName}
+                onExport={({ columns: picked, rows: pickedRows, scope, count }) =>
+                  exportReportRows({
+                    fileName: exportFileName,
+                    sheetName: 'פרויקטים',
+                    columns: picked,
+                    rows: pickedRows,
+                    meta: { scope, count, generatedAt: new Date() },
+                  })
+                }
               />
             )}
             {/* הדפדוף יושב תחת הטבלה, בתוך אותו כרטיס (חוזה §4) — ומוסתר-מאליו כש-total=0

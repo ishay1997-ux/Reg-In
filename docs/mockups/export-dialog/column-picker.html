@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>בוחר-עמודות · 30 שדות</title>
+    <!--
+      מסך: בוחר-העמודות בחלון-הייצוא, במצב של ייצוא-פרויקטים.
+      סעיף-אפיון: processes-approved.md ת4ב · החוב: PROJECT_MASTER §6 "🚧 מ13 ← מ11".
+      פרופילים: mockup_surface@T1 [MOCK-1,2,3,4,5,6,7,9] · hebrew_rtl (RTL בתוך MOCK-4).
+
+      🔒 קדימות (MOCK-9): מראה ⇒ המוקאפ קובע · התנהגות/נתונים/הרשאות ⇒ האפיון קובע ·
+      סתירה ⇒ עוצרים ושואלים את ישי.
+
+      📊 מקור-הנתונים (MOCK-1): שמות-השדות נגזרו מ-docs/schema.sql — projects (38 עמודות)
+      + project_finance (10) = 48 גולמיים, מהם 30 בעלי משמעות לייצוא (מזהים פנימיים,
+      טוקנים, קווי-אורך/רוחב וחותמות-מערכת אינם מוצגים).
+      שורות-הדוגמה בתצוגה הן פרויקטים אמיתיים שנמדדו במסך גיול-החובות ב-17/09/2026.
+      ⚠️ תוויות מסומנות [חדש] אינן קיימות בממשק היום — הן הצעה שלי וטעונות אישורך (MOCK-5).
+    -->
+    <style>
+      :root {
+        --teal: #0f766e;
+        --teal-ink: #0b5c56;
+        --page: #f8fafc;
+        --card: #ffffff;
+        --line: #cbd5e1;
+        --line-soft: #e2e8f0;
+        --ink: #1e293b;
+        --ink-soft: #475569;
+        --ink-faint: #64748b;
+        --bad: #b91c1c;
+        --new: #92400e;
+        --new-bg: #fef3c7;
+        --r: 8px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font:
+          14px/1.5 'Segoe UI',
+          system-ui,
+          sans-serif;
+        padding: 20px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: var(--ink-faint);
+        font-size: 13px;
+        margin: 0 0 18px;
+      }
+      .switcher {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        padding: 8px;
+        margin-bottom: 18px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .switcher b {
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin-inline-end: 4px;
+      }
+      .switcher button {
+        font: inherit;
+        font-size: 12px;
+        min-height: 32px;
+        padding: 4px 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--card);
+        color: var(--ink-soft);
+        cursor: pointer;
+      }
+      .switcher button[aria-pressed='true'] {
+        background: var(--teal);
+        border-color: var(--teal);
+        color: #fff;
+        font-weight: 600;
+      }
+      :focus-visible {
+        outline: 3px solid var(--teal);
+        outline-offset: 2px;
+      }
+
+      .pair {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 900px) {
+        .pair {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .col > h2 {
+        font-size: 14px;
+        margin: 0 0 2px;
+      }
+      .col > p {
+        font-size: 12px;
+        color: var(--ink-faint);
+        margin: 0 0 8px;
+        min-height: 32px;
+      }
+      .panel {
+        width: 320px;
+        max-width: 100%;
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: var(--r);
+        padding: 12px;
+      }
+      .panel > .lbl {
+        font-size: 12px;
+        color: var(--ink-soft);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+      }
+      .link {
+        color: var(--teal-ink);
+        background: none;
+        border: 0;
+        font: inherit;
+        font-size: 12px;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 4px 2px;
+        min-height: 24px;
+      }
+      .search {
+        width: 100%;
+        font: inherit;
+        font-size: 12px;
+        padding: 6px 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        margin-bottom: 6px;
+      }
+      .bulk {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      ul.list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        overflow: auto;
+        border: 1px solid var(--line-soft);
+        border-radius: 6px;
+      }
+      ul.list.today {
+        max-height: 224px;
+      }
+      ul.list.proposed {
+        max-height: 420px;
+      }
+      ul.list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--line-soft);
+        background: var(--card);
+      }
+      ul.list li:last-child {
+        border-bottom: 0;
+      }
+      .grip {
+        color: var(--ink-faint);
+        cursor: grab;
+        font-size: 13px;
+        min-width: 16px;
+      }
+      .name {
+        flex: 1;
+        min-width: 0;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .arrows {
+        display: flex;
+        gap: 2px;
+      }
+      .arrows button {
+        font: inherit;
+        font-size: 11px;
+        min-width: 24px;
+        min-height: 24px;
+        border: 0;
+        background: none;
+        color: var(--ink-soft);
+        cursor: pointer;
+      }
+      .tag {
+        font-size: 10px;
+        padding: 1px 5px;
+        border-radius: 999px;
+        background: var(--new-bg);
+        color: var(--new);
+        white-space: nowrap;
+      }
+      .counter {
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin-top: 6px;
+      }
+      .warn {
+        font-size: 12px;
+        color: var(--bad);
+        margin-top: 6px;
+      }
+      .note {
+        background: #ecfdf5;
+        border: 1px solid #99f6e4;
+        border-radius: var(--r);
+        padding: 10px 12px;
+        font-size: 12px;
+        margin-top: 18px;
+      }
+      .foot {
+        margin-top: 22px;
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+      .foot h3 {
+        font-size: 13px;
+        margin: 0 0 6px;
+        color: var(--ink);
+      }
+      .foot ol {
+        margin: 0 0 12px;
+        padding-inline-start: 20px;
+      }
+      table.map {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 11px;
+        margin-top: 6px;
+      }
+      table.map th,
+      table.map td {
+        border: 1px solid var(--line-soft);
+        padding: 4px 6px;
+        text-align: start;
+      }
+      table.map th {
+        background: #f1f5f9;
+        font-weight: 600;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .state-msg {
+        border: 1px dashed var(--line);
+        border-radius: 6px;
+        padding: 14px;
+        font-size: 12px;
+        color: var(--ink-soft);
+        text-align: center;
+      }
+      .skel {
+        height: 28px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #eef2f7, #e2e8f0, #eef2f7);
+        margin-bottom: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>בוחר-העמודות כשיש 30 שדות — היום מול המוצע</h1>
+    <p class="sub">
+      ייצוא מתוך מסך הפרויקטים. <bdi>30</bdi> שדות בעלי משמעות מתוך <bdi>48</bdi> שקיימים
+      בטבלאות <bdi>projects</bdi> ו-<bdi>project_finance</bdi>.
+    </p>
+
+    <div class="switcher" role="group" aria-label="מצבי המסך">
+      <b>מצב:</b>
+      <button aria-pressed="true" data-state="full">מלא (<bdi>30</bdi> שדות)</button>
+      <button aria-pressed="false" data-state="default">ברירת מחדל (<bdi>8</bdi>)</button>
+      <button aria-pressed="false" data-state="loading">טעינה</button>
+      <button aria-pressed="false" data-state="empty">ריק</button>
+      <button aria-pressed="false" data-state="none">בלי בחירה</button>
+      <button aria-pressed="false" data-state="error">שגיאה</button>
+    </div>
+
+    <div class="pair">
+      <section class="col">
+        <h2>היום</h2>
+        <p>
+          גובה קבוע — <bdi>6</bdi> שורות נראות. אין חיפוש, אין סימון-הכול. כדי להעביר שדה
+          ממקום <bdi>30</bdi> למקום <bdi>1</bdi>: <bdi>29</bdi> לחיצות חץ.
+        </p>
+        <div class="panel">
+          <div class="lbl">
+            <span>עמודות (<bdi><span class="cnt-today">30/30</span></bdi>)</span>
+            <button class="link" type="button">איפוס</button>
+          </div>
+          <div class="body-today"></div>
+        </div>
+      </section>
+
+      <section class="col">
+        <h2>המוצע</h2>
+        <p>
+          חיפוש · סימון-הכול / נקה-הכול · גובה נגזר-מסך · ושורת-מצב שאומרת כמה נבחרו וכמה
+          נראות.
+        </p>
+        <div class="panel">
+          <div class="lbl">
+            <span>עמודות (<bdi><span class="cnt-prop">30/30</span></bdi>)</span>
+            <button class="link" type="button">איפוס</button>
+          </div>
+          <div class="body-prop"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="note">
+      <b>מה שלא משתנה:</b> נשארה <b>רשימה אחת</b> שבה מסמנים וגם מסדרים — ההכרעה שלך מ-17/09
+      (<span dir="rtl">"עמודה אחת בה הוא מסדר את הסדר, מסתיר או לא"</span>). לא נכנס פקד
+      דו-אזורי, והגרירה נשארה אנכית בלבד. <b>מה שנוסף הוא רק מה שרשימה של <bdi>30</bdi>
+      דורשת ורשימה של <bdi>8</bdi> לא.</b>
+    </div>
+
+    <div class="foot">
+      <h3>שלוש שאלות פתוחות אליך</h3>
+      <ol>
+        <li>
+          <b>סדר-העמודות ב-<bdi>30</bdi> שדות.</b> חצים וגרירה עובדים ל-<bdi>8</bdi>. ל-<bdi
+            >30</bdi
+          >
+          צריך משהו נוסף — הצעתי: <b>"העבר לראש"</b> בלחיצה אחת. מאשר, או שמעדיף להשאיר חצים
+          בלבד?
+        </li>
+        <li>
+          <b>ברירת-המחדל בייצוא-פרויקטים.</b> כל <bdi>30</bdi> מסומנים, או <bdi>8</bdi>
+          עמודות-הליבה שמופיעות בטבלת המסך? הצעתי: <b>ליבה בלבד</b>, ומי שרוצה יותר מסמן.
+        </li>
+        <li>
+          <b>שמות השדות המסומנים <span class="tag">חדש</span>.</b> אין להם תווית בממשק היום.
+          הצעתי נוסח — תקן מה שלא מדויק בשפה שלך.
+        </li>
+      </ol>
+      <h3>מיפוי שדה ⇐ עמודה במסד (MOCK-5)</h3>
+      <table class="map">
+        <thead>
+          <tr>
+            <th>תווית במסך</th>
+            <th>עמודה</th>
+            <th>טבלה</th>
+            <th>מקור</th>
+          </tr>
+        </thead>
+        <tbody class="map-body"></tbody>
+      </table>
+      <p style="margin-top: 10px">
+        <b>לבדיקה במכשיר שלך:</b> גרירה בעכבר על רשימה ארוכה, והאם <bdi>420</bdi> פיקסלים
+        גובה נוחים לך במסך שאתה עובד עליו.
+      </p>
+    </div>
+
+    <script>
+      // 30 השדות בעלי המשמעות, מתוך 48 הגולמיים. label = התווית המוצעת · col/tbl = המקור.
+      // isNew = אין תווית בממשק היום ⇒ מסומן [חדש] לפי MOCK-5.
+      const FIELDS = [
+        { label: 'מספר פרויקט', col: 'project_id', tbl: 'projects' },
+        { label: 'שם האירוע', col: 'event_name', tbl: 'projects' },
+        { label: 'לקוח', col: 'customer_name', tbl: 'projects' },
+        { label: 'תאריך האירוע', col: 'final_event_date', tbl: 'projects' },
+        { label: 'מיקום', col: 'final_location', tbl: 'projects' },
+        { label: 'שעת התחלה', col: 'final_start_time', tbl: 'projects' },
+        { label: 'שעת סיום', col: 'final_end_time', tbl: 'projects' },
+        { label: 'סטטוס', col: 'project_status', tbl: 'projects' },
+        { label: 'אורחים בפועל', col: 'actual_guests', tbl: 'projects' },
+        { label: 'דיילות נדרשות', col: 'required_hostess_count', tbl: 'projects' },
+        { label: 'שעות בפועל', col: 'actual_hours', tbl: 'projects' },
+        { label: 'מנהלת הפרויקט', col: 'owner_name', tbl: 'projects' },
+        { label: 'טלפון מנהלת', col: 'owner_phone', tbl: 'projects', isNew: true },
+        { label: 'חשבונית נשלחה', col: 'invoice_sent_at', tbl: 'projects' },
+        { label: 'תאריך תשלום', col: 'payment_date', tbl: 'projects' },
+        { label: 'ציון משוב', col: 'feedback_score', tbl: 'projects' },
+        { label: 'סטטוס משוב', col: 'feedback_status', tbl: 'projects' },
+        { label: 'סיבות משוב חיובי', col: 'positive_feedback_reasons', tbl: 'projects', isNew: true },
+        { label: 'סיבות משוב שלילי', col: 'negative_feedback_reasons', tbl: 'projects', isNew: true },
+        { label: 'הערות משוב', col: 'feedback_notes', tbl: 'projects', isNew: true },
+        { label: 'סוג ביטול', col: 'cancel_type', tbl: 'projects' },
+        { label: 'סיבת ביטול', col: 'cancel_reason', tbl: 'projects', isNew: true },
+        { label: 'בוטל בתאריך', col: 'cancelled_at', tbl: 'projects', isNew: true },
+        { label: 'בוטל על-ידי', col: 'cancelled_by', tbl: 'projects', isNew: true },
+        { label: 'נסגר תפעולית', col: 'operationally_closed_at', tbl: 'projects' },
+        { label: 'נסגר תפעולית על-ידי', col: 'operationally_closed_by', tbl: 'projects', isNew: true },
+        { label: 'נוצר בתאריך', col: 'created_at', tbl: 'projects', isNew: true },
+        { label: 'רווח סופי', col: 'final_profit', tbl: 'project_finance' },
+        { label: 'דמי ביטול', col: 'cancellation_fee', tbl: 'project_finance' },
+        { label: 'נמחק כחוב אבוד', col: 'written_off', tbl: 'project_finance', isNew: true },
+      ]
+      const CORE = 8 // עמודות-הליבה שמופיעות בטבלת מסך-הפרויקטים
+
+      const el = (h) => {
+        const d = document.createElement('div')
+        d.innerHTML = h.trim()
+        return d.firstElementChild
+      }
+
+      function row(f, i, last, withTop) {
+        const tag = f.isNew ? ' <span class="tag">חדש</span>' : ''
+        const top = withTop
+          ? `<button type="button" title="העבר לראש" aria-label="העבר את ${f.label} לראש הרשימה">⤒</button>`
+          : ''
+        return el(`<li>
+            <span class="grip" aria-hidden="true">⠿</span>
+            <input type="checkbox" id="c-${withTop ? 'p' : 't'}-${i}" checked />
+            <label class="name" for="c-${withTop ? 'p' : 't'}-${i}">${f.label}${tag}</label>
+            <span class="arrows">
+              ${top}
+              <button type="button" aria-label="הזז את ${f.label} מעלה" ${i === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" aria-label="הזז את ${f.label} מטה" ${last ? 'disabled' : ''}>▼</button>
+            </span>
+          </li>`)
+      }
+
+      function list(fields, cls, withTop) {
+        const ul = document.createElement('ul')
+        ul.className = 'list ' + cls
+        ul.tabIndex = 0
+        ul.setAttribute('role', 'region')
+        ul.setAttribute('aria-label', 'רשימת העמודות שייכנסו לקובץ, לפי סדרן')
+        fields.forEach((f, i) => ul.appendChild(row(f, i, i === fields.length - 1, withTop)))
+        return ul
+      }
+
+      function render(state) {
+        const today = document.querySelector('.body-today')
+        const prop = document.querySelector('.body-prop')
+        today.innerHTML = ''
+        prop.innerHTML = ''
+
+        if (state === 'loading') {
+          const sk = () => `<div class="skel"></div>`.repeat(5)
+          today.innerHTML = sk()
+          prop.innerHTML = sk()
+          return
+        }
+        if (state === 'empty') {
+          const m = `<p class="state-msg">אין עמודות לדוח הזה — בחרי דוח אחר.</p>`
+          today.innerHTML = m
+          prop.innerHTML = m
+          return
+        }
+        if (state === 'error') {
+          const m = `<p class="state-msg" role="alert" style="color:var(--bad);border-color:var(--bad)">
+              שליפת הנתונים לא הושלמה. <button class="link" type="button">נסי שוב</button>
+            </p>`
+          today.innerHTML = m
+          prop.innerHTML = m
+          return
+        }
+
+        const fields = state === 'default' ? FIELDS.slice(0, CORE) : FIELDS
+        const noneSelected = state === 'none'
+
+        today.appendChild(list(fields, 'today', false))
+        today.appendChild(
+          el(
+            `<p class="${noneSelected ? 'warn' : 'counter'}">${
+              noneSelected ? 'בחרי עמודה אחת לפחות' : 'הסדר כאן הוא הסדר בקובץ'
+            }</p>`,
+          ),
+        )
+
+        prop.appendChild(
+          el(
+            `<label class="visually-label" style="display:block">
+               <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">חיפוש עמודה</span>
+               <input class="search" type="search" placeholder="חיפוש עמודה — למשל: רווח" dir="auto" />
+             </label>`,
+          ),
+        )
+        prop.appendChild(
+          el(`<div class="bulk">
+                <button class="link" type="button">סמני הכול</button>
+                <button class="link" type="button">נקי הכול</button>
+              </div>`),
+        )
+        prop.appendChild(list(fields, 'proposed', true))
+        const shown = Math.min(fields.length, 10)
+        prop.appendChild(
+          el(
+            `<p class="${noneSelected ? 'warn' : 'counter'}">${
+              noneSelected
+                ? 'בחרי עמודה אחת לפחות'
+                : `<bdi>${fields.length}</bdi> עמודות ייכנסו לקובץ · <bdi>${shown}</bdi> נראות כאן · הסדר כאן הוא הסדר בקובץ`
+            }</p>`,
+          ),
+        )
+
+        const n = noneSelected ? 0 : fields.length
+        document.querySelector('.cnt-today').textContent = `${n}/${fields.length}`
+        document.querySelector('.cnt-prop').textContent = `${n}/${fields.length}`
+      }
+
+      document.querySelectorAll('.switcher button').forEach((b) => {
+        b.addEventListener('click', () => {
+          document
+            .querySelectorAll('.switcher button')
+            .forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+          render(b.dataset.state)
+        })
+      })
+
+      document.querySelector('.map-body').innerHTML = FIELDS.map(
+        (f) =>
+          `<tr><td>${f.label}</td><td><bdi>${f.col}</bdi></td><td><bdi>${f.tbl}</bdi></td><td>${
+            f.isNew ? 'תווית חדשה — טעונה אישור' : 'קיימת בממשק'
+          }</td></tr>`,
+      ).join('')
+
+      render('full')
+    </script>
+  </body>
+</html>

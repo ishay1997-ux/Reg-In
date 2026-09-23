@@ -31,15 +31,25 @@ const PRIMARY_CONTACT_EMBED =
 
 // כל הלקוחות (פעילים ולא-פעילים) ממוינים לפי שם-חברה. הסינון/המיון העדין נעשה בצד-לקוח דרך
 // src/lib/customers.js (מסך קטן, דאטה קטן) — כאן מביאים את הסט המלא שה-RLS מתיר לתפקיד.
+//
+// 🔴 23/09/2026 — `fetchAll`, כתנאי-כניסה לחלון-הייצוא (`PROJECT_MASTER §6`, `🚧 מ13 ← מ11`):
+// הקובץ שיורד הוא "כל השורות שעומדות במסנן" (הכרעת-ישי 17/09), ותקרת-1,000 של PostgREST
+// הייתה חותכת אותו **בשקט** — בלי שגיאה ובלי שדה שאומר "יש עוד" (ר' `src/api/fetchAll.js`).
+// 61 לקוחות היום, אז זה לא באג חי; זה גדר לפני שהוא נעשה כזה.
+// ⚠️ `.order('customer_id')` הוא שובר-השוויון שחוזה-`fetchAll` דורש: שם-חברה אינו ייחודי,
+// ודפדוף בלי סדר יציב מחזיר שורה פעמיים ומדלג על אחרת — אותו כשל שקט בדיוק.
 export async function listCustomers() {
   // 🔴 N2: היה `customer_contacts(contact_name)` בלבד — מספיק לחיפוש הסלחני (matchesText),
   // לא-מספיק כדי לקבוע/להציג את הראשי. עם `PRIMARY_CONTACT_EMBED` השורה גם מכילה `is_primary`
   // (ל-`primaryContact()`) וגם `phone`/`email` (לתצוגה) — לחיפוש-הטקסט זה שינוי-סרק, ל-primaryContact
   // זה מה שהופך את זה מ"אפשרי" ל"קיים".
-  const { data, error } = await supabase
-    .from('customers')
-    .select(`*, ${PRIMARY_CONTACT_EMBED}`)
-    .order('company_name')
+  const { data, error } = await fetchAll(() =>
+    supabase
+      .from('customers')
+      .select(`*, ${PRIMARY_CONTACT_EMBED}`)
+      .order('company_name')
+      .order('customer_id'),
+  )
   if (error) throw toError(error, 'שגיאה בטעינת רשימת הלקוחות.')
   return data ?? []
 }
