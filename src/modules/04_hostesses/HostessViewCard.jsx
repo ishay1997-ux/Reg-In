@@ -580,7 +580,9 @@ function KeyValue({ label, value, ltr }) {
 
 // ‏`מצוינת` ⇒ טורקיז · `בסדר` ⇒ מתאר · `לא לשלוח שוב` ⇒ ענבר — אותם גוונים של כפתורי-האיכות
 // בלשונית הסגירה (`ClosingTab.jsx`), שבה ההעדפה נרשמת. תווית ולא רק צבע (נגישות).
-const PREFERENCE_TONE = { מצוינת: 'teal', בסדר: 'outline', 'לא לשלוח שוב': 'warn' }
+const NEGATIVE_LABEL = 'לא לשלוח שוב'
+const PREFERENCE_TONE = { מצוינת: 'teal', בסדר: 'outline', [NEGATIVE_LABEL]: 'warn' }
+const PREFERENCE_ORDER = [NEGATIVE_LABEL, 'מצוינת', 'בסדר']
 
 function ClientPreferences({ preferences, error, onRetry }) {
   if (error) {
@@ -611,23 +613,36 @@ function ClientPreferences({ preferences, error, onRetry }) {
     )
   }
   if (preferences.length === 0) return <Muted>טרם נרשמו העדפות</Muted>
+  // 📏 **מקובץ לפי סוג, ולא שורה לכל לקוח:** במסד יש דיילות עם 25–37 העדפות (נמדד 24/09/2026) —
+  // רשימה בגובה כזה הייתה דוחקת את שאר הכרטיס. "לא לשלוח שוב" **ראשון ועם הסיבה**, כי הוא היחיד
+  // שחוסם שיבוץ; "מצוינת" ו"בסדר" — שורת-שמות אחת לכל סוג.
+  const groups = PREFERENCE_ORDER.map((label) => ({
+    label,
+    rows: preferences.filter(
+      (row) => (qualityLabelFromValue(row.preference) ?? row.preference) === label,
+    ),
+  })).filter((group) => group.rows.length > 0)
   return (
-    <ul className="flex flex-col gap-1.5" data-testid="hostess-preferences">
-      {preferences.map((row) => {
-        const label = qualityLabelFromValue(row.preference) ?? row.preference
-        return (
-          <li
-            key={row.customerId}
-            className="flex flex-wrap items-center gap-2 text-sm text-slate-700"
-            data-testid={`hostess-preference-${row.customerId}`}
-          >
-            <span className="font-medium">{row.customerName ?? 'לקוח ללא שם'}</span>
-            <StatusTag label={label} tone={PREFERENCE_TONE[label] ?? 'muted'} />
-            {row.reason && <span className="text-xs text-slate-500">{row.reason}</span>}
-          </li>
-        )
-      })}
-    </ul>
+    <div className="flex flex-col gap-2" data-testid="hostess-preferences">
+      {groups.map(({ label, rows }) => (
+        <div
+          key={label}
+          className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-slate-700"
+          data-testid={`hostess-preferences-${PREFERENCE_TONE[label] ?? 'muted'}`}
+        >
+          <StatusTag label={label} tone={PREFERENCE_TONE[label] ?? 'muted'} />
+          {rows.map((row, index) => (
+            <span key={row.customerId} data-testid={`hostess-preference-${row.customerId}`}>
+              {row.customerName ?? 'לקוח ללא שם'}
+              {row.reason && label === NEGATIVE_LABEL && (
+                <span className="text-xs text-slate-500"> ({row.reason})</span>
+              )}
+              {index < rows.length - 1 && ' ·'}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
   )
 }
 
