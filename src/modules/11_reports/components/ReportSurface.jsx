@@ -88,7 +88,9 @@ function Tiles({ tiles, onOpenTarget }) {
           // אבל הכרטיס עצמו מילא רק רוחב ⇒ ארבעה כרטיסים באותה שורה בארבעה גבהים.
           // ‏📏 נמדד: הפרש 17px לפני הגדלת הכתב, **39px אחריה** — הכתב הגדול שובר שורות-משנה
           // ליותר שורות ומגדיל את הפער. ‏🔑 ו-`flex flex-wrap` נשמר — הכרעת-ישי 08/08 אינה נגועה.
-          className="flex min-w-[210px] max-w-[340px] grow basis-[210px] [&>*]:h-full [&>*]:w-full"
+          // ✏️ 23/09/2026 (תקן-הכרטיס) — 210 ⇒ 180: שישה אריחים (מ17) לא נכנסו בשורה ב-1536 והשישי
+          // נפל לבד לשורה שנייה. עם שורה-אחת-מתחת-לערך, 180 מספיק לתווית ולמספר.
+          className="flex min-w-[180px] max-w-[340px] grow basis-[180px] [&>*]:h-full [&>*]:w-full"
         >
           <KpiTile tile={tile} masked={tile.masked} onOpenTarget={onOpenTarget} />
         </div>

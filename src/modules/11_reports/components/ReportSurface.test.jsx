@@ -966,8 +966,9 @@ describe('ReportSurface — גבולות-רוחב של האריח', () => {
     const strip = await screen.findByTestId('report-tiles')
     expect(strip.className).toContain('flex-wrap')
     const box = strip.firstElementChild
-    expect(box.className).toContain('min-w-[210px]')
+    // ✏️ 23/09/2026 (תקן-הכרטיס): 210 ⇒ 180 — שישה אריחים (מ17) נכנסים בשורה אחת ב-1536.
+    expect(box.className).toContain('min-w-[180px]')
     expect(box.className).toContain('max-w-[340px]')
-    expect(box.className).toContain('basis-[210px]')
+    expect(box.className).toContain('basis-[180px]')
   })
 })

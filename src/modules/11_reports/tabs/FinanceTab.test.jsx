@@ -479,8 +479,10 @@ describe('מ7 · מבט-על כספים', () => {
     expect(plain(tile)).toContain('206,002 ₪')
     // 📐3 — חלון-הזמן על האריח. ✏️ 23/09/2026 (L1): בלי "אינו מושפע ממסנן התקופה" — שורת-המסננים
     // כבר אומרת זאת כעובדה (`תקופה  נכון להיום`), וההסתייגות ירדה מהשרת.
-    expect(plain(tile)).toContain('נכון להיום')
-    expect(plain(tile)).not.toContain('אינו מושפע')
+    // ✏️ 23/09/2026 (תקן-הכרטיס): החלון עבר מהשורה הגלויה ל-ⓘ שלצד הכרטיס — לא נמחק.
+    expect(plain(screen.getByTestId('report-tile-box-open_debt'))).toContain('נכון להיום')
+    expect(plain(tile)).not.toContain('נכון להיום')
+    expect(plain(screen.getByTestId('report-tile-box-open_debt'))).not.toContain('אינו מושפע')
 
     // שבב-ההיקף מהשרת (`population.summary`); ההצהרה המלאה מקופלת בתוכו.
     expect(plain(screen.getByTestId('report-scope-summary'))).toContain('35 חשבוניות פתוחות')
