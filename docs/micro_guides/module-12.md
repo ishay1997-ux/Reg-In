@@ -39,6 +39,12 @@ gh pr list --state open
 לפני כל פעולה, ענה לסגן בהודעה אחת, עם הפניה לשורה בלוח: מה המשימה · איפה מותר לך לכתוב · מה אסור · מה משחרר אותך בסוף · שתי מלכודות.
 ```
 
+## 2ב · מפת-ענפים ותיקיות — אחריות-הסגן (ישי 17:2X: *"שים לב שאין ענפים מיותרים… אחריותך לנהל את כל הדבר הזה"*)
+- **חיים:** `main` · `dev` · `ishay/system-polish` (⇐ main היום) · `ishay/module-12-integration` (מ12 + ענף-ההמשך אחרי main) · `ishay/module-10-automations` (16–20/10) · 4 ענפי dependabot (16/10).
+- **נמחק 17:2X (התוכן כבר ב-dev/main — נבדק):** `ishay/e2e-stale-fixes-agent2` (מקומי + שרת, `ea2b6268`) · `worktree-agent-abb466…` (`4d718709`) · התיקייה `.claude/worktrees/agent-abb466…` (נקייה).
+- **נמחק אחרי main (כשיוכח שהתוכן ב-main):** `ishay/system-polish-copy` + `Reg-In-copy-wt` · `ishay/system-polish` + `Reg-In-export-wt` · `Reg-In-qa-wt` (אחרי השער).
+- **ממתין לארכוב-שיחה של ישי** (כלל-ברזל 10 — לא הסגן): `.claude/worktrees/youthful-shaw-068eb8` + `claude/youthful-shaw-068eb8` (`dd04777b`, מוכל ב-system-polish) + `ishay/e2e-stale-fixes` — של השיחה "Investigate five e2e tests failing on dev".
+
 ## 3 · מה נעשה ואומת היום (24/09)
 - **סשן 2:** ‏0ג (6 פריטים) + 0ב, עד `cc726958`. מיגרציות `module11_m3_walkthrough_fixes` + `module5_upcoming_orders` — **בדיקה ① עברה אצל הסגן** (md5 חי = הקובץ · proacl בלי anon · 27,186 נגזר בנפרד).
 - **PR [#156](https://github.com/ishay1997-ux/Reg-In/pull/156)** (`ishay/e2e-stale-fixes-agent2` ⇐ `dev`): חמש בדיקות e2e שהתיישנו + שלושה תיקוני-נתונים, **כבר מוחלים במסד**: 24 פרויקטים יצאו מהארכיון · 6+4 אירועים עתידיים קיבלו שורות/לוגיסטיקה · 53 עמודות-סיבה. **אומת עצמאית ע"י הסגן במסד.** ✅ **מוזג ל-`dev` ב-24/09, ‏`2b35385c`** (CI 5/5, ‏CLEAN). ⚠️ לפני המיזוג כובה `auto_archive_on_close` של סשן-הסגן — ברירת-המחדל הייתה מארכבת את הסגן עם המיזוג.
