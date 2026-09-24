@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import ReturnToLink from '@/components/ReturnToLink'
 import { useAuth } from '@/contexts/AuthContext'
 import Hint from '@/components/Hint'
 import LoadingOrError from '@/components/LoadingOrError'
@@ -211,6 +212,8 @@ export default function ProjectCardPage() {
 
   return (
     <div data-testid="project-card-page">
+      {/* 0ב (24/09/2026): הגעה מדוח או ממסך הבית — קישור-חזרה מעל פירורי-הלחם. */}
+      <ReturnToLink className="mb-1" />
       <Crumbs eventName={project.event_name} />
 
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">

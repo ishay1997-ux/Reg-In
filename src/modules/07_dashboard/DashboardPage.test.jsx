@@ -427,9 +427,10 @@ describe('DashboardPage — מה דורש טיפול (R6 09/09/2026: ארבעה 
   it('לחיצה על כרטיס-לוגיסטיקה פותחת את /logistics — לא פרויקט בודד', async () => {
     renderPage()
     await screen.findByTestId('kpi-active')
-    expect(screen.getByTestId('dashboard-attention-card-logistics')).toHaveAttribute(
-      'href',
-      '/logistics',
-    )
+    // ✏️ 24/09/2026 (0ב): הקישור נושא גם `returnTo=/` — היעד עצמו לא השתנה.
+    const href = screen.getByTestId('dashboard-attention-card-logistics').getAttribute('href')
+    const url = new URL(href, 'http://x')
+    expect(url.pathname).toBe('/logistics')
+    expect(url.searchParams.get('returnTo')).toBe('/')
   })
 })

@@ -11,6 +11,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Hint from '@/components/Hint'
+import { useReturnTo } from '@/components/ReturnToLink'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -135,6 +136,7 @@ export default function QuotesPage() {
   // חלון-הזמן והדפדוף חיים בכתובת (`?window=&page=`), לא ב-state — אותה מוסכמה כמו
   // CustomersPage.jsx: כך רשימה מסוננת+מדופדפת היא קישור שאפשר לשמור, ו"חזור" לא מאפס אותם.
   const [searchParams, setSearchParams] = useSearchParams()
+  const returnTo = useReturnTo()
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -227,7 +229,12 @@ export default function QuotesPage() {
   // מזהה שאינו ברשימה (נמחק · אין הרשאה · קישור ישן) — נאמר במפורש, ולא נבלע כחלון שלא נפתח.
   const viewMissing = Boolean(viewParam) && !loading && !loadError && documentQuote === null
 
+  // 0ב (24/09/2026): חלון שנפתח מדוח (`?returnTo=`) — הסגירה חוזרת לדוח (דחיפה, לא החלפה).
   function setDocumentQuote(quote) {
+    if (!quote && returnTo) {
+      navigate(returnTo)
+      return
+    }
     setSearchParams(
       (prev) => {
         const p = new URLSearchParams(prev)

@@ -23,6 +23,7 @@ import { listCustomers } from '@/modules/02_customers/api'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { formatIsraelDate, formatWindowLabel } from '@/lib/reportsFormat'
 import { cn } from '@/lib/utils'
+import { withReturnTo } from '@/lib/returnTo'
 import { DRILL_INTENT, ROW_DOOR_KINDS } from './api'
 import {
   REPORT_TABS,
@@ -456,7 +457,8 @@ export default function ReportsPage() {
     // *"מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט"*), ו**הכרעה 19 עומדת בעינה**.
     // ⇒ המשטח מסמן היום רק מפתח ש**חוזר על הממד של הרמה הפתוחה** (ר' `ReportSurface`).
     if (intent !== DRILL_INTENT && next?.id != null && ROW_DOOR_KINDS.includes(next.kind)) {
-      navigate(DOOR_PATHS[next.kind](next.id))
+      // 0ב (24/09/2026): הדלת נושאת את כתובת-הדוח (לשונית · דוח · מסננים) — היעד חוזר אליה בסגירה.
+      navigate(withReturnTo(DOOR_PATHS[next.kind](next.id), `/reports?${searchParams.toString()}`))
       return
     }
     // 🔑 האובייקט נכתב לכתובת **כפי שהוא** — הסימן חי בקריאה ולא בתוכו, ולכן אין כאן

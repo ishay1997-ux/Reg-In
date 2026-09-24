@@ -8,6 +8,7 @@
 
 import { cloneElement, isValidElement, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import ReturnToLink from '@/components/ReturnToLink'
 import { ArrowRight, Eye } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
@@ -457,6 +458,8 @@ export default function QuoteBuilderPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
+          {/* 0ב (24/09/2026): הגעה מ"מה דורש טיפול" במסך הבית — קישור-חזרה. */}
+          <ReturnToLink className="mb-1" />
           <h1 className="text-lg font-bold text-slate-800">
             {isEditMode ? `עריכת הצעה #${quoteId}` : 'הצעת מחיר חדשה'}
           </h1>
