@@ -139,6 +139,39 @@ describe('ReportSurface — extension slots', () => {
     expect(within(extra).getAllByRole('columnheader')[0]).toHaveAttribute('aria-sort', 'ascending')
   })
 
+  // 🔒 נעילה, לא תיקון (24/09/2026, שאלת-הבודק על הדגל `upcoming`): שורות "כמה להזמין לחודש הקרוב"
+  // במ12 נושאות `{kind:'sku', upcoming:true}`, ו-`report_m12_equipment` **מתעלם מ-`p_drill`** (נמדד:
+  // אותו md5 עם ובלי). ⇒ שורה כזו חייבת להישאר לא-לחיצה — אחרת היא "סמן-מת" (📐14ב③). היום זה
+  // מוחזק ע"י `hasRowDoor` ב-`ExtraTable`; הבדיקה הזו נכשלת ביום שמישהו יסיר את השער.
+  it('an extra table whose rows have no door (kind sku) is not clickable', async () => {
+    callReport.mockResolvedValueOnce(
+      payload({
+        meta: {
+          extra_tables: [
+            {
+              title: 'כמה להזמין לחודש הקרוב',
+              columns: [{ key: 'item_name', label: 'פריט' }],
+              rows: [
+                {
+                  row_key: 'A1',
+                  item_name: 'שרוך',
+                  drill_key: { kind: 'sku', sku: 'A1', upcoming: true },
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    )
+    const onDrill = vi.fn()
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={onDrill} />)
+    const extra = await screen.findByTestId('report-extra-table')
+    const row = within(extra).getByTestId('report-row')
+    expect(row).not.toHaveAttribute('role', 'button')
+    fireEvent.click(row)
+    expect(onDrill).not.toHaveBeenCalled()
+  })
+
   it('does not run transformPayload on a failed load and keeps the error envelope', async () => {
     callReport.mockRejectedValueOnce(Object.assign(new Error('boom'), { code: 'XX000' }))
     const transformPayload = vi.fn((p) => p)

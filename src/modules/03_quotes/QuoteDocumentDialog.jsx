@@ -60,7 +60,7 @@ import {
   MISSING_VAT_CODE,
 } from '@/modules/03_quotes/quotePdf'
 import { getLastSuccessfulSend, sendEmail as sendEmailViaFunction } from '@/api/email'
-import { followupAvailability } from '@/lib/quoteFollowup'
+import { FOLLOWUP_AI_AVAILABLE, followupAvailability } from '@/lib/quoteFollowup'
 import FollowupDraftDialog from '@/modules/03_quotes/FollowupDraftDialog'
 
 // Blob ⇒ base64 גולמי (בלי ה-prefix `data:...;base64,`) — זה הפורמט שהעברנו ל-Edge
@@ -393,7 +393,7 @@ export default function QuoteDocumentDialog({
 
         {/* ✨ D2 — שורה משלה מעל כפתורי-המסמך, ולא כפתור שלישי בתוכם: נימוק-ההשבתה ("ההצעה עוד לא
             נשלחה ללקוח") חייב להיות **טקסט גלוי ליד הכפתור**, ושורת-הכפתורים היא flex בלי מקום לו. */}
-        {followup.show && (
+        {FOLLOWUP_AI_AVAILABLE && followup.show && (
           <FollowupDraftDialog quote={quote} disabledReason={followup.disabledReason} />
         )}
 

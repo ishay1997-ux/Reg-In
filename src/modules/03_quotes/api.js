@@ -167,7 +167,9 @@ export async function getPricingCatalog() {
 // (3) נזרקת `Error` שנושאת `kind` (`quota` · `final` · `retry`) — החלון מחליט לפיו אם להציע `נסי שוב`.
 //     הסיווג עצמו טהור ונבדק ב-`src/lib/quoteFollowup.js`.
 // (4) **טיוטה ריקה = כשל**, לא הצלחה: 200 בלי נושא או בלי גוף נזרק כ-`retry`.
-export async function draftFollowupEmail(quoteId) {
+// ‏`signal` — סגירת-החלון באמצע מבטלת את הבקשה (ממצא-הבודק 24/09), כדי שפתיחה-מחדש לא תשאיר שתי
+// בקשות חיות במקביל. בקשה שבוטלה נדחית ככשל רגיל, והחלון (שכבר לא על המסך) פשוט לא מעדכן state.
+export async function draftFollowupEmail(quoteId, { signal } = {}) {
   let timer
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(new Error('TIMEOUT')), FOLLOWUP_DRAFT_TIMEOUT_MS)
@@ -175,7 +177,7 @@ export async function draftFollowupEmail(quoteId) {
   let result
   try {
     result = await Promise.race([
-      supabase.functions.invoke('draft-followup', { body: { quote_id: quoteId } }),
+      supabase.functions.invoke('draft-followup', { body: { quote_id: quoteId }, signal }),
       timeout,
     ])
   } catch {

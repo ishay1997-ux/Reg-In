@@ -18,6 +18,13 @@ import { isMailtoTooLong } from '@/lib/marketing'
 // ⚠️ **היעד ≤10 שניות (התוכנית §6ה-ה) לא עמד** בשתי המדידות החיות (18.7 · 25 שניות בלי תשובה) — זו התקרה.
 export const FOLLOWUP_DRAFT_TIMEOUT_MS = 35_000
 
+// 🔌 **המתג של הכפתור "נסחי מייל מעקב" — כבוי.** הכרעת-הסגן 24/09/2026: *"אם הקריאה החיה המדודה לא
+// מחזירה טיוטה ⇐ להסתיר את הכפתור (הקוד נשאר)"*. 📏 **שלוש קריאות-אמת, שלושתן בלי תשובה מהספק:**
+// 10:58 UTC (תקרה 18 שנ') · 11:05 (25 שנ') · 13:15 (25 שנ', כבר עם `max_output_tokens` 1024 — כך
+// שזה אינו ייצור-שבורח). ⇒ כפתור שתמיד נגמר ב"הניסוח נכשל" גרוע מאין-כפתור. **החלון, השרת והבדיקות
+// נשארים כמו שהם**; מדליקים כאן אחרי קריאה חיה אחת שמחזירה טיוטה (`supabase/functions/draft-followup/README.md`).
+export const FOLLOWUP_AI_AVAILABLE = false
+
 // סיבת-הדחייה שעבודת-התפוגה כותבת (`20260731085335_module3_vat_and_expiry_param_guards.sql:121`).
 // פרטי במכוון — ייצוא בלי צרכן הוא ממצא-knip.
 const FOLLOWUP_EXPIRED_REASON = 'פג תוקף'
@@ -61,7 +68,8 @@ export function followupAvailability({ quote, canEdit, lastSend, sentNow, checkF
 /**
  * תשובת-כשל של השרת ⇒ מה החלון אומר ומה הוא מציע.
  * - `quota` (429) — אין "נסי שוב" עכשיו: המכסה לא נפתחת בשנייה, וכל ניסיון שורף ממנה.
- * - `final` (4xx אחר: הרשאה · לא נמצאה · לא-זכאית) — ההודעה של השרת כלשונה; ניסיון-חוזר לא ישנה דבר.
+ * - `final` (4xx אחר: הרשאה · לא נמצאה · לא-זכאית · וגם 500 `unavailable` = אין מפתח-AI) — ההודעה של
+ *   השרת כלשונה; ניסיון-חוזר לא ישנה דבר.
  * - `retry` (5xx · רשת · פסק-זמן · תשובה ריקה) — `נסי שוב`.
  */
 export function classifyFollowupFailure(body, httpStatus) {
@@ -69,7 +77,8 @@ export function classifyFollowupFailure(body, httpStatus) {
   if (httpStatus === 429 || body?.status === 'quota') {
     return { kind: 'quota', message: FOLLOWUP_QUOTA_MESSAGE }
   }
-  if (httpStatus >= 400 && httpStatus < 500) {
+  // מפתח-AI שלא הוגדר (500 עם `unavailable`) — סופי: "נסי שוב" לא יתקין מפתח, והיה מבטיח דרך שאין.
+  if ((httpStatus >= 400 && httpStatus < 500) || body?.status === 'unavailable') {
     return { kind: 'final', message: serverMessage || FOLLOWUP_FAILED_MESSAGE }
   }
   return { kind: 'retry', message: serverMessage || FOLLOWUP_FAILED_MESSAGE }

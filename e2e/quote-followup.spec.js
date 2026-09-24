@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { test, expect } from '@playwright/test'
 
 // ✨ D2 — "נסחי מייל מעקב" מחלון-המסמך של הצעה (ליטושי-הכנס 24/09/2026, התוכנית §6 D2 · §6ה).
@@ -85,8 +86,19 @@ async function tabTo(page, testId, max = 30) {
   expect(await activeTestId(page), `לא הגעתי ל-${testId} ב-${max} לחיצות Tab`).toBe(testId)
 }
 
+// 🔌 הכפתור מוסתר כל עוד `FOLLOWUP_AI_AVAILABLE` כבוי (`src/lib/quoteFollowup.js`, הכרעת-הסגן 24/09).
+// נקרא מקובץ-המקור ולא מועתק — כך הבדיקות חוזרות לרוץ מעצמן ביום שמדליקים אותו. (ה-alias `@/` שבקובץ
+// אינו נפתר ב-Playwright, ולכן קריאת-טקסט ולא import.)
+const FOLLOWUP_AI_AVAILABLE = /FOLLOWUP_AI_AVAILABLE\s*=\s*true/.test(
+  readFileSync('src/lib/quoteFollowup.js', 'utf8'),
+)
+
 test.describe('D2 · טיוטת מייל-מעקב בעזרת AI', () => {
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_* לא הוגדרו ב-.env.local')
+  test.skip(
+    !FOLLOWUP_AI_AVAILABLE,
+    'הכפתור מוסתר — FOLLOWUP_AI_AVAILABLE כבוי (הספק לא ענה, 24/09)',
+  )
   test.use({ permissions: ['clipboard-read', 'clipboard-write'] })
 
   test.beforeEach(async ({ page }) => {

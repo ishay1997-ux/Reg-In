@@ -235,3 +235,24 @@ output_tokens <n>` — and the timeout/error lines now carry `elapsed` too. Fiel
 values (`incomplete` = stopped at the output limit) are from https://ai.google.dev/api/interactions-api.
 Temperature left at 0.4 (one change at a time). The one measured live call is recorded below.
 **No fallback model** — that is a separate ruling, after this measurement.
+
+**The measured call (version 4, deployed 24/09/2026 ~13:14 UTC via MCP, `verify_jwt: true`):** gates
+first — no header → 401 `לא מחובר.` · finance (view) → 403. Then **one** real call, CEO, quote **2068**
+(expired, the same case as calls 1–2), 13:15:02 UTC: **502 after 25,961 ms**; function log
+`gemini did not answer 25000 ms Signal timed out. elapsed 25005`. **No `gemini attempt` line** — the
+provider sent no response at all, so there is no finish reason and no token count. ⇒ **Hypothesis 1 is
+refuted:** with a 1,024-token cap a normal answer cannot take 25 s, so this is not runaway generation.
+Three live calls, zero drafts.
+
+**Deputy's ruling on that result:** the button is hidden — `FOLLOWUP_AI_AVAILABLE = false` in
+`src/lib/quoteFollowup.js`. The dialog, this function and every test stay; the e2e tests that open the
+dialog read that same flag from the source and skip while it is off, so they come back on their own.
+The next diagnosis (one experiment per difference from `classify-feedback`) is a separate module-12
+item, after the merge.
+
+**Reviewer fixes in the same round (version 5):** a DB error while reading `users`/`permissions` is
+now 500 `תקלה זמנית — נסי שוב.` (it used to read as "no row" ⇒ a false 403) · a missing
+`GEMINI_API_KEY` answers `{status:'unavailable'}` with `ניסוח בעזרת AI לא זמין כרגע — אפשר לכתוב את
+המייל ידנית.`, a final state in the dialog (no retry) — this message is **no longer** byte-identical to
+`classify-feedback`, by ruling · 401 says `החיבור פג — התחברי מחדש.` · the draft guard also rejects
+`אחוז` and a number followed by `אלף/אלפים/מיליון`.

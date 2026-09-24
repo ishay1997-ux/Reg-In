@@ -15,6 +15,15 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { fullName: 'דנה' }, onboardingMode: 0 }),
 }))
 vi.mock('@/api/email', () => ({ getLastSuccessfulSend: vi.fn(), sendEmail: vi.fn() }))
+// המתג `FOLLOWUP_AI_AVAILABLE` כבוי בקוד (ר' `src/lib/quoteFollowup.js`) — הבדיקות של השורה עצמה
+// מדליקות אותו, ובדיקה אחת בסוף מוודאת שכשהוא כבוי אין כפתור בכלל.
+const aiSwitch = vi.hoisted(() => ({ on: true }))
+vi.mock('@/lib/quoteFollowup', async (importOriginal) => ({
+  ...(await importOriginal()),
+  get FOLLOWUP_AI_AVAILABLE() {
+    return aiSwitch.on
+  },
+}))
 vi.mock('@/modules/03_quotes/quotePdf', async (importOriginal) => ({
   ...(await importOriginal()),
   renderQuotePdfBlob: () => Promise.reject(new Error('no PDF under jsdom')),
@@ -101,5 +110,20 @@ describe('חלון-המסמך — שורת "נסחי מייל מעקב"', () => 
     renderDocument(quote(), { canEdit: false })
     await waitFor(() => expect(getLastSuccessfulSend).toHaveBeenCalled())
     expect(screen.queryByTestId('quote-followup-row')).not.toBeInTheDocument()
+  })
+
+  it('המתג כבוי ⇒ אין שורה בכלל, גם להצעה פתוחה שנשלחה (הספק לא ענה בשלוש קריאות-אמת, 24/09)', async () => {
+    aiSwitch.on = false
+    try {
+      getLastSuccessfulSend.mockResolvedValue({
+        created_at: '2026-08-28T10:00:00Z',
+        recipient: 'a',
+      })
+      renderDocument(quote())
+      await waitFor(() => expect(getLastSuccessfulSend).toHaveBeenCalled())
+      expect(screen.queryByTestId('quote-followup-row')).not.toBeInTheDocument()
+    } finally {
+      aiSwitch.on = true
+    }
   })
 })

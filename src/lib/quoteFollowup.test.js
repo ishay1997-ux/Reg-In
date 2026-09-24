@@ -3,6 +3,7 @@
 // לעולם לא מציעה "נסי שוב") · **טיוטה ריקה אינה טיוטה** · **mailto שלא נחתך באמצע משפט**.
 import { describe, it, expect } from 'vitest'
 import {
+  FOLLOWUP_AI_AVAILABLE,
   FOLLOWUP_CHECKING_REASON,
   FOLLOWUP_FAILED_MESSAGE,
   FOLLOWUP_NOT_SENT_REASON,
@@ -17,6 +18,12 @@ import {
 const open = { quote_id: 31, quote_status: 'in_progress', rejection_reason: null }
 const expired = { quote_id: 7, quote_status: 'rejected', rejection_reason: 'פג תוקף' }
 const sentRow = { created_at: '2026-08-28T10:00:00Z', recipient: 'a@b.co' }
+
+describe('FOLLOWUP_AI_AVAILABLE — המתג שמסתיר את הכפתור', () => {
+  it('כבוי: שלוש קריאות-אמת לספק (24/09/2026) לא החזירו טיוטה — כפתור שתמיד נכשל גרוע מאין-כפתור', () => {
+    expect(FOLLOWUP_AI_AVAILABLE).toBe(false)
+  })
+})
 
 describe('followupAvailability — מתי "נסחי מייל מעקב" מוצג, ומתי הוא מושבת ולמה', () => {
   it('הצעה פתוחה שנשלחה ⇒ פעיל', () => {
@@ -79,6 +86,21 @@ describe('followupAvailability — מתי "נסחי מייל מעקב" מוצג,
 })
 
 describe('classifyFollowupFailure — מה החלון אומר ומה הוא מציע', () => {
+  it('מפתח-AI חסר (500 + `unavailable`) ⇒ מצב סופי עם נוסח השרת, בלי "נסי שוב" — ניסיון-חוזר לא יתקין מפתח', () => {
+    expect(
+      classifyFollowupFailure(
+        {
+          status: 'unavailable',
+          error: 'ניסוח בעזרת AI לא זמין כרגע — אפשר לכתוב את המייל ידנית.',
+        },
+        500,
+      ),
+    ).toEqual({
+      kind: 'final',
+      message: 'ניסוח בעזרת AI לא זמין כרגע — אפשר לכתוב את המייל ידנית.',
+    })
+  })
+
   it('429 ⇒ מכסה, בלי "נסי שוב" (גם כשהגוף לא נקרא)', () => {
     expect(classifyFollowupFailure({ status: 'quota' }, 429)).toEqual({
       kind: 'quota',

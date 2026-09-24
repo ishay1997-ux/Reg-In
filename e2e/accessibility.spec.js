@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
@@ -424,6 +425,12 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
   }
 
   test('סריקה על חלון-המסמך של הצעה ועל חלון טיוטת-המייל (מודול 3 · D2)', async ({ page }) => {
+    // 🔌 חלון-הטיוטה נפתח רק מהכפתור, והכפתור מוסתר כל עוד `FOLLOWUP_AI_AVAILABLE` כבוי
+    // (`src/lib/quoteFollowup.js`). ⇒ סריקת חלון-המסמך רצה תמיד; חלק-הטיוטה רק כשהמתג דולק.
+    // נקרא מהמקור ולא מועתק — חוזר לרוץ מעצמו ביום שמדליקים.
+    const aiOn = /FOLLOWUP_AI_AVAILABLE\s*=\s*true/.test(
+      readFileSync('src/lib/quoteFollowup.js', 'utf8'),
+    )
     test.setTimeout(120_000)
     await login(page)
     const quoteId = await pickExpiredQuoteId(page)
@@ -447,8 +454,10 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
     await expect(
       page.getByTestId('quote-document-frame').or(page.getByTestId('quote-document-error')),
     ).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByTestId('quote-followup-open')).toBeEnabled()
+    if (aiOn) await expect(page.getByTestId('quote-followup-open')).toBeEnabled()
+    else await expect(page.getByTestId('quote-followup-row')).toHaveCount(0)
     await scan(page, 'הצעות · חלון-המסמך (מודול 3)')
+    if (!aiOn) return
 
     await page.getByTestId('quote-followup-open').click()
     await expect(page.getByTestId('followup-draft')).toBeVisible()

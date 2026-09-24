@@ -89,9 +89,14 @@ const PH = {
 } as const
 
 const MSG = {
-  // **זהה-בייט** ל-`classify-feedback:730` — אותה תקלה, אותה הודעה (R30).
-  noKey: 'מפתח ה-AI לא הוגדר במערכת — פנה למנכ"ל',
-  notSignedIn: 'לא מחובר.',
+  // ✏️ 24/09/2026 (הכרעת-הסגן, ממצא-הבודק): **כבר לא זהה ל-`classify-feedback:730`.** שם הקוראת היא
+  // מי שמריצה ניתוח ויכולה לפנות למנכ"ל; כאן זו מנהלת באמצע מייל ללקוח — והדרך קדימה היא לכתוב
+  // בעצמה. ‏`status: 'unavailable'` ⇒ החלון מציג מצב סופי, בלי "נסי שוב" (`classifyFollowupFailure`).
+  noKey: 'ניסוח בעזרת AI לא זמין כרגע — אפשר לכתוב את המייל ידנית.',
+  // ✏️ 24/09/2026: "לא מחובר." תיאר מצב ולא אמר מה לעשות — וזה כמעט תמיד חיבור שפג באמצע עבודה.
+  notSignedIn: 'החיבור פג — התחברי מחדש.',
+  // קריאת-המסד של שער-ההרשאה נכשלה — **לא** "אין לך הרשאה": זו הייתה טענה שקרית על מי שמותר לה.
+  temporary: 'תקלה זמנית — נסי שוב.',
   forbidden: 'אין לך הרשאה לנסח מייל מעקב.',
   badBody: 'גוף הבקשה אינו תקין.',
   // זהה ל-`quotes-view-missing` ב-`QuotesPage.jsx` — אותה עובדה (RLS/נמחקה), אותו משפט.
@@ -371,7 +376,9 @@ async function callProvider(
 // המסך כסוגריים, וסכום או הנחה שהמודל המציא היו נשלחים ללקוח כהתחייבות. ⇒ נכשלים ב-502 ומבקשים
 // "נסי שוב", במקום להציג משהו שאסור לשלוח. אין כאן ספרות אסורות: `days_since_sent` הוא עובדה שמותר
 // למודל להזכיר, ולכן הבדיקה היא על סימני-כסף והנחה, לא על כל ספרה.
-const MONEY_OR_DISCOUNT = /₪|%|ש"ח|ש״ח|שקל|הנחה|הנחות/
+// ✏️ 24/09/2026 (ממצא-הבודק): הרמז בחלון אומר שהמחיר וההנחה לא נשלחים ל-AI — והשומר הוא מה שמונע
+// ממנו להמציא אותם. נוספו: "אחוז" במילים, וסכום-במילים צמוד לספרה ("5 אלף", "3,000 שקלים" כבר נתפס).
+const MONEY_OR_DISCOUNT = /₪|%|ש"ח|ש״ח|שקל|הנחה|הנחות|אחוז|\d[\d,.]*\s*(?:אלף|אלפים|מיליון)/
 const PLACEHOLDER_TOKEN = /\{\{[^{}]*\}\}/g
 
 function draftProblem(text: string, allowed: string[]): string | null {
@@ -397,7 +404,7 @@ Deno.serve(async (req) => {
 
   // ── שער 1: הסוד — ראשון, לפני כל קריאה אחרת ─────────────────────────────────
   const apiKey = Deno.env.get('GEMINI_API_KEY')
-  if (!apiKey) return json({ error: MSG.noKey }, 500)
+  if (!apiKey) return json({ status: 'unavailable', error: MSG.noKey }, 500)
 
   // ── שער 2: מי את ────────────────────────────────────────────────────────────
   const authHeader = req.headers.get('Authorization') ?? ''
@@ -412,18 +419,28 @@ Deno.serve(async (req) => {
   // ‏`edit` ולא `view` על 'הצעות מחיר': כל קריאה שורפת מכסת-AI משותפת, ואותו נימוק שבגללו
   // `classify-feedback` דורש `edit` (התוכנית §6 D2). שתי שאילתות, מסוננות לפי `role_id` —
   // `permissions_select_all` הוא `using (true)`, וסינון לפי מודול בלבד מחזיר חמש שורות.
-  const { data: me } = await asUser
+  // ✏️ 24/09/2026 (ממצא-הבודק): שגיאת-מסד כאן הייתה נקראת כ"אין שורה" ⇒ 403 "אין לך הרשאה". ⇒ שגיאה
+  // נבדקת לפני התוכן, ומחזירה 500 "תקלה זמנית" (החלון מציע "נסי שוב").
+  const { data: me, error: meError } = await asUser
     .from('users')
     .select('role_id, status')
     .eq('email', email)
     .maybeSingle()
+  if (meError) {
+    console.error('draft-followup users read failed:', meError.message)
+    return json({ status: 'failed', error: MSG.temporary }, 500)
+  }
   if (!me || me.status !== 'active') return json({ error: MSG.forbidden }, 403)
-  const { data: perm } = await asUser
+  const { data: perm, error: permError } = await asUser
     .from('permissions')
     .select('permission_level, modules!inner(module_name)')
     .eq('role_id', me.role_id)
     .eq('modules.module_name', QUOTES_MODULE)
     .maybeSingle()
+  if (permError) {
+    console.error('draft-followup permissions read failed:', permError.message)
+    return json({ status: 'failed', error: MSG.temporary }, 500)
+  }
   if (perm?.permission_level !== 'edit') return json({ error: MSG.forbidden }, 403)
 
   // ── ורק עכשיו: הגוף ──────────────────────────────────────────────────────────

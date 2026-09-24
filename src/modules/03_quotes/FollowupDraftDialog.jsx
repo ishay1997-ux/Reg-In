@@ -19,6 +19,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Copy, Mail, RotateCcw, Sparkles } from 'lucide-react'
 import Hint from '@/components/Hint'
+import Ltr from '@/components/Ltr'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -101,11 +102,26 @@ function FollowupDraftPanel({ quoteId }) {
   //    פעמיים; בלי הזיכרון הזה כל פתיחה הייתה שולחת **שתי** בקשות ל-Gemini ושורפת מכסה כפולה.
   //    ההרצה השנייה נרשמת לאותה הבטחה, והראשונה (שבוטלה) פשוט לא מעדכנת state.
   const inflight = useRef(null)
+  // ✏️ 24/09/2026 (ממצא-הבודק): סגירת-החלון באמצע הניסוח **מבטלת** את הבקשה — אחרת פתיחה-מחדש
+  // השאירה שתי בקשות חיות במקביל. 🔴 **הביטול דחוי בתקתוק אחד ומתבטל בהרכבה-מחדש:** StrictMode מפרק
+  // ומרכיב כל רכיב פעם אחת בפיתוח, וביטול מיידי היה הורג את הבקשה היחידה (ר' `inflight` למעלה).
+  const abortTimer = useRef(null)
+  useEffect(() => {
+    clearTimeout(abortTimer.current)
+    return () => {
+      abortTimer.current = setTimeout(() => inflight.current?.controller.abort(), 0)
+    }
+  }, [])
 
   useEffect(() => {
     if (!quoteId) return undefined
     if (inflight.current?.attempt !== attempt) {
-      inflight.current = { attempt, promise: draftFollowupEmail(quoteId) }
+      const controller = new AbortController()
+      inflight.current = {
+        attempt,
+        controller,
+        promise: draftFollowupEmail(quoteId, { signal: controller.signal }),
+      }
     }
     let cancelled = false
     inflight.current.promise
@@ -129,10 +145,12 @@ function FollowupDraftPanel({ quoteId }) {
 
   useEffect(() => () => clearTimeout(noticeTimer.current), [])
 
+  // ✏️ 24/09/2026 (ממצא-הבודק): "גוף הטיוטה הועתק — הדביקי…" **נשאר** — הוא נקרא אחרי שתוכנת-המייל
+  // נפתחה מעל החלון, ו-2.5 שניות כבר עברו כשהיא חוזרת. רק "הועתק." (אישור-רגע) נעלם.
   function announce(next) {
     clearTimeout(noticeTimer.current)
     setNotice(next)
-    noticeTimer.current = setTimeout(() => setNotice(''), 2500)
+    if (next !== 'bodyCopied') noticeTimer.current = setTimeout(() => setNotice(''), 2500)
   }
 
   function retry() {
@@ -325,7 +343,8 @@ export default function FollowupDraftDialog({ quote, disabledReason = '' }) {
             {/* "נוסחה בעזרת AI" אינו כאן: הכותרת קבועה, והמשפט מתאר טיוטה שקיימת — בזמן הניסוח ואחרי
                 כשל עוד אין כזו (נמצא ע"י סוכן D2, 24/09). הוא מוצג בראש הטיוטה עצמה, ב-`FollowupDraftPanel`. */}
             <DialogDescription>
-              הצעת מחיר {quote?.quote_id} — {quote?.event_name}
+              הצעת מחיר <Ltr data-testid="followup-quote-id">{quote?.quote_id}</Ltr> —{' '}
+              {quote?.event_name}
             </DialogDescription>
           </DialogHeader>
           <FollowupDraftPanel quoteId={quote?.quote_id} />

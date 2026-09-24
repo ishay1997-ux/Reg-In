@@ -88,7 +88,11 @@ describe('הכפתור בחלון-המסמך', () => {
     renderDialog()
     await openAndWaitForDraft()
     expect(invoke).toHaveBeenCalledTimes(1)
-    expect(invoke).toHaveBeenCalledWith('draft-followup', { body: { quote_id: 31 } })
+    // הגוף — `quote_id` בלבד (לא שם, לא אירוע). ‏`signal` הוא לביטול בסגירה, לא מידע שיוצא.
+    expect(invoke).toHaveBeenCalledWith('draft-followup', {
+      body: { quote_id: 31 },
+      signal: expect.any(AbortSignal),
+    })
   })
 
   it('StrictMode (כמו `src/main.jsx`) ⇒ עדיין **בקשה אחת** לכל פתיחה — לא מכסה כפולה', async () => {
@@ -96,6 +100,31 @@ describe('הכפתור בחלון-המסמך', () => {
     renderDialog({}, { strict: true })
     await openAndWaitForDraft()
     expect(invoke).toHaveBeenCalledTimes(1)
+    // וההרצה-הכפולה של StrictMode **לא** ביטלה את הבקשה החיה (הביטול הוא רק בסגירה אמיתית).
+    expect(invoke.mock.calls[0][1].signal.aborted).toBe(false)
+  })
+
+  it('סגירה באמצע הניסוח ⇒ הבקשה מבוטלת, ופתיחה מחדש שולחת בקשה אחת חדשה — לא שתיים במקביל', async () => {
+    invoke.mockReturnValue(new Promise(() => {}))
+    renderDialog()
+    fireEvent.click(screen.getByTestId('quote-followup-open'))
+    await screen.findByTestId('followup-skeleton')
+    const first = invoke.mock.calls[0][1].signal
+    fireEvent.keyDown(screen.getByTestId('followup-dialog'), { key: 'Escape' })
+    await waitFor(() => expect(first.aborted).toBe(true))
+    fireEvent.click(screen.getByTestId('quote-followup-open'))
+    await screen.findByTestId('followup-skeleton')
+    expect(invoke).toHaveBeenCalledTimes(2)
+    expect(invoke.mock.calls[1][1].signal.aborted).toBe(false)
+  })
+
+  it('מספר-ההצעה בתיאור עטוף בבידוד-כיווניות (`<Ltr>`) — לא נשבר בין מילים עבריות', async () => {
+    invoke.mockReturnValue(new Promise(() => {}))
+    renderDialog()
+    fireEvent.click(screen.getByTestId('quote-followup-open'))
+    await screen.findByTestId('followup-skeleton')
+    expect(screen.getByTestId('followup-quote-id')).toHaveAttribute('dir', 'ltr')
+    expect(screen.getByTestId('followup-quote-id')).toHaveTextContent('31')
   })
 })
 
@@ -111,7 +140,7 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     expect(status).toHaveTextContent('מנסחת טיוטה — זה יכול לקחת עד חצי דקה.')
     // "נוסחה בעזרת AI" מתאר טיוטה שקיימת — בזמן הניסוח עוד אין כזו (נמצא ע"י סוכן D2, 24/09).
     expect(screen.queryByText(/נוסחה בעזרת AI/)).not.toBeInTheDocument()
-    expect(screen.getByText(/הצעת מחיר 31/)).toBeInTheDocument()
+    expect(screen.getByTestId('followup-quote-id')).toHaveTextContent('31')
     await act(async () => resolve({ data: DRAFT, error: null }))
     expect(screen.queryByTestId('followup-skeleton')).not.toBeInTheDocument()
     expect(status).toHaveTextContent('הטיוטה מוכנה.')
@@ -171,6 +200,12 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     expect(
       await screen.findByText('גוף הטיוטה הועתק — הדביקי אותו במייל שנפתח.'),
     ).toBeInTheDocument()
+    // ✏️ 24/09 (ממצא-הבודק): ההודעה הזו נקראת **אחרי** שתוכנת-המייל נפתחה מעל החלון — היא נשארת,
+    // ולא נעלמת אחרי 2.5 שניות כמו "הועתק.".
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 2700))
+    })
+    expect(screen.getByText('גוף הטיוטה הועתק — הדביקי אותו במייל שנפתח.')).toBeInTheDocument()
   })
 
   it('אין מייל לאיש-הקשר הראשי ⇒ "פתחי במייל" מושבת, והנימוק גלוי ומקושר', async () => {
