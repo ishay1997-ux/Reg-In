@@ -37,7 +37,8 @@ export default function ExecOverviewSurface(props) {
         <TableLead rowAction={ROW_ACTION} hintId="reports.execOverview.topEventsSort" />
       )}
       // ✂️ 24/09/2026 — הקישור "כל השנים בדוח «מגמות רב-שנתיות» →" ירד: הדוח הוחלף ב"סגירת הצעות",
-      // ואין בו עוד ציר-שנים. אריח-ההכנסות עדיין פותח אותו (`tiles[].target` מהשרת).
+      // ואין בו עוד ציר-שנים. גם אריח-ההכנסות כבר לא פותח אותו — `target: null` מהשרת
+      // (`20260924213000_module11_m02_revenue_tile_no_door`), כי אריח על הכנסות לא נפתח על דוח הצעות.
     />
   )
 }

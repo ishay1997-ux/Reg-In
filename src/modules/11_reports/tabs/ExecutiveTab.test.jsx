@@ -138,7 +138,8 @@ const m2Payload = () =>
         format: 'money',
         sub: null,
         window: 'חלון-האריח',
-        target: { tab: 'הנהלה', report: 'report_m03_trends', drill: null },
+        // ✏️ 24/09/2026 — אין דלת: "סגירת הצעות" אינו יעד לאריח הכנסות (`20260924213000`).
+        target: null,
         compare: {
           value: 1425658.65,
           label: '2025 באותו טווח',
