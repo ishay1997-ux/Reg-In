@@ -14,12 +14,14 @@ import { useCallback, useEffect, useState } from 'react'
 import LoadingOrError from '@/components/LoadingOrError'
 import Ltr from '@/components/Ltr'
 import { formatDate } from '@/lib/dates'
+import { cn } from '@/lib/utils'
 import { getUpcomingOrders } from './api'
 
 const TITLE = 'להזמין לחודש הקרוב'
 const EMPTY_SENTENCE = 'אין ציוד להזמין לאירועים של החודש הקרוב.'
 
-export default function UpcomingOrders() {
+// `className` — מיקום בלבד (הקורא מבטל את `mt-4` כשהבלוק עומד לצד התור). התוכן לא משתנה.
+export default function UpcomingOrders({ className }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [tick, setTick] = useState(0)
@@ -51,7 +53,7 @@ export default function UpcomingOrders() {
 
   return (
     <section
-      className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      className={cn('mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm', className)}
       aria-labelledby="upcoming-orders-title"
       data-testid="logistics-upcoming-orders"
     >
