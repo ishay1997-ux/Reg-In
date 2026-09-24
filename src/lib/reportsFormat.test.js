@@ -9,7 +9,6 @@ import {
   formatAxisTick,
   formatByType,
   formatDelta,
-  formatGini,
   formatIsraelDate,
   formatMoney,
   formatPercent,
@@ -55,12 +54,6 @@ describe('בידוד-כיווניות בפורמטרים — הרגרסיה של
     }
   })
 
-  // ⚠️ ג'יני הוא ספרות ונקודה בלבד — אין בו גליף נייטרלי שינדוד, ולכן הוא **לא** מבודד
-  // בכוונה. בידוד מיותר מוסיף תווים בלתי-נראים למחרוזת שנכנסת גם לשמות-קבצים.
-  it('ג׳יני אינו מבודד — אין בו מה שינדוד', () => {
-    expect(formatGini(0.43)).toBe('0.43')
-  })
-
   it('"אין נתון" אינו מבודד — מקף עברי אינו צריך בידוד', () => {
     expect(formatMoney(null)).toBe(NO_VALUE)
     expect(formatPercent(null)).toBe(NO_VALUE)
@@ -89,19 +82,6 @@ describe('formatPercent — 📐4: ספרה עשרונית אחת, תמיד', ()
 
   it('חסר ⇒ מקף, לא 0%', () => {
     expect(formatPercent(null)).toBe(NO_VALUE)
-  })
-})
-
-describe('formatGini — 📐4: שתי ספרות', () => {
-  // 🔑 העוגן: `spec.md §🔢 3.3` מתעד 0.4329 מול 0.4299 על אותה אוכלוסייה. אם השתיים לא
-  // מרנדרות אותו דבר, המסך מציג פער-מדידה כאילו הוא ממצא.
-  it('שתי המדידות המתועדות של אותו n מרנדרות זהה', () => {
-    expect(formatGini(0.4329)).toBe('0.43')
-    expect(formatGini(0.4299)).toBe('0.43')
-  })
-
-  it('חסר ⇒ מקף', () => {
-    expect(formatGini(null)).toBe(NO_VALUE)
   })
 })
 
@@ -188,7 +168,6 @@ describe('formatByType — המיפוי שהחוזה (C8) מכריז עליו', 
   it('כל פורמט מוכר מגיע לפונקציה שלו', () => {
     expect(formatByType(1250, 'money')).toBe(`${LRI}1,250 ₪${PDI}`)
     expect(formatByType(60.14, 'percent')).toBe(`${LRI}60.1%${PDI}`)
-    expect(formatByType(0.4299, 'gini')).toBe('0.43')
     expect(formatByType(1500, 'int')).toBe(`${LRI}1,500${PDI}`)
     expect(formatByType(68, 'days')).toBe(`${LRI}68${PDI} ימים`)
     expect(formatByType(2.35, 'ratio')).toBe(`${LRI}2.4${PDI}`)
@@ -264,9 +243,9 @@ describe('formatAxisTick — 📐4 על ציר', () => {
     expect(formatAxisTick(1200, 'int')).toBe(`${LRI}1,200${PDI}`)
   })
 
-  // ג'יני/יחס/ציון חיים בטווח קטן — עיגול-לשלם היה מוחק את כל ההבחנה על הציר.
-  it('מדד-גיני ויחס שומרים ספרות עשרוניות', () => {
-    expect(formatAxisTick(0.43, 'gini')).toBe(`${LRI}0.43${PDI}`)
+  // יחס/ציון חיים בטווח קטן — עיגול-לשלם היה מוחק את כל ההבחנה על הציר.
+  it('ציון ויחס שומרים ספרות עשרוניות', () => {
+    expect(formatAxisTick(0.43, 'score')).toBe(`${LRI}0.43${PDI}`)
     expect(formatAxisTick(4.75, 'ratio')).toBe(`${LRI}4.8${PDI}`)
   })
 

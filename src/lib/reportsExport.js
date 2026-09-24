@@ -107,7 +107,6 @@ export function buildExportFileName({ reportName, windowLabel, drillLabel } = {}
 // כמספרים (לא טקסט)"* — כלומר רו"ח שיסכם את הטור יקבל 0. הפורמט הוא מה שיודע שזה כסף.
 const MONEY_FORMAT = '#,##0'
 const PERCENT_FORMAT = '0.0'
-const GINI_FORMAT = '0.00'
 
 const toNumber = (value) => {
   if (value === null || value === undefined || value === '') return null
@@ -145,8 +144,6 @@ function cellFor(value, format) {
       return numericCell(value, MONEY_FORMAT)
     case 'percent':
       return numericCell(value, PERCENT_FORMAT)
-    case 'gini':
-      return numericCell(value, GINI_FORMAT)
     case 'int':
     case 'days':
       return numericCell(value, '0')

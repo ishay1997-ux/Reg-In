@@ -6,7 +6,7 @@
 // שהשרשרת כולה מגיעה למסך — כי תקלה בין שתי השכבות אינה נראית באף אחת מהן לבדה.
 //
 // 🔬 **המספרים בפיקסצ'רים הם מדידה חיה** (‏CEO, 16/09/2026, ‏`p_from/p_to = null`) ולא
-// המצאה: `87.2%` הגעה-בזמן · `6` אדומות · ג'יני `0.4581` · `50` פעילות מתוך `186` ·
+// המצאה: `87.2%` הגעה-בזמן · `6` אדומות · `50` פעילות מתוך `186` ·
 // `17` בלי דירוג · חציון-תעריף `43.27 ₪` · תגובה חציונית `9.9` שעות · אחוזון-90 `20.7`.
 // 🚫 **ולא הועתקו מהכרטיס** — הכרטיס מדד ב-10/09 והחלון נגרר מאז.
 
@@ -138,13 +138,14 @@ const m14 = () =>
         target: { tab: 'דיילות', drill: null, report: 'report_m15_reliability' },
       },
       {
-        key: 'gini',
-        label: 'ריכוזיות המשמרות',
-        value: 0.4581,
-        format: 'gini',
+        // ✏️ 24/09/2026 — אריח-הריכוזיות האקדמי הוחלף (הכרעת-ישי): אחוז המשמרות שהלך לרבע
+        // הדיילות העמוסות, עם השוואה לאשתקד על אותו מדד. הערכים כאן — פיקסצ'ר, לא מדידה.
+        key: 'top_quarter',
+        label: 'רבע הדיילות העמוסות',
+        value: 55.8,
+        format: 'percent',
         window: '12 החודשים האחרונים',
-        // ✏️ 23/09/2026 (L3): בלי "(n=97)" — השרת אומר "אשתקד" בלבד.
-        compare: { label: 'אשתקד', value: 0.4383, direction: 'up' },
+        compare: { label: 'אשתקד', value: 53.1, note: null, direction: 'up' },
         target: { tab: 'דיילות', drill: null, report: 'report_m17_fairness' },
       },
       {
@@ -330,25 +331,12 @@ const m17 = () =>
     },
     tiles: [
       {
-        key: 'gini',
-        label: 'ריכוזיות המשמרות',
-        value: 0.4581,
-        format: 'gini',
-        window: '12 החודשים האחרונים',
-        compare: {
-          label: 'אשתקד',
-          value: 0.4383,
-          direction: 'up',
-        },
-        target: null,
-      },
-      {
         key: 'top_quarter',
         label: 'רבע הדיילות העמוסות',
         value: 55.8,
         format: 'percent',
         window: '12 החודשים האחרונים',
-        compare: null,
+        compare: { label: 'אשתקד', value: 53.1, note: null, direction: 'up' },
         target: null,
       },
       {
@@ -390,23 +378,21 @@ const m17 = () =>
         target: null,
       },
     ],
+    // ✏️ 24/09/2026 — עקומת-הריכוזיות הוחלפה בעמודות-רבעים מול קו אופקי של חלוקה שווה.
     chart: {
-      type: 'lorenz',
-      title: 'עקומת לורנץ',
-      xKey: 'x',
+      type: 'bar',
+      title: 'איך המשמרות מתחלקות בין הדיילות',
+      xKey: 'label',
       unit: 'percent',
       domain: [0, 100],
-      series: [{ key: 'y', label: 'אחוז-משמרות מצטבר' }],
+      series: [{ key: 'share', label: 'חלק מהמשמרות', format: 'percent' }],
       data: [
-        { x: 0, y: 0 },
-        { x: 50, y: 16.3 },
-        { x: 100, y: 100 },
+        { label: 'רבע העמוסות ביותר', share: 55.8 },
+        { label: 'רבע שני', share: 26.1 },
+        { label: 'רבע שלישי', share: 13.2 },
+        { label: 'רבע הפחות עמוסות', share: 4.9 },
       ],
-      // ✏️ I1: קו-השוויון האלכסוני של 📐6 נחת במטען (היה חסר בסבב 2 ודווח).
-      refLines: [
-        { axis: 'diagonal', from: { x: 0, y: 0 }, to: { x: 100, y: 100 }, label: 'חלוקה שווה' },
-        { axis: 'y', value: 16.3, label: 'מחצית הדיילות = ⁦16.3%⁩ מהמשמרות' },
-      ],
+      refLines: [{ axis: 'y', value: 25, label: 'חלוקה שווה = 25%' }],
     },
     columns: [
       { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
@@ -493,14 +479,20 @@ describe('מ14 · מבט-על דיילות', () => {
     const labels = [
       'הגעה בזמן',
       'דיילות אדומות',
-      'ריכוזיות המשמרות',
+      'רבע הדיילות העמוסות',
       'דיילות פעילות',
       'אירועים עם חוסר',
     ]
     for (const label of labels) expect(screen.getByText(label)).toBeInTheDocument()
-    // 📐4 — אחוז בעשרונית אחת · ג'יני בשתיים, שניהם מבודדים ב-LRI…PDI.
+    // 📐4 — אחוז בעשרונית אחת, מבודד ב-LRI…PDI.
     expect(screen.getByTestId('report-tile-on_time')).toHaveTextContent('87.2%')
-    expect(screen.getByTestId('report-tile-gini')).toHaveTextContent('0.46')
+    // ✏️ 24/09/2026 — אריח-הריכוזיות הוא אחוז הרבע העמוס, וחצי-ההשוואה שלו על אותו מדד.
+    const topQuarter = screen.getByTestId('report-tile-top_quarter')
+    expect(topQuarter).toHaveTextContent('55.8%')
+    expect(topQuarter).toHaveTextContent('אשתקד')
+    expect(topQuarter).toHaveTextContent('53.1%')
+    expect(screen.queryByTestId('report-tile-gini')).toBeNull()
+    expect(document.body.textContent).not.toMatch(/ג['׳]יני|לורנץ|Gini|Lorenz/)
     // 📐2 · 📐23 · 📐16 — שלוש שורות-הבסיס, שאינן שכבת-הטמעה.
     expect(screen.getByTestId('report-population')).toHaveTextContent('n=1,699')
     expect(screen.getByTestId('report-so-what')).toHaveTextContent('לא לשלוח')
@@ -708,6 +700,26 @@ describe('מ17 · הוגנות השיבוץ', () => {
     expect(screen.getByTestId('report-meta-notes')).toHaveTextContent('אין עדיין נתון')
   })
 
+  // ✏️ 24/09/2026 — הכרעת-ישי: שום מונח אקדמי על המסך. הגרף הוא עמודות-רבעים מול קו 25%.
+  it('הריכוזיות נאמרת ברבעים: אריח עם השוואה לאשתקד, וגרף-עמודות של ארבעת הרבעים', async () => {
+    callReport.mockResolvedValue(m17())
+    renderTab(SURFACES.m17)
+    const tile = await screen.findByTestId('report-tile-top_quarter')
+    expect(tile).toHaveTextContent('55.8%')
+    expect(tile).toHaveTextContent('53.1%')
+    expect(
+      screen.getByRole('heading', { name: 'איך המשמרות מתחלקות בין הדיילות' }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('recharts-BarChart')).toBeInTheDocument()
+    expect(screen.queryByTestId('recharts-LineChart')).toBeNull()
+    expect(screen.getAllByTestId('recharts-ReferenceLine')).toHaveLength(1)
+    const srTable = screen.getByTestId('chart-sr-table')
+    for (const quarter of ['רבע העמוסות ביותר', 'רבע שני', 'רבע שלישי', 'רבע הפחות עמוסות']) {
+      expect(srTable).toHaveTextContent(quarter)
+    }
+    expect(document.body.textContent).not.toMatch(/ג['׳]יני|לורנץ|Gini|Lorenz/)
+  })
+
   it('זמני-התגובה מוצגים בערכם, ולא כ"ימים" מעוגלים (תיקון-יחידה מוצהר)', async () => {
     callReport.mockResolvedValue(m17())
     renderTab(SURFACES.m17)
@@ -835,7 +847,7 @@ const follows = (first, second) =>
 const HINT_PLACEMENT = [
   ['מ14 · מבט-על דיילות', SURFACES.m14, m14, 'hostessOverview', 'redCount', null, 'redTableSort'],
   ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, 'reliability', null, null, 'absenceColumns'],
-  ['מ17 · הוגנות השיבוץ', SURFACES.m17, m17, 'fairness', null, 'giniBasis', null],
+  ['מ17 · הוגנות השיבוץ', SURFACES.m17, m17, 'fairness', null, 'quartersBasis', null],
 ]
 
 describe('מיקום שכבת-ההטמעה (רמה 2)', () => {
