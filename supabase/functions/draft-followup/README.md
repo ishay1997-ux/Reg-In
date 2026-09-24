@@ -115,9 +115,14 @@ After the model answers and **before** filling, both subject and body must:
    raw braces;
 3. contain no money or discount marker (`₪` · `%` · `ש"ח` · `שקל` · `הנחה` · `הנחות`) — the prompt forbids
    inventing a price or a discount, and a draft that does is a commitment nobody approved;
-4. be at most 2,000 characters.
+4. contain no Arabic-script character (U+0600–06FF · 0750–077F · FB50–FDFF · FE70–FEFF) — measured live
+   24/09/2026 22:07 UTC: one draft in three wrote "מועד" with an Arabic `ע` and `ד` inside a Hebrew word;
+5. be at most 2,000 characters.
 
-A failure is a 502 `failed` ("נסי שוב"), not a silently trimmed draft.
+A failure is a 502 `failed` ("נסי שוב"), not a silently trimmed draft. **One exception:** an Arabic-script
+rejection asks the model **once more**, inside the same budget (deputy's ruling 25/09/2026) — it is a
+random slip of the model, not of the request; only if the second draft fails too does the 502 go out.
+The guard lives in `draftGuard.ts` (pure, no Deno), so `draftGuard.test.js` runs it in Vitest.
 
 ## Wording (the prompt)
 
@@ -145,13 +150,16 @@ and the retry, deputy's ruling, see the last section).
 deno check --node-modules-dir=none supabase/functions/draft-followup/index.ts
 ```
 
+(`index.ts` imports `./draftGuard.ts`, so this checks both files.)
+
 Runs in CI as the third step of the `edge-function-check` job (`.github/workflows/ci.yml`). Prettier
 formats `index.ts` (`.prettierignore` does not exclude `supabase/functions`); ESLint and knip do not
 reach it, so `deno check` plus Prettier are the whole gate for this file.
 
 ## Deploy
 
-Supabase MCP `deploy_edge_function` (name `draft-followup`, `verify_jwt: true`). **A deploy is live for
+Supabase MCP `deploy_edge_function` (name `draft-followup`, `verify_jwt: true`), **with both files —
+`index.ts` and `draftGuard.ts`**; without the second the import fails at boot. **A deploy is live for
 every user at once** and nothing in CI deploys — an edit to this file is not live until it is deployed
 again. Repo⇄deployment identity: `get_edge_function` diffed against this file.
 
@@ -263,3 +271,9 @@ budget 27 s ⇒ **90 s** (`BUDGET_MS`) · retry on **every** 5xx including the 5
 copied from `callProvider` in `classify-feedback` · `temperature` 0.4 ⇒ **0**. The dialog's timeout
 (`FOLLOWUP_DRAFT_TIMEOUT_MS`) is 160 s, and a unit test reads both server numbers from `index.ts` and
 fails if the dialog would give up first. The button stays hidden; the ≤10 s target is unchanged.
+
+**Version 6 measured live — 24/09/2026 22:07 UTC, quote 2068, CEO, three calls:** 200 in 3.7 / 1.9 / 2.7 s
+(Gemini itself 1.7 / 1.4 / 1.4 s, `completed`, first attempt each — no retry, no timeout). All three returned
+a draft. ⚠️ **What this does not tell us:** the 60 s wait and the retry were never exercised, so it cannot
+separate "the fix helped" from "the provider was slow on 24/09 morning and is not now". One draft in three
+contained Arabic letters (`ע`, `ד`) inside a Hebrew word ⇒ the guard rule above (version 7).

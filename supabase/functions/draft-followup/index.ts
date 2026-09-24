@@ -29,6 +29,7 @@
 
 // ⚠️ הגרסה נעולה במדויק, כמו בשתי הפונקציות האחרות: `@2` היה שובר את שער-הטיפוסים ב-CI מעצמו.
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2.112.0'
+import { ARABIC_SCRIPT_PROBLEM, draftProblem } from './draftGuard.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -79,7 +80,6 @@ const RETRY_WAITS_MS = [2_000, 5_000]
 // ‏`store: false` — איננו משתמשים ב-`previous_interaction_id`, ואין סיבה שהספק ישמור כל טיוטה.
 const MAX_OUTPUT_TOKENS = 1024
 const PROVIDER_ERROR_CHARS = 600
-const MAX_BODY_CHARS = 2_000
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 // מצייני-המקום — **המפתחות היחידים שהמודל רואה.** סוגריים מסולסלים ולא מרובעים בכוונה: אסימוני
@@ -378,27 +378,7 @@ async function callProvider(
   }
 }
 
-// ── שומר-הטיוטה: מה שלא עובר כאן **לא** מגיע למשתמשת ─────────────────────────────────
-// 🔴 **"טיוטה שבורה" גרועה מ"הניסוח נכשל":** מציין-מקום שהמודל המציא (`{{מחיר}}`) היה נשאר על
-// המסך כסוגריים, וסכום או הנחה שהמודל המציא היו נשלחים ללקוח כהתחייבות. ⇒ נכשלים ב-502 ומבקשים
-// "נסי שוב", במקום להציג משהו שאסור לשלוח. אין כאן ספרות אסורות: `days_since_sent` הוא עובדה שמותר
-// למודל להזכיר, ולכן הבדיקה היא על סימני-כסף והנחה, לא על כל ספרה.
-// ✏️ 24/09/2026 (ממצא-הבודק): הרמז בחלון אומר שהמחיר וההנחה לא נשלחים ל-AI — והשומר הוא מה שמונע
-// ממנו להמציא אותם. נוספו: "אחוז" במילים, וסכום-במילים צמוד לספרה ("5 אלף", "3,000 שקלים" כבר נתפס).
-const MONEY_OR_DISCOUNT = /₪|%|ש"ח|ש״ח|שקל|הנחה|הנחות|אחוז|\d[\d,.]*\s*(?:אלף|אלפים|מיליון)/
-const PLACEHOLDER_TOKEN = /\{\{[^{}]*\}\}/g
-
-function draftProblem(text: string, allowed: string[]): string | null {
-  if (text.trim() === '') return 'empty'
-  const tokens = text.match(PLACEHOLDER_TOKEN) ?? []
-  const unknown = tokens.filter((token) => !allowed.includes(token))
-  if (unknown.length > 0) return `unknown placeholder ${unknown.join(',')}`
-  if (text.replace(PLACEHOLDER_TOKEN, '').includes('{{')) return 'broken placeholder'
-  if (MONEY_OR_DISCOUNT.test(text)) return 'money or discount'
-  if (text.length > MAX_BODY_CHARS) return 'too long'
-  return null
-}
-
+// ── שומר-הטיוטה — בקובץ נפרד (`draftGuard.ts`), כדי שבדיקת-יחידה ב-Vitest תוכל לייבא אותו בלי Deno ──
 function fill(text: string, values: Record<string, string>): string {
   let out = text
   for (const [token, value] of Object.entries(values)) out = out.replaceAll(token, value)
@@ -472,6 +452,17 @@ Deno.serve(async (req) => {
   }
 })
 
+// כשל של הספק ⇒ תשובת-HTTP: 429 = מכסה (בלי "נסי שוב"), כל השאר = 502 "הניסוח נכשל".
+function providerFailure(err: unknown): Response {
+  if (err instanceof ProviderError && err.httpStatus === 429) {
+    console.error('draft-followup quota:', err.detail)
+    return json({ status: 'quota', error: MSG.quota, provider_error: err.detail }, 429)
+  }
+  const detail = err instanceof ProviderError ? err.detail || err.message : 'unknown'
+  console.error('draft-followup provider failure:', detail)
+  return json({ status: 'failed', error: MSG.failed, provider_error: detail }, 502)
+}
+
 async function draft(
   asUser: SupabaseClient,
   apiKey: string,
@@ -544,16 +535,22 @@ async function draft(
   try {
     raw = await callProvider(apiKey, model, facts, deadline)
   } catch (err) {
-    if (err instanceof ProviderError && err.httpStatus === 429) {
-      console.error('draft-followup quota:', err.detail)
-      return json({ status: 'quota', error: MSG.quota, provider_error: err.detail }, 429)
-    }
-    const detail = err instanceof ProviderError ? err.detail || err.message : 'unknown'
-    console.error('draft-followup provider failure:', detail)
-    return json({ status: 'failed', error: MSG.failed, provider_error: detail }, 502)
+    return providerFailure(err)
   }
 
-  const problem = draftProblem(raw.subject, allowed) ?? draftProblem(raw.body, allowed)
+  let problem = draftProblem(raw.subject, allowed) ?? draftProblem(raw.body, allowed)
+  // 🔁 **אות ערבית ⇒ ניסיון AI אחד נוסף, בתוך אותו תקציב** (הכרעת-הסגן 25/09/2026). נמדד 24/09 22:07 UTC (01:07 שעון ישראל):
+  // טיוטה אחת מתוך שלוש כתבה "מו<U+0639><U+062F>" (ע' ו-ד' ערביות בתוך מילה עברית). זו תקלה אקראית של המודל ולא של הבקשה,
+  // ולכן ניסיון שני סביר שיצליח. שאר הפסילות (כסף, מציין-מקום) הן תוכן — ניסיון שני לא נותן להן יותר.
+  if (problem === ARABIC_SCRIPT_PROBLEM && Date.now() < deadline) {
+    console.error('draft-followup rejected model draft, asking once more:', problem)
+    try {
+      raw = await callProvider(apiKey, model, facts, deadline)
+    } catch (err) {
+      return providerFailure(err)
+    }
+    problem = draftProblem(raw.subject, allowed) ?? draftProblem(raw.body, allowed)
+  }
   if (problem) {
     // הטקסט לפני המילוי — מצייני-מקום בלבד, בטוח ללוג.
     console.error('draft-followup rejected model draft:', problem, excerpt(raw.body))
