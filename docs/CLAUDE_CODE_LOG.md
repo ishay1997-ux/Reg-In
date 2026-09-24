@@ -46,6 +46,11 @@
 
 ## Session Log (newest first)
 
+### 24/09/2026 — M12 conference demo script + refresh-script gate (`ishay/module-12-integration`, worker for the deputy)
+- Commits `48f3a7f6` + `66d63ebe` (`docs/guides/conference-demo-script.md`: one-customer 8-station path, fallback per live service, merge-dependent stations) · `927e555d` (`scripts/conference-refresh/refresh-before-conference.sql`). Pushed; no PR (deputy's instruction).
+- Found by measurement: all 33 open quotes had `updated_at` 09/09 23:32 UTC ⇒ the `module3-quote-expiry` cron would have expired them 10/10 01:00 UTC, before the 14/10 refresh, which would then touch 0 rows while check ② reported "0 expiring" as a pass. The deputy ran step ① early (24/09 11:33 UTC, 33→33, expiry now 24/10). Script now: gate ⓪ (raise when open < 33) + ① in one DO block (psql without ON_ERROR_STOP would otherwise run past a failed gate) · ② returns open_quotes too · ③ had no `from staffing` (42703, measured) — fixed. Script not run by me.
+- Branch rules from the deputy: this branch may touch LOG and STATUS (add-only; the deputy resolves the conflict when merging `dev` in) but never PROJECT_MASTER · 00_roadmap · db_roadmap; `docs/micro_guides/module-12.md` is the deputy's board — read-only.
+
 ### 23–24/09/2026 night — M11 decision reports + card standard second half (`ishay/m11-decision-reports`)
 - Commits `11e725ed` (plan backup + STATUS) · `f8348f58` (density check + L5/L6 + M21 banner/S1 + hostess hints) · `4281d924` (ה1–ה3, seed, review fixes) · `d5ca2adb` (grid + L7/L7b). All pushed; not merged (merge is Ishay's).
 - DB: 11 migrations applied under Ishay's session grant ("לא לבקש אישור להכיל מיגרציות בסשן הזה"); every text round checked by live md5 == `expect-md5.mjs`; proacl has no anon on all 16. Seed: 106 feedback scores (backup table in `seed_snapshot`); M19 "satisfied return faster" kept its direction (28 vs 162 days).
