@@ -190,14 +190,16 @@ function todayInIsrael(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date())
 }
 
-// ‏`{{תוקף}}`: להצעה ממתינה — עד מתי היא בתוקף. להצעה שפגה — היום שבו פגה, כלומר `updated_at`:
-// עבודת-התפוגה כותבת את הדחייה וטריגר `moddatetime` מעדכן את החותמת, וטריגר-הנעילה
-// (`quotes_lock_non_in_progress`) מונע כל עדכון אחריו. ⇒ `updated_at` של הצעה שפגה = יום-התפוגה.
+// ‏`{{תוקף}}`: **רק להצעה ממתינה** — עד מתי היא בתוקף, באותה נוסחה שהמסך מציג ("פג בעוד N יום").
+// 🚫 **ולהצעה שפגה — אין `{{תוקף}}` בכלל, אחרי מדידה:** הנחתי ש-`updated_at` של הצעה שפגה הוא יום-
+// התפוגה (עבודת-התפוגה כותבת, `moddatetime` חותם, טריגר-הנעילה מונע עדכון אחר). **נמדד 24/09/2026:
+// כל 33 ההצעות שפגו נושאות `updated_at` = 03/09/2026** — עדכון-זריעה גורף — בזמן שהאירועים שלהן
+// היו ביוני–יולי. מייל שאומר ללקוח "ההצעה פגה ב-03/09" על אירוע מ-26/07 היה עובדה שקרית שהמערכת
+// ניסחה. ⇒ יום-התפוגה אינו ידוע באמינות, והמודל פשוט לא מקבל אותו (המייל לא צריך אותו).
 function validityDay(quote: QuoteRow, state: QuoteState, validityDays: number | null) {
+  if (state !== 'pending' || validityDays === null) return null
   const start = utcDayStart(quote.updated_at)
   if (start === null) return null
-  if (state === 'expired') return formatIsoDay(isoFromUtc(start))
-  if (validityDays === null) return null
   return formatIsoDay(isoFromUtc(start + validityDays * MS_PER_DAY))
 }
 

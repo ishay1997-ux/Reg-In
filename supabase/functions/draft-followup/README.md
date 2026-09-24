@@ -91,10 +91,14 @@ The model receives **placeholders and non-identifying facts only**:
 - A placeholder is offered only when its value exists (no primary contact ⇒ no `{{איש_קשר}}`; a
   missing or non-integer `ימי_תוקף_הצעה` ⇒ no `{{תוקף}}` for a pending quote — never a silent
   default of 30).
-- `{{תוקף}}`: pending ⇒ the UTC day of `updated_at` + `ימי_תוקף_הצעה` — the exact formula of
-  `deriveQuoteExpiry` (`src/lib/quotes.js`), copied (Deno cannot import `src/`); expired ⇒ the UTC day
-  of `updated_at`, which *is* the expiry day: the expiry job writes the rejection, `moddatetime`
-  stamps it, and `quotes_lock_non_in_progress` forbids any later update.
+- `{{תוקף}}` — **pending only**: the UTC day of `updated_at` + `ימי_תוקף_הצעה`, the exact formula of
+  `deriveQuoteExpiry` (`src/lib/quotes.js`), copied (Deno cannot import `src/`) — so the email and the
+  screen's "פג בעוד N יום" agree. **Not offered for an expired quote, after a measurement:** the first
+  draft of this function used `updated_at` as the expiry day (the expiry job writes the rejection,
+  `moddatetime` stamps it, the lock trigger forbids later updates) — but **all 33 expired quotes carry
+  `updated_at` = 03/09/2026** (a bulk seed update, measured 24/09/2026) while their events were in
+  June–July. An email saying "the quote expired on 03/09" about a 26/07 event would be a false fact
+  the system wrote. The expiry day is not reliably known, and the email does not need it.
 - `event_passed` (additive to the plan's facts, 24/09/2026): **measured, all 33 expired quotes have an
   event date that has already passed.** "Check whether it is still relevant and renew" is nonsense for
   an event that took place, so the prompt then asks about an upcoming event instead. One boolean, no
