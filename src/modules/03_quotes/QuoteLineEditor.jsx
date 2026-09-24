@@ -5,7 +5,7 @@
 // לדרוס מחיר-שורה, שינוי שנעלם מכל מעקב עתידי. המחיר נגזר מהמדרגה לפי הכמות (pricing.js),
 // והמסך רק **מציג** אותו; אין כאן חישוב-מחיר עצמאי (כלל 14).
 
-import { Plus, Trash2 } from 'lucide-react'
+import { Lock, Plus, Trash2 } from 'lucide-react'
 import { computeLineTotal, findMatchingTier, resolveUnitPrice } from '@/lib/pricing'
 import { isColorApplicable } from '@/lib/quotes'
 import { LINE_COLORS, NO_COLOR_LABEL, PRODUCT_CATEGORY_LABELS } from '@/lib/catalog'
@@ -260,7 +260,18 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                     {/* exact: מחיר-מדרגה יכול לצאת עשרוני (2.5, 3.3...) — עיגול-תצוגה כאן
                         היה מציג אותו מספר לשתי מדרגות שונות, בעוד סה"כ-השורה משתמש בערך
                         המדויק. נתפס בהדגמה: "3 ₪" הוצג לגם ל-2.5 וגם ל-3.3 (ר' Money.jsx). */}
-                    <Money amount={line.unitPrice} exact />
+                    {/* 🔒 24/09/2026 (ליטושי-הכנס, B): המחיר אינו שדה — הוא נגזר מהמחירון ומהמדרגה. בלי
+                        סימן, משתמשת חדשה לא יודעת שיש כאן החלטה לשאול עליה; ההסבר בשכבה
+                        (`quoteBuilder.priceLocked`), ושם-הנגיש כאן אומר את העובדה. */}
+                    <span className="inline-flex items-center gap-1">
+                      <Lock
+                        className="size-4 text-slate-500"
+                        aria-label="מחיר מהמחירון"
+                        role="img"
+                        data-testid={`quote-line-price-lock-${line.key}`}
+                      />
+                      <Money amount={line.unitPrice} exact />
+                    </span>
                     {/* המדרגה מוצגת **רק כשהיא הוזילה בפועל** את המחיר (הכרעת-ישי 29/07):
                         במדרגה הראשונה המחיר זהה למחיר-הבסיס והכיתוב הוא רעש; כשהכמות הורידה
                         את המחיר, בלעדיו המשתמש רואה מספר שאינו תואם למחירון וחושב שיש תקלה.

@@ -10,6 +10,7 @@ import {
   distanceOrderOk,
   matchesParamSearch,
   parseForDisplay,
+  paramLabel,
 } from './paramsRegistry'
 import { PRICING_PARAM_NAMES } from './pricing'
 import { HOSTESS_PARAM_NAMES } from './hostesses'
@@ -549,5 +550,19 @@ describe('פרמטרי מודול 11 — שם · קבוצה · והערך מהמ
     expect(red).toBe(0.87)
     expect(amber).toBe(0.95)
     expect(red).toBeLessThan(amber)
+  })
+})
+
+// ✏️ 24/09/2026 (ליטושי-הכנס, A5): הודעות "חסר פרמטר" נוקבות בתווית שבמסך, לא בשם-העמודה.
+describe('paramLabel — שם-פרמטר ⇐ המילים שעל המסך', () => {
+  it('שם שבמרשם ⇒ התווית שלו', () => {
+    expect(paramLabel('אחוז_מעמ')).toBe('אחוז מע"מ')
+    expect(paramLabel('סף_שביעות_רצון')).toBe('סף שביעות רצון')
+  })
+  it('שם שאינו במרשם ⇒ קווים תחתונים הופכים לרווחים, ולא מוסתר', () => {
+    expect(paramLabel('פרמטר_חדש_לגמרי')).toBe('פרמטר חדש לגמרי')
+  })
+  it("אף תווית במרשם אינה נושאת קו-תחתון (ז'רגון-מסד על המסך)", () => {
+    expect(PARAM_REGISTRY.filter((entry) => entry.label.includes('_'))).toEqual([])
   })
 })

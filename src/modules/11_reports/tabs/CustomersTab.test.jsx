@@ -821,7 +821,8 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     renderTab(SURFACES.מ22)
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('16/09/2026')
     // 🔤 שם, לא כתובת-התחברות (J1) — וכתובת-הדוא"ל **אינה** עולה למסך.
-    expect(screen.getByTestId('m25-run-text')).toHaveTextContent('ישי אטיאס')
+    // ✏️ 24/09/2026 (D1): שם-המאשרת עבר ל-ⓘ של הפס.
+    expect(screen.getByTestId('m25-run-details')).toHaveTextContent('ישי אטיאס')
     expect(screen.getByTestId('m25-run-text')).not.toHaveTextContent('ishay1997@gmail.com')
     // 🎨 ממצא 14 — המוקאפ שומר את הענבר ל-`.runbar.warn`; מצב מיושב שאין בו מה לעשות
     // מצויר לבן. פס שענבר תמיד — אינו אומר דבר כשהוא באמת צריך לומר.
@@ -836,24 +837,50 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
   // ✏️ **פריט [C5] סבב ב' — התאמת-מספר בפס** (17/09/2026). ‏`run_count` נמדד חי = ⁦2⁩,
   // והפס הכריז *"מציג את **הריצה**"* ביחיד על שתי ריצות שאוחדו ב-G2-1. שתי הבדיקות
   // נועלות את **שני** הענפים, כי כ12 נופל דווקא בקצה: *"‏1 ריצות"*.
-  it('שתי ריצות מאושרות — הפס אומר כמה, ושהתאריך שייך לאחרונה', async () => {
+  // ✏️ 24/09/2026 (ליטושי-הכנס, D1 — "AI גלוי"): השורה היא *"סווג בעזרת AI · <תאריך>"* (חותמת
+  // העדכניות של ⚖️5-א נשארת גלויה), ומספר-הריצות ושם-המאשרת עברו ל-ⓘ. שני ענפי-המספר נשמרו שם.
+  it('שתי ריצות מאושרות — השורה אומרת AI ותאריך, וה-ⓘ אומר כמה ושהתאריך של האחרונה', async () => {
     callReport.mockResolvedValue(notesPayload())
     renderTab(SURFACES.מ22)
     const text = await screen.findByTestId('m25-run-text')
-    expect(text).toHaveTextContent('מציג ⁦2⁩ ריצות-ניתוח מאושרות')
-    expect(text).toHaveTextContent('האחרונה מ-⁦16/09/2026⁩')
-    expect(text).toHaveTextContent('אושרה ע"י ישי אטיאס')
-    expect(text).not.toHaveTextContent('מציג את הריצה')
+    expect(text).toHaveTextContent('סווג בעזרת AI · ⁦16/09/2026⁩')
+    expect(text).not.toHaveTextContent('אושרה ע"י')
+    const details = screen.getByTestId('m25-run-details')
+    expect(details).toHaveTextContent('⁦2⁩ ריצות-ניתוח מאושרות; התאריך הוא של האחרונה')
+    expect(details).toHaveTextContent('אושרה ע"י ישי אטיאס')
   })
 
-  it('ריצה מאושרת אחת — הנוסח הנעול של הכרטיס, ולא "‏1 ריצות"', async () => {
+  it('ריצה מאושרת אחת — "ריצת-ניתוח מאושרת אחת", ולא "‏1 ריצות"', async () => {
     callReport.mockResolvedValue(
       notesPayload({ run: { ...APPROVED_RUN, run_count: 1, runs: undefined } }),
     )
     renderTab(SURFACES.מ22)
-    const text = await screen.findByTestId('m25-run-text')
-    expect(text).toHaveTextContent('מציג את הריצה מ-⁦16/09/2026⁩, אושרה ע"י ישי אטיאס')
-    expect(text).not.toHaveTextContent('ריצות')
+    await screen.findByTestId('m25-run-text')
+    const details = screen.getByTestId('m25-run-details')
+    expect(details).toHaveTextContent('ריצת-ניתוח מאושרת אחת')
+    expect(details).not.toHaveTextContent('ריצות')
+  })
+
+  it('D1 — במצב המאושר, מי שיש לה `edit` רואה "הריצי שוב"; ו-`noop` משאיר את שורת-ה-AI', async () => {
+    callReport.mockResolvedValue(notesPayload())
+    renderTab(SURFACES.מ22)
+    const button = await screen.findByTestId('m25-run-button')
+    expect(button).toHaveTextContent('הריצי שוב')
+    invoke.mockResolvedValueOnce({ data: { status: 'noop' }, error: null })
+    fireEvent.click(button)
+    await waitFor(() =>
+      expect(screen.getByTestId('m25-run-sub')).toHaveTextContent('אין הערות חדשות לסיווג.'),
+    )
+    expect(invoke).toHaveBeenCalledWith('classify-feedback', { body: { action: 'start' } })
+    expect(screen.getByTestId('m25-run-text')).toHaveTextContent('סווג בעזרת AI')
+  })
+
+  it('D1 — צופה בלי `edit` רואה את שורת-ה-AI, בלי כפתור', async () => {
+    permissions = PROJECTS
+    callReport.mockResolvedValue(notesPayload())
+    renderTab(SURFACES.מ22)
+    expect(await screen.findByTestId('m25-run-text')).toHaveTextContent('סווג בעזרת AI')
+    expect(screen.queryByTestId('m25-run-button')).toBeNull()
   })
 
   // 🪤 מטען ישן שאין בו `run_count` כלל — הנפילה-לאחור היא `runs.length`, ולא ⁦1⁩ שקרי.
@@ -868,9 +895,8 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
       }),
     )
     renderTab(SURFACES.מ22)
-    expect(await screen.findByTestId('m25-run-text')).toHaveTextContent(
-      'מציג ⁦3⁩ ריצות-ניתוח מאושרות',
-    )
+    await screen.findByTestId('m25-run-text')
+    expect(screen.getByTestId('m25-run-details')).toHaveTextContent('⁦3⁩ ריצות-ניתוח מאושרות')
   })
 
   it('🔴 `run_in_progress` במצב `failed` אינו "ריצה בתהליך" — הדף מתנהג כאילו אין אחת', async () => {
@@ -1092,7 +1118,7 @@ describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
     })
     renderTab(SURFACES.מ21)
     expect(await screen.findByTestId('report-missing-params')).toHaveTextContent(
-      'חסר פרמטר מערכת: מכפיל_מרווח_מתרחק',
+      'חסר פרמטר מערכת: מכפיל מרווח ללקוח מתרחק',
     )
   })
 

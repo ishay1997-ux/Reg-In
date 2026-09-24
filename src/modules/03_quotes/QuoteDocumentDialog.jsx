@@ -60,6 +60,8 @@ import {
   MISSING_VAT_CODE,
 } from '@/modules/03_quotes/quotePdf'
 import { getLastSuccessfulSend, sendEmail as sendEmailViaFunction } from '@/api/email'
+import { FOLLOWUP_AI_AVAILABLE, followupAvailability } from '@/lib/quoteFollowup'
+import FollowupDraftDialog from '@/modules/03_quotes/FollowupDraftDialog'
 
 // Blob ⇒ base64 גולמי (בלי ה-prefix `data:...;base64,`) — זה הפורמט שהעברנו ל-Edge
 // Function, שמעביר אותו הלאה ל-Make בלי לגעת בו. FileReader ולא Buffer: זה קוד-דפדפן.
@@ -211,6 +213,18 @@ export default function QuoteDocumentDialog({
   // ⚠️ `!= null` (ולא `!==`) מכוון: הוא false גם ל-undefined, כלומר "לא ידוע" אינו
   //    "כבר נשלח" — הוא מסלול נפרד עם נוסח משלו.
   const alreadySent = sent || previousSend != null
+
+  // ✨ D2 (ליטושי-הכנס 24/09/2026) — "נסחי מייל מעקב": טיוטה בעזרת AI, **לעולם לא שליחה**.
+  // מוצג להצעה פתוחה (פעיל רק אם נשלחה — אותו `previousSend` תלת-מצבי של ההגנה מפני שליחה-כפולה)
+  // או להצעה שפג תוקפה; רק עם `canEdit` — אותו prop שמסך-הניהול ובונה-ההצעה מעבירים, ו-`false` בכרטיס-
+  // הלקוח במכוון (שם ההקשר הוא היסטוריה, לא פעולה). ‏`sendCheckNotice` לא-ריק = היומן לא נבדק.
+  const followup = followupAvailability({
+    quote,
+    canEdit,
+    lastSend: previousSend,
+    sentNow: sent,
+    checkFailed: sendCheckNotice !== '',
+  })
 
   async function sendEmail() {
     if (!blob || disabledReason || sending) return
@@ -375,6 +389,12 @@ export default function QuoteDocumentDialog({
           <p className="text-teal-700 text-sm" data-testid="quote-send-success">
             ✓ נשלח ל-{customerEmail}
           </p>
+        )}
+
+        {/* ✨ D2 — שורה משלה מעל כפתורי-המסמך, ולא כפתור שלישי בתוכם: נימוק-ההשבתה ("ההצעה עוד לא
+            נשלחה ללקוח") חייב להיות **טקסט גלוי ליד הכפתור**, ושורת-הכפתורים היא flex בלי מקום לו. */}
+        {FOLLOWUP_AI_AVAILABLE && followup.show && (
+          <FollowupDraftDialog quote={quote} disabledReason={followup.disabledReason} />
         )}
 
         <DialogFooter>

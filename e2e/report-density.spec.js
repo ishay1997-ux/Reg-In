@@ -258,13 +258,14 @@ function mode2Violations(surface, m) {
   return v
 }
 
-test.describe('בדיקת-הצפיפות — 16 דוחות, מצב 0 ומצב 2', () => {
+// ✏️ 24/09/2026 — המספר נגזר מהקטלוג (היו 16; מ16 הוסר מהממשק) ואינו מוקלד.
+test.describe(`בדיקת-הצפיפות — ${SURFACES.length} דוחות, מצב 0 ומצב 2`, () => {
   test.use({ viewport: { width: 1536, height: 900 } })
   test.skip(!CEO_EMAIL || !CEO_PASSWORD, 'E2E_CEO_* לא הוגדרו ב-.env.local')
 
   for (const mode of [0, 2]) {
     test(`מצב ${mode}`, async ({ page }) => {
-      test.setTimeout(16 * 30_000)
+      test.setTimeout(SURFACES.length * 30_000)
       await forceOnboardingMode(page, mode)
       await login(page, CEO_EMAIL, CEO_PASSWORD)
       const violations = []

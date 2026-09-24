@@ -86,7 +86,12 @@ test.describe('מסך-הבית — חמש הזהויות (§7.10 · §7.97)', ()
 
     await login(page, email, password)
     await expect(page.getByTestId('kpi-profit')).toBeVisible({ timeout: 30_000 })
-    const title = page.locator('h2').first()
+    // 🔄 24/09/2026: `locator('h2').first()` הניח שכותרת-הלוח היא ה-h2 הראשון בעמוד. הכרעת-ישי
+    // מ-16/09/2026 (DashboardPage.jsx:156) העלתה את רצועת "מה דורש טיפול" (h2 משלה) מעל הלוח —
+    // מאז ה-h2 הראשון הוא שלה, לא של הלוח. מתחמים לפי ה-h2 שיושב עם כפתורי-הניווט של הלוח
+    // (אותו קונטיינר, `CalendarGrid.jsx:104-106`) כדי לתפוס את כותרת-החודש בדיוק, בלי להישען
+    // על סדר-רינדור.
+    const title = page.locator('div:has([data-testid="dashboard-cal-next"]) > h2')
     const before = await title.textContent()
 
     await page.getByTestId('dashboard-cal-next').click()

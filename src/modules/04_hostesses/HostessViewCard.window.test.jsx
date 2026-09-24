@@ -9,11 +9,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import HostessViewCard from './HostessViewCard'
-import { getHostess, getHostessAssignments, getHostessScreenParams } from './api'
+import {
+  getHostess,
+  getHostessAssignments,
+  getHostessClientPreferences,
+  getHostessScreenParams,
+} from './api'
 
 vi.mock('./api', () => ({
   getHostess: vi.fn(),
   getHostessAssignments: vi.fn(),
+  getHostessClientPreferences: vi.fn(),
   getHostessScreenParams: vi.fn(),
 }))
 
@@ -61,6 +67,7 @@ function mockCard(assignments) {
   getHostess.mockResolvedValue(HOSTESS)
   getHostessAssignments.mockResolvedValue(assignments)
   getHostessScreenParams.mockResolvedValue({})
+  getHostessClientPreferences.mockResolvedValue([])
 }
 
 function renderCard() {

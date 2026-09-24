@@ -24,6 +24,7 @@ import { supabase } from '@/supabaseClient'
 import { RLS_DENIED_CODE } from '@/lib/apiError'
 import { WRITE_FAILURE_SENTENCE } from '@/lib/projectLogistics'
 import {
+  getUpcomingOrders,
   LOGISTICS_CHANGE_KEYS,
   buildLogisticsChanges,
   assertLogisticsUpdate,
@@ -367,5 +368,22 @@ describe('getChecklist — הרענון בפתיחה (㊲) ומבחין שלוש
       quoteProductLines: undefined,
     })
     expect(supabase.from).not.toHaveBeenCalled()
+  })
+})
+
+// 🆕 24/09/2026 (0ג פריט 4) — מטען בלי `rows` הוא תקלה, לא "אין מה להזמין".
+describe('getUpcomingOrders', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('קורא ל-logistics_upcoming_orders ומחזיר את המטען', async () => {
+    const payload = { from: '2026-09-25', to: '2026-10-24', rows: [] }
+    supabase.rpc.mockResolvedValue({ data: payload, error: null })
+    await expect(getUpcomingOrders()).resolves.toEqual(payload)
+    expect(supabase.rpc).toHaveBeenCalledWith('logistics_upcoming_orders')
+  })
+
+  it('מטען בלי rows ⇒ זריקה, לא רשימה ריקה', async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: null })
+    await expect(getUpcomingOrders()).rejects.toThrow('שגיאה בטעינת רשימת ההזמנה.')
   })
 })

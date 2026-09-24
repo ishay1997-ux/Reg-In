@@ -207,7 +207,13 @@ test.describe('שומרי "לא ידוע" — כשל-טעינה שמכבה רש�
     // ── הכשל מוסר: החלון חוזר לדעת את האמת ─────────────────────────────────
     await page.unroute('**/rest/v1/email_log*')
     await page.reload()
-    await page.getByTestId(`quote-document-${SENDABLE_QUOTE_ID}`).click()
+    // ✏️ 24/09/2026 (ליטושי-הכנס, חבילה 0): חלון-המסמך חי בכתובת (`?view=<id>`), ולכן רענון
+    // **פותח אותו מחדש על אותה הצעה** — אין מה ללחוץ (הלחיצה נחסמה ע"י שכבת-החלון הפתוח).
+    // בודקים שזה אכן אותו חלון, על אותה הצעה.
+    await expect(page).toHaveURL(new RegExp(`[?&]view=${SENDABLE_QUOTE_ID}(&|$)`))
+    await expect(page.getByTestId('quote-document-title')).toContainText(
+      `הצעת מחיר ${SENDABLE_QUOTE_ID}`,
+    )
     await expect(page.getByTestId('quote-previous-send')).toBeVisible()
     await expect(page.getByTestId('quote-send-check-notice')).toHaveCount(0)
   })

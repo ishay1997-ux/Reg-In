@@ -932,7 +932,9 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
           </div>
           <div className="mt-0.5 text-xs text-slate-500">
             {row.city && `${row.city} · `}
-            <Ltr>{`${Number(row.rateSnapshot ?? 0)} ₪`}</Ltr> לשעה
+            {/* ✏️ 24/09/2026 (A6): `Money exact` ולא מחרוזת-ידנית — 7 שורות חיות הן שבר (42.50), ו-`?? 0`
+                היה מציג "0 ₪" לתעריף חסר. `exact`: ברירת-המחדל של Money מעגלת לשקל. */}
+            <Money amount={row.rateSnapshot} exact /> לשעה
           </div>
         </td>
         <td className="border-b border-slate-100 px-2.5 py-3 align-top">

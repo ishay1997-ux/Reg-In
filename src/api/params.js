@@ -16,6 +16,7 @@
 
 import { supabase } from '@/supabaseClient'
 import { toError } from '@/lib/apiError'
+import { paramLabel } from '@/lib/paramsRegistry'
 
 // ערכי-פרמטרים לפי שם, כמפה `{ שם: ערך }`.
 //
@@ -56,7 +57,8 @@ export async function getParamValues(names) {
   if (missing.length > 0) {
     // כל השמות החסרים בהודעה אחת, ולא רק הראשון: המשתמשת שתפתח את מסך ההגדרות צריכה
     // לדעת כמה שורות להשלים, לא לגלות אותן אחת-אחת בסבבי-רענון.
-    const quoted = missing.map((name) => `"${name}"`).join(', ')
+    // ✏️ 24/09/2026 (A5): תווית-המסך ולא שם-העמודה, בגרש ולא במירכאות — `אחוז מע"מ` נושא מירכאות בעצמו.
+    const quoted = missing.map((name) => `'${paramLabel(name)}'`).join(', ')
     throw toError(
       { code: 'PGRST116' },
       missing.length === 1

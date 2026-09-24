@@ -216,7 +216,7 @@ export function hostessReliabilityScore({ count, total }, companyAverage, dampin
   return responsivenessScore({ answered, confirmed }, average, damping)
 }
 
-// ── תעריף ודירוג (מ16) ───────────────────────────────────────────────────────
+// ── חציון (נולד במ16; משמש היום את מ19/מ2 — ✂️ רצועות-התעריף נמחקו עם מ16, 24/09/2026) ───────────────────────────────────────────────────────
 
 /**
  * חציון — **ולא ממוצע**: דיילת אחת יקרה במיוחד אינה מזיזה אותו (`cards-hostesses.md` ⑥ מ16).
@@ -229,37 +229,4 @@ export function medianOf(values) {
 
   const middle = Math.floor(n / 2)
   return n % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
-}
-
-/**
- * רצועות התעריף לפי דירוג — הסדרה שמתחת לפיזור של מ16, בסדר `5 → 4 → 3 → ללא-דירוג`.
- *
- * 🔑 **הסדר הוא הכרעה** (`cards-hostesses.md` §ד): הטבלה נקראת באותו כיוון שבו נקרא
- * ציר-ה-Y של הפיזור, מלמעלה למטה. **רצועת חסרות-הדירוג אחרונה** — אי-אפשר להציב אותן
- * על סולם 1–5 בלי להמציא להן ציון (📐6 נועל `domain 1–5`).
- *
- * 🚫 **דירוג בלי אף דיילת אינו רצועה** — רצועה ריקה הייתה מצוירת כ-"0 ₪", שהוא מחיר
- * ולא חוסר.
- */
-export function rateByRatingBands(rows) {
-  const byRating = new Map()
-  for (const row of rows ?? []) {
-    const rate = finiteNumber(row?.hourly_rate)
-    if (rate === null) continue
-    const rating = finiteNumber(row?.rating)
-    const key = rating === null ? 'none' : rating
-    if (!byRating.has(key)) byRating.set(key, { rating, rates: [] })
-    byRating.get(key).rates.push(rate)
-  }
-
-  const rated = [...byRating.values()].filter((band) => band.rating !== null)
-  rated.sort((a, b) => b.rating - a.rating)
-  const unrated = byRating.get('none')
-
-  return [...rated, ...(unrated ? [unrated] : [])].map(({ rating, rates }) => ({
-    rating,
-    count: rates.length,
-    avgRate: rates.reduce((acc, value) => acc + value, 0) / rates.length,
-    medianRate: medianOf(rates),
-  }))
 }

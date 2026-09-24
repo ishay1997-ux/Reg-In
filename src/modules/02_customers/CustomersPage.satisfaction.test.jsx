@@ -90,11 +90,11 @@ function mockPage(
   listProjectsForCustomerMetrics.mockResolvedValue(projectRows)
 }
 
-function renderPage() {
+function renderPage(entry = '/customers') {
   return render(
     <ToastProvider>
       <ConfirmProvider>
-        <MemoryRouter initialEntries={['/customers']}>
+        <MemoryRouter initialEntries={[entry]}>
           <CustomersPage />
         </MemoryRouter>
       </ConfirmProvider>
@@ -156,6 +156,30 @@ describe('רשימת-הלקוחות — צ\'יפ "טעון בירור" (A3)', ()
     fireEvent.click(chip)
     expect(screen.getByTestId('customer-row-2')).toBeInTheDocument()
     expect(chip).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  // ✏️ 24/09/2026 (ליטושי-הכנס, C3): הצ'יפ ושדה "שביעות רצון" בפאנל הם **מסנן אחד** בכתובת
+  // (`?satisfaction=`). קישור שמגיע עם `attention` מדליק את הצ'יפ; רמה אחרת מסננת בלעדיו.
+  it("C3 — `?satisfaction=attention` הוא הצ'יפ עצמו: מסנן ומדליק אותו", async () => {
+    mockPage([projectRow(1, 'completed', 2), projectRow(2, 'completed', 5)])
+    renderPage('/customers?satisfaction=attention')
+    await screen.findByTestId('customer-row-1')
+    expect(screen.queryByTestId('customer-row-2')).not.toBeInTheDocument()
+    expect(screen.getByTestId('customers-preset-low-satisfaction')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  it('C3 — רמה "מצוין" מהכתובת מציגה רק את מי שממוצעו מצוין', async () => {
+    mockPage([projectRow(1, 'completed', 2), projectRow(2, 'completed', 5)])
+    renderPage('/customers?satisfaction=excellent')
+    await screen.findByTestId('customer-row-2')
+    expect(screen.queryByTestId('customer-row-1')).not.toBeInTheDocument()
+    expect(screen.getByTestId('customers-preset-low-satisfaction')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 
   it('🔴 לקוח שאין עליו נתון-משוב **אינו** נכנס לרשימת-הטיפול', async () => {

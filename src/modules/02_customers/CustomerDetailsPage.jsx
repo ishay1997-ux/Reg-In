@@ -13,6 +13,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Check, Download, Eye, Pencil, Plus, X } from 'lucide-react'
+import { useReturnTo } from '@/components/ReturnToLink'
+import { returnToLabel } from '@/lib/returnTo'
 import { Button } from '@/components/ui/button'
 import ExportDialog from '@/components/ExportDialog'
 import {
@@ -557,6 +559,7 @@ export default function CustomerDetailsPage() {
   // CustomersPage.jsx ומסך-הניהול של מודול 3 (הכרעת-ישי 04/09/2026). שתי הלשוניות חולקות
   // חלון אחד וטופס-עמוד אחד: מעבר-לשונית הוא בעצמו "שינוי-מסנן" ומאפס את העמוד ל-1.
   const [searchParams, setSearchParams] = useSearchParams()
+  const returnTo = useReturnTo()
 
   const [editOpen, setEditOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
@@ -792,14 +795,15 @@ export default function CustomerDetailsPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 0ב (24/09/2026): כשהגיעו מדוח (`?returnTo=`) — אותו כפתור חוזר לדוח, באותו מסנן. */}
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => (returnTo ? navigate(returnTo) : navigate(-1))}
         className="inline-flex items-center gap-1.5 text-sm text-teal-700 hover:text-teal-800 w-fit"
         data-testid="customer-page-back"
       >
         <ArrowRight className="size-4" />
-        חזרה לרשימת הלקוחות
+        {returnTo ? returnToLabel(returnTo) : 'חזרה לרשימת הלקוחות'}
       </button>
 
       <div className="bg-white rounded-2xl shadow-md" data-testid="customer-page">

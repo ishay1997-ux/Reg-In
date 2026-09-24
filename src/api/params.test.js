@@ -73,7 +73,7 @@ describe('getParamValues — הקורא המשותף של params', () => {
     mockParams({ data: [{ param_name: 'שעות_תוקף_זימון', param_value: '48' }], error: null })
 
     await expect(getParamValues(['שעות_תוקף_זימון', 'סף_שביעות_רצון'])).rejects.toThrow(
-      'הפרמטר "סף_שביעות_רצון" חסר בהגדרות המערכת.',
+      "הפרמטר 'סף שביעות רצון' חסר בהגדרות המערכת.",
     )
   })
 
@@ -81,7 +81,7 @@ describe('getParamValues — הקורא המשותף של params', () => {
     mockParams({ data: [], error: null })
 
     await expect(getParamValues(['סף_שביעות_רצון', 'סף_לוגיסטיקה_ימי_עסקים'])).rejects.toThrow(
-      'הפרמטרים "סף_שביעות_רצון", "סף_לוגיסטיקה_ימי_עסקים" חסרים בהגדרות המערכת.',
+      "הפרמטרים 'סף שביעות רצון', 'סף אזהרת לוגיסטיקה' חסרים בהגדרות המערכת.",
     )
   })
 
@@ -95,7 +95,7 @@ describe('getParamValues — הקורא המשותף של params', () => {
     })
 
     await expect(getParamValues(['סף_שביעות_רצון', 'שעות_תוקף_זימון'])).rejects.toThrow(
-      'הפרמטרים "סף_שביעות_רצון", "שעות_תוקף_זימון" חסרים בהגדרות המערכת.',
+      "הפרמטרים 'סף שביעות רצון', 'תוקף זימון-משמרת' חסרים בהגדרות המערכת.",
     )
   })
 
@@ -103,7 +103,7 @@ describe('getParamValues — הקורא המשותף של params', () => {
     mockParams({ data: null, error: null })
 
     await expect(getParamValues(['סף_לוגיסטיקה_ימי_עסקים'])).rejects.toThrow(
-      'הפרמטר "סף_לוגיסטיקה_ימי_עסקים" חסר בהגדרות המערכת.',
+      "הפרמטר 'סף אזהרת לוגיסטיקה' חסר בהגדרות המערכת.",
     )
   })
 

@@ -808,7 +808,7 @@ function FeeActions({ busy, actions }) {
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={actions.onOpenWriteOff}
         >
-          סגור ללא תשלום
+          סגרי ללא תשלום
         </Button>
       </div>
       {/* עמודה ולא שורה: ‏`GateNote` הוא `span`, ושני משפטי-שער זה לצד זה בתוך אב-בלוק
@@ -1078,7 +1078,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={onOpenWriteOff}
         >
-          סגור ללא תשלום
+          סגרי ללא תשלום
         </Button>
       </div>
     </div>
@@ -1113,7 +1113,7 @@ function WriteOffForm({ reason, onReason, onConfirm, onCancel, busy }) {
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={onConfirm}
         >
-          {busy === 'writeOff' ? 'סוגרת…' : 'סגור ללא תשלום'}
+          {busy === 'writeOff' ? 'סוגרת…' : 'סגרי ללא תשלום'}
         </Button>
         <Button
           type="button"
@@ -1880,7 +1880,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
       dialog: {
         title: 'סגירה ללא תשלום',
         message: WRITE_OFF_CONFIRM_MESSAGE,
-        confirmLabel: 'סגור ללא תשלום',
+        confirmLabel: 'סגרי ללא תשלום',
       },
       key: 'writeOff',
       fn: writeOffCall,

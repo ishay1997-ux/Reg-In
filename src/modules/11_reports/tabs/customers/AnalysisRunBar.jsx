@@ -25,11 +25,13 @@
 // מציג את מה שהיה מציג בלעדיה.
 
 import { useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import { supabase } from '@/supabaseClient'
 import { Button } from '@/components/ui/button'
 import { formatIsraelDate, isolateLtr } from '@/lib/reportsFormat'
 import { cn } from '@/lib/utils'
 import { approveFeedbackAiRun } from '../../api'
+import InfoDetails from '../../components/InfoDetails'
 
 const FUNCTION_NAME = 'classify-feedback'
 
@@ -51,6 +53,13 @@ const GENERIC_ERROR = 'הניתוח נכשל. נסי שוב, ואם זה חוז�
 // 🔤 הנוסח של פונקציית-השרת עצמה (‏`index.ts`, ענף ה-409) — **מועתק ולא מנוסח מחדש**, כדי
 // שמה שכתוב על הפס לפני הלחיצה יהיה בדיוק מה שהיה נאמר אחריה.
 const ALREADY_RUNNING = 'ריצת-ניתוח כבר פועלת.'
+// 🆕 24/09/2026 (ליטושי-הכנס, D1) — **AI גלוי.** ישי 23/09: *"אין כפתור אבל של נתח הערות במסך אז לא
+// כל כך ברור"*. ⇒ המצב המאושר אומר במפורש שהסיווג נעשה ב-AI, ומי שיש לה `edit` יכולה להריץ שוב.
+// 🔤 **`הריצי שוב` ולא `הרץ שוב`** (התוכנית כתבה בזכר): כפתור = פועל **בנקבה** (מדריך-הסגנון §1, R12).
+// ‏`RUN_LABEL` (*"הרץ ניתוח"*) נשאר כמות-שהוא — נעול בכרטיס ⑧22, ומחוץ להיקף כאן.
+const AI_LINE = 'סווג בעזרת AI'
+const RERUN_LABEL = 'הריצי שוב'
+const NOOP_SUB = 'אין הערות חדשות לסיווג.'
 // שני המצבים שבהם ריצה **לא-מאושרת** היא עדיין רלוונטית. `failed` אינו בהם במכוון.
 const LIVE_RUN_STATUSES = new Set(['running', 'partial'])
 
@@ -192,25 +201,43 @@ function serverRunState(active) {
  * הוא נפילה-לאחור למטען ישן, ו-⁦1⁩ היא הנפילה האחרונה — מטען שהגיע לכאן עם
  * ‏`approved_at` נושא **לפחות** ריצה אחת מאושרת, ולכן ⁦0⁩ אינו מצב אפשרי.
  */
-function approvedState(run) {
+// ✏️ 24/09/2026 (D1): השורה עצמה = *"✨ סווג בעזרת AI · <תאריך>"* — חותמת-העדכניות של ⚖️5-א
+// (התאריך) נשארת גלויה; **מספר-הריצות ושם-המאשרת עוברים ל-ⓘ** (תקן-הכרטיס: פירוט = נתונים, בלחיצה).
+// שני ענפי-המספר (אחת / יותר) נשמרו — עכשיו בתוך ⓘ.
+function approvedState(run, canEdit) {
   const day = isolateLtr(formatIsraelDate(String(run.approved_at).slice(0, 10)))
   const count = run.run_count ?? (Array.isArray(run.runs) ? run.runs.length : 1) ?? 1
-  const text =
+  const details = [
     count > 1
-      ? `מציג ${isolateLtr(String(count))} ריצות-ניתוח מאושרות, האחרונה מ-${day} · אושרה ע"י ${run.approved_by}`
-      : `מציג את הריצה מ-${day}, אושרה ע"י ${run.approved_by}`
-  return { text, sub: null, action: null, tone: 'plain' }
+      ? `${isolateLtr(String(count))} ריצות-ניתוח מאושרות; התאריך הוא של האחרונה`
+      : 'ריצת-ניתוח מאושרת אחת',
+    `אושרה ע"י ${run.approved_by}`,
+  ]
+  return {
+    text: `${AI_LINE} · ${day}`,
+    ai: true,
+    details,
+    sub: null,
+    action: canEdit ? 'start' : null,
+    actionLabel: canEdit ? RERUN_LABEL : undefined,
+    tone: 'plain',
+  }
 }
 
 function barState({ run, runInProgress, local, pending, notesCount, canEdit }) {
   if (pending) return { text: 'מסווג…', sub: RUNNING_SUB, action: null, tone: 'plain' }
+  // ✏️ 24/09/2026 (D1): `noop` אחרי "הריצי שוב" **אינו מחליף** את שורת-ה-AI — היא נשארת, ו"אין הערות
+  // חדשות לסיווג." נאמר מתחתיה. עד היום הפס כולו התחלף לשורה הזו עד רענון, ו"סווג בעזרת AI" נעלם.
+  if (local?.status === 'noop' && run?.approved_at) {
+    return { ...approvedState(run, canEdit), sub: NOOP_SUB }
+  }
   if (local) return localState(local)
   // ר' ההערה למעלה: הענף הוא על `status`, ולא על עצם קיום `run_in_progress`.
   if (runInProgress && LIVE_RUN_STATUSES.has(runInProgress.status)) {
     return serverRunState(runInProgress)
   }
   if (run?.approved_at) {
-    return approvedState(run)
+    return approvedState(run, canEdit)
   }
   if (!canEdit) return { text: VIEWER_SENTENCE, sub: null, action: null, tone: 'warn' }
   return {
@@ -300,11 +327,28 @@ export default function AnalysisRunBar({ payload, canEdit, onChanged }) {
       aria-label="מצב ריצת-הניתוח"
       data-testid="m25-run-bar"
     >
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-700" data-testid="m25-run-text">
-          {state.text}
-        </p>
-        {state.sub && <p className="mt-0.5 text-xs text-slate-600">{state.sub}</p>}
+      {/* ‏`aria-live` — תוצאת "הריצי שוב" (למשל *"אין הערות חדשות לסיווג."*) מוכרזת לקורא-מסך. */}
+      <div className="min-w-0" aria-live="polite">
+        <div className="relative z-20 flex items-center gap-1.5">
+          {state.ai && <Sparkles aria-hidden="true" className="size-4 text-teal-700" />}
+          <p className="text-sm font-semibold text-slate-700" data-testid="m25-run-text">
+            {state.text}
+          </p>
+          {state.details && (
+            <InfoDetails label={AI_LINE} testId="m25-run-details">
+              {state.details.map((line) => (
+                <span key={line} className="block text-sm text-slate-600">
+                  {line}
+                </span>
+              ))}
+            </InfoDetails>
+          )}
+        </div>
+        {state.sub && (
+          <p className="mt-0.5 text-xs text-slate-600" data-testid="m25-run-sub">
+            {state.sub}
+          </p>
+        )}
         {error && (
           <p className="mt-1 text-xs font-semibold text-red-600" role="alert">
             {error}

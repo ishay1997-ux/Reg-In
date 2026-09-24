@@ -23,8 +23,15 @@ import { listCustomers } from '@/modules/02_customers/api'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { formatIsraelDate, formatWindowLabel } from '@/lib/reportsFormat'
 import { cn } from '@/lib/utils'
+import { withReturnTo } from '@/lib/returnTo'
 import { DRILL_INTENT, ROW_DOOR_KINDS } from './api'
-import { REPORT_TABS, canOpenTab, findSurface, findTab } from './reportsCatalog'
+import {
+  REPORT_TABS,
+  RETIRED_REPORT_TARGETS,
+  canOpenTab,
+  findSurface,
+  findTab,
+} from './reportsCatalog'
 import Envelope from './components/Envelope'
 import FiltersBar from './components/FiltersBar'
 import { DEFAULT_PERIOD, PERIOD_OPTIONS, parsePeriodParam, periodRange } from './reportsPeriod'
@@ -87,11 +94,12 @@ function locateDoor(next) {
 /**
  * 🔗 **המסכים שדלת-שורה מובילה אליהם — נמדדו ב-`src/App.jsx`, לא הונחו.**
  * ‏`project` ⇒ `/projects/:id` · `customer` ⇒ `/customers/:customerId` · `quote` ⇒
- * `/quotes/:quoteId/edit` — שלושה מסכים אמיתיים, כל אחד אומת בקובץ-הניתוב.
- * ⚠️ **ולמה `/quotes/:quoteId/edit` ולא `/quotes`:** רשימת-ההצעות אינה יכולה לקשר להצעה
- * אחת, ו-`cards-management` שורה 8 נוקב ב**הצעת-המחיר עצמה** כיעד-הקידוח היחיד של מ4.
- * זהו גם הנתיב שהמנתב המקומי של לשונית-ההנהלה כבר השתמש בו. 🔒 המסך גדור `'הצעות מחיר'`
- * ב-`ProtectedRoute`, ולכן מי שאין לו הרשאה מקבל את מסך-החסימה של המערכת ולא דף שבור.
+ * `/quotes?view=:quoteId` — מסכים אמיתיים, כל אחד אומת בקובץ-הניתוב.
+ * ✏️ **`quote` תוקן 24/09/2026 (ליטושי-הכנס, חבילה 0) — היה `/quotes/:quoteId/edit`, ושבר בייצור:**
+ * שורות "סגירת הצעות" (ה1) הן הצעות **שכבר הוכרעו**, ולמסך-העריכה אין מה להציג להן (הוא עורך
+ * `in_progress` בלבד). **היעד הוא מסמך-ההצעה:** רשימת-ההצעות פותחת את `QuoteDocumentDialog` לפי
+ * `?view=`, בכל סטטוס — וזו כוונת הדלת (*"שורה פותחת את הצעת-המחיר שאבדה"*). 🔒 המסך גדור
+ * `'הצעות מחיר'` ב-`ProtectedRoute`, ולכן מי שאין לו הרשאה מקבל את מסך-החסימה ולא דף שבור.
  * ✏️ **`hostess` תוקן 16/09/2026 — כבר לא חצי-דלת.** עד עכשיו לכרטיס-הדיילת לא הייתה
  * כתובת, והלחיצה נחתה על **מסך-הדיילות** ולא על הכרטיס עצמו. `HostessesPage` מכבדת
  * עכשיו `?hostess=<id>` ופותחת את הכרטיס **באותו state ואותה טעינת-נתונים כמו לחיצת-
@@ -102,7 +110,7 @@ const DOOR_PATHS = Object.freeze({
   project: (id) => `/projects/${id}`,
   customer: (id) => `/customers/${id}`,
   hostess: (id) => `/hostesses?hostess=${id}`,
-  quote: (id) => `/quotes/${id}/edit`,
+  quote: (id) => `/quotes?view=${id}`,
 })
 
 /**
@@ -402,6 +410,8 @@ export default function ReportsPage() {
    */
   const canOpenTarget = useCallback(
     (target) => {
+      // ✂️ יעד שהוסר **במכוון** (מ16, 24/09/2026) — האריח נשאר עם הערך, בלי דלת. ר' `reportsCatalog.js`.
+      if (RETIRED_REPORT_TARGETS.includes(target?.report)) return false
       const door = locateDoor(target)
       if (!door) return true
       return canOpenTab(door.tab, permissions)
@@ -447,7 +457,8 @@ export default function ReportsPage() {
     // *"מ9 בשורש: השורה כולה דלת אל כרטיס-הפרויקט"*), ו**הכרעה 19 עומדת בעינה**.
     // ⇒ המשטח מסמן היום רק מפתח ש**חוזר על הממד של הרמה הפתוחה** (ר' `ReportSurface`).
     if (intent !== DRILL_INTENT && next?.id != null && ROW_DOOR_KINDS.includes(next.kind)) {
-      navigate(DOOR_PATHS[next.kind](next.id))
+      // 0ב (24/09/2026): הדלת נושאת את כתובת-הדוח (לשונית · דוח · מסננים) — היעד חוזר אליה בסגירה.
+      navigate(withReturnTo(DOOR_PATHS[next.kind](next.id), `/reports?${searchParams.toString()}`))
       return
     }
     // 🔑 האובייקט נכתב לכתובת **כפי שהוא** — הסימן חי בקריאה ולא בתוכו, ולכן אין כאן

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { getParamEntry, validateParamValue } from '../src/lib/paramsRegistry.js'
 
 // ══════════════════════════════════════════════════════════════════════════════════════
 // צעד 4.3 (31/07/2026) — החבילה הקבועה של לשונית "מחירים" (§7.84).
@@ -236,8 +237,14 @@ test.describe('פרמטרי-תמחור: שמירה ווולידציה (4.3b ②,
 
     // 🔀 הבדל-צורה מהכרטיס הישן, לא ריכוך: שם השגיאה הופיעה **אחרי** לחיצה על "שמור";
     // כאן היא מוצגת מיד, וכפתור-השמירה עצמו מנוטרל — כלומר המסלול חסום בשלב מוקדם יותר.
+    // 🔄 24/09/2026: הטקסט הקשיח "ערך חוקי: מספר שלם חיובי" התיישן — `paramsRegistry.js:299`
+    // הוסיפה תקרה סניטרית (`max: 150`) לפרמטר הזה, וההודעה (`numericMessage`,
+    // `paramsRegistry.js:141-148`) נגזרת מ-min/max בפועל ולכן השתנתה ל"...בין 1 ל-150".
+    // נגזרים מה-SSOT עצמו (`validateParamValue`) במקום לנעוץ מחרוזת — אם התקרה תזוז שוב,
+    // הבדיקה לא תירקב.
+    const expectedMessage = validateParamValue(getParamEntry('יחס_אורחים_לדיילת'), '0').message
     await expect(page.locator('[data-param="יחס_אורחים_לדיילת"]').getByRole('alert')).toHaveText(
-      'ערך חוקי: מספר שלם חיובי',
+      expectedMessage,
     )
     await expect(page.getByTestId('settings-save-button')).toBeDisabled()
     await expect(page.getByTestId('toast-success')).toHaveCount(0)
