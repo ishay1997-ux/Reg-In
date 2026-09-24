@@ -137,6 +137,58 @@ describe('ReportSurface — extension slots', () => {
     expect(within(extra).getAllByTestId('report-row')).toHaveLength(2)
     // ‏`table.sort` של ה-RPC מנצח את `columns[].sorted` — אחרת אין `aria-sort` על טבלה נוספת.
     expect(within(extra).getAllByRole('columnheader')[0]).toHaveAttribute('aria-sort', 'ascending')
+    // בלי `note` — אין שורת-הערה ריקה.
+    expect(within(extra).queryByTestId('report-extra-table-note')).toBeNull()
+  })
+
+  // ✏️ 25/09/2026 (הכרעת הסגן, מ15 F1): ‏`table.note` מהשרת לא הוצג בשום מקום.
+  it('an extra table note from the server is shown under its title', async () => {
+    callReport.mockResolvedValueOnce(
+      payload({
+        meta: {
+          extra_tables: [
+            {
+              title: 'אי-הגעה לפי דירוג',
+              note: 'אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות.',
+              columns: [{ key: 'rating', label: 'דירוג', format: 'int' }],
+              rows: [{ row_key: 3, rating: 3 }],
+            },
+          ],
+        },
+      }),
+    )
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={() => {}} />)
+    const extra = await screen.findByTestId('report-extra-table')
+    expect(within(extra).getByTestId('report-extra-table-note')).toHaveTextContent(
+      'אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות.',
+    )
+  })
+
+  // ✏️ 25/09/2026 (הכרעת הסגן, מ21 F2): אריחים שמחושבים על כל הלקוחות אומרים את זה כשנבחר לקוח.
+  it('with a customer selected, tiles listed in customer_filter_ignored say they cover all customers', async () => {
+    const tiled = () =>
+      payload({
+        tiles: [{ key: 'drifting_count', label: 'לקוחות מתרחקים', value: 13, format: 'int' }],
+        meta: { customer_filter_ignored: ['drifting_count'] },
+      })
+    callReport.mockResolvedValueOnce(tiled())
+    const { unmount } = render(
+      <ReportSurface
+        surface={surface}
+        filters={{ ...filters, customerId: 213 }}
+        drill={null}
+        onDrill={() => {}}
+      />,
+    )
+    expect(await screen.findByTestId('report-tiles-all-customers')).toHaveTextContent(
+      'האריחים מחושבים על כל הלקוחות, לא רק על הלקוח שנבחר.',
+    )
+    unmount()
+
+    callReport.mockResolvedValueOnce(tiled())
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={() => {}} />)
+    await screen.findByTestId('report-tiles')
+    expect(screen.queryByTestId('report-tiles-all-customers')).toBeNull()
   })
 
   // 🔒 נעילה, לא תיקון (24/09/2026, שאלת-הבודק על הדגל `upcoming`): שורות "כמה להזמין לחודש הקרוב"

@@ -10,7 +10,8 @@
 // ⚠️ **התאריכים יחסיים לשעון האמיתי**: המסך קורא את השעון בעצמו (`nowIso()`), וקיבוע
 // תאריך היה מזייף בדיוק את חלונות-הזמן שנבדקים כאן.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import OverviewTab from './OverviewTab'
 import { listStaffingOverview } from './api'
 import { getParamValues } from '@/api/params'
@@ -65,8 +66,19 @@ beforeEach(() => {
   getParamValues.mockResolvedValue(THRESHOLDS)
 })
 
-function renderTab() {
-  return render(<OverviewTab reloadKey={0} onOpenSmartMatch={vi.fn()} onResendExpired={vi.fn()} />)
+// ✏️ 25/09/2026: המסנן חי בכתובת (`?filter=`) ⇒ המסך צריך נתב. ‏`Where` מדפיס את הכתובת הנוכחית.
+function Where() {
+  const location = useLocation()
+  return <p data-testid="where">{`${location.pathname}${location.search}`}</p>
+}
+
+function renderTab(entry = '/hostesses') {
+  return render(
+    <MemoryRouter initialEntries={[entry]}>
+      <OverviewTab reloadKey={0} onOpenSmartMatch={vi.fn()} onResendExpired={vi.fn()} />
+      <Where />
+    </MemoryRouter>,
+  )
 }
 
 describe('מבט-על — שלושת הספים נטענים מ-`params` ואינם קבועים בקוד', () => {
@@ -144,5 +156,67 @@ describe('הכיתובים מצטטים את הספים החיים — ולא מ
     const table = screen.getByTestId('overview-table')
     expect(table).toHaveTextContent('בתוך 48 שעות')
     expect(table).not.toHaveTextContent('בתוך 24 שעות')
+  })
+})
+
+// ✏️ 25/09/2026 (הכרעת הסגן #1): אריח "אירועים עם חוסר" בדוח מ14 פותח את המסך הזה ב-`?filter=missing`.
+// אירוע מאויש במלואו (701) ואירוע חסר (702) — כך רואים שהמסנן באמת נדלק מהכתובת.
+function staffedProject(projectId, hours) {
+  const project = projectInHours(projectId, hours)
+  return {
+    ...project,
+    required_hostess_count: 1,
+    assignments: [
+      {
+        hostess_id: 1,
+        assignment_number: 1,
+        assignment_status: 'finally_approved',
+        project_id: projectId,
+      },
+    ],
+  }
+}
+
+describe('המסנן בכתובת — ?filter=missing', () => {
+  beforeEach(() => {
+    listStaffingOverview.mockResolvedValue([staffedProject(701, 30), projectInHours(702, 50)])
+  })
+
+  it('כתובת עם ?filter=missing ⇒ "הציגי חסרים בלבד" דלוק, והשורה המאוישת לא מוצגת', async () => {
+    renderTab('/hostesses?filter=missing')
+    await screen.findByTestId('overview-table')
+
+    expect(screen.getByTestId('overview-filter-missing')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('overview-row-702')).toBeInTheDocument()
+    expect(screen.queryByTestId('overview-row-701')).not.toBeInTheDocument()
+  })
+
+  it('בלי פרמטר ⇒ "הכול", ושתי השורות מוצגות', async () => {
+    renderTab()
+    await screen.findByTestId('overview-table')
+
+    expect(screen.getByTestId('overview-filter-all')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('overview-row-701')).toBeInTheDocument()
+    expect(screen.getByTestId('overview-row-702')).toBeInTheDocument()
+  })
+
+  it('לחיצה על "הכול" מוחקת את הפרמטר, ולחיצה על "חסרים" כותבת אותו — ושאר הכתובת נשמרת', async () => {
+    renderTab('/hostesses?filter=missing&returnTo=%2Freports')
+    await screen.findByTestId('overview-table')
+
+    fireEvent.click(screen.getByTestId('overview-filter-all'))
+    expect(screen.getByTestId('where')).toHaveTextContent('/hostesses?returnTo=%2Freports')
+
+    fireEvent.click(screen.getByTestId('overview-filter-missing'))
+    expect(screen.getByTestId('where')).toHaveTextContent('filter=missing')
+    expect(screen.getByTestId('where')).toHaveTextContent('returnTo=%2Freports')
+  })
+
+  it('ערך לא מוכר ⇒ "הכול", בלי לרוקן את הרשימה', async () => {
+    renderTab('/hostesses?filter=bogus')
+    await screen.findByTestId('overview-table')
+
+    expect(screen.getByTestId('overview-filter-all')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('overview-row-701')).toBeInTheDocument()
   })
 })

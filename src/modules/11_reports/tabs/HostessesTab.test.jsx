@@ -155,7 +155,8 @@ const m14 = () =>
         format: 'int',
         window: 'נכון ל-16/09/2026',
         compare: null,
-        target: { tab: 'דיילות', drill: null, report: 'report_m16_quality_cost' },
+        // ✏️ 25/09/2026 (הכרעת הסגן, `20260925000300`): בלי דלת — פונקציית-היעד (מ16) נמחקה 24/09.
+        target: null,
       },
       {
         key: 'gap_events',
@@ -164,8 +165,9 @@ const m14 = () =>
         format: 'int',
         window: '30 הימים הקרובים',
         compare: { label: '31–60 הימים הבאים', value: 2, direction: 'up' },
-        // 🔴 **דלת חוצת-לשונית** (הכרעה 33): לשונית "הנהלה", שהרשאתה `'כספים'`.
-        target: { tab: 'הנהלה', drill: null, report: 'report_m06_staffing' },
+        // ✏️ 25/09/2026 (הכרעת הסגן, `20260925000300`): בלי דלת. "איכות אירועים" (מ6) מראה רשימה אחרת —
+        // אירועים ב-14 הימים הקרובים עם גורם-סיכון, לא חוסר — ואף דוח לא מונה חוסר-דיילות.
+        target: null,
       },
     ],
     chart: {
@@ -546,21 +548,20 @@ describe('מ14 · מבט-על דיילות', () => {
 })
 
 describe('מה ש-i2 הוסיף לשרת, ומה שהוא משנה על המסך', () => {
-  it('מ14 · חמישה אריחים וחמש דלתות — הכרעה 33 מושלמת, כולל דלת חוצת-לשונית', async () => {
+  it('מ14 · חמישה אריחים ושלוש דלתות — "דיילות פעילות" ו"אירועים עם חוסר" בלי דלת', async () => {
     callReport.mockResolvedValue(m14())
-    const onDrill = renderTab(SURFACES.m14)
+    renderTab(SURFACES.m14)
     await screen.findByTestId('report-tiles')
     // ⚠️ הספירה נגזרת מהמטען ולא מוקלדת: `report-tile-link-*` הוא העטיפה ש-`KpiTile`
     // מוסיף **רק** לאריח עם `target` (הכרעה 33).
     const doors = screen.getAllByTestId(/^report-tile-link-/)
     expect(doors).toHaveLength(m14().tiles.filter((t) => t.target).length)
-    expect(doors).toHaveLength(5)
+    expect(doors).toHaveLength(3)
 
-    // הדלת שהיא **חוצת-לשונית** — האריח היחיד שיעדו מחוץ ללשונית "דיילות".
-    fireEvent.click(screen.getByTestId('report-tile-link-gap_events'))
-    expect(onDrill).toHaveBeenCalledWith(
-      expect.objectContaining({ tab: 'הנהלה', report: 'report_m06_staffing' }),
-    )
+    // ✏️ 25/09/2026 (הכרעת הסגן, `20260925000300`): שני האריחים נשארים עם ערך, בלי דלת.
+    expect(screen.getByTestId('report-tile-gap_events')).toHaveTextContent('4')
+    expect(screen.queryByTestId('report-tile-link-gap_events')).toBeNull()
+    expect(screen.queryByTestId('report-tile-link-active_hostesses')).toBeNull()
   })
 
   it('מ15 · שני הספים והכרעה 38 על המסך **ברמה 0** — מבחן-המחיקה של C3', async () => {

@@ -12,6 +12,7 @@
 // "שלח לעוד דיילות".
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
@@ -53,6 +54,16 @@ const filterLabels = (urgentHours) => ({
   urgent: `דחוף (עד ${urgentHours} שעות)`,
 })
 
+// ✏️ 25/09/2026 (הכרעת הסגן #1): המסנן חי בכתובת (`?filter=missing`), כמו כל מסנן-רשימה (`CLAUDE.md` §4.2) —
+// ואריח "אירועים עם חוסר" בדוח מבט-העל של הדיילות (מ14) פותח את המסך הזה ישר על "חסרים בלבד".
+// ערך שאינו מוכר (או חסר) ⇒ "הכול"; "הכול" אינו נכתב לכתובת.
+const FILTER_PARAM = 'filter'
+const FILTER_VALUES = ['all', 'missing', 'urgent']
+const readFilter = (searchParams) => {
+  const value = searchParams.get(FILTER_PARAM)
+  return FILTER_VALUES.includes(value) ? value : 'all'
+}
+
 // ⚠️ מחושב פעם אחת בטעינה ומוחזק ב-state — `react-hooks/purity` אוסר קריאת-שעון בתוך
 // render, וגם לוגית: "עכשיו" שזז באמצע רינדור מייצר שורות שמסכימות זו עם זו רק לפעמים.
 function nowIso() {
@@ -71,7 +82,21 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [now, setNow] = useState(nowIso)
-  const [filter, setFilter] = useState('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filter = readFilter(searchParams)
+  const setFilter = useCallback(
+    (next) =>
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev)
+          if (next === 'all') params.delete(FILTER_PARAM)
+          else params.set(FILTER_PARAM, next)
+          return params
+        },
+        { replace: true },
+      ),
+    [setSearchParams],
+  )
   const [sending, setSending] = useState(false)
 
   const [reloadTick, setReloadTick] = useState(0)
