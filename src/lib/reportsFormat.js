@@ -2,14 +2,15 @@
 //
 // 🔴 למה הקובץ קיים בכלל, ומה הוא **אינו**: הוא אינו פורמטר-כסף שני. ‏📐4
 // (`processes-approved.md`) קובע *"דיוק אחיד — ₪ בלי אגורות בכל מקום · אחוזים בספרה עשרונית
-// אחת · ג'יני בשתיים"*, ושישה-עשר משטחים עומדים להציג את אותם מדדים. בלי מקום אחד שגוזר
+// אחת · ג'יני בשתיים"* (✂️ 24/09/2026: ג'יני ירד מהמסך — הוחלף באחוז-הרבע-העמוס),
+// ושישה-עשר משטחים עומדים להציג את אותם מדדים. בלי מקום אחד שגוזר
 // את הכלל הזה, כל בונה-לשונית יכתוב `toFixed` משלו — וזה בדיוק הפגם ש-📐4 נולד ממנו
 // *(נמדד שם: `75,769.90` בדף אחד מול `75,770` בדף אחר)*.
 //
 // ⇒ **כל מה שכבר קיים בריפו נקרא מכאן ולא משוכפל** (כלל-ברזל 14): הכסף דרך
 // `formatShekelWhole` (`src/lib/pricing.js`) והתאריך דרך `formatDate` (`src/lib/dates.js`).
-// מה שנוסף כאן הוא רק מה ש-📐4 דורש ולא היה קיים: אחוז בספרה אחת, ג'יני בשתיים, וחצי-
-// ההשוואה של 📐1.
+// מה שנוסף כאן הוא רק מה ש-📐4 דורש ולא היה קיים: אחוז בספרה אחת וחצי-ההשוואה
+// של 📐1.
 //
 // ⚠️ **ולמה `formatPercent` כאן אינו זה שב-`src/lib/projectFinance.js`:** זה שם מעגל
 // **לשלם** (`69%`) לפי המוקאפ המאושר של מודול 8, וזהו חוזה-תצוגה של אותו מודול. ‏📐4 דורש
@@ -99,25 +100,12 @@ export function formatPercent(value) {
   return isolateLtr(`${n.toFixed(1)}%`)
 }
 
-/**
- * ‏`0.4299` ⇒ `"0.43"` · חסר ⇒ `"—"`. ‏📐4: שתי ספרות, תמיד.
- * 🔑 **שתיים ולא ארבע, וזה מוכרע ולא טעם:** `spec.md §🔢 3.3` מתעד שתי מדידות של אותה
- * אוכלוסייה — `0.4329` מול `0.4299` — ו**שתיהן מרנדרות `0.43`**. העיגול הוא מה שמונע
- * מהמסך להציג פער שאינו משמעותי כאילו הוא ממצא.
- */
-export function formatGini(value) {
-  const n = toFiniteNumber(value)
-  if (n === null) return NO_VALUE
-  return n.toFixed(2)
-}
-
 // הפורמטים שאריח/עמודה יכולים להכריז עליהם בחוזה-ה-RPC (מדריך-המיקרו §2ב C8, עמודת `format`).
 // 🔑 המיפוי חי **כאן ולא ברכיב**: `KpiTile` ו-`ReportTable` מציגים את אותו `format` בדיוק,
 // ושתי מפות-מקרים היו נפרדות ביום הראשון (המחלה של `StatTile`, `src/CLAUDE.md`).
 const FORMATTERS = {
   money: formatMoney,
   percent: formatPercent,
-  gini: formatGini,
   int: (v) => {
     const n = toFiniteNumber(v)
     return n === null ? NO_VALUE : isolateLtr(Math.round(n).toLocaleString('he-IL'))
@@ -182,7 +170,7 @@ export function formatByType(value, format) {
 // למעלה, ולכן אין כאן "עוד פורמטר" אלא אותו קיבוץ בלי היחידה.
 const groupWhole = (n) => Math.round(n).toLocaleString('he-IL')
 
-// 🔑 **תוויות-ציר לפי פורמט** — ר' `formatAxisTick`. ‏`gini`/`ratio`/`score` שומרים ספרות
+// 🔑 **תוויות-ציר לפי פורמט** — ר' `formatAxisTick`. ‏`ratio`/`score` שומרים ספרות
 // עשרוניות כי הטווח שלהן קטן (⁦0⁩–⁦1⁩, ⁦1⁩–⁦5⁩) ועיגול-לשלם היה מוחק את כל ההבחנה על הציר.
 const AXIS_TICKS = {
   money: groupWhole,
@@ -190,7 +178,6 @@ const AXIS_TICKS = {
   days: groupWhole,
   // ‏`50` ⇒ `50%` ולא `50.0%`: תו-סימון עגול הוא הנפוץ על ציר, ו-`.0` שחוזר שש פעמים הוא רעש.
   percent: (n) => `${Number.isInteger(n) ? n : Number(n.toFixed(1))}%`,
-  gini: (n) => n.toLocaleString('he-IL', { maximumFractionDigits: 2 }),
   ratio: (n) => n.toLocaleString('he-IL', { maximumFractionDigits: 1 }),
   score: (n) => n.toLocaleString('he-IL', { maximumFractionDigits: 2 }),
 }

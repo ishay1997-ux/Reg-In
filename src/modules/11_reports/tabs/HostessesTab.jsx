@@ -42,7 +42,7 @@ const HINTS = {
   // ‏`extras` מחזיק רק את מה שיושב מתחת לטבלה-הנוספת (זמני-התגובה של מ17) — לא מילון-מונחים.
   'hostess-overview': {
     afterSoWhat: ['reports.hostessOverview.purpose'],
-    beforeChart: ['reports.hostessOverview.redCount', 'reports.hostessOverview.gini'],
+    beforeChart: ['reports.hostessOverview.redCount', 'reports.hostessOverview.topQuarter'],
     chartFooter: [],
     beforeTable: ['reports.hostessOverview.redTableSort'],
     extras: [],
@@ -57,7 +57,7 @@ const HINTS = {
   fairness: {
     afterSoWhat: ['reports.fairness.purpose'],
     beforeChart: [],
-    chartFooter: ['reports.fairness.giniBasis'],
+    chartFooter: ['reports.fairness.quartersBasis'],
     beforeTable: [],
     extras: ['reports.fairness.responseTime'],
   },

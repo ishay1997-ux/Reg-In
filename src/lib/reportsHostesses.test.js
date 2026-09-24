@@ -1,8 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { responsivenessScore } from './smartMatch'
 import {
-  giniPopulation,
-  lorenzPoints,
   concentrationShares,
   reliabilityThresholds,
   reliabilityBand,
@@ -22,7 +20,7 @@ vi.mock('./smartMatch', async (importOriginal) => {
 })
 
 // 🔴 **הבדיקות בקובץ הזה נכתבו לפני המימוש, והמספרים בהן לא חושבו כאן.**
-// מקורם: `docs/specs/module_11_reports/spec.md §🔢 3.3` (המקרה המחושב-ביד של ג'יני)
+// מקורם: `docs/specs/module_11_reports/spec.md §🔢 3.3` (המקרים המחושבים-ביד)
 // ו-`stage2-review/signoff-baseline-2026-09-10.md` (המדידה העצמאית). בדיקה שכתב מי
 // שכתב את הנוסחה מקודדת את אותה שגיאה ועוברת בירוק — ולכן הציפייה קודמת לקוד.
 //
@@ -38,8 +36,9 @@ vi.mock('./smartMatch', async (importOriginal) => {
 //   `select count(*) from assignments where assignment_status='finally_approved'
 //    and event_date > '2025-09-10' and event_date <= '2026-09-10' group by hostess_id`
 // ⇒ `n=106` · `סה"כ 1,862`. זה החלון שבו נמדדו כל עוגני `signoff-baseline-2026-09-10.md`,
-// ולכן **הפיקסצ'ר הזה הוא האורקל** של ג'יני (0.4559), הריכוזיות (55.3/16.2/26.0),
-// החציון (13.5) והקודקוד הראשון של לורנץ — הערך ש-`cards-hostesses.md §ד` סימן כחסר.
+// ולכן **הפיקסצ'ר הזה הוא האורקל** של הריכוזיות (55.3/16.2/26.0) והחציון (13.5).
+// ✂️ 24/09/2026 — בדיקות ג'יני ולורנץ נמחקו עם הפונקציות (הכרעת-ישי: שני המונחים ירדו
+// מהמסך); הרבע-העליון (55.3%) הוא עכשיו המדד הראשי של הריכוזיות, ונבדק כאן למטה.
 // ⚠️ **אינו נמדד מחדש**: החלון נגרר עם השעון, והפיקסצ'ר נועד דווקא לא לזוז איתו.
 const SHIFT_COUNTS_2026_09_10 = [
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7,
@@ -47,96 +46,6 @@ const SHIFT_COUNTS_2026_09_10 = [
   15, 15, 15, 15, 17, 18, 18, 20, 21, 23, 24, 24, 25, 26, 26, 27, 28, 28, 30, 30, 31, 31, 32, 32,
   32, 32, 32, 33, 35, 35, 35, 36, 36, 37, 37, 39, 39, 41, 42, 44, 44, 44, 45, 46, 46, 46, 48,
 ]
-
-describe("ג'יני — גרסת-אוכלוסייה, וזו ההכרעה (spec.md §🔢 3.3)", () => {
-  // חמש דיילות, ספירות 1·2·3·4·10 · n=5 · סכום 20 · ממוצע 4.
-  // סכום ההפרשים המוחלטים המסודרים = 80 ⇒ 80 ÷ (2·25·4) = 0.40.
-  // ‏🚫 גרסת-המדגם מחזירה 0.50 על אותו קלט — הפרש של 25%.
-  const HAND_CASE = [1, 2, 3, 4, 10]
-
-  it('‏1·2·3·4·10 ⇒ 0.40 בדיוק', () => {
-    expect(giniPopulation(HAND_CASE)).toBeCloseTo(0.4, 10)
-  })
-
-  it('‏0.50 היה אומר שנבחרה גרסת-המדגם — ולכן נבדק במפורש שזה לא קורה', () => {
-    expect(giniPopulation(HAND_CASE)).not.toBeCloseTo(0.5, 3)
-  })
-
-  it('הנוסחה השנייה (סדרה ממוינת) מחזירה את אותו מספר — 1.6 − 1.2', () => {
-    const sorted = [...HAND_CASE].sort((a, b) => a - b)
-    const n = sorted.length
-    const sum = sorted.reduce((acc, value) => acc + value, 0)
-    const weighted = sorted.reduce((acc, value, index) => acc + (index + 1) * value, 0)
-    expect(giniPopulation(HAND_CASE)).toBeCloseTo((2 * weighted) / (n * sum) - (n + 1) / n, 10)
-  })
-
-  it('סדר הקלט אינו משנה', () => {
-    expect(giniPopulation([10, 3, 1, 4, 2])).toBeCloseTo(0.4, 10)
-  })
-
-  it('חלוקה שווה ⇒ 0', () => {
-    expect(giniPopulation([5, 5, 5, 5])).toBeCloseTo(0, 10)
-  })
-
-  it('ריכוז מוחלט (אחת מקבלת הכול) ⇒ (n−1)/n, לא 1 — זו גרסת-האוכלוסייה', () => {
-    expect(giniPopulation([0, 0, 0, 4])).toBeCloseTo(0.75, 10)
-  })
-
-  // ‏`cards-hostesses.md` ④ מ17: פחות משתי דיילות ⇒ המדד אינו מוגדר, מוצג "—" ולא 0.
-  it('‏n<2 ⇒ null, לעולם לא 0', () => {
-    expect(giniPopulation([7])).toBeNull()
-    expect(giniPopulation([])).toBeNull()
-    expect(giniPopulation(null)).toBeNull()
-  })
-
-  it('סכום אפס ⇒ null — אין ממוצע לחלק בו', () => {
-    expect(giniPopulation([0, 0, 0])).toBeNull()
-  })
-})
-
-describe('עקומת-לורנץ — אותו נתון בדיוק כמו ג׳יני, בצורת גרף', () => {
-  it('‏1·2·3·4·10: שש נקודות, מ-(0,0) ל-(100,100)', () => {
-    expect(lorenzPoints([1, 2, 3, 4, 10])).toEqual([
-      { x: 0, y: 0 },
-      { x: 20, y: 5 },
-      { x: 40, y: 15 },
-      { x: 60, y: 30 },
-      { x: 80, y: 50 },
-      { x: 100, y: 100 },
-    ])
-  })
-
-  it('חלוקה שווה ⇒ העקומה היא קו-השוויון', () => {
-    expect(lorenzPoints([2, 2, 2, 2])).toEqual([
-      { x: 0, y: 0 },
-      { x: 25, y: 25 },
-      { x: 50, y: 50 },
-      { x: 75, y: 75 },
-      { x: 100, y: 100 },
-    ])
-  })
-
-  it('אין נתון ⇒ מערך ריק, לא נקודה מומצאת', () => {
-    expect(lorenzPoints([])).toEqual([])
-    expect(lorenzPoints([0, 0])).toEqual([])
-  })
-
-  // ✒️ ‏`cards-hostesses.md §ד` סימן במפורש שהקודקוד הזה **חסר מטבלת-ה-`sr-only`** של
-  // המוקאפ (הגרף נשא 13 קודקודים והטבלה 12 שורות). כאן הוא מקובע: הדיילת הפחות-עמוסה
-  // היא ‏1/106 מהדיילות (0.9434%) ומחזיקה משמרת אחת מתוך 1,862 (0.0537%).
-  it('הקודקוד הראשון על האוכלוסייה האמיתית ⇒ (0.9434, 0.0537)', () => {
-    const points = lorenzPoints(SHIFT_COUNTS_2026_09_10)
-    expect(points).toHaveLength(107)
-    expect(points[0]).toEqual({ x: 0, y: 0 })
-    expect(points[1].x).toBeCloseTo(0.9434, 4)
-    expect(points[1].y).toBeCloseTo(0.0537, 4)
-    expect(points[106]).toEqual({ x: 100, y: 100 })
-  })
-
-  it("ומאותה סדרה בדיוק יוצא ג'יני 0.4559 — העקומה והמדד לא יכולים לסתור", () => {
-    expect(giniPopulation(SHIFT_COUNTS_2026_09_10)).toBeCloseTo(0.45587, 5)
-  })
-})
 
 describe('נתחי-ריכוזיות — רבע עליון · מחצית תחתונה · עשירון עליון', () => {
   // ‏1·2·3·4·10 · n=5 · סכום 20.

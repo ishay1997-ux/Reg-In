@@ -368,28 +368,27 @@ describe('ChartCard — 📐5/📐6: ציר מאפס וקווי-ייחוס', () 
     expect(yAxis.domain).toEqual([0, 100])
   })
 
-  // 📐6 — קו-השוויון בלורנץ הוא אלכסון 1:1. `y=` הוא אופקי בלבד ולא היה מצייר אותו.
-  it('קו-ייחוס אלכסוני נמסר כ-segment ולא כ-y', () => {
+  // 📐6 — קו-השוויון של מ17 (✏️ 24/09/2026: עמודות-רבעים במקום עקומה) הוא קו **אופקי** ב-25%.
+  it('קו-ייחוס אופקי נמסר כ-y עם הערך, ולא כ-segment', () => {
     render(
       <ChartCard
         chart={{
           ...BAR_CHART,
-          type: 'lorenz',
-          refLines: [{ axis: 'diagonal', label: 'חלוקה שווה' }],
+          unit: 'percent',
+          domain: [0, 100],
+          refLines: [{ axis: 'y', value: 25, label: 'חלוקה שווה = 25%' }],
         }}
       />,
     )
     const refLine = screen.getByTestId('recharts-ReferenceLine')
     const ref = JSON.parse(refLine.dataset.props)
-    expect(ref.segment).toEqual([
-      { x: 0, y: 0 },
-      { x: 100, y: 100 },
-    ])
+    expect(ref.y).toBe(25)
+    expect(ref.segment).toBeUndefined()
     // 🔴 **התווית היא רכיב-ילד ולא `label={{…}}`** — נמדד בדפדפן 16/09/2026 שהצורה
     // האובייקטית אינה מרנדרת טקסט כלל ב-Recharts 3.10.1, וקו-השוויון נחת בלי שמו.
     const label = refLine.querySelector('[data-testid="recharts-Label"]')
     expect(label).not.toBeNull()
-    expect(JSON.parse(label.dataset.props).value).toBe('חלוקה שווה')
+    expect(JSON.parse(label.dataset.props).value).toBe('חלוקה שווה = 25%')
   })
 })
 
@@ -653,7 +652,6 @@ const SCATTER = {
     { key: 'actual', label: 'בפועל' },
   ],
   data: [{ estimated: 100, actual: 120 }],
-  refLines: [{ axis: 'diagonal', label: 'ההערכה התקיימה בדיוק', to: { x: 630, y: 630 } }],
 }
 
 describe('ChartCard — פיזור: תחום הציר', () => {
@@ -666,17 +664,6 @@ describe('ChartCard — פיזור: תחום הציר', () => {
     render(<ChartCard chart={SCATTER} />)
     expect(axes('XAxis')[0].domain).toEqual([0, 630])
     expect(axes('YAxis')[0].domain).toEqual([0, 630])
-  })
-
-  it('קו-השוויון נמסר כ-segment עם שני הקצוות, ועם תווית', () => {
-    render(<ChartCard chart={SCATTER} />)
-    const refLine = screen.getByTestId('recharts-ReferenceLine')
-    expect(JSON.parse(refLine.dataset.props).segment).toEqual([
-      { x: 0, y: 0 },
-      { x: 630, y: 630 },
-    ])
-    const label = refLine.querySelector('[data-testid="recharts-Label"]')
-    expect(JSON.parse(label.dataset.props).value).toBe('ההערכה התקיימה בדיוק')
   })
 
   // ✏️ חריג-📐5 המוצהר: ציר של **שיעור** (תעריף שעתי ⁦41⁩–⁦49⁩ ₪) אינו חייב להתחיל באפס.
@@ -761,30 +748,5 @@ describe('ChartCard — טבלת-קורא-המסך נפרשת כשכבה', () =>
     fireEvent.focus(first)
     fireEvent.blur(first, { relatedTarget: document.body })
     expect(table.className).toBe('sr-only')
-  })
-})
-
-// ── מקרא לקו-הייחוס האלכסוני ───────────────────────────────────────────────
-//
-// 🔴 **נמדד בדפדפן:** ‏`ReferenceLine` עם `segment` מצייר את הקו ו**אינו מרנדר את התווית
-// שלו כלל** (אפס צמתי-`text` ב-`.recharts-reference-line`) — אותה משפחה של הממצא הקודם.
-
-describe('ChartCard — מקרא לאלכסון', () => {
-  it('תווית-האלכסון מוצגת כמקרא, מהמטען ומילה-במילה', () => {
-    render(<ChartCard chart={SCATTER} />)
-    expect(screen.getByTestId('chart-refline-legend')).toHaveTextContent('ההערכה התקיימה בדיוק')
-  })
-
-  // ⚠️ קווי `x`/`y` מקבלים תווית **בתוך** הגרף (נמדד עובד) — מקרא שם היה מכפיל אותה.
-  it('קו-ייחוס אופקי אינו מקבל מקרא — התווית שלו מצוירת בגרף', () => {
-    render(
-      <ChartCard chart={{ ...BAR_CHART, refLines: [{ axis: 'y', value: 50, label: 'יעד' }] }} />,
-    )
-    expect(screen.queryByTestId('chart-refline-legend')).toBeNull()
-  })
-
-  it('אלכסון בלי תווית אינו מייצר מקרא ריק', () => {
-    render(<ChartCard chart={{ ...SCATTER, refLines: [{ axis: 'diagonal' }] }} />)
-    expect(screen.queryByTestId('chart-refline-legend')).toBeNull()
   })
 })

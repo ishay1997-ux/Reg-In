@@ -240,22 +240,9 @@ function renderRefLines(refLines, yAxisId) {
     // מפוזר, והאזהרה נמדדה בפועל בקונסולה בריצת-האימות. `key` בתוך spread אינו מפתח.
     const key = `ref-${index}`
 
-    // 📐6: קו-השוויון בלורנץ הוא **אלכסון 1:1** — `ReferenceLine` תומך בזה דרך `segment`,
-    // ולא דרך `y=` שהוא אופקי בלבד. בלי זה הלורנץ מצויר בלי הבסיס שהוא נמדד מולו.
-    if (ref.axis === 'diagonal') {
-      return (
-        <ReferenceLine
-          key={key}
-          {...common}
-          segment={[
-            { x: ref.from?.x ?? 0, y: ref.from?.y ?? 0 },
-            { x: ref.to?.x ?? 100, y: ref.to?.y ?? 100 },
-          ]}
-        >
-          {labelNode}
-        </ReferenceLine>
-      )
-    }
+    // ✂️ 24/09/2026 — קו-ייחוס אלכסוני (`axis:'diagonal'`, דרך `segment`) נמחק: שני צרכניו
+    // היו עקומת-לורנץ של מ17 (הוחלפה בעמודות-רבעים עם קו אופקי ב-25%) והפיזור הישן של מ6
+    // (הוחלף בעמודות). אף מטען חי אינו מצהיר עליו — נבדק ב-`supabase/migrations` בקריאה.
     if (ref.axis === 'x') {
       return (
         <ReferenceLine key={key} {...common} x={ref.value}>
@@ -516,14 +503,16 @@ function ScatterBody({ chart, onSelect }) {
           קו-השוויון נופל **מחוץ** לתחום, ו-Recharts **משליך את הקטע כולו** — כלומר
           האלכסון שהרמז, מקרא-הצורות והכרטיס כולם מדברים עליו פשוט לא צויר.
           ⚠️ **ובפיזור זה נכון מהותית ולא רק טכנית:** שני הצירים מודדים את **אותו מדד**
-          (צפי מול בפועל), ו-1:1 על שני סולמות שונים אינו קו של ⁦45°⁩. */}
+          (צפי מול בפועל), ו-1:1 על שני סולמות שונים אינו קו של ⁦45°⁩.
+          ✂️ 24/09/2026 — הקו האלכסוני עצמו נמחק מהרכיב (אין לו עוד מטען); התחום המשותף נשאר,
+          כי הנימוק "שני צירים, אותו מדד" אינו תלוי בו. */}
       {/* ✏️ **`chart.x_domain` — חריג מוצהר ל-📐5, הכרעה 16/09/2026 19:4X:** ציר-מאפס קיים
           כדי שלא לנפח **סכומים, מונים וכסף**; ציר של **שיעור** הוא סיפור אחר. נמדד במ16:
           תעריפים שעתיים בטווח ⁦41⁩–⁦49⁩ ₪ נמתחו על ציר ⁦1⁩–⁦49⁩, וכל הנקודות נדחסו לקצה אחד —
           כלומר ציר שאינו משקר ופשוט **אינו קריא**. ⇒ ה-RPC רשאי להצהיר `x_domain`, והוא
           **בלבד** — לא נגזר בלקוח. 🔑 בלעדיו ההתנהגות זהה לקודמתה: אותו `domain` של ציר-Y
-          (וזה מה שמחזיר את האלכסון של מ6 למסך), ובהיעדרו `[0, 'auto']`.
-          ⚠️ **וקווי-הייחוס אינם משתנים** — הם נחתכים לצירים, כך שאלכסון 1:1 שהוצא מהתחום
+          (תחום משותף לשני הצירים), ובהיעדרו `[0, 'auto']`.
+          ⚠️ **וקווי-הייחוס אינם משתנים** — הם נחתכים לצירים, כך שקו שהוצא מהתחום
           פשוט אינו מצויר, בדיוק כמו קודם. */}
       <XAxis
         dataKey={xKey}
@@ -567,7 +556,7 @@ function ScatterBody({ chart, onSelect }) {
  * כפי ש-`ParetoBody` דורש לסדרה-המצטברת שלו — ולכן שניהם אותו גוף.
  *
  * ⚠️ **ומה שלא נפתר כאן ומדווח:** ‏`refLines` של C8 אינם נוקבים באיזה ציר הם יושבים
- * (רק `x`/`y`/`diagonal`) ⇒ בלוח דו-צירי הם נתלים על **הימני כשהוא קיים**, כמו בפארטו.
+ * (רק `x`/`y`) ⇒ בלוח דו-צירי הם נתלים על **הימני כשהוא קיים**, כמו בפארטו.
  * דף שיצטרך קו-ייחוס על ציר-ה-₪ בלוח דו-צירי יידרש לשדה נוסף — פריט-חוזה, לא באג.
  */
 function ComposedBody({ chart, idPrefix, onSelect, selected }) {
@@ -627,21 +616,12 @@ function ParetoBody({ chart, idPrefix, onSelect, selected }) {
 }
 
 function LineBody({ chart, onSelect }) {
-  const { type, data = [], xKey, series = [], domain, refLines, unit } = chart
-  const lorenz = type === 'lorenz'
+  const { data = [], xKey, series = [], domain, refLines, unit } = chart
   return (
     <LineChart data={data} accessibilityLayer margin={CHART_MARGIN}>
       {commonGrid()}
-      {/* לורנץ: ציר-X מצטבר מספרי 0–100, לא קטגוריה — אחרת קו-השוויון האלכסוני מאבד זווית. */}
-      {lorenz ? (
-        <XAxis dataKey={xKey} type="number" domain={[0, 100]} {...valueAxisProps('percent')} />
-      ) : (
-        categoryAxis(xKey)
-      )}
-      <YAxis
-        domain={lorenz ? [0, 100] : valueDomain(domain)}
-        {...valueAxisProps(lorenz ? 'percent' : valueFormat(series, unit))}
-      />
+      {categoryAxis(xKey)}
+      <YAxis domain={valueDomain(domain)} {...valueAxisProps(valueFormat(series, unit))} />
       {renderRefLines(refLines)}
       {commonTooltip(unit)}
       {LineSeries({ series, onSelect })}
@@ -742,7 +722,6 @@ const CHART_BODIES = {
   scatter: ScatterBody,
   pareto: ParetoBody,
   line: LineBody,
-  lorenz: LineBody,
   bar: BarBody,
   stackedBar: BarBody,
   histogram: BarBody,
@@ -837,42 +816,6 @@ function ShapeLegend({ chart }) {
 }
 
 /**
- * ‏**מקרא לקווי-ייחוס אלכסוניים** — ✏️ נוסף 16/09/2026.
- *
- * 🔴 **נמדד בדפדפן, וזו מגבלת-ספרייה ולא בחירה:** ‏`ReferenceLine` עם `segment` מצייר את
- * הקו (‏`<line x1=64 y1=226 x2=950 y2=8>`, אומת על מ6 אחרי תיקון תחום-הציר) אבל **אינו
- * מרנדר את ה-`<Label>` שלו כלל** — אפס צמתי-`text` בתוך `.recharts-reference-line`. זו
- * אותה משפחה בדיוק של הממצא הקודם *(`label={{…}}` אינו מרנדר דבר)*, והפעם גם צורת-הילד
- * אינה עוזרת. ⚠️ **וקווי `x`/`y` ממשיכים לקבל תווית בתוך הגרף** — הם נמדדו עובדים, ולכן
- * המקרא הזה חל **על האלכסון בלבד** ואינו מכפיל תווית שכבר מצוירת.
- *
- * 🔑 **והטקסט אינו מומצא כאן:** הוא `refLines[].label` של המטען, מילה-במילה
- * *(מ6: "ההערכה התקיימה בדיוק")* — הועבר למקום שבו הוא **נראה**, ולא נוסח מחדש.
- */
-function DiagonalLegend({ refLines }) {
-  const diagonals = (refLines ?? []).filter((ref) => ref.axis === 'diagonal' && ref.label)
-  if (diagonals.length === 0) return null
-  return (
-    <ul
-      className="mb-2 flex flex-wrap gap-3 text-xs text-slate-600"
-      data-testid="chart-refline-legend"
-    >
-      {diagonals.map((ref) => (
-        <li key={ref.label} className="flex items-center gap-1.5">
-          {/* הדגימה מראה **קו מקווקו**, אותו קו שמצויר בגרף — ולא ריבוע צבע. */}
-          <span
-            aria-hidden="true"
-            className="inline-block h-0 w-4"
-            style={{ borderTop: `1px dashed ${AXIS_COLOR}` }}
-          />
-          {ref.label}
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-/**
  * ‏`chart` — אובייקט-גרף של C8:
  * `{ type, title, note?, series: [{key,label,format?,kind?,axis?}], data, xKey, domain,
  *    refLines, unit, shape_key?, shape_labels? }`.
@@ -945,7 +888,6 @@ export default function ChartCard({
         <>
           <ChartLegend series={series} />
           <ShapeLegend chart={chart} />
-          <DiagonalLegend refLines={chart.refLines} />
 
           {/* ‏`aside` — אריח-צד שהלשונית שותלת **בתוך** כרטיס-הגרף (F9). ‏`md:flex` כדי
               שבמסך צר הוא ייפול מתחת לגרף במקום לרסק אותו. */}
