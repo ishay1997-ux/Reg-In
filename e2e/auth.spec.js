@@ -30,7 +30,7 @@ test.describe('התחברות (מודול 1)', () => {
     await page.getByRole('button', { name: 'התחברות', exact: true }).click()
     // עד שההודעה מוצגת עוברות 3 קריאות-רשת עוקבות (check_login_lock → Auth → register_failed_login),
     // כל אחת עם preflight משלה - ברשת איטית זה חורג מ-10 השניות של ברירת המחדל.
-    await expect(page.getByText(/מייל או סיסמה שגויים|החשבון ננעל/)).toBeVisible({
+    await expect(page.getByText(/המייל והסיסמה לא תואמים|החשבון ננעל/)).toBeVisible({
       timeout: 30_000,
     })
   })

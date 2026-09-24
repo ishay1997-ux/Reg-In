@@ -17,8 +17,8 @@ import Ltr from '@/components/Ltr'
 import { MASKED_TEXT } from '@/lib/dashboard'
 import { NO_VALUE, formatByType, formatDelta } from '@/lib/reportsFormat'
 import { useContext } from 'react'
-import { Info } from 'lucide-react'
 import { ReportsShellContext } from './reportsShellContext'
+import InfoDetails from './InfoDetails'
 
 // 🔑 מועתק מ-`KpiStrip.jsx` (מ7) — **התקדים המדויק לאריח-דוח ממוסך**, וההערה שם מסבירה
 // למה זה `text-slate-400`: הוא מראה של קוד מוזג, ושינוי-גוון כאן הוא אדווה למודול 7.
@@ -59,14 +59,23 @@ function SubLine({ sub }) {
  * ⚠️ **וערך שכבר מחרוזת עובר כמות-שהוא** — לשונית שתיקנה את זה אצלה בטרנספורם מוסרת
  * מחרוזת מעוצבת, ועיצוב-כפול היה מחזיר `—` (‏`Number("⁦206,002 ₪⁩")` אינו מספר).
  */
-function CompareLine({ compare, fallbackFormat }) {
+function CompareLine({ compare, fallbackFormat, tileValueText }) {
   if (!compare) return null
   const format = compare.format ?? fallbackFormat
-  const glyph = ARROW[compare.direction]
   const delta = compare.delta === undefined ? null : formatDelta(compare.delta, format)
   const hasValue = compare.value !== null && compare.value !== undefined
   const valueText =
     typeof compare.value === 'string' ? compare.value : formatByType(compare.value, format)
+  // 🆕 24/09/2026 (ליטושי-הכנס 0ג פריט 6): **ערך והשוואה שמוצגים זהים ⇒ "ללא שינוי", בלי חץ.**
+  // נמדד במ20: *"4.0 ▲ אשתקד: 4.0"* — החץ נכון במספרים הגולמיים (4.006 מול 3.993), אבל על המסך
+  // הקורא רואה שני מספרים זהים וחץ שסותר אותם. ההשוואה היא על **הטקסט המוצג** (אחרי העיגול), כי
+  // זה מה שהעין משווה. רק להשוואה-עם-כיוון (תקופה קודמת) — "מתוך N" שווה לערך אינו "ללא שינוי".
+  const unchanged =
+    hasValue &&
+    Boolean(compare.direction) &&
+    tileValueText !== undefined &&
+    stripIsolates(valueText) === stripIsolates(tileValueText)
+  const glyph = unchanged ? null : ARROW[compare.direction]
   return (
     <>
       {/* ⚠️ `display:block` ולא `flex` — 🔴 **זה היה שורש רב-קבצי** (§⑥, תיקון 10/09/2026):
@@ -91,7 +100,8 @@ function CompareLine({ compare, fallbackFormat }) {
             במ21/מ22 מוסרים `label` שלם עם `value: null`, והמסך הציג *"… לא סכום שצפוי
             להיאבד: —"* — מקף שנקרא כ"אין לי את הנתון" על משפט שמלכתחילה אינו נושא מספר.
             ⇒ התווית לבדה, בלי נקודתיים ובלי `—`. */}
-        {hasValue && (
+        {hasValue && unchanged && <>: ללא שינוי</>}
+        {hasValue && !unchanged && (
           <>
             : <Ltr>{valueText}</Ltr>
             {delta && delta !== NO_VALUE && <> ({delta})</>}
@@ -143,7 +153,8 @@ function CompareLine({ compare, fallbackFormat }) {
 // 📏 **30 תווים גלויים** — "35 חשבוניות פתוחות" (18) נשאר; "0 מחמשת הגדולים (44.4% מההכנסה)
 // מסומנים 'מתרחק'" (52) עובר ל-ⓘ. תווי-הבידוד אינם נספרים — הם בלתי-נראים.
 const SUB_VISIBLE_MAX = 30
-const visibleLength = (text) => String(text ?? '').replace(/[⁦-⁩]/g, '').length
+const stripIsolates = (text) => String(text ?? '').replace(/[⁦-⁩]/g, '')
+const visibleLength = (text) => stripIsolates(text).length
 
 function splitLines(tile, masked) {
   if (masked) return { showSub: false, showCompare: false, details: { window: tile.window } }
@@ -168,31 +179,22 @@ function TileDetails({ label, details, fallbackFormat }) {
   const { sub, compare, note, window } = details
   if (!sub && !compare && !note && !window) return null
   return (
-    // 🔽 `<details>` מקומי — מקלדת מלידה, בלי portal ובלי מוקש-RTL (ר' `Disclosure.jsx`).
-    // ⚠️ **אח של הכפתור ולא בתוכו:** אריח-דלת הוא `<button>`, ואלמנט-אינטראקטיבי בתוך כפתור
-    // אינו HTML תקין — הלחיצה על ⓘ הייתה פותחת את הדוח במקום את הפירוט.
-    <details className="group absolute left-2 top-2 z-10" data-testid="kpi-details">
-      <summary
-        aria-label={`פירוט — ${label}`}
-        className="flex size-7 cursor-pointer list-none items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-700 [&::-webkit-details-marker]:hidden"
-      >
-        <Info aria-hidden="true" className="size-4" />
-      </summary>
-      <div className="absolute left-0 top-8 w-64 space-y-1 rounded-lg border border-slate-200 bg-white p-3 text-right shadow-lg">
-        <SubLine sub={sub} />
-        {compare && <CompareLine compare={compare} fallbackFormat={fallbackFormat} />}
-        {note && (
-          <span className="block text-sm text-slate-600" data-testid="kpi-compare-note">
-            {note}
-          </span>
-        )}
-        {window && (
-          <span className="block text-sm text-slate-600" data-testid="kpi-window">
-            {window}
-          </span>
-        )}
-      </div>
-    </details>
+    // 🔽 הקליפה (`<details>` + ⓘ) חולצה ל-`InfoDetails` (24/09/2026) — פס ה-AI במ22 משתמש בה.
+    // ⚠️ **אח של הכפתור ולא בתוכו** — ר' ההערה ב-`InfoDetails.jsx`.
+    <InfoDetails label={label} className="absolute left-2 top-2 z-10">
+      <SubLine sub={sub} />
+      {compare && <CompareLine compare={compare} fallbackFormat={fallbackFormat} />}
+      {note && (
+        <span className="block text-sm text-slate-600" data-testid="kpi-compare-note">
+          {note}
+        </span>
+      )}
+      {window && (
+        <span className="block text-sm text-slate-600" data-testid="kpi-window">
+          {window}
+        </span>
+      )}
+    </InfoDetails>
   )
 }
 
@@ -214,7 +216,11 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
             {/* סדר-המוקאפ: המכנה ואז ההשוואה (`.sub · .cmp`). */}
             {showSub && <SubLine sub={tile.sub} />}
             {showCompare && (
-              <CompareLine compare={{ ...tile.compare, note: null }} fallbackFormat={tile.format} />
+              <CompareLine
+                compare={{ ...tile.compare, note: null }}
+                fallbackFormat={tile.format}
+                tileValueText={formatByType(tile.value, tile.format)}
+              />
             )}
           </>
         ) : null

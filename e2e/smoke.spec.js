@@ -54,6 +54,11 @@ const ALLOWED_WRITE_PATHS = [
   // 🚫 ואף אחת מהאחרות אינה כאן: המסע נוגע במסך אחד של המודול, וכתיבה אמיתית
   // (`approve_feedback_ai_run`, ‏`classify-feedback`) לעולם לא תיכנס לרשימה הזו.
   '/rest/v1/rpc/report_m02_exec_overview',
+  // מודול 5 (24/09/2026, ליטושי-הכנס — בודק-השער): `logistics_upcoming_orders` — "להזמין לחודש
+  // הקרוב", נקראת אוטומטית בעליית מסך-הלוגיסטיקה. `stable` + select בלבד (מיגרציה
+  // `20260924081000_module5_upcoming_orders`) — אותו נימוק בדיוק כמו השורות שמעל. בלעדיה המסע
+  // נכשל על "כתיבה" שאינה כתיבה. אותה שורה כבר ב-`e2e/logistics.spec.js`.
+  '/rest/v1/rpc/logistics_upcoming_orders',
 ]
 
 test.describe('בדיקת-עשן', () => {

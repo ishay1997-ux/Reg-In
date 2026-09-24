@@ -11,12 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CUSTOMER_TYPE_LABELS } from '@/lib/customers'
+import { CUSTOMER_TYPE_LABELS, SATISFACTION_BANDS } from '@/lib/customers'
 
 // ערך-דמה ל"כל הסוגים" ב-Select (Radix לא מאפשר SelectItem עם value ריק) — ממופה חזרה ל-undefined.
 const ANY_TYPE = '__any__'
 const ANY_RECENT = '__any_recent__'
 const ANY_DISCOUNT = '__any_discount__'
+const ANY_SATISFACTION = '__any_satisfaction__'
 
 export default function CustomersFilterSheet({ filters, onChange }) {
   // filters = { customerType, marketingConsent, minDiscount } — הטקסט-החופשי מנוהל בנפרד בעמוד.
@@ -131,18 +132,30 @@ export default function CustomersFilterSheet({ filters, onChange }) {
           </Select>
         </div>
 
-        {/* שביעות-רצון (§7.80): מסננת קיימת-אך-רדומה עד שמ8 יביא feedback_score — מושבתת עם "אין
-            נתונים עדיין". הוחזרה 11/07 (הכרעת-ישי — "סינון חשוב"); מיישר עם §7.80. חוזרת לפעולה במ8. */}
-        <div
-          className="flex flex-col gap-1 w-44 opacity-60"
-          data-testid="customers-filter-satisfaction"
-        >
-          <label className="text-xs text-slate-500">שביעות רצון</label>
-          <Select disabled value="">
-            <SelectTrigger className="w-full h-auto p-2 rounded-lg border-slate-200 text-sm">
-              <SelectValue placeholder="אין נתונים עדיין" />
+        {/* שביעות-רצון (§7.80). הוחזרה 11/07 בהכרעת-ישי ("סינון חשוב") והייתה מושבתת עם "אין
+            נתונים עדיין" עד שמ8 יביא ציונים. ✏️ 24/09/2026 (ליטושי-הכנס, C3): מ8 נבנה ⇒ **פעילה**,
+            ארבע רמות §7.80. **אותו פרמטר-כתובת של הצ'יפ "טעון בירור"** (`satisfaction`) — שני
+            מסננים נפרדים לאותה שאלה היו מתפצלים. לקוח בלי משוב אינו בשום רמה. */}
+        <div className="flex flex-col gap-1 w-44" data-testid="customers-filter-satisfaction">
+          <label className="text-xs text-slate-600">שביעות רצון</label>
+          <Select
+            value={filters.satisfaction ?? ANY_SATISFACTION}
+            onValueChange={(v) => patch({ satisfaction: v === ANY_SATISFACTION ? undefined : v })}
+          >
+            <SelectTrigger
+              className="w-full h-auto p-2 rounded-lg border-slate-300 text-sm"
+              data-testid="customers-filter-satisfaction-trigger"
+            >
+              <SelectValue placeholder="הכול" />
             </SelectTrigger>
-            <SelectContent dir="rtl" />
+            <SelectContent dir="rtl">
+              <SelectItem value={ANY_SATISFACTION}>הכול</SelectItem>
+              {SATISFACTION_BANDS.map((band) => (
+                <SelectItem key={band.key} value={band.key}>
+                  {band.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
 

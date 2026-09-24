@@ -9,6 +9,7 @@
 
 import { supabase } from '@/supabaseClient'
 import { toError } from '@/lib/apiError'
+import { paramLabel } from '@/lib/paramsRegistry'
 // N2: איש-הקשר הראשי הוא שורה ב-customer_contacts (is_primary), לא שלוש עמודות על customers.
 // primaryContact היא נקודת-הבחירה היחידה (src/lib/customers.js) — לא לממש inline.
 import { primaryContact } from '@/lib/customers'
@@ -121,7 +122,7 @@ export async function getParamValue(name) {
     .maybeSingle()
   if (error) throw toError(error, 'שגיאה בטעינת הגדרות המערכת.')
   if (!data?.param_value) {
-    throw toError({ code: 'PGRST116' }, `הפרמטר "${name}" חסר בהגדרות המערכת.`)
+    throw toError({ code: 'PGRST116' }, `הפרמטר '${paramLabel(name)}' חסר בהגדרות המערכת.`)
   }
   return data.param_value
 }

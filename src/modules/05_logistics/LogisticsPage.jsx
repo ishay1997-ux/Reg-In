@@ -25,6 +25,7 @@ import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareE
 import StatusTag from '@/components/StatusTag'
 import FilterPill from '@/components/FilterPill'
 import Ltr from '@/components/Ltr'
+import ReturnToLink from '@/components/ReturnToLink'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate, weekdayOf } from '@/lib/dates'
@@ -57,6 +58,7 @@ import {
 } from '@/lib/projectLogistics'
 import { getParamValues } from '@/api/params'
 import ChecklistDialog from './ChecklistDialog'
+import UpcomingOrders from './UpcomingOrders'
 import { listActiveProjects, listLogisticsRows, listProducts } from './api'
 
 // 🔄 סף-הענבר (⑳) ירד מקבוע-קוד ל-`params` (מודול 9 · צעד 2.3). **למודול 5 לא היה
@@ -276,46 +278,54 @@ export default function LogisticsPage() {
     <div data-testid="logistics-page">
       <PageHeader today={today} />
       <OutboundSection entries={outbound} today={today} onOpen={openChecklist} />
-      <Card>
-        <PillsBar counts={counts} pill={pill} onSelect={setPill} />
-        {visible.length === 0 ? (
-          // מצב ③ — ריק אחרי גלולה. הפעולה הנכונה **הפוכה ממצב ②** (ניקוי-סינון, לא
-          // ניסיון-חוזר) ⇒ 🚫 אסור לאחד ביניהם. המונה בשורה השנייה **חי**, לא מועתק.
-          <PermissionAwareEmpty
-            state="empty"
-            title={FILTERED_EMPTY_TITLE}
-            detail={filteredOutSentence(base.length)}
-            action={
-              <Button
-                type="button"
-                variant="link"
-                // 🔴 **מעביר לגלולת `הכול`, ולא ל"ברירת-המחדל" כלשון כרטיס §①** — וזו סתירה
-                // שנפתרה ולא הוכרעה מחדש: גלולה עם מונה `0` **מושבתת** (㉚) ⇒ המצב הזה נגיש
-                // אך ורק כשברירת-המחדל עצמה ריקה, והחזרה אליה הייתה הופכת את הכפתור
-                // ל-no-op בדיוק במצב היחיד שבו הוא מוצג. התקדים המוזג עושה בדיוק את זה
-                // (`ProjectsPage.jsx` — `onClear` מעביר ל-`all`). מדווח לישי.
-                onClick={() => setPill('all')}
-                className="h-auto p-0 text-sm font-semibold text-teal-700"
-                data-testid="logistics-clear-filter"
-              >
-                {CLEAR_FILTER_LABEL}
-              </Button>
-            }
-            testId="logistics-empty-filtered"
-          />
-        ) : (
-          <>
-            <QueueTable
-              entries={visible}
-              products={data.products}
-              today={today}
-              amberDays={data.amberDays}
-              onOpen={openChecklist}
+      {/* ✏️ 24/09/2026 — "להזמין" בגובה-המסך הראשון (0ג פריט 4: *"מתחת לתור"* — אבל נמדד: עם 13 שורות-תור
+          הבלוק התחיל ב-y=1441 בחלון ברוחב 1536 ובגובה 864). **התיקון הקטן שלא נוגע בתור:** ברוחב ≥1360 הבלוק עומד
+          **לצד** התור (עמודה של 20rem, משמאל ב-RTL) במקום מתחתיו; התור עצמו — אותן שורות, אותו סדר, בלי
+          גלילה פנימית — רק צר יותר (≥736px, רחב מה-702 שהוא כבר מתפקד בו ב-1024). מתחת ל-1360 — מתחת לתור, כמו קודם. */}
+      <div className="min-[1360px]:grid min-[1360px]:grid-cols-[minmax(0,1fr)_20rem] min-[1360px]:items-start min-[1360px]:gap-4">
+        <Card>
+          <PillsBar counts={counts} pill={pill} onSelect={setPill} />
+          {visible.length === 0 ? (
+            // מצב ③ — ריק אחרי גלולה. הפעולה הנכונה **הפוכה ממצב ②** (ניקוי-סינון, לא
+            // ניסיון-חוזר) ⇒ 🚫 אסור לאחד ביניהם. המונה בשורה השנייה **חי**, לא מועתק.
+            <PermissionAwareEmpty
+              state="empty"
+              title={FILTERED_EMPTY_TITLE}
+              detail={filteredOutSentence(base.length)}
+              action={
+                <Button
+                  type="button"
+                  variant="link"
+                  // 🔴 **מעביר לגלולת `הכול`, ולא ל"ברירת-המחדל" כלשון כרטיס §①** — וזו סתירה
+                  // שנפתרה ולא הוכרעה מחדש: גלולה עם מונה `0` **מושבתת** (㉚) ⇒ המצב הזה נגיש
+                  // אך ורק כשברירת-המחדל עצמה ריקה, והחזרה אליה הייתה הופכת את הכפתור
+                  // ל-no-op בדיוק במצב היחיד שבו הוא מוצג. התקדים המוזג עושה בדיוק את זה
+                  // (`ProjectsPage.jsx` — `onClear` מעביר ל-`all`). מדווח לישי.
+                  onClick={() => setPill('all')}
+                  className="h-auto p-0 text-sm font-semibold text-teal-700"
+                  data-testid="logistics-clear-filter"
+                >
+                  {CLEAR_FILTER_LABEL}
+                </Button>
+              }
+              testId="logistics-empty-filtered"
             />
-            <AmberLegend />
-          </>
-        )}
-      </Card>
+          ) : (
+            <>
+              <QueueTable
+                entries={visible}
+                products={data.products}
+                today={today}
+                amberDays={data.amberDays}
+                onOpen={openChecklist}
+              />
+              <AmberLegend />
+            </>
+          )}
+        </Card>
+        {/* 🆕 24/09/2026 (0ג פריט 4) — "להזמין לחודש הקרוב", מתחת לתור (ולצדו ברוחב גדול). טעינה משלו: כשל כאן לא מפיל את התור. */}
+        <UpcomingOrders className="min-[1360px]:mt-0" />
+      </div>
       {/* משטח 2 הוא **דיאלוג ואינו ראוט** (㉔) — התור נשאר גלוי מאחוריו. הדיאלוג שולף את
           הדאטה של עצמו בפתיחה (㊲) ואינו מקבל אותה מכאן. */}
       {openProjectId !== null && (
@@ -337,6 +347,8 @@ function PageHeader({ today }) {
   // של הציור ולא ערך שמועתק.
   return (
     <div className="mb-4">
+      {/* 0ב (24/09/2026): הגיעו מכרטיס "לוגיסטיקה" במסך הבית (`?returnTo=/`) ⇒ "חזרה למסך הבית". */}
+      <ReturnToLink className="mb-1" />
       <h1 className="text-lg font-bold text-slate-800">לוגיסטיקה</h1>
       <div className="mt-0.5 text-sm text-slate-500" data-testid="logistics-today">
         היום: <Ltr>{formatDate(today)}</Ltr> · יום {weekdayOf(today)}

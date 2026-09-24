@@ -403,7 +403,13 @@ test.describe('מודול 11 · קידוח (📐13) — מ9 בלבד', () => {
     await expect(page.getByTestId('report-crumbs')).toHaveCount(0)
     await expect(page.getByTestId('report-so-what')).toBeVisible()
     await clickCentered(page.getByTestId('report-row-drillable').first())
-    await expect(page).toHaveURL(/\/quotes\/\d+\/edit/)
+    // ✏️ 24/09/2026 (ליטושי-הכנס, חבילה 0): **בודקים תוכן, לא רק כתובת.** הבדיקה הקודמת וידאה
+    // `/quotes/N/edit` בלבד — ועברה ירוק בזמן שבייצור נפתח טופס-עריכה **ריק ופעיל** על הצעה שנדחתה.
+    // הדלת היא עכשיו חלון-המסמך, והוא חייב לשאת את **מספר ההצעה שבכתובת**.
+    await expect(page).toHaveURL(/\/quotes\?view=\d+/)
+    const quoteId = new URL(page.url()).searchParams.get('view')
+    await expect(page.getByTestId('quote-document-title')).toContainText(`הצעת מחיר ${quoteId}`)
+    await expect(page.getByTestId('quote-builder-document')).toHaveCount(0)
   })
 
   test('מ9: אריח-דלת פותח מדרג, הפירורים נוקבים בו — והייצוא דווקא לא', async ({ page }) => {
@@ -450,6 +456,57 @@ test.describe('מודול 11 · קידוח (📐13) — מ9 בלבד', () => {
     await expect(row).toHaveAttribute('role', 'button')
     await clickCentered(row)
     await expect(page).toHaveURL(/\/projects\/\d+/)
+  })
+
+  // 🆕 24/09/2026 (ליטושי-הכנס, חבילה 0ב — "חזרה למקור"). ישי: *"שלוחצים על דיילת ואז סוגרים אתה לא
+  // חוזר למסך בדוחות"*. דוח ⇐ שורה ⇐ סגירה ⇐ **אותו דוח ואותו מסנן** (לא רק "חזרה לדוחות").
+  test('0ב: חלון-ההצעה מדוח ה1 נסגר חזרה לאותו דוח ולאותה תקופה', async ({ page }) => {
+    test.setTimeout(120_000)
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await openReport(page, 'exec', 'trends')
+    await page.getByTestId('reports-period-12m').click()
+    await expect(page).toHaveURL(/period=12m/)
+    await page.waitForLoadState('networkidle')
+    const reportUrl = new URL(page.url())
+
+    await clickCentered(page.getByTestId('report-row-drillable').first())
+    await expect(page).toHaveURL(/\/quotes\?view=\d+.*returnTo=/)
+    await expect(page.getByTestId('quote-document-title')).toBeVisible()
+    await page.keyboard.press('Escape')
+
+    await expect(page).toHaveURL(/\/reports\?/)
+    const back = new URL(page.url())
+    expect(back.searchParams.get('tab')).toBe(reportUrl.searchParams.get('tab'))
+    expect(back.searchParams.get('report')).toBe(reportUrl.searchParams.get('report'))
+    expect(back.searchParams.get('period')).toBe('12m')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('סגירת הצעות')
+    // כפתור-אחורה של הדפדפן ממשיך לעבוד — החזרה דוחפת צעד, לא דורסת.
+    await page.goBack()
+    await expect(page).toHaveURL(/\/quotes/)
+  })
+
+  // המקרה שישי תיאר מילה-במילה: דיילת מדוח ⇐ סגירת הכרטיס ⇐ חזרה לדוח.
+  test('0ב: כרטיס-דיילת מדוח "אמינות" נסגר חזרה לאותו דוח', async ({ page }) => {
+    test.setTimeout(120_000)
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await openReport(page, 'hostesses', 'reliability')
+    await clickCentered(page.getByTestId('report-row-drillable').first())
+    await expect(page).toHaveURL(/\/hostesses\?.*hostess=\d+/)
+    await expect(page.getByTestId('return-to-link')).toHaveText('חזרה לדוח')
+    await page.keyboard.press('Escape')
+    await expect(page).toHaveURL(/\/reports\?.*report=reliability/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('אמינות והתייצבות')
+  })
+
+  test('0ב: כרטיס-פרויקט מגיול-חובות מציג "חזרה לדוח" שמחזיר לאותו דוח', async ({ page }) => {
+    await login(page, CEO_EMAIL, CEO_PASSWORD)
+    await openReport(page, 'finance', 'aging')
+    await clickCentered(page.getByTestId('report-row-drillable').first())
+    await expect(page).toHaveURL(/\/projects\/\d+/)
+    const link = page.getByTestId('return-to-link')
+    await expect(link).toHaveText('חזרה לדוח')
+    await link.click()
+    await expect(page).toHaveURL(/\/reports\?.*report=aging/)
   })
 })
 

@@ -62,7 +62,7 @@ export default function LoginPage() {
       setErrorMsg(
         nowLockedUntil
           ? 'החשבון ננעל עקב 5 ניסיונות כושלים — נסי שוב בעוד כ-15 דקות.'
-          : 'מייל או סיסמה שגויים — נסי שוב.',
+          : 'המייל והסיסמה לא תואמים — נסי שוב.',
       )
       setLoading(false)
       return

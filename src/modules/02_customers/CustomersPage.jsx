@@ -32,6 +32,7 @@ import {
   deriveCustomerMetrics,
   matchesCustomerFilters,
   needsSatisfactionAttention,
+  SATISFACTION_BANDS,
   primaryContact,
   sortCustomers,
 } from '@/lib/customers'
@@ -219,6 +220,10 @@ function numParam(value) {
 
 function boolParam(value) {
   return value === null ? undefined : value === 'true'
+}
+
+function satisfactionParam(value) {
+  return SATISFACTION_BANDS.some((band) => band.key === value) ? value : undefined
 }
 
 // 🆕 A3 (מודול 6 · משטח 8) — קיבוץ צד-לקוח של שורות-הפרויקטים בתפזורת, אותה תבנית בדיוק
@@ -479,8 +484,9 @@ export default function CustomersPage() {
       createdAfter: searchParams.get('createdAfter') ?? undefined,
       // 🆕 A3 — צ'יפ עליון כמו "קהל דיוור" (לא בפאנל-המתקדם): בוליאני-חד-כיווני.
       dormantOnly: boolParam(searchParams.get('dormant')),
-      // 🆕 A3 · החצי השני (מ8 · צעד 4.2) — "טעון בירור". אותה תבנית-צ'יפ בדיוק.
-      lowSatisfactionOnly: boolParam(searchParams.get('lowSatisfaction')),
+      // ✏️ 24/09/2026 (ליטושי-הכנס, C3): **מסנן-שביעות אחד** (`?satisfaction=<רמה>`, §7.80) —
+      // שדה-הפאנל והצ'יפ "טעון בירור" כותבים לאותו פרמטר. ערך שאינו רמה מוכרת ⇒ אין מסנן.
+      satisfaction: satisfactionParam(searchParams.get('satisfaction')),
     }),
     [searchParams],
   )
@@ -495,7 +501,7 @@ export default function CustomersPage() {
       newDays: next.newWithinDays,
       createdAfter: next.createdAfter,
       dormant: next.dormantOnly,
-      lowSatisfaction: next.lowSatisfactionOnly,
+      satisfaction: next.satisfaction,
     })
   }
 
@@ -868,13 +874,13 @@ export default function CustomersPage() {
                 onClick={() =>
                   setFilters((f) => ({
                     ...f,
-                    lowSatisfactionOnly: f.lowSatisfactionOnly !== true ? true : undefined,
+                    satisfaction: f.satisfaction !== 'attention' ? 'attention' : undefined,
                   }))
                 }
-                aria-pressed={filters.lowSatisfactionOnly === true}
+                aria-pressed={filters.satisfaction === 'attention'}
                 className={cn(
                   'h-auto py-2.5 px-4 rounded-lg gap-2',
-                  filters.lowSatisfactionOnly === true
+                  filters.satisfaction === 'attention'
                     ? 'bg-rose-50 border-rose-300 text-rose-800 hover:bg-rose-100'
                     : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
                 )}
@@ -948,6 +954,7 @@ export default function CustomersPage() {
             ) : (
               <>
                 <Hint id="customers.satisfactionAverage" />
+                {filters.dormantOnly === true && <Hint id="customers.dormantWhy" />}
                 {/* עטיפת-גלילה אופקית: 11 עמודות גולשות במסך צר (מובייל) — min-w שומר על רוחב קריא
                     והעטיפה גוללת במקום לרסק עמודות; במסך רחב w-full נמתח כרגיל. */}
                 <div className="overflow-x-auto">

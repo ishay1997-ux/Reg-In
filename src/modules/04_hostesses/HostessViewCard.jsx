@@ -38,7 +38,13 @@ import {
 } from '@/lib/hostesses'
 import { responsivenessCounts, SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { formatDate } from '@/lib/dates'
-import { getHostess, getHostessAssignments, getHostessScreenParams } from './api'
+import { qualityLabelFromValue } from '@/lib/closingDraft'
+import {
+  getHostess,
+  getHostessAssignments,
+  getHostessClientPreferences,
+  getHostessScreenParams,
+} from './api'
 import { WindowChips, Pager } from '@/components/ListWindow'
 import { DEFAULT_WINDOW, filterByWindow, paginate } from '@/lib/listWindow'
 
@@ -58,6 +64,11 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
   // 🆕 חלון-זמן + דפדוף על "היסטוריה" (עד 156 שורות לדיילת אחת, מעבר-האחידות
   // `src/lib/listWindow.js`) — הכרטיס הוא overlay בלי כתובת משלו, ולכן שניהם ב-`useState`
   // מקומי, לא ב-URL (בניגוד ל-`CustomersPage`).
+  // ‏העדפות-הלקוחות נטענות **בנפרד** מהכרטיס (C1, 24/09/2026): כשל בהן אינו מפיל את הכרטיס כולו,
+  // ונאמר בסעיף שלהן בלבד. תלת-ערכי (`CLAUDE.md` §4.3): `null` = עוד לא ידוע · `[]` = אין · מערך = יש.
+  const [preferences, setPreferences] = useState(null)
+  const [preferencesError, setPreferencesError] = useState(false)
+  const [preferencesTick, setPreferencesTick] = useState(0)
   const [historyWindow, setHistoryWindow] = useState(DEFAULT_WINDOW)
   const [historyPage, setHistoryPage] = useState(1)
   function changeHistoryWindow(key) {
@@ -93,6 +104,25 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
       cancelled = true
     }
   }, [hostessId])
+
+  useEffect(() => {
+    let cancelled = false
+    getHostessClientPreferences(hostessId)
+      .then((rows) => {
+        if (cancelled) return
+        setPreferences(rows)
+        setPreferencesError(false)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('העדפות-הלקוחות של הדיילת לא נטענו:', err)
+        setPreferences(null)
+        setPreferencesError(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [hostessId, preferencesTick])
 
   const derived = useMemo(
     () => (hostess ? deriveCardData(hostess, assignments, params, today) : null),
@@ -152,6 +182,12 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
           // בכרטיס (`getHostessScreenParams`), ולא בשליפה נוספת.
           inviteValidityHours={params[HOSTESS_PARAM_NAMES.inviteValidityHours]}
           onEdit={() => onEdit(hostessId)}
+          preferences={preferences}
+          preferencesError={preferencesError}
+          onRetryPreferences={() => {
+            setPreferencesError(false)
+            setPreferencesTick((tick) => tick + 1)
+          }}
           historyWindow={historyWindow}
           onHistoryWindowChange={changeHistoryWindow}
           historyHiddenCount={historyHiddenCount}
@@ -236,6 +272,9 @@ function CardBody({
   now,
   inviteValidityHours,
   onEdit,
+  preferences,
+  preferencesError,
+  onRetryPreferences,
   historyWindow,
   onHistoryWindowChange,
   historyHiddenCount,
@@ -344,11 +383,14 @@ function CardBody({
           )}
         </Section>
 
-        {/* 🔴 **ריק מוצהר, לא ריק שקט.** הטבלה נכתבת ע"י מודול 6 ותישאר ריקה עד
-                  שייבנה. כלפי הקוראת זה נראה כמו "עוד אין נתונים" לגיטימי — לא כמו
-                  תקלה — ולכן הטקסט אינו מזכיר מודול או טבלה (ר' ממצא-מבנה בדיווח). */}
+        {/* ✏️ 24/09/2026 (ליטושי-הכנס, C1) — היה כאן *"טרם נרשמו העדפות"* **קבוע**, עם הערה
+            "עד שמודול 6 ייבנה". מודול 6 נבנה, והטבלה מלאה ⇒ הסעיף קורא אותה. */}
         <Section title="העדפות של לקוחות">
-          <Muted>טרם נרשמו העדפות</Muted>
+          <ClientPreferences
+            preferences={preferences}
+            error={preferencesError}
+            onRetry={onRetryPreferences}
+          />
           <Hint id="hostess.clientPreferences" />
         </Section>
 
@@ -532,6 +574,74 @@ function KeyValue({ label, value, ltr }) {
       >
         {value}
       </span>
+    </div>
+  )
+}
+
+// ‏`מצוינת` ⇒ טורקיז · `בסדר` ⇒ מתאר · `לא לשלוח שוב` ⇒ ענבר — אותם גוונים של כפתורי-האיכות
+// בלשונית הסגירה (`ClosingTab.jsx`), שבה ההעדפה נרשמת. תווית ולא רק צבע (נגישות).
+const NEGATIVE_LABEL = 'לא לשלוח שוב'
+const PREFERENCE_TONE = { מצוינת: 'teal', בסדר: 'outline', [NEGATIVE_LABEL]: 'warn' }
+const PREFERENCE_ORDER = [NEGATIVE_LABEL, 'מצוינת', 'בסדר']
+
+function ClientPreferences({ preferences, error, onRetry }) {
+  if (error) {
+    return (
+      <div
+        className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-800"
+        role="alert"
+        data-testid="hostess-preferences-error"
+      >
+        העדפות הלקוחות לא נטענו.
+        <Button
+          type="button"
+          variant="link"
+          className="h-auto p-0 text-amber-800 underline"
+          onClick={onRetry}
+          data-testid="hostess-preferences-retry"
+        >
+          נסי שוב
+        </Button>
+      </div>
+    )
+  }
+  if (preferences === null) {
+    return (
+      <p className="text-sm text-slate-500" role="status" data-testid="hostess-preferences-loading">
+        טוען…
+      </p>
+    )
+  }
+  if (preferences.length === 0) return <Muted>טרם נרשמו העדפות</Muted>
+  // 📏 **מקובץ לפי סוג, ולא שורה לכל לקוח:** במסד יש דיילות עם 25–37 העדפות (נמדד 24/09/2026) —
+  // רשימה בגובה כזה הייתה דוחקת את שאר הכרטיס. "לא לשלוח שוב" **ראשון ועם הסיבה**, כי הוא היחיד
+  // שחוסם שיבוץ; "מצוינת" ו"בסדר" — שורת-שמות אחת לכל סוג.
+  const groups = PREFERENCE_ORDER.map((label) => ({
+    label,
+    rows: preferences.filter(
+      (row) => (qualityLabelFromValue(row.preference) ?? row.preference) === label,
+    ),
+  })).filter((group) => group.rows.length > 0)
+  return (
+    <div className="flex flex-col gap-2" data-testid="hostess-preferences">
+      {groups.map(({ label, rows }) => (
+        <div
+          key={label}
+          className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-slate-700"
+          data-testid={`hostess-preferences-${PREFERENCE_TONE[label] ?? 'muted'}`}
+        >
+          <StatusTag label={label} tone={PREFERENCE_TONE[label] ?? 'muted'} />
+          {rows.map((row, index) => (
+            <span key={row.customerId} data-testid={`hostess-preference-${row.customerId}`}>
+              {row.customerName ?? 'לקוח ללא שם'}
+              {row.reason && label === NEGATIVE_LABEL && (
+                <span className="text-xs text-slate-500"> ({row.reason})</span>
+              )}
+              {index < rows.length - 1 && ' ·'}
+            </span>
+          ))}
+        </div>
+      ))}
     </div>
   )
 }

@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom'
 import Hint from '@/components/Hint'
 import { attentionCategories, MASKED_TEXT } from '@/lib/dashboard'
 import Ltr from '@/components/Ltr'
+import { withReturnTo } from '@/lib/returnTo'
 
 const DOT_CLASS = { red: 'bg-red-500', yellow: 'bg-amber-500' }
 
@@ -35,7 +36,8 @@ export default function AttentionPanel({ summary }) {
         {categories.map((cat) => (
           <Link
             key={cat.kind}
-            to={cat.href}
+            // 0ב (24/09/2026): היעד מציג "חזרה למסך הבית" ומחזיר לכאן.
+            to={withReturnTo(cat.href, '/')}
             className="flex min-w-0 flex-col gap-1 rounded-lg border border-slate-200 p-2.5 hover:border-teal-300 hover:bg-teal-50/40"
             data-testid={`dashboard-attention-card-${cat.kind}`}
           >

@@ -108,7 +108,7 @@
 | מ13 | דוח 16 — שכר + נסיעות לפי חודש (תפעולי; ההפקה במ8) | כספים | תפעולי/סטנדרטי | כספים · מנכ"ל | ⏸️ **נדחה — הכרעה 30** | `…/approved/03_tab_finance_approved.html` | `stage2-cards/cards-finance.md#מ13` |
 | מ14 | מבט-על דיילות ו-Smart Match | דיילות | בקרה | גיוס · מנכ"ל | ✅ | `…/approved/04_tab_hostesses_approved.html` | `stage2-cards/cards-hostesses.md#מ14` |
 | מ15 | דוח 13 — אמינות: איחורים/אי-הגעה | דיילות | **תומך-החלטה** | גיוס | ✅ | `…/approved/04_tab_hostesses_approved.html` | `stage2-cards/cards-hostesses.md#מ15` |
-| מ16 | דוח 14 — איכות ↔ עלות (תגי-לקוח כספירות) | דיילות | **תומך-החלטה** | גיוס · מנכ"ל | ✅ | `…/approved/04_tab_hostesses_approved.html` | `stage2-cards/cards-hostesses.md#מ16` |
+| מ16 | דוח 14 — איכות ↔ עלות (תגי-לקוח כספירות) | דיילות | **תומך-החלטה** | גיוס · מנכ"ל | ✅ | `…/approved/04_tab_hostesses_approved.html` | `stage2-cards/cards-hostesses.md#מ16` · ✂️ **הוסר מהממשק 24/09/2026** (ליטושי-הכנס 0ג פריט 3, הכרעת-ישי 22+24/09 — `docs/plans/2026-09-24-system-polish.md` §6); ה-RPC נשאר במסד עד `drop` אחרי מיזוג ל-`main` |
 | מ17 | דוח 14א — ג'יני · לורנץ · זמן-לאיוש (+ `recommended_rank` כשיצטבר) | דיילות | בקרה | מנכ"ל · גיוס | ✅ | `…/approved/04_tab_hostesses_approved.html` | `stage2-cards/cards-hostesses.md#מ17` |
 | מ18 | דוח 15 — מאגר-חי (ותק · ימים-מאז-משמרת · נשירה) | דיילות | **תומך-החלטה** | גיוס | ⏸️ **נדחה — הכרעה 30** | — | טרם נכתב |
 | מ19 | מבט-על לקוחות | לקוחות | בקרה | כספים-ולקוחות · מנכ"ל | ✅ | `…/approved/05_tab_customers_approved.html` | `stage2-cards/cards-customers.md#מ19` |

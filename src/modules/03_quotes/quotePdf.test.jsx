@@ -224,7 +224,7 @@ describe('buildQuoteDocument — שומר המע"מ', () => {
       caught = err
     }
     expect(caught?.code).toBe(MISSING_VAT_CODE)
-    expect(caught?.message).toContain('אחוז_מעמ')
+    expect(caught?.message).toContain('אחוז מע"מ')
   })
 
   // הצד השני של השומר: 0% הוא ערך **חוקי** ולא "חסר". פטור-ממע"מ הוא מצב אמיתי,

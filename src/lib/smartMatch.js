@@ -15,6 +15,7 @@
 // וארבע השכבות רצות כאן — במקום היחיד שיש בו בדיקות-יחידה.
 
 import { isUnavailableOn, optionalNumber } from './hostesses'
+import { paramLabel } from './paramsRegistry'
 
 // שמות-הפרמטרים, זהים-בייט למיגרציה `20260809125750`. שם שגוי בתו אחד מחזיר שורה ריקה,
 // הפרמטר נראה "חסר", ואין שום שגיאה — ולכן יש עליהם בדיקה.
@@ -112,7 +113,7 @@ export function parseSmartMatchParams(paramsByName) {
 function requireParams(params, keys) {
   const missing = keys.filter((key) => params?.[key] === null || params?.[key] === undefined)
   if (missing.length > 0) {
-    const names = missing.map((key) => SMART_MATCH_PARAM_NAMES[key]).join(', ')
+    const names = missing.map((key) => paramLabel(SMART_MATCH_PARAM_NAMES[key])).join(', ')
     throw new Error(`חסרים פרמטרים של Smart Match בהגדרות המערכת: ${names}`)
   }
 }

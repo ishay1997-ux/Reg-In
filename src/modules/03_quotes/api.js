@@ -13,6 +13,11 @@ import { fetchAll } from '@/api/fetchAll'
 import { PRICING_PARAM_NAMES } from '@/lib/pricing'
 import { flattenProductCost } from '@/lib/catalog'
 import { QUOTE_SCREEN_PARAM_NAMES, quoteServerErrorMessage } from '@/lib/quotes'
+import {
+  FOLLOWUP_DRAFT_TIMEOUT_MS,
+  classifyFollowupFailure,
+  readFollowupDraft,
+} from '@/lib/quoteFollowup'
 import { toError, assertRowsAffected } from '@/lib/apiError'
 
 // כתיבות בלבד: ההודעה המדויקת של המסד גוברת על ה-fallback הכללי כשהיא מוכרת (סבב D).
@@ -147,6 +152,60 @@ export async function getPricingCatalog() {
     tiers: tiersRes.data ?? [],
     params: paramsRes.data ?? [],
   }
+}
+
+// ---- טיוטת מייל-מעקב בעזרת AI (ליטושי-הכנס D2, 24/09/2026) ----
+
+// ‏`draft-followup` — **קריאה בלבד, ואינה שולחת דבר** (ר' `supabase/functions/draft-followup/README.md`).
+// גרה כאן ולא ב-`src/api/` כי החלון שצורך אותה הוא של מודול 3, והשרת קורא הצעה אחת של מודול 3.
+//
+// (1) ⏱️ **תקרת-זמן משלנו** — הדפוס של `src/api/email.js` `sendEmail`: ל-`functions.invoke` אין timeout,
+//     ובלעדיה השלד בחלון יכול להסתובב לנצח. כאן הטיימר גם **מתנקה** — אין מה להשאיר רץ אחרי תשובה.
+// (2) 🔴 **הגוף העברי של שגיאה יושב ב-`error.context`, לא ב-`error.message`** (‏`FunctionsHttpError`,
+//     אותו לקח של `AnalysisRunBar.jsx` `invokeClassify`): בלי `context.json()` המשתמשת הייתה מקבלת
+//     *"Edge Function returned a non-2xx status code"* במקום *"הגעת למכסת ה-AI…"*.
+// (3) נזרקת `Error` שנושאת `kind` (`quota` · `final` · `retry`) — החלון מחליט לפיו אם להציע `נסי שוב`.
+//     הסיווג עצמו טהור ונבדק ב-`src/lib/quoteFollowup.js`.
+// (4) **טיוטה ריקה = כשל**, לא הצלחה: 200 בלי נושא או בלי גוף נזרק כ-`retry`.
+// ‏`signal` — סגירת-החלון באמצע מבטלת את הבקשה (ממצא-הבודק 24/09), כדי שפתיחה-מחדש לא תשאיר שתי
+// בקשות חיות במקביל. בקשה שבוטלה נדחית ככשל רגיל, והחלון (שכבר לא על המסך) פשוט לא מעדכן state.
+export async function draftFollowupEmail(quoteId, { signal } = {}) {
+  let timer
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('TIMEOUT')), FOLLOWUP_DRAFT_TIMEOUT_MS)
+  })
+  let result
+  try {
+    result = await Promise.race([
+      supabase.functions.invoke('draft-followup', { body: { quote_id: quoteId }, signal }),
+      timeout,
+    ])
+  } catch {
+    throw followupError(classifyFollowupFailure(null, 0))
+  } finally {
+    clearTimeout(timer)
+  }
+
+  const { data, error } = result
+  if (!error) {
+    const draft = readFollowupDraft(data)
+    if (!draft) throw followupError(classifyFollowupFailure(null, 0))
+    return draft
+  }
+  let body = null
+  try {
+    body = await error.context.json()
+  } catch (bodyError) {
+    // אין גוף לקרוא (כשל-רשת אמיתי) — נרשם ולא נבלע, כמו ב-`invokeClassify`.
+    console.error('draft-followup נכשלה ואין גוף-תשובה לקרוא:', error, bodyError)
+  }
+  throw followupError(classifyFollowupFailure(body, error.context?.status ?? 0))
+}
+
+function followupError({ kind, message }) {
+  const err = new Error(message)
+  err.kind = kind
+  return err
 }
 
 // ---- כתיבות (Writes) ----

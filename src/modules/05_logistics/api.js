@@ -134,6 +134,19 @@ export async function listLogisticsRows(projectIds) {
   return data ?? []
 }
 
+// 🆕 24/09/2026 (ליטושי-הכנס 0ג פריט 4) — "להזמין לחודש הקרוב". ⚠️ **חריג מוצהר ל-AR-3** (שלוש
+// קריאות ישירות, בלי RPC-קריאה): החישוב הוא של דוח צריכת-הציוד (מ12), ומנהלת הלוגיסטיקה חסומה על
+// הדוחות. ‏RPC ולא שאילתה רביעית כאן, כי **חישוב אחד** (`m11_upcoming_equipment_orders` במסד) משרת
+// את שניהם — כלל-ברזל 14. מיגרציה `20260924081000_module5_upcoming_orders.sql`.
+// ⇒ `{ from, to, rows: [{ sku, item_name, qty, events }] }`. מטען בלי `rows` הוא תקלה, לא "אין מה להזמין".
+const UPCOMING_ORDERS_FAILURE = 'שגיאה בטעינת רשימת ההזמנה.'
+export async function getUpcomingOrders() {
+  const { data, error } = await supabase.rpc('logistics_upcoming_orders')
+  if (error) throw toError(error, UPCOMING_ORDERS_FAILURE)
+  if (!data || !Array.isArray(data.rows)) throw toError(null, UPCOMING_ORDERS_FAILURE)
+  return data
+}
+
 // קטלוג-המוצרים — ‏`category` הוא מה שמכריע את סימון-הענבר (⑳: פריט פיזי בלבד; `site` פטור),
 // ו-`item_name`/`unit` הם מה שהצ'קליסט מציג במקום מק"ט עירום.
 // ‏`products_select_all_authenticated` הוא `using(true)` ⇒ אין כאן שער-הרשאה ואין כשל-שקט.

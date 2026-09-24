@@ -5,6 +5,8 @@ import {
   countActiveFilters,
   matchesCustomerFilters,
   needsSatisfactionAttention,
+  satisfactionBand,
+  SATISFACTION_BANDS,
   SATISFACTION_THRESHOLD_PARAM_NAME,
   sortCustomers,
   deriveCustomerMetrics,
@@ -398,10 +400,12 @@ describe('countActiveFilters — תג ספירת-המסננים', () => {
     expect(countActiveFilters({ dormantOnly: false })).toBe(0)
   })
 
-  it('lowSatisfactionOnly נספר רק כשהוא true (A3 · מ8, צעד 4.2)', () => {
-    expect(countActiveFilters({ lowSatisfactionOnly: true })).toBe(1)
-    expect(countActiveFilters({ lowSatisfactionOnly: false })).toBe(0)
-    expect(countActiveFilters({ dormantOnly: true, lowSatisfactionOnly: true })).toBe(2)
+  // ✏️ 24/09/2026 (ליטושי-הכנס, C3): הדגל הבוליאני `lowSatisfactionOnly` הוחלף במסנן **אחד**
+  // `satisfaction` (ארבע רמות, §7.80) — הצ'יפ "טעון בירור" הוא קיצור שמציב אותו.
+  it('satisfaction נספר כשנבחרה רמה', () => {
+    expect(countActiveFilters({ satisfaction: 'attention' })).toBe(1)
+    expect(countActiveFilters({ satisfaction: undefined })).toBe(0)
+    expect(countActiveFilters({ dormantOnly: true, satisfaction: 'good' })).toBe(2)
   })
 })
 
@@ -443,17 +447,51 @@ describe('needsSatisfactionAttention + מסנן "טעון בירור"', () => {
     expect(needsSatisfactionAttention(undefined, THRESHOLD)).toBe(false)
   })
 
-  it('המסנן קורא את `avg_feedback` שהוזרק לשורה, ומסנן רק כשהוא true מפורש', () => {
+  it('המסנן קורא את `avg_feedback` שהוזרק לשורה, ומסנן רק כשנבחרה רמה', () => {
     const low = c({ avg_feedback: 2 })
     const high = c({ avg_feedback: 4.5 })
     const unknown = c({ avg_feedback: null })
-    expect(matchesCustomerFilters(low, { lowSatisfactionOnly: true }, THRESHOLD)).toBe(true)
-    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: true }, THRESHOLD)).toBe(false)
-    expect(matchesCustomerFilters(unknown, { lowSatisfactionOnly: true }, THRESHOLD)).toBe(false)
-    // כבוי / לא-סופק ⇒ אינו מסנן איש (כמו כל שאר הדגלים כאן)
+    expect(matchesCustomerFilters(low, { satisfaction: 'attention' }, THRESHOLD)).toBe(true)
+    expect(matchesCustomerFilters(high, { satisfaction: 'attention' }, THRESHOLD)).toBe(false)
+    expect(matchesCustomerFilters(unknown, { satisfaction: 'attention' }, THRESHOLD)).toBe(false)
+    // לא-סופק ⇒ אינו מסנן איש (כמו כל שאר הדגלים כאן)
     expect(matchesCustomerFilters(high, {}, THRESHOLD)).toBe(true)
-    expect(matchesCustomerFilters(high, { lowSatisfactionOnly: false }, THRESHOLD)).toBe(true)
     expect(matchesCustomerFilters(unknown, {}, THRESHOLD)).toBe(true)
+  })
+
+  // 🆕 C3 — ארבע רמות §7.80 על **ממוצע** (5=מצוין · 4=טוב · 3=בינוני · מתחת לסף=טעון בירור).
+  // הממוצע מעוגל לציון הקרוב (4.5 ⇒ מצוין, 3.5 ⇒ טוב) — והרמה "טעון בירור" נגזרת **תמיד**
+  // מ-`needsSatisfactionAttention`, כך שהצ'יפ, המסנן והתווית בטבלה לעולם לא נפרדים.
+  it('satisfactionBand: ארבע רמות, ו"טעון בירור" = אותה פונקציה של התווית בטבלה', () => {
+    expect(satisfactionBand(5, THRESHOLD)).toBe('excellent')
+    expect(satisfactionBand(4.5, THRESHOLD)).toBe('excellent')
+    expect(satisfactionBand(4.49, THRESHOLD)).toBe('good')
+    expect(satisfactionBand(3.5, THRESHOLD)).toBe('good')
+    expect(satisfactionBand(3.49, THRESHOLD)).toBe('medium')
+    expect(satisfactionBand(3, THRESHOLD)).toBe('medium')
+    expect(satisfactionBand(2.9, THRESHOLD)).toBe('attention')
+    // הסף מהפרמטר, לא 3 קשיח: סף 4 ⇒ 3.5 כבר טעון בירור.
+    expect(satisfactionBand(3.5, '4')).toBe('attention')
+    // אין נתון ⇒ אין רמה (ואינו נכנס לאף מסנן).
+    expect(satisfactionBand(null, THRESHOLD)).toBe(null)
+  })
+
+  it('כל רמה מסננת בדיוק את הלקוחות שלה', () => {
+    const rows = [5, 4, 3, 2, null].map((avg, i) => c({ customer_id: i, avg_feedback: avg }))
+    const pick = (band) =>
+      rows
+        .filter((row) => matchesCustomerFilters(row, { satisfaction: band }, THRESHOLD))
+        .map((row) => row.avg_feedback)
+    expect(pick('excellent')).toEqual([5])
+    expect(pick('good')).toEqual([4])
+    expect(pick('medium')).toEqual([3])
+    expect(pick('attention')).toEqual([2])
+    expect(SATISFACTION_BANDS.map((band) => band.key)).toEqual([
+      'excellent',
+      'good',
+      'medium',
+      'attention',
+    ])
   })
 
   // ⚠️ ‏`CustomerPicker` (מודול 3) קורא ל-`matchesCustomerFilters` **בלי** סף — הוא לעולם

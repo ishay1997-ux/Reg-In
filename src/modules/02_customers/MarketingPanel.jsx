@@ -132,7 +132,8 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
       // המשוב נעלם אחרי רגע — לא צריך state מתמשך
       setTimeout(() => setCopied(''), 1500)
     } catch {
-      toast.error('העתקה נכשלה — ניתן להעתיק ידנית.')
+      // ✏️ 24/09/2026 (הסגן): סביל ⇐ ציווי-נקבה (מדריך-הסגנון §1); אותו נוסח בחלון טיוטת-המייל (R30).
+      toast.error('העתקה נכשלה — סמני את הטקסט והעתיקי ידנית.')
     }
   }
 

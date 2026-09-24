@@ -47,6 +47,7 @@ import { Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
 import ExportDialog from '@/components/ExportDialog'
+import ReturnToLink from '@/components/ReturnToLink'
 import {
   buildExportFileName,
   buildExportSheet,
@@ -80,7 +81,7 @@ const PAGE_TITLE = 'כספים'
 const PAGE_SUBTITLE = 'בקרת גבייה, סגירת-תיקים ודו"ח-שכר'
 const SALARY_BUTTON_LABEL = 'הפקת דוח שכר דיילות'
 const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני הכספים.'
-const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם לסינון שבחרת.'
+const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקי סינון'
 const CANCELLATION_FEE_TAG = 'דמי-ביטול'
 const CANCELLATION_FEE_UNRESOLVED = 'דמי-ביטול — טרם נפתרו'
@@ -872,6 +873,7 @@ export default function FinancePage() {
       <Hint id="finance.amberRows" />
       <Card>
         <TabsBar active={tab} counts={counts} onSelect={changeTab} />
+        {tab === 'awaiting_payment' && <Hint id="finance.paidWhileAwaiting" />}
         <FilterBar filters={filters} onChange={changeFilters} onClear={clearFilters} />
         {/* חלון-הזמן יושב מתחת לסרגל-החיפוש, לפני הטבלה (חוזה §4) — אותו מיקום-יחסי כמו
             במסך-הפרויקטים (שם הוא יושב מתחת לגלולות-הסטטוס). */}
@@ -987,6 +989,8 @@ function PageHeader({ onOpenSalary }) {
   return (
     <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
       <div>
+        {/* 0ב (24/09/2026): הגיעו מכרטיס "כספים" במסך הבית (`?returnTo=/`) ⇒ "חזרה למסך הבית". אחרת — כלום. */}
+        <ReturnToLink className="mb-1" />
         <h1 className="text-lg font-bold text-slate-800">{PAGE_TITLE}</h1>
         <p className="mt-0.5 text-sm text-slate-500">{PAGE_SUBTITLE}</p>
       </div>

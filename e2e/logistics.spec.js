@@ -60,8 +60,8 @@ const OUTBOUND_HEADING = 'יוצא עד יום העסקים הבא'
 const CANCELLED_CONTROL_TITLE = 'הפרויקט בוטל — לא ניתן לעדכן'
 const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשום סחורה שהגיעה'
 const QTY_LOCKED_BY_ITEM = 'הפריט טרם הוזמן — הכמות בפועל נפתחת לעריכה אחרי סימון "הוזמן"'
-const CANCEL_BANNER_LINE = 'אין לעדכן מצב או הערה בפרויקט מבוטל.'
-const CANCEL_BANNER_QTY_LINE = 'אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.'
+// ✏️ 24/09/2026 (מבקרים טריים): "פקדים" ⇐ "שדות".
+const CANCEL_BANNER_QTY_LINE = 'אפשר עדיין לרשום כמות שהגיעה — שאר השדות נעולים.'
 const SHORTFALL_LEAD = 'נרשם חוסר של '
 const SHORTFALL_EMPHASIS = 'הוא מתועד ואינו עוצר את הפרויקט'
 
@@ -88,6 +88,10 @@ const ALLOWED_WRITE_PATHS = [
   // (מיגרציה `20260903182735`), אותו נימוק כמו ברשימת-העשן. בלעדיה 12 בדיקות כאן נפלו על
   // "מסך קריאה-בלבד ניסה לכתוב" — הכתיבה-לכאורה הייתה מסך-הבית שנטען בדרך ללוגיסטיקה.
   '/rest/v1/rpc/get_dashboard_summary',
+  // ✏️ 24/09/2026: "להזמין לחודש הקרוב" (`UpcomingOrders.jsx`, ליטושי-הכנס 0ג-4) קורא ל-RPC הזה בכל
+  // טעינה של מסך-הלוגיסטיקה. `stable` + DEFINER (נמדד ב-`pg_proc`: provolatile='s') — אותו נימוק.
+  // בלעדיו 9 מ-12 הבדיקות כאן נפלו על שורת-"ניסה לכתוב" האחרונה, אחרי שכל הטענות שלפניה עברו.
+  '/rest/v1/rpc/logistics_upcoming_orders',
 ]
 
 // 🔒 המנגנון, לא ההבטחה: כל כתיבה שאינה בזרימת-ההתחברות **נחסמת ונרשמת**. נרשם ראשון
@@ -623,13 +627,13 @@ test.describe('מודול 5 · משטח 2 — דיאלוג-הצ׳קליסט (מ�
     await openChecklist(page, subject.rowId)
     await assertCraftedRowsRendered(page, subject.crafted)
 
-    // הבאנר — הודעה על מצב **תקין-וסופי**, ובו שתי השורות של O-4 מילה-במילה.
+    // הבאנר — הודעה על מצב **תקין-וסופי**: העובדה והחריג (✏️ 24/09 A4 — שורת 'אין לעדכן…' ירדה).
     const banner = page.getByTestId('checklist-banner-cancelled')
     await expect(banner).toBeVisible()
-    await expect(banner).toContainText(CANCEL_BANNER_LINE)
     await expect(banner).toContainText(CANCEL_BANNER_QTY_LINE)
     await expect(page.getByTestId('checklist-project-status')).toHaveText('בוטל')
-    await expect(page.getByTestId('checklist-locked-note')).toBeVisible()
+    // ✏️ 24/09/2026: השורה התחתונה שחזרה על הבאנר ירדה.
+    await expect(page.getByTestId('checklist-locked-note')).toHaveCount(0)
     // ⚠️ ובקרת-שפיות על היירוט עצמו: כותרת-הדיאלוג נשארה שם-האירוע. תשובה מיורטת בעלת
     // **צורה** שגויה (פריסת-אובייקט על מערך) מייצרת פרויקט בלי `event_name` — כותרת ריקה
     // שכל שאר הטענות כאן היו עוברות מעליה בירוק. נמדד 26/08/2026, ותפוס בסריקת-הנגישות.
