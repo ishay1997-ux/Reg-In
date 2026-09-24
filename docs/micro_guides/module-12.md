@@ -154,6 +154,11 @@ gh pr list --state open
 - שורות-הערה עם סיסמאות ב-`.env.local` — הוא מוחק בעצמו. **לעולם לא להדפיס את הקובץ.**
 - ClosingTab (`06_projects/ClosingTab.jsx:935`) מציג תעריף גם להרשאת `view`. היום אין תפקיד כזה, ולכן אין חשיפה.
 
+## 7א · 🚀 בייצור — 24/09/2026 18:54
+- **PR [#157](https://github.com/ishay1997-ux/Reg-In/pull/157)** ‏`ishay/system-polish` ⇐ `dev`: CI 5/5 ⇐ מוזג `9c3fefa9`. **PR [#158](https://github.com/ishay1997-ux/Reg-In/pull/158)** ‏`dev` ⇐ `main`: CI 8/8 ⇐ מוזג **`b5ef4255`**.
+- **Vercel Production deployment `6642131150` — success, על `b5ef4255`.** האתר https://reg-in-umber.vercel.app נטען, 0 שגיאות-קונסול, והקובץ המוגש מכיל קוד מהגרסה (`returnTo` · "חזרה למסך הבית"). **מסכים מחוברים — בצילומי חבילת-הגיבוי של סשן 2** (הסגן לא מקליד סיסמאות).
+- **"מוזג ל-main ואומת" נשלח** לסשן 2 (חבילת-הגיבוי, מחוץ לריפו) ולבודק (הסרת `Reg-In-qa-wt`).
+
 ## 7ב · מצב-הסגן — 18:3X
 - 📏 **הקשר הסגן: 71%** (get_usage, 18:3X). ‏⇐ הלוח עומד בפני עצמו; יורש אפשרי במילה של ישי (פרומפט §8).
 - **ה-SHA לייצור: `9c922b04`** (`ishay/system-polish`) = `83568516` (4 תיקוני-שער) + תיקון-smoke. הבודק מריץ עליו smoke + logistics + accessibility ⇐ צילומים ⇐ דוח סופי.
