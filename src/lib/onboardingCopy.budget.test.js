@@ -32,18 +32,29 @@ describe('שכבת-ההסבר — תקציב ומפתחות', () => {
     expect(over).toEqual([])
   })
 
-  it('כל מפתח-רמז שהדוחות מצטטים קיים בקובץ-הקופי', () => {
-    const root = path.resolve(__dirname, '../modules/11_reports')
+  // ✏️ 24/09/2026 (ליטושי-הכנס, חבילה B — "רשת-ביטחון"): עד היום נסרק כאן רק `src/modules/11_reports`,
+  // ורק מפתחות `reports.X.Y`. ‏**מפתח שהוקלד שגוי במודולים 01–09 היה נעלם בשקט והשער ירוק** —
+  // ולכן הסריקה עוברת על כל `src/` ותופסת גם כל `<Hint id="…">` מילולי, לפני שנכתב רמז חדש אחד.
+  // ⚠️ `id={משתנה}` אינו נסרק כאן: במודולים 01–09 אין כזה (נמדד 24/09), ובמ11 המשתנים מקבלים את
+  // ערכם ממחרוזות `reports.X.Y` — שהתבנית השנייה כן תופסת.
+  it('כל מפתח-רמז שהמערכת מצטטת קיים בקובץ-הקופי', () => {
+    const root = path.resolve(__dirname, '..')
+    const patterns = [
+      /<Hint\s[^>]*?\bid=["']([^"']+)["']/gs,
+      /['"](reports\.[A-Za-z0-9]+\.[A-Za-z0-9]+)['"]/g,
+    ]
+    // צורת-מפתח בלבד (`<מסך>.<מה>`): הערות-קוד מצטטות `<Hint id="…">` כדוגמה, וזו אינה ציטוט.
+    const KEY_SHAPE = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z0-9]+)+$/
     const cited = new Set(
-      sourceFiles(root).flatMap((file) =>
-        [
-          ...fs
-            .readFileSync(file, 'utf8')
-            .matchAll(/['"](reports\.[A-Za-z0-9]+\.[A-Za-z0-9]+)['"]/g),
-        ].map((match) => match[1]),
-      ),
+      sourceFiles(root)
+        .flatMap((file) => {
+          const text = fs.readFileSync(file, 'utf8')
+          return patterns.flatMap((pattern) => [...text.matchAll(pattern)].map((match) => match[1]))
+        })
+        .filter((key) => KEY_SHAPE.test(key)),
     )
-    expect(cited.size).toBeGreaterThan(0)
+    // רצפה ולא ספירה מדויקת: מכנה 0 היה עובר ירוק על סריקה שלא מצאה כלום (`e2e/CLAUDE.md` §3).
+    expect(cited.size).toBeGreaterThan(40)
     const missing = [...cited].filter((key) => !Object.hasOwn(ONBOARDING_COPY, key))
     expect(missing).toEqual([])
   })

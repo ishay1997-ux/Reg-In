@@ -52,6 +52,27 @@ export function needsSatisfactionAttention(avgFeedback, threshold) {
   return typeof avgFeedback === 'number' && max !== null && avgFeedback < max
 }
 
+// 🆕 **ארבע רמות-השביעות של §7.80 — על ממוצע של לקוח** (ליטושי-הכנס, חבילה C3, 24/09/2026).
+// §7.80 מגדיר תווית **לציון שלם** (5=מצוין · 4=טוב · 3=בינוני · 1–2=טעון בירור); ללקוח יש **ממוצע**
+// של כמה משובים (3.5). ⇒ **הממוצע מעוגל לציון הקרוב** (4.5 ⇒ מצוין · 3.5 ⇒ טוב) — הנחה טכנית,
+// מתועדת במדריך-המיקרו של מ2. 🔴 **ו"טעון בירור" אינו עיגול אלא `needsSatisfactionAttention`** —
+// אותה פונקציה של התווית בטבלה ושל הצ'יפ, עם הסף מ-`params`. כך שלושתם לעולם לא נפרדים.
+// אין ממוצע ⇒ `null`: "אין נתון" אינו אף רמה.
+export const SATISFACTION_BANDS = Object.freeze([
+  { key: 'excellent', label: 'מצוין' },
+  { key: 'good', label: 'טוב' },
+  { key: 'medium', label: 'בינוני' },
+  { key: 'attention', label: 'טעון בירור' },
+])
+
+export function satisfactionBand(avgFeedback, threshold) {
+  if (typeof avgFeedback !== 'number') return null
+  if (needsSatisfactionAttention(avgFeedback, threshold)) return 'attention'
+  if (avgFeedback >= 4.5) return 'excellent'
+  if (avgFeedback >= 3.5) return 'good'
+  return 'medium'
+}
+
 // חיפוש-טקסט סלחני-אך-חד-משמעי (§7.11): מתאים אם מחרוזת-החיפוש היא תת-מחרוזת בשם-החברה
 // או בשם-איש-הקשר, או **תחילית** של ה-ח"פ (company_number). ח"פ הוא מזהה ולכן התאמת-תחילית
 // בלבד (לא includes) — כדי שחיפוש "514" ימצא לקוח שח"פ שלו מתחיל ב-514, בלי התאמות-אמצע מקריות.
@@ -96,7 +117,7 @@ function matchesText(customer, rawText) {
 // ⚠️ ‏`satisfactionThreshold` הוא ארגומנט שלישי ולא שדה ב-`filters`, בכוונה: `filters` הוא
 // **מה שהמשתמשת בחרה**, וזה **הגדרת-מערכת**. ערבובם היה גורם ל-`countActiveFilters` שמתחתיו
 // לספור הגדרה כאילו היא מסננת. ‏`CustomerPicker` (מודול 3) אינו מעביר אותו — הוא לעולם אינו
-// מדליק `lowSatisfactionOnly`, ולכן הסף אינו נדרש שם.
+// מציב `satisfaction`, ולכן הסף אינו נדרש שם.
 export function matchesCustomerFilters(customer, filters = {}, satisfactionThreshold) {
   const {
     text,
@@ -107,7 +128,7 @@ export function matchesCustomerFilters(customer, filters = {}, satisfactionThres
     status,
     createdAfter,
     dormantOnly,
-    lowSatisfactionOnly,
+    satisfaction,
   } = filters
   // סטטוס: מסננים רק כשסופק ערך מפורש. toggle-הארכיון בעמוד שולח status='active' כברירת-מחדל
   // (מציג פעילים בלבד — סטיית-הכרעה מ-5.x, ר' §9 במדריך); כשמדליקים "הצג ארכיון" הוא לא נשלח כלל.
@@ -122,9 +143,10 @@ export function matchesCustomerFilters(customer, filters = {}, satisfactionThres
   // נתוני-פרויקטים חוצי-לקוח שהפונקציה הטהורה הזו אינה רואה. **ולמה `null` אינו עובר את
   // המסנן:** לקוח שאיש מלקוחותיו לא ענה על סקר אינו "לקוח לא-מרוצה" — הוא לקוח שאין עליו
   // נתון, ורשימת-הטיפול חייבת להכיל רק את מי שבאמת דורש טלפון (אותה דוקטרינת "ריק אינו 0").
+  // ✏️ 24/09/2026 (C3): מסנן אחד, ארבע רמות. הצ'יפ "טעון בירור" מציב אותו על `attention`.
   if (
-    lowSatisfactionOnly === true &&
-    !needsSatisfactionAttention(customer.avg_feedback, satisfactionThreshold)
+    satisfaction &&
+    satisfactionBand(customer.avg_feedback, satisfactionThreshold) !== satisfaction
   ) {
     return false
   }
@@ -155,8 +177,8 @@ export function countActiveFilters(filters = {}) {
     (typeof filters.hasDiscount === 'boolean' ? 1 : 0) +
     (filters.newWithinDays ? 1 : 0) +
     (filters.dormantOnly === true ? 1 : 0) +
-    // 🆕 "טעון בירור" — נספר כמו `dormantOnly`: צ'יפ בוליאני חד-כיווני, ולכן רק `true` נספר.
-    (filters.lowSatisfactionOnly === true ? 1 : 0)
+    // ✏️ 24/09/2026 (C3): רמת-שביעות אחת (כולל הצ'יפ "טעון בירור", שמציב אותה).
+    (filters.satisfaction ? 1 : 0)
   )
 }
 

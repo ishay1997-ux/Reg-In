@@ -6,6 +6,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import TemplateEditor from './TemplateEditor'
 
+// ✏️ 24/09/2026: ב-CI אין `.env.local` — הרמז (`Hint` ⇐ `AuthContext`) טוען את `src/supabaseClient.js`,
+// שיוצר את הלקוח בזמן-טעינה ונפל על "supabaseUrl is required". הרמז עצמו נשאר ברמה 0 (אין ספק).
+vi.mock('@/supabaseClient', () => ({ supabase: {} }))
+
 // שורות-פיקסצ'ר בצורת שורת-DB גולמית (`param_name`/`param_type`/`owner_role_id`) — בדיוק
 // כמו ש-`ParamsTab`/`MySettingsPage` באמת מעבירות ל-`paneComponents.templates` (§10, חיווט
 // גל 2: הרכיב קורא `row.param_name` ושולף תווית מהמרשם החי, לא מ-`row.label`). שני השמות

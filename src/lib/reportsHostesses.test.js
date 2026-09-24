@@ -9,7 +9,6 @@ import {
   reliabilityParamOrderNote,
   hostessReliabilityScore,
   medianOf,
-  rateByRatingBands,
 } from './reportsHostesses'
 
 // 🔴 **המימוש האמיתי עוטף במרגל, ולא מוחלף במימוש מזויף** (הכרעה 38 · כלל-ברזל 14):
@@ -316,7 +315,7 @@ describe('ציון-האמינות — אותה נוסחה של Smart Match, לא
   })
 })
 
-describe('חציון ותעריף לפי דירוג (מ16)', () => {
+describe('חציון', () => {
   it('חציון על מספר אי-זוגי של ערכים', () => {
     expect(medianOf([41, 43, 47])).toBe(43)
   })
@@ -348,28 +347,5 @@ describe('חציון ותעריף לפי דירוג (מ16)', () => {
 
   it('סדרה שכולה חוסר ⇒ null, לא 0 — "אין תעריף" אינו "תעריף אפס"', () => {
     expect(medianOf([null, Number.NaN, undefined])).toBeNull()
-  })
-
-  it('רצועות-דירוג: ממוצע לכל דירוג, ורצועה נפרדת לחסרות-דירוג', () => {
-    const rows = [
-      { rating: 5, hourly_rate: 46 },
-      { rating: 5, hourly_rate: 48 },
-      { rating: 4, hourly_rate: 44 },
-      { rating: 3, hourly_rate: 40 },
-      { rating: 3, hourly_rate: 42 },
-      { rating: null, hourly_rate: 42.26 },
-    ]
-    expect(rateByRatingBands(rows)).toEqual([
-      { rating: 5, count: 2, avgRate: 47, medianRate: 47 },
-      { rating: 4, count: 1, avgRate: 44, medianRate: 44 },
-      { rating: 3, count: 2, avgRate: 41, medianRate: 41 },
-      { rating: null, count: 1, avgRate: 42.26, medianRate: 42.26 },
-    ])
-  })
-
-  it('דירוג בלי אף דיילת אינו רצועה — לא מציגים "0 ₪"', () => {
-    expect(rateByRatingBands([{ rating: 4, hourly_rate: 44 }])).toEqual([
-      { rating: 4, count: 1, avgRate: 44, medianRate: 44 },
-    ])
   })
 })

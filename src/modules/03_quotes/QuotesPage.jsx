@@ -11,6 +11,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Hint from '@/components/Hint'
+import ReturnToLink, { useReturnTo } from '@/components/ReturnToLink'
+import { shouldReturnOnClose } from '@/lib/returnTo'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -135,6 +137,7 @@ export default function QuotesPage() {
   // חלון-הזמן והדפדוף חיים בכתובת (`?window=&page=`), לא ב-state — אותה מוסכמה כמו
   // CustomersPage.jsx: כך רשימה מסוננת+מדופדפת היא קישור שאפשר לשמור, ו"חזור" לא מאפס אותם.
   const [searchParams, setSearchParams] = useSearchParams()
+  const returnTo = useReturnTo()
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -162,7 +165,6 @@ export default function QuotesPage() {
   // ובמקומם נאמר שאי-אפשר לדעת. ⛔ כשל-יומן לעולם אינו "טרם נשלחה" — זו הטענה ההפוכה,
   // והיא הייתה שולחת את המשתמש לשלוח מייל שהלקוח אולי כבר קיבל.
   const [sentIds, setSentIds] = useState(null)
-  const [documentQuote, setDocumentQuote] = useState(null)
   const [approveTarget, setApproveTarget] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
 
@@ -215,6 +217,39 @@ export default function QuotesPage() {
   }
 
   const windowKey = parseWindowParam(searchParams.get('window'))
+
+  // 📄 **חלון-המסמך חי בכתובת (`?view=<quoteId>`), לא ב-state** (ליטושי-הכנס, חבילה 0, 24/09/2026).
+  // ‏למה: דלת-השורה בדוח "סגירת הצעות" (מ11 ה1) מובילה להצעה **שכבר הוכרעה** — ולה אין מסך-עריכה.
+  // המסך הקיים שמציג הצעה בכל סטטוס הוא החלון הזה, ולכן הדלת היא `/quotes?view=`. ‏`CLAUDE.md` §4.2:
+  // מצב פתוח = כתובת, ו"חזור" בדפדפן סוגר אותו. ההצעה נמצאת בין **כל** ההצעות שנטענו (לא רק בחלון
+  // או בלשונית), כי הדלת יכולה להוביל להצעה ישנה או נדחתה.
+  const viewParam = searchParams.get('view')
+  const documentQuote = viewParam
+    ? (quotes.find((q) => String(q.quote_id) === viewParam) ?? null)
+    : null
+  // מזהה שאינו ברשימה (נמחק · אין הרשאה · קישור ישן) — נאמר במפורש, ולא נבלע כחלון שלא נפתח.
+  const viewMissing = Boolean(viewParam) && !loading && !loadError && documentQuote === null
+
+  // 0ב (24/09/2026): חלון שנפתח מדוח (`?returnTo=`) — הסגירה חוזרת לדוח (דחיפה, לא החלפה).
+  // ✏️ 24/09/2026 (ביקורת-קוד): **רק כשנסגרת ההצעה שהדלת פתחה** — `doorView` הוא ה-`view` שהיה בכתובת
+  // ברינדור הראשון. מכרטיס "הצעות" ריק במסך הבית (`/quotes?returnTo=/`) אין `view` ⇒ הצעה שהיא פתחה
+  // בעצמה נסגרת סגירה רגילה והיא נשארת ברשימה (עד היום — הועפה למסך הבית). `shouldReturnOnClose`.
+  const [doorView] = useState(() => searchParams.get('view'))
+  function setDocumentQuote(quote) {
+    if (!quote && shouldReturnOnClose({ returnTo, closingId: viewParam, doorId: doorView })) {
+      navigate(returnTo)
+      return
+    }
+    setSearchParams(
+      (prev) => {
+        const p = new URLSearchParams(prev)
+        if (quote) p.set('view', String(quote.quote_id))
+        else p.delete('view')
+        return p
+      },
+      { replace: !quote },
+    )
+  }
   const pageParam = parsePageParam(searchParams.get('page'))
 
   function stripPage(sp) {
@@ -396,6 +431,9 @@ export default function QuotesPage() {
           עם שני מספרים בלבד נמדדה כ-100% רוחב וכמעט ריקה. כאן הם בגודל-התוכן שלהם. */}
       <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
         <div>
+          {/* 0ב (24/09/2026): הגיעו מדלת-דוח (`?view=…&returnTo=/reports…`) או מכרטיס "הצעות" במסך
+              הבית (`?returnTo=/`) ⇒ קישור-חזרה גלוי, לא רק חזרה-בסגירה. אחרת — כלום. */}
+          <ReturnToLink className="mb-1" />
           <h1 className="text-xl font-bold text-slate-800">ניהול הצעות מחיר</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             מעקב אחר הצעות שנשלחו, ואישור או דחייה שלהן
@@ -433,6 +471,16 @@ export default function QuotesPage() {
           data-testid="quotes-missing-params"
         >
           {missingParamsMessage}
+        </p>
+      )}
+
+      {viewMissing && (
+        <p
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 mb-4"
+          role="alert"
+          data-testid="quotes-view-missing"
+        >
+          ההצעה לא נמצאה, או שאין לך הרשאה אליה.
         </p>
       )}
 
@@ -610,6 +658,11 @@ export default function QuotesPage() {
             )}
           </div>
         </div>
+
+        {/* ✏️ 24/09/2026 (מבקרים טריים): הרמז משווה בין שני הצ'יפים — ולכן רק כשצ'יפ "פג בקרוב" עצמו
+            מוצג. ב"מאושרות"/"נדחו" הוא מוסתר (תפוגה קיימת רק ל-in_progress) ו"אירועים קרובים" לבדו
+            נשאר — `showChips` היה מציג שם הסבר על צ'יפ שאינו על המסך. */}
+        {showExpiringChip && <Hint id="quotes.expiringVsEventSoon" className="mb-2" />}
 
         {/* חלון-הזמן — שורה עצמאית מתחת לשורת-הסינון (הרחבת השורה הקיימת נמדדה שוברת אותה,
             ר' ההערה למעלה על 1,174px בתוך 960px). מציג-ומאפס עמוד יחד (הכרעת-ישי 04/09/2026). */}

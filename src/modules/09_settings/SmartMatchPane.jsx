@@ -32,6 +32,7 @@ import { getParamEntry, parseForDisplay, weightsSumOk } from '@/lib/paramsRegist
 import { activeWeights } from '@/lib/smartMatch'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { countAttendanceRows } from '@/modules/09_settings/api'
+import Hint from '@/components/Hint'
 import ParamRow, {
   PARAMS_TABLE_CLASS,
   ParamsTableHead,
@@ -265,6 +266,15 @@ export default function SmartMatchPane({
             data-testid="settings-smartmatch-reliability-toggle"
           />
         </div>
+      )}
+      {/* ✏️ 24/09/2026 (מבקרים טריים): הרמז חזר על שורת "בפועל כרגע" שמעל הטבלה ("מרכיב שכבוי יוצא
+          מהחישוב, והנותרים מתחלקים ביניהם") — שתי השורות יחד על אותו מסך. ⇒ הוא מוצג רק כשהשורה
+          ההיא **אינה** מוצגת (`effectiveWeights` = null: אין פער, כלומר האמינות דלוקה), ואז הוא
+          אומר מראש מה יקרה בכיבוי. כשהשורה מוצגת היא לבדה אומרת את זה, עם המספרים. */}
+      {/* ✏️ 24/09/2026 (בודק-השער): לפי המתג עצמו, לא לפי היעדר שורת "בפועל". מרכיב כבוי שמשקלו 0
+          אינו יוצר פער, ולכן גם בלי השורה הרמז היה מבטיח משהו שכבר קרה. */}
+      {reliabilityRow && parseForDisplay(reliabilityEntry, values?.[RELIABILITY_NAME]) === true && (
+        <Hint id="settingsSmartMatch.reliabilityOff" />
       )}
     </div>
   )

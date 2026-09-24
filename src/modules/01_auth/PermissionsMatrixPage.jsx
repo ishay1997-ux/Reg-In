@@ -13,6 +13,7 @@ import { supabase } from '@/supabaseClient'
 import { CEO_ROLE_NAME, BUSINESS_MODULES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
 
 const CYCLE = ['edit', 'view', 'blocked']
 
@@ -134,6 +135,7 @@ export default function PermissionsMatrixPage() {
         לחיצה על עיגול מחליפה את ההרשאה ושומרת אותה מיד
       </p>
 
+      <Hint id="permissions.ceoLocked" className="-mt-4 mb-4" />
       {cellError && <p className="text-red-600 text-sm mb-4">{cellError}</p>}
 
       <table className="w-full text-right border-collapse">

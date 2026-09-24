@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { paramLabel } from './paramsRegistry'
 import { REPORT_PARAM_NAMES, missingReportParamsMessage } from './reportsParams'
 
 // הערכים שמיגרציה C מכניסה (`20260916043500_module11_c_report_params.sql`), כמחרוזות —
@@ -30,11 +31,11 @@ describe('missingReportParamsMessage — אומרת מה חסר, לעולם לא
     const rest = { ...ALL_PRESENT }
     delete rest[REPORT_PARAM_NAMES.reliabilityRed]
     const message = missingReportParamsMessage(rest)
-    expect(message).toContain('חסר פרמטר מערכת: מקדם_אמינות_אדום')
+    expect(message).toContain('חסר פרמטר מערכת: מקדם אמינות לסימון אדום')
     expect(message).toContain('אין סימון אדום בדוח אמינות הדיילות')
     expect(message).toContain('יש להוסיף את השורה בהגדרות המערכת.')
     // 🔴 השורות הקיימות אינן מוזכרות — באנר שמונה גם את מה שתקין נקרא כרקע.
-    expect(message).not.toContain('מקדם_אמינות_ענבר')
+    expect(message).not.toContain('מקדם אמינות לסימון ענבר')
   })
 
   it('שתי שורות חסרות ⇒ שתיהן נקובות, בלשון רבים', () => {
@@ -43,8 +44,8 @@ describe('missingReportParamsMessage — אומרת מה חסר, לעולם לא
       [REPORT_PARAM_NAMES.reliabilityAmber]: '0.95',
     })
     expect(message).toContain('חסרים פרמטרי מערכת')
-    expect(message).toContain('מכפיל_מרווח_מתרחק')
-    expect(message).toContain('סף_סטיית_תקציב_אחוז')
+    expect(message).toContain('מכפיל מרווח ללקוח מתרחק')
+    expect(message).toContain('סף סטיית תקציב')
     expect(message).toContain('יש להוסיף את השורות בהגדרות המערכת.')
   })
 
@@ -57,7 +58,7 @@ describe('missingReportParamsMessage — אומרת מה חסר, לעולם לא
         ...ALL_PRESENT,
         [REPORT_PARAM_NAMES.budgetDeviationPercent]: value,
       })
-      expect(message).toContain('סף_סטיית_תקציב_אחוז')
+      expect(message).toContain('סף סטיית תקציב')
     },
   )
 
@@ -72,8 +73,9 @@ describe('missingReportParamsMessage — אומרת מה חסר, לעולם לא
 
   it('מפה ריקה או חסרה ⇒ כל הארבעה נקובים, ובלי לזרוק', () => {
     const message = missingReportParamsMessage(undefined)
+    // ✏️ 24/09/2026 (A5): ההודעה נוקבת בתווית שבמסך הפרמטרים, ולא בשם-העמודה.
     for (const name of Object.values(REPORT_PARAM_NAMES)) {
-      expect(message).toContain(name)
+      expect(message).toContain(paramLabel(name))
     }
   })
 
@@ -82,7 +84,7 @@ describe('missingReportParamsMessage — אומרת מה חסר, לעולם לא
     const onlyReliability = [REPORT_PARAM_NAMES.reliabilityRed, REPORT_PARAM_NAMES.reliabilityAmber]
     expect(
       missingReportParamsMessage({ [REPORT_PARAM_NAMES.reliabilityRed]: '0.87' }, onlyReliability),
-    ).toContain('מקדם_אמינות_ענבר')
+    ).toContain('מקדם אמינות לסימון ענבר')
     expect(
       missingReportParamsMessage(
         {

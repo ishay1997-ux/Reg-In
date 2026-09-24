@@ -16,6 +16,8 @@ import HostessFormDialog from './HostessFormDialog'
 import HostessViewCard from './HostessViewCard'
 import SmartMatchPage from './SmartMatchPage'
 import { resendExpiredInvites } from './api'
+import ReturnToLink, { useReturnTo } from '@/components/ReturnToLink'
+import { shouldReturnOnClose } from '@/lib/returnTo'
 
 const TABS = {
   overview: 'מעקב פניות ושיבוצים',
@@ -59,6 +61,7 @@ export default function HostessesPage() {
   // (בדיוק המוקש שהוביל למלכודת ה-`resolveNext` שם), ובנוסף חוסם את שער-ה-lint
   // ‏`react-hooks/set-state-in-effect` (סנכרון-מצב שיכול להיגזר ברינדור אינו effect).
   const [searchParams, setSearchParams] = useSearchParams()
+  const returnTo = useReturnTo()
 
   function writeParams(patch) {
     setSearchParams(
@@ -82,8 +85,16 @@ export default function HostessesPage() {
     writeParams({ hostess: id })
   }
 
+  // 0ב (24/09/2026): כרטיס שנפתח מדוח (`?returnTo=`) — הסגירה חוזרת לדוח, באותו מסנן. `navigate` רגיל
+  // (דחיפה ולא החלפה) — כפתור-אחורה של הדפדפן ממשיך לעבוד.
+  // ✏️ 24/09/2026 (ביקורת-קוד): **רק כשנסגר הכרטיס שהדלת פתחה** (`doorHostess` = ה-`hostess` שהיה בכתובת
+  // ברינדור הראשון). מכרטיס "דיילות" ריק במסך הבית (`/hostesses?returnTo=/`) — כרטיס שהיא פתחה בעצמה
+  // נסגר סגירה רגילה והיא נשארת ברשימה. `shouldReturnOnClose` (`src/lib/returnTo.js`).
+  const [doorHostess] = useState(() => searchParams.get('hostess'))
   function closeCard() {
-    writeParams({ hostess: undefined })
+    if (shouldReturnOnClose({ returnTo, closingId: rawCardHostessId, doorId: doorHostess })) {
+      navigate(returnTo)
+    } else writeParams({ hostess: undefined })
   }
 
   function handleSaved() {
@@ -112,6 +123,7 @@ export default function HostessesPage() {
   return (
     <div className="p-6">
       <div className="mb-4">
+        <ReturnToLink className="mb-2" />
         <h1 className="text-lg font-bold text-slate-800">דיילות</h1>
         <p className="mt-0.5 text-xs text-slate-500">מאגר הדיילות ומעקב השיבוצים</p>
       </div>
@@ -168,7 +180,8 @@ export default function HostessesPage() {
           hostessId={cardHostessId}
           onClose={closeCard}
           onEdit={(id) => {
-            closeCard()
+            // עריכה נשארת כאן גם כשהגיעו מדוח — `closeCard` היה מנווט חזרה לפני שהטופס נפתח.
+            writeParams({ hostess: undefined })
             setFormHostessId(id)
           }}
         />

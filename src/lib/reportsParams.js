@@ -15,6 +15,8 @@
 // ✏️ **ההבדל היחיד מהמקור, והוא מכוון:** כאן `null` כשהכול תקין (ולא `''`) — שני הערכים
 // נופלים באותה צורה ב-`{message && <banner/>}`, וה-`null` נאמר במפורש בחוזה הקריאה.
 
+import { paramLabel } from './paramsRegistry'
+
 export const REPORT_PARAM_NAMES = {
   distantCustomerMultiplier: 'מכפיל_מרווח_מתרחק',
   budgetDeviationPercent: 'סף_סטיית_תקציב_אחוז',
@@ -65,5 +67,5 @@ export function missingReportParamsMessage(paramsMap, names = ALL_REPORT_PARAM_N
   // ו-`תנאי_תשלום_ימים` מגיעים משם בלי שורה ב-`MISSING_EFFECTS`. בלי הענף הזה המשפט היה
   // יוצא *"…: X — . יש להוסיף…"*: מקף תלוי שאין אחריו דבר, על באנר-אזהרה.
   const effectPart = effects.length > 0 ? ` — ${effects.join(', ')}` : ''
-  return `${label}: ${missing.join(', ')}${effectPart}. ${action} בהגדרות המערכת.`
+  return `${label}: ${missing.map(paramLabel).join(', ')}${effectPart}. ${action} בהגדרות המערכת.`
 }

@@ -15,6 +15,7 @@ import { buildEmailPayload, fillEmailTemplate, findUnknownPlaceholders } from '@
 // N2 (02/09/2026): איש-הקשר הראשי הוא שורה ב-customer_contacts, לא שלוש עמודות על customers.
 // primaryContact הוא נקודת-הקריאה היחידה (src/lib/customers.js) — לא לבחור ידנית מהמערך כאן.
 import { primaryContact } from '@/lib/customers'
+import { paramLabel } from '@/lib/paramsRegistry'
 
 // quotes.quote_status — שלושת הערכים של CHECK quotes_quote_status_check.
 export const QUOTE_STATUS_LABELS = {
@@ -556,7 +557,8 @@ export function missingParamsMessage(values = {}) {
   if (missing.length === 0) return ''
 
   // ההשלכה נאמרת פר-פרמטר ולא כמשפט כללי: המשתמש צריך לדעת מה **לא עובד עכשיו**,
-  // לא רק שחסרה שורה. שם-הפרמטר מודפס כלשונו — זה מה שמחפשים ב-Table Editor.
+  // לא רק שחסרה שורה. ✏️ 24/09/2026 (A5): השם מודפס **בתווית שבמסך הפרמטרים** (`paramLabel`),
+  // לא כשם-העמודה — מאז מודול 9 מחפשים אותו שם, ולא ב-Table Editor.
   const effects = []
   if (missing.includes(QUOTE_SCREEN_PARAM_NAMES.vatPercent)) {
     effects.push('לא ניתן להפיק מסמכים ללקוחות')
@@ -573,7 +575,7 @@ export function missingParamsMessage(values = {}) {
   // התאמת מין ומספר — תווית שאומרת "השורות" על שורה אחת נקראת כמו טקסט מתורגם.
   const label = missing.length === 1 ? 'חסר פרמטר מערכת' : 'חסרים פרמטרי מערכת'
   const action = missing.length === 1 ? 'יש להוסיף את השורה' : 'יש להוסיף את השורות'
-  return `${label}: ${missing.join(', ')} — ${effects.join(', ')}. ${action} בהגדרות המערכת.`
+  return `${label}: ${missing.map(paramLabel).join(', ')} — ${effects.join(', ')}. ${action} בהגדרות המערכת.`
 }
 
 // 'YYYY-MM-DD' ⇒ חותמת UTC. עבודה בחלקי-תאריך של UTC (ולא בשעון המקומי) היא מכוונת:

@@ -38,6 +38,8 @@ import { Button } from '@/components/ui/button'
 import Ltr from '@/components/Ltr'
 import StatusTag from '@/components/StatusTag'
 import LoadingOrError from '@/components/LoadingOrError'
+import Hint from '@/components/Hint'
+import { Lock } from 'lucide-react'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
 import SegmentedControl from './SegmentedControl'
 import { useAuth } from '@/contexts/AuthContext'
@@ -87,7 +89,7 @@ const CANCELLED_QTY_TITLE = 'הפרויקט בוטל — אך אפשר לרשו�
 // `NEGATIVE_QTY_SENTENCE`: שני נוסחים לאותה שגיאה הם מה שהכלל מונע.
 const CLOSED_EVENT_SENTENCE = 'האירוע כבר הסתיים — לא ניתן לעדכן את הלוגיסטיקה שלו.'
 // שתי שורות-ההסבר שמתחת לטבלה — §3.7, מצוטטות **במלואן** (מצביע הסתיר פעם את שורת-㊵).
-const EXPLAINER_SAVE = 'כל שינוי נשמר מיד — אין כפתור שמירה במסך.'
+const EXPLAINER_SAVE = 'כל שינוי נשמר מיד.'
 const AUTOFILL_TAG = 'מולא אוטומטית'
 // 📌 **הכרעה-על-עוגן — O-5 (אושרה ע"י ישי 26/08/2026, "מאשר את הכל"), const אחד.**
 // המוקאפ צייר *"נרשם חוסר של 80 יחידות **בשרוך הסאטן**"* — צורה מוטה שאין קוד שיכול לגזור
@@ -451,7 +453,15 @@ function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
         )}
       </DialogHeader>
 
-      {isCancelled && <CancelBanner project={project} />}
+      {isCancelled && <CancelBanner project={project} canEdit={canEdit} />}
+      {/* ✏️ 24/09/2026 (מבקרים טריים): ‏"רשמי כאן את הכמות" — רק למי שיכולה לרשום (`edit`). */}
+      {/* ✏️ 24/09/2026 (בודק-השער): רק כשיש בפועל שדה-כמות פתוח — פריט שהוזמן או מוכן. בלי אחד כזה
+          הרמז הסביר שדה שאינו על המסך. אותו תנאי, הפוך, של `checklist.qtyLocked`. */}
+      {isCancelled &&
+        canEdit &&
+        sorted.some((row) => row.item_status === 'ordered' || row.item_status === 'ready') && (
+          <Hint id="checklist.cancelledOrdered" />
+        )}
       {locked && !isCancelled && (
         <div
           role="status"
@@ -535,30 +545,30 @@ function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
             </tbody>
           </table>
 
-          {/* שתי שורות-ההסבר — §3.7, מילה-במילה. אינן קישוט: כל אחת עונה על שאלה שהמסך
-              מזמין ואינו עונה עליה לבד — "איפה כפתור השמירה?" ו"מה קורה למספר כשאני מסמנת
-              מוכן?" (`🧱⑤` · ㉕). */}
-          <div className="mt-2.5 text-xs leading-loose text-slate-400">
+          {/* ✏️ 24/09/2026 (ליטושי-הכנס, חבילה A4) — היה כאן בלוק-הסבר של §3.7 בחמש שורות, עם
+              "מודול 8" על המסך. **הבסיס (מצב 0) שומר רק את העובדה שעונה על "איפה כפתור השמירה?"**;
+              ההסבר על המילוי-האוטומטי עבר לשכבת-ההטמעה (`checklist.autoSave`), בלי שם-מודול.
+              כתיבה-חזרה לאפיון: `docs/specs/module_05_logistics/` §3.7. */}
+          <p className="mt-2.5 text-xs text-slate-500" data-testid="checklist-autosave-note">
             {EXPLAINER_SAVE}
-            <br />
-            סימון <b>מוכן</b> ממלא את הכמות בפועל אוטומטית, <b>רק אם עדיין לא הוקלד בה ערך</b>.
-            <b> וערך שמולא כך נושא לידו את הכיתוב &quot;{AUTOFILL_TAG}&quot;</b> — שנעלם ברגע שהיא
-            מקלידה.{' '}
-            <span className="block text-slate-400">
-              מספר שנרשם כאילו נמדד, ולא נמדד, יזלוג לחישוב הרווחיות של מודול 8 בלי שאיש ידע.
-            </span>
-            מספר שהקלדת לעולם אינו נדרס.
-          </div>
+          </p>
+          {/* ✏️ 24/09/2026 (ביקורת-קוד): הרמז מסביר מה קורה כשמקלידים — רק למי שיכולה להקליד (`edit`),
+              כמו הרמז שמתחתיו. ל-`view` הוא היה מסביר פקדים שאין לה.
+              ✏️ 24/09/2026 (מבקרים טריים, דרך הסגן): ושני הרמזים — רק כשהפרויקט **פעיל** (`!locked`).
+              באירוע שהסתיים אין מה להקליד ואין מה לסמן, ובמבוטל אי-אפשר לשנות מצב — לא 'הוזמן' ולא
+              'מוכן' — ושם `checklist.cancelledOrdered` שמעל הטבלה אומר מה כן עושים. */}
+          {canEdit && !locked && <Hint id="checklist.autoSave" />}
+          {canEdit &&
+            !locked &&
+            sorted.some((row) => row.item_status !== 'ordered' && row.item_status !== 'ready') && (
+              <Hint id="checklist.qtyLocked" />
+            )}
         </div>
       )}
 
-      {isCancelled && (
-        <div className="text-xs leading-loose text-slate-400" data-testid="checklist-locked-note">
-          כל הפקדים במסך הזה מושבתים ונשארים גלויים, כדי שיהיה ברור{' '}
-          <b>מה היה אפשר לעשות ולמה אי-אפשר</b>.
-        </div>
-      )}
-
+      {/* ✏️ 24/09/2026 (מבקרים טריים, דרך הסגן): כאן ישבה שורה תחתונה (`checklist-locked-note`)
+          שחזרה על הבאנר מילה-במילה — "נעול" הופיע שלוש פעמים באותו חלון. הבאנר לבדו אומר את
+          העובדה ואת החריג. */}
       <ChecklistFooter onOpenChange={onOpenChange} />
     </>
   )
@@ -584,7 +594,7 @@ function ChecklistFooter({ onOpenChange }) {
 
 // ㉝ כפי שצומצמה ב-㊴. ענבר ולא אדום: זו הודעה על מצב **תקין-וסופי**, לא כשל-מערכת
 // (תקציב-הצבע: אפס אדום בשני מסכי המודול).
-function CancelBanner({ project }) {
+function CancelBanner({ project, canEdit }) {
   return (
     <div
       role="status"
@@ -598,10 +608,13 @@ function CancelBanner({ project }) {
       {/* ✅ O-4 (ישי, 26/08/2026) — הנוסח המצויר אמר "מצב, **כמות** או הערה", וזה סתר את ㊴
           שמתירה את הכמות במפורש. השורה השנייה היא התוספת שאושרה באותו סבב: ה-`title` על
           השדה בלבד אינו נראה עד ריחוף ואינו נגיש במקלדת. */}
-      אין לעדכן מצב או הערה בפרויקט מבוטל. אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים. הנעילה
-      חלה על כל המשתמשות.
-      <br />
-      הפריט שכבר הוזמן <b>נשאר ברשימה כראיית-חיוב</b> ואינו משתנה — אין לו מצב &quot;בוטל&quot;.
+      {/* ✏️ 24/09/2026 (A4): העובדה + החריג בלבד. "אין לעדכן…" ו"הנעילה חלה על כל המשתמשות"
+          ירדו (R18 · R27 — הפקדים המושבתים כבר אומרים זאת), והנימוק על פריט שהוזמן עבר לשכבה
+          (`checklist.cancelledOrdered`). */}
+      {/* ✏️ 24/09/2026 (מבקרים טריים): "פקדים" ⇐ "שדות" — מילה שהמשתמשת אומרת. */}
+      {/* ✏️ 24/09/2026 (בודק-השער): רק למי שיש לה עריכה. ל-`view` השורה הבטיחה פעולה שאין לה —
+          ויש היום משתמשת פעילה כזו (מנהלת-פרויקטים, 'לוגיסטיקה' = view). */}
+      {canEdit && 'אפשר עדיין לרשום כמות שהגיעה — שאר השדות נעולים.'}
     </div>
   )
 }
@@ -771,6 +784,16 @@ function ItemRows({
             >
               {AUTOFILL_TAG}
             </span>
+          )}
+          {/* 🔒 24/09/2026 (ליטושי-הכנס, B): **נעילה גלויה, לא רק `title`.** עד היום הסיבה שהשדה
+              מושבת נראתה רק בריחוף-עכבר — במגע ובמקלדת לא בכלל (H4). המנעול מסמן שיש סיבה, והסיבה
+              עצמה נשארת ב-`aria-label` של השדה ובשכבה (`checklist.qtyLocked`). */}
+          {canEdit && !qtyStateAllows && (
+            <Lock
+              aria-hidden="true"
+              className="mb-1 ml-1 inline size-4 text-slate-500"
+              data-testid={`checklist-qty-lock-${key}`}
+            />
           )}
           {canEdit ? (
             <input

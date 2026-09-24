@@ -703,7 +703,7 @@ describe('getHostessScreenParams — פרמטר חסר זורק ונוקב בש�
     setupFrom(queues)
 
     await expect(getHostessScreenParams()).rejects.toThrow(
-      'הפרמטר "שעות_תוקף_זימון" חסר בהגדרות המערכת.',
+      "הפרמטר 'תוקף זימון-משמרת' חסר בהגדרות המערכת.",
     )
   })
 

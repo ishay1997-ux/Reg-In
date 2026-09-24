@@ -782,7 +782,7 @@ describe('חמשת המצבים והייצוא', () => {
     callReport.mockResolvedValue(payload)
     renderTab({ slug: 'finance-overview' })
     expect(plain(await screen.findByTestId('report-missing-params'))).toContain(
-      'חסר פרמטר מערכת: תנאי_תשלום_ימים',
+      'חסר פרמטר מערכת: תנאי תשלום ללקוח',
     )
   })
 
