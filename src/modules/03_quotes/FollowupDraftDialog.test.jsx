@@ -208,6 +208,8 @@ describe('חלון-הטיוטה — כשל, מכסה, ולעולם לא טיוט
     expect(await screen.findByText(FOLLOWUP_QUOTA_MESSAGE)).toBeInTheDocument()
     expect(screen.queryByTestId('followup-retry')).not.toBeInTheDocument()
     expect(screen.queryByTestId('followup-draft')).not.toBeInTheDocument()
+    // בכשל אין טיוטה לבדוק ⇒ גם אין "טיוטה — בדקי לפני שליחה." (הייתה רעש, נמצא בצילום 24/09).
+    expect(screen.queryByTestId('followup-notice')).not.toBeInTheDocument()
   })
 
   it('כשל-ספק (502) ⇒ "הניסוח נכשל — נסי שוב." + ניסיון-חוזר שמצליח', async () => {

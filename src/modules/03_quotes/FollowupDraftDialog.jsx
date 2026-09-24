@@ -72,6 +72,12 @@ function statusText(phase, failure, notice) {
   return 'הטיוטה מוכנה.'
 }
 
+function statusClass(phase, notice) {
+  if (phase === 'error') return 'text-sm font-medium text-red-600'
+  if (phase === 'ready' && !notice) return 'sr-only'
+  return 'text-sm text-slate-500'
+}
+
 // ── תוכן-החלון, עם כל המצב. **נטען מחדש בכל פתיחה**: Radix מסיר את `DialogContent` כשהחלון סגור,
 // ולכן כל פתיחה היא mount טרי = טיוטה חדשה, בלי effect שמאפס state (שגיאת-lint בקונפיג הזה).
 function FollowupDraftPanel({ quoteId }) {
@@ -156,15 +162,22 @@ function FollowupDraftPanel({ quoteId }) {
 
   return (
     <>
-      {/* האזור-החי: הודעה אחת בכל רגע. הכשל גלוי (לא sr-only) — יש בו דרך קדימה. */}
-      <p
-        aria-live="polite"
-        className={
-          phase === 'error' ? 'text-sm font-medium text-red-600' : 'text-sm text-slate-500'
-        }
-        data-testid="followup-status"
-      >
-        {ready && !notice ? <span className="sr-only">{liveText}</span> : liveText}
+      {/* ⚠️ קבוע, לא רמז: אזהרה לפני פעולה יוצאת-החוצה (H2). ענבר = "דורש תשומת-לב", לא חוסם.
+          מוצג כל עוד יש (או עומדת להיות) טיוטה — בכשל אין מה לבדוק, והאזהרה הייתה רעש. */}
+      {phase !== 'error' && (
+        <p
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-800"
+          data-testid="followup-notice"
+        >
+          {FOLLOWUP_NOTICE}
+        </p>
+      )}
+      <Hint id="quoteFollowup.privacy" />
+
+      {/* האזור-החי: הודעה אחת בכל רגע. הכשל גלוי (לא sr-only) — יש בו דרך קדימה. "הטיוטה מוכנה."
+          מוכרז לקורא-מסך בלבד — הטיוטה עצמה על המסך היא ההודעה; אותו אלמנט, כדי שההכרזה תישמע. */}
+      <p aria-live="polite" className={statusClass(phase, notice)} data-testid="followup-status">
+        {liveText}
       </p>
 
       {phase === 'loading' && <DraftSkeleton />}
@@ -306,14 +319,6 @@ export default function FollowupDraftDialog({ quote, disabledReason = '' }) {
               נוסחה בעזרת AI · הצעת מחיר {quote?.quote_id} — {quote?.event_name}
             </DialogDescription>
           </DialogHeader>
-          {/* ⚠️ קבוע, לא רמז: אזהרה לפני פעולה יוצאת-החוצה (H2). ענבר = "דורש תשומת-לב", לא חוסם. */}
-          <p
-            className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-800"
-            data-testid="followup-notice"
-          >
-            {FOLLOWUP_NOTICE}
-          </p>
-          <Hint id="quoteFollowup.privacy" />
           <FollowupDraftPanel quoteId={quote?.quote_id} />
         </DialogContent>
       </Dialog>
