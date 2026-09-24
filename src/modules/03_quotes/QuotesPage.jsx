@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Hint from '@/components/Hint'
-import { useReturnTo } from '@/components/ReturnToLink'
+import ReturnToLink, { useReturnTo } from '@/components/ReturnToLink'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -426,6 +426,9 @@ export default function QuotesPage() {
           עם שני מספרים בלבד נמדדה כ-100% רוחב וכמעט ריקה. כאן הם בגודל-התוכן שלהם. */}
       <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
         <div>
+          {/* 0ב (24/09/2026): הגיעו מדלת-דוח (`?view=…&returnTo=/reports…`) או מכרטיס "הצעות" במסך
+              הבית (`?returnTo=/`) ⇒ קישור-חזרה גלוי, לא רק חזרה-בסגירה. אחרת — כלום. */}
+          <ReturnToLink className="mb-1" />
           <h1 className="text-xl font-bold text-slate-800">ניהול הצעות מחיר</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             מעקב אחר הצעות שנשלחו, ואישור או דחייה שלהן

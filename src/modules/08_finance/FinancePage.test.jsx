@@ -1000,3 +1000,18 @@ describe('S1 — דפדוף (04/09/2026)', () => {
     expect(screen.getAllByTestId(/^finance-row-/)).toHaveLength(50)
   })
 })
+
+// 0ב (24/09/2026) — הגיעו מכרטיס "כספים" במסך הבית (`?returnTo=/`): קישור-חזרה גלוי. בלי הפרמטר — אין.
+describe('FinancePage — חזרה למסך הבית', () => {
+  it('`?returnTo=/` ⇒ "חזרה למסך הבית" אל `/`', async () => {
+    await renderPage('/finance?returnTo=/')
+    const link = screen.getByTestId('return-to-link')
+    expect(link).toHaveTextContent('חזרה למסך הבית')
+    expect(link).toHaveAttribute('href', '/')
+  })
+
+  it('בלי `returnTo` — אין קישור', async () => {
+    await renderPage()
+    expect(screen.queryByTestId('return-to-link')).not.toBeInTheDocument()
+  })
+})

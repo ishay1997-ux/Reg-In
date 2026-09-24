@@ -47,6 +47,7 @@ import { Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
 import ExportDialog from '@/components/ExportDialog'
+import ReturnToLink from '@/components/ReturnToLink'
 import {
   buildExportFileName,
   buildExportSheet,
@@ -988,6 +989,8 @@ function PageHeader({ onOpenSalary }) {
   return (
     <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
       <div>
+        {/* 0ב (24/09/2026): הגיעו מכרטיס "כספים" במסך הבית (`?returnTo=/`) ⇒ "חזרה למסך הבית". אחרת — כלום. */}
+        <ReturnToLink className="mb-1" />
         <h1 className="text-lg font-bold text-slate-800">{PAGE_TITLE}</h1>
         <p className="mt-0.5 text-sm text-slate-500">{PAGE_SUBTITLE}</p>
       </div>

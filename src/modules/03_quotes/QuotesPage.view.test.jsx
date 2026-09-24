@@ -94,6 +94,16 @@ describe('?view= — מסמך-ההצעה מהכתובת', () => {
     expect(screen.getByTestId('where')).not.toHaveTextContent('view=')
   })
 
+  // 0ב (24/09/2026): מדלת-דוח — גם קישור-חזרה גלוי בראש המסך, לא רק חזרה-בסגירה.
+  it('מדוח (`returnTo=/reports…`) ⇒ "חזרה לדוח" גלוי, אל אותו דוח', async () => {
+    listQuotes.mockResolvedValue([quote({ quote_id: 2317 })])
+    const back = '/reports?tab=exec&report=trends'
+    renderAt(`/quotes?view=2317&returnTo=${encodeURIComponent(back)}`)
+    const link = await screen.findByTestId('return-to-link')
+    expect(link).toHaveTextContent('חזרה לדוח')
+    expect(link).toHaveAttribute('href', back)
+  })
+
   it('מספר שאינו ברשימה — נאמר במפורש, ולא חלון שפשוט לא נפתח', async () => {
     listQuotes.mockResolvedValue([quote({ quote_id: 5 })])
     renderAt('/quotes?view=999')

@@ -11,7 +11,8 @@
 // 🔬 **הנתונים מגוונים ולא-מונוטוניים לפי אינדקס** (משמעת 30/07): סדר-הקלט מעורבב בכוונה,
 // אחרת בדיקת-המיון הייתה מאשרת את סדר-הקליטה במקום את המיון.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { render as rtlRender, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import LogisticsPage from './LogisticsPage'
 import { getUpcomingOrders, listActiveProjects, listLogisticsRows, listProducts } from './api'
 import { getParamValues } from '@/api/params'
@@ -46,6 +47,12 @@ vi.mock('./ChecklistDialog', () => ({
     </div>
   ),
 }))
+
+// 0ב (24/09/2026): המסך מציג `ReturnToLink`, שקורא את הכתובת — ולכן כל רינדור עטוף בנתב.
+// ברירת-המחדל `/logistics` בלי `returnTo` = המסך בדיוק כמו קודם.
+function render(ui, { url = '/logistics' } = {}) {
+  return rtlRender(<MemoryRouter initialEntries={[url]}>{ui}</MemoryRouter>)
+}
 
 // אותו "היום" שהמסך מחשב — שעון ישראל, לא UTC.
 function todayIso() {
@@ -663,5 +670,21 @@ describe('LogisticsPage — להזמין לחודש הקרוב', () => {
     expect(within(section).getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
     expect(within(section).queryByTestId('logistics-upcoming-orders-empty')).toBeNull()
     expect(screen.getByTestId('logistics-queue-table')).toBeInTheDocument()
+  })
+})
+
+// 0ב (24/09/2026) — הגיעו מכרטיס "לוגיסטיקה" במסך הבית (`?returnTo=/`): קישור-חזרה גלוי. בלי הפרמטר — אין.
+describe('LogisticsPage — חזרה למסך הבית', () => {
+  it('`?returnTo=/` ⇒ "חזרה למסך הבית" אל `/`', async () => {
+    render(<LogisticsPage />, { url: '/logistics?returnTo=/' })
+    const link = await screen.findByTestId('return-to-link')
+    expect(link).toHaveTextContent('חזרה למסך הבית')
+    expect(link).toHaveAttribute('href', '/')
+  })
+
+  it('בלי `returnTo` — אין קישור', async () => {
+    render(<LogisticsPage />)
+    await screen.findByRole('heading', { level: 1, name: 'לוגיסטיקה' })
+    expect(screen.queryByTestId('return-to-link')).not.toBeInTheDocument()
   })
 })

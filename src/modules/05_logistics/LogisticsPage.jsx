@@ -25,6 +25,7 @@ import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareE
 import StatusTag from '@/components/StatusTag'
 import FilterPill from '@/components/FilterPill'
 import Ltr from '@/components/Ltr'
+import ReturnToLink from '@/components/ReturnToLink'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate, weekdayOf } from '@/lib/dates'
@@ -340,6 +341,8 @@ function PageHeader({ today }) {
   // של הציור ולא ערך שמועתק.
   return (
     <div className="mb-4">
+      {/* 0ב (24/09/2026): הגיעו מכרטיס "לוגיסטיקה" במסך הבית (`?returnTo=/`) ⇒ "חזרה למסך הבית". */}
+      <ReturnToLink className="mb-1" />
       <h1 className="text-lg font-bold text-slate-800">לוגיסטיקה</h1>
       <div className="mt-0.5 text-sm text-slate-500" data-testid="logistics-today">
         היום: <Ltr>{formatDate(today)}</Ltr> · יום {weekdayOf(today)}
