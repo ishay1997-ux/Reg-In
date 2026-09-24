@@ -42,4 +42,21 @@ begin
 end
 $m16drop$;
 
+-- ✏️ 24/09/2026 (הסגן): גיבוי לפני בלתי-הפיך, באותה מיגרציה — הגוף החי המדויק נשמר ב-`seed_snapshot`
+-- (הסכמה שבה הפרויקט כבר שומר גיבויים, ר' `20260924007000_module11_m2_feedback_notes_backup`), כך
+-- שהגיבוי והמחיקה אטומיים יחד. שחזור: `execute (select def from seed_snapshot.function_backups where
+-- fn_name = 'report_m16_quality_cost')`, ואז השוואת md5.
+create table if not exists seed_snapshot.function_backups (
+  fn_name  text        not null,
+  saved_at timestamptz not null default now(),
+  md5      text        not null,
+  def      text        not null
+);
+revoke all on seed_snapshot.function_backups from public, anon, authenticated;
+
+insert into seed_snapshot.function_backups (fn_name, md5, def)
+select p.proname, md5(pg_get_functiondef(p.oid)), pg_get_functiondef(p.oid)
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public' and p.proname = 'report_m16_quality_cost';
+
 drop function public.report_m16_quality_cost(date, date, integer, jsonb);
