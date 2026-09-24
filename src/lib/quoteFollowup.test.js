@@ -179,8 +179,8 @@ describe('buildFollowupMailto — קישור שלם, או בלי גוף; לעו�
 })
 
 // 🔗 **החלון מחכה יותר מהשרת — נבדק מול קוד-השרת עצמו, לא מול מספר שהועתק.** השרת מנסה שוב על 5xx
-// כל עוד לא עבר `BUDGET_MS`, וכל ניסיון מחכה עד `PROVIDER_TIMEOUT_MS`; ⇒ הוא עונה לכל המאוחר אחרי
-// סכומם. חלון שמוותר קודם מציג "הניסוח נכשל" על טיוטה שעוד בדרך. פונקציית-השרת היא Deno ולא ניתנת
+// כל עוד לא עבר `BUDGET_MS`, ותקרת כל ניסיון נחתכת למה שנשאר (`providerRetry.ts`, נבדק בשעון מזויף
+// ב-`providerRetry.test.js`) ⇒ הוא עונה עד `BUDGET_MS`. חלון שמוותר קודם מציג "הניסוח נכשל" על טיוטה שעוד בדרך. פונקציית-השרת היא Deno ולא ניתנת
 // לייבוא כאן, ולכן המספרים נקראים מהטקסט שלה.
 describe('FOLLOWUP_DRAFT_TIMEOUT_MS מול תקציב-השרת', () => {
   const serverSource = fs.readFileSync(
@@ -193,8 +193,11 @@ describe('FOLLOWUP_DRAFT_TIMEOUT_MS מול תקציב-השרת', () => {
     return Number(match[1].replaceAll('_', ''))
   }
 
-  it('ארוך מהמקרה הגרוע של השרת (תקציב + ניסיון אחרון), עם מרווח לרשת', () => {
-    const worstServerMs = readMs('BUDGET_MS') + readMs('PROVIDER_TIMEOUT_MS')
-    expect(FOLLOWUP_DRAFT_TIMEOUT_MS).toBeGreaterThanOrEqual(worstServerMs + 5_000)
+  it('ארוך מתקציב-השרת, עם מרווח לזמן-המסד ולרשת', () => {
+    expect(FOLLOWUP_DRAFT_TIMEOUT_MS).toBeGreaterThanOrEqual(readMs('BUDGET_MS') + 10_000)
+  })
+
+  it('תקרת ניסיון בודד לא ארוכה מהתקציב כולו', () => {
+    expect(readMs('PROVIDER_TIMEOUT_MS')).toBeLessThanOrEqual(readMs('BUDGET_MS'))
   })
 })

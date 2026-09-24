@@ -30,6 +30,7 @@
 // ⚠️ הגרסה נעולה במדויק, כמו בשתי הפונקציות האחרות: `@2` היה שובר את שער-הטיפוסים ב-CI מעצמו.
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2.112.0'
 import { ARABIC_SCRIPT_PROBLEM, draftProblem } from './draftGuard.ts'
+import { callWithRetry } from './providerRetry.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -63,14 +64,13 @@ const TEMPERATURE = 0
 // לדעת אם D2 **איטית** או **לא נענית**. ⚠️ **היעד ≤10 שניות (התוכנית §6ה-ה) לא משתנה** — זו תקרה, לא הזמן
 // הצפוי. הכפתור מוסתר (`FOLLOWUP_AI_AVAILABLE`), ולכן ההמתנה הארוכה לא פוגשת משתמשת.
 // 🔗 **הלקוח מחכה יותר מהמקרה הגרוע** — `FOLLOWUP_DRAFT_TIMEOUT_MS` (`src/lib/quoteFollowup.js`): ניסיון
-// מתחיל רק לפני ה-deadline, ולכן השרת עונה לכל המאוחר אחרי `BUDGET_MS + PROVIDER_TIMEOUT_MS`. בדיקה
-// ב-`quoteFollowup.test.js` קוראת את שני המספרים מכאן ונכשלת אם הלקוח קצר מהם.
+// מתחיל רק לפני ה-deadline ותקרתו נחתכת למה שנשאר (`providerRetry.ts`), ולכן השרת עונה עד `BUDGET_MS` ועוד
+// זמן-המסד — הרבה מתחת ל-150 שניות של הפלטפורמה. בדיקה ב-`quoteFollowup.test.js` קוראת את המספר מכאן.
 const PROVIDER_TIMEOUT_MS = 60_000
 const BUDGET_MS = 90_000
-// ניסיון-חוזר על **כל 5xx, כולל פסק-זמן (504)** — הדפוס של `classify-feedback` (‏`RETRY_WAITS_MS` ·
-// `isTransient` · `callProvider`), שנולד מ-"high demand" חולף (16/09/2026). 🚫 **לא על 429:** מכסה שנגמרה
-// לא נפתחת בשניות, וכל ניסיון שורף עוד בקשה ממנה. 400/401/403 = הבקשה שלנו, ושום המתנה לא תתקן אותם.
-const RETRY_WAITS_MS = [2_000, 5_000]
+// ניסיון-חוזר על **כל 5xx, כולל פסק-זמן (504)** — הדפוס של `classify-feedback`, בקובץ `providerRetry.ts`
+// (המתנות 2/5 שניות, ותקרת כל ניסיון נחתכת למה שנשאר מ-`BUDGET_MS`). 🚫 **לא על 429:** מכסה שנגמרה לא נפתחת
+// בשניות, וכל ניסיון שורף עוד בקשה ממנה. 400/401/403 = הבקשה שלנו, ושום המתנה לא תתקן אותם.
 // 🧪 **תקרת-פלט, ו-`store: false` — אבחון 24/09/2026 (סשן 2, קריאה-בלבד ביומנים):** אותו מפתח, אותו
 // endpoint ואותו דגם (`GEMINI_MODEL`) עונים ל-`classify-feedback` תוך ~10 שניות לאצוות 30 הערות, ואילו
 // בקשת-טיוטה **אחת וקצרה** לא ענתה תוך 25 שניות — פעמיים. מה ששונה כאן: טמפרטורה 0.4, שדה `body` חופשי
@@ -354,28 +354,22 @@ function extractText(payload: Record<string, unknown>): string {
   return chunks.join('')
 }
 
-function isTransient(status: number): boolean {
-  return status >= 500
-}
-
-// ⏱️ ניסיון נוסף רק אם ההמתנה לא חוצה את ה-deadline — בדיוק כמו `callProvider` ב-`classify-feedback`.
-async function callProvider(
+// ⏱️ הלולאה עצמה ב-`providerRetry.ts` (טהורה, נבדקת בשעון מזויף). כאן רק מה ששייך לספק הזה: מה נחשב
+// כשל זמני, ומה נזרק כשהתקציב נגמר לפני ניסיון — 504, כמו פסק-זמן, כדי שהמסלול אחריו לא ישתנה.
+function callProvider(
   apiKey: string,
   model: string,
   facts: Record<string, unknown>,
   deadline: number,
 ): Promise<{ subject: string; body: string }> {
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      return await callProviderOnce(apiKey, model, facts, PROVIDER_TIMEOUT_MS)
-    } catch (err) {
-      if (!(err instanceof ProviderError) || !isTransient(err.httpStatus)) throw err
-      const wait = RETRY_WAITS_MS[attempt]
-      if (wait === undefined || Date.now() + wait >= deadline) throw err
-      console.error('gemini retry', attempt + 1, 'after', err.httpStatus)
-      await new Promise((resolve) => setTimeout(resolve, wait))
-    }
-  }
+  return callWithRetry((timeoutMs) => callProviderOnce(apiKey, model, facts, timeoutMs), {
+    deadline,
+    attemptMs: PROVIDER_TIMEOUT_MS,
+    isTransient: (err) => err instanceof ProviderError && err.httpStatus >= 500,
+    exhausted: () => new ProviderError('הספק לא ענה.', 504, 'budget exhausted before an attempt'),
+    onRetry: (n, err) =>
+      console.error('gemini retry', n, 'after', (err as ProviderError).httpStatus),
+  })
 }
 
 // ── שומר-הטיוטה — בקובץ נפרד (`draftGuard.ts`), כדי שבדיקת-יחידה ב-Vitest תוכל לייבא אותו בלי Deno ──

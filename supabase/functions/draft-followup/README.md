@@ -56,7 +56,7 @@ blocked user sending a bad body gets 400 and learns she *would* have passed.
 | quote is neither `in_progress` nor `rejected` with `rejection_reason = 'פג תוקף'` | **409** | `{error: 'אפשר לנסח מייל מעקב רק להצעה פתוחה, או להצעה שפג תוקפה.'}` |
 | `in_progress` quote with no successful send in `email_log` | **409** | `{error: 'ההצעה עוד לא נשלחה ללקוח.'}` — the same sentence the dialog shows beside the disabled button |
 | provider **429** (quota) | **429** | `{status: 'quota', error: 'הגעת למכסת ה-AI — נסי שוב מאוחר יותר.', provider_error}` — **not** retried |
-| provider 5xx, including timeout (60 s) / network (504) | retried like `classify-feedback`: waits 2 s then 5 s, each retry only if the wait ends before the 90 s budget; then **502** (worst case ≈ 150 s — the dialog waits 160 s) | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
+| provider 5xx, including timeout (60 s) / network (504) | retried like `classify-feedback`: waits 2 s then 5 s, each retry only if the wait ends before the 90 s budget, and **each attempt's ceiling is cut to what is left of the budget** (`providerRetry.ts`); then **502**. The whole run ends by the 90 s budget (+ the DB reads), well under the platform's 150 s — the dialog waits 160 s | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
 | provider 400/401/403, non-JSON, empty text, model JSON invalid | **502** | same `failed` body |
 | model draft fails the guard (below) | **502** | same `failed` body, `provider_error` names the rule |
 | database read error | **500** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.'}` |
@@ -122,7 +122,8 @@ After the model answers and **before** filling, both subject and body must:
 A failure is a 502 `failed` ("נסי שוב"), not a silently trimmed draft. **One exception:** an Arabic-script
 rejection asks the model **once more**, inside the same budget (deputy's ruling 25/09/2026) — it is a
 random slip of the model, not of the request; only if the second draft fails too does the 502 go out.
-The guard lives in `draftGuard.ts` (pure, no Deno), so `draftGuard.test.js` runs it in Vitest.
+The guard lives in `draftGuard.ts` (pure, no Deno), so `draftGuard.test.js` runs it in Vitest; the retry loop
+lives in `providerRetry.ts`, and `providerRetry.test.js` proves the time ceiling with a fake clock.
 
 ## Wording (the prompt)
 
@@ -150,7 +151,7 @@ and the retry, deputy's ruling, see the last section).
 deno check --node-modules-dir=none supabase/functions/draft-followup/index.ts
 ```
 
-(`index.ts` imports `./draftGuard.ts`, so this checks both files.)
+(`index.ts` imports `./draftGuard.ts` and `./providerRetry.ts`, so this checks all three.)
 
 Runs in CI as the third step of the `edge-function-check` job (`.github/workflows/ci.yml`). Prettier
 formats `index.ts` (`.prettierignore` does not exclude `supabase/functions`); ESLint and knip do not
@@ -158,8 +159,9 @@ reach it, so `deno check` plus Prettier are the whole gate for this file.
 
 ## Deploy
 
-Supabase MCP `deploy_edge_function` (name `draft-followup`, `verify_jwt: true`), **with both files —
-`index.ts` and `draftGuard.ts`**; without the second the import fails at boot. **A deploy is live for
+Supabase MCP `deploy_edge_function` (name `draft-followup`, `verify_jwt: true`), **with all three
+files — `index.ts`, `draftGuard.ts` and `providerRetry.ts`**; without them the import fails at boot (the
+`*.test.js` files are not deployed). **A deploy is live for
 every user at once** and nothing in CI deploys — an edit to this file is not live until it is deployed
 again. Repo⇄deployment identity: `get_edge_function` diffed against this file.
 
