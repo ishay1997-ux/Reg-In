@@ -545,7 +545,9 @@ function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
           <p className="mt-2.5 text-xs text-slate-500" data-testid="checklist-autosave-note">
             {EXPLAINER_SAVE}
           </p>
-          <Hint id="checklist.autoSave" />
+          {/* ✏️ 24/09/2026 (ביקורת-קוד): הרמז מסביר מה קורה כשמקלידים — רק למי שיכולה להקליד (`edit`),
+              כמו הרמז שמתחתיו. ל-`view` הוא היה מסביר פקדים שאין לה. */}
+          {canEdit && <Hint id="checklist.autoSave" />}
           {canEdit &&
             !isCancelled &&
             sorted.some((row) => row.item_status !== 'ordered' && row.item_status !== 'ready') && (

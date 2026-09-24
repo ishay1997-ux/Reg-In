@@ -235,7 +235,7 @@ export const ONBOARDING_COPY = Object.freeze({
   // מ8 · כספים — `FinancePage.jsx` (`record_payment` אינה משנה סטטוס; הארכוב דורש משוב פתור).
   'finance.paidWhileAwaiting': {
     guided:
-      "תיק ששולם נשאר ב'ממתין לתשלום' עד שמאכבים אותו — רישום התשלום לא מזיז אותו לבד, והארכוב דורש גם משוב פתור. אם שילמו והתיק עדיין כאן, בדקי את המשוב.",
+      "תיק ששולם נשאר ב'ממתין לתשלום' עד שמארכבים אותו — רישום התשלום לא מזיז אותו לבד, והארכוב דורש גם משוב פתור. אם שילמו והתיק עדיין כאן, בדקי את המשוב.",
   },
   // מ9 · שיבוץ חכם בהגדרות — `SmartMatchPane.jsx` `effectiveWeights` / `activeWeights`.
   'settingsSmartMatch.reliabilityOff': {

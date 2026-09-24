@@ -17,7 +17,7 @@
 // ⚠️ הפיקסצ'רים **מעורבבים בכוונה** ולא ממוינים-מראש: רשימה שכבר ממוינת מאשרת מיון שלא רץ
 // (המלכודת המדודה של 30/07).
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ChecklistDialog from './ChecklistDialog'
 // הדיאלוג צורך useToast (ערוץ-הכשל של שמירת-הסגירה) ⇒ כל רינדור עטוף ב-Provider האמיתי.
 import { ToastProvider } from '@/components/ToastProvider'
@@ -170,6 +170,22 @@ describe('ChecklistDialog — הצגה, מיון ועמודת ההגעה', () =>
     await screen.findByTestId('checklist-row-01WEB-1')
     expect(screen.getByTestId('checklist-autosave-note')).toHaveTextContent('כל שינוי נשמר מיד.')
     expect(document.body.textContent).not.toMatch(/מודול \d/)
+  })
+
+  // ✏️ 24/09/2026 (ביקורת-קוד): רמז-המילוי-האוטומטי מסביר הקלדה — רק ל-`edit`, כמו `checklist.qtyLocked`.
+  it('מצב 2: `checklist.autoSave` מוצג ל-`edit` ולא ל-`view`', async () => {
+    authState.onboardingMode = 2
+    try {
+      await renderDialog()
+      await screen.findByTestId('checklist-row-01WEB-1')
+      expect(screen.getByTestId('hint-checklist.autoSave')).toBeInTheDocument()
+      cleanup()
+      await renderDialog({ permissions: { לוגיסטיקה: 'view' } })
+      await screen.findByTestId('checklist-row-01WEB-1')
+      expect(screen.queryByTestId('hint-checklist.autoSave')).not.toBeInTheDocument()
+    } finally {
+      delete authState.onboardingMode
+    }
   })
 
   it('㉟ — `טרם החל` עם כמות בפועל > 0 מרנדר את ערך השדה, לא `0` קשיח', async () => {
