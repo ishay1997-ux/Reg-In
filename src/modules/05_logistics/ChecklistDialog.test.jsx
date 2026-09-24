@@ -764,6 +764,26 @@ describe('ChecklistDialog — ㊲ מרוץ-הביטול ונעילת ㉝/㊴', (
       expect(screen.queryByTestId('hint-checklist.qtyLocked')).toBeNull()
       cleanup()
       await renderDialog({ envelope: cancelledEnvelope, permissions: { לוגיסטיקה: 'view' } })
+      const viewBanner = await screen.findByTestId('checklist-banner-cancelled')
+      expect(screen.queryByTestId('hint-checklist.cancelledOrdered')).toBeNull()
+      // ✏️ 24/09/2026 (בודק-השער): ל-`view` הבאנר לא מבטיח רישום-כמות שאין לה.
+      expect(viewBanner).toHaveTextContent('הפרויקט נעול לעריכה.')
+      expect(viewBanner).not.toHaveTextContent('אפשר עדיין לרשום')
+    } finally {
+      delete authState.onboardingMode
+    }
+  })
+
+  // ✏️ 24/09/2026 (בודק-השער): בלי פריט שהוזמן או מוכן אין שדה-כמות פתוח ⇒ אין מה להסביר.
+  it('מצב 2: `checklist.cancelledOrdered` לא מוצג כשאין אף פריט שהוזמן או מוכן', async () => {
+    authState.onboardingMode = 2
+    try {
+      await renderDialog({
+        envelope: {
+          ...cancelledEnvelope,
+          rows: [row({ project_id: 13, sku: 'B-SAT-LAN', planned_qty: 40 })],
+        },
+      })
       await screen.findByTestId('checklist-banner-cancelled')
       expect(screen.queryByTestId('hint-checklist.cancelledOrdered')).toBeNull()
     } finally {

@@ -211,6 +211,20 @@ describe('SmartMatchPane', () => {
     }
   })
 
+  // ✏️ 24/09/2026 (בודק-השער): כבוי ומשקלו 0 ⇒ אין פער ואין שורת "בפועל" — והרמז (שמתאר מה יקרה
+  // *בכיבוי*) לא מוצג, כי הכיבוי כבר קרה.
+  it('מצב 2: `settingsSmartMatch.reliabilityOff` — לא מוצג כשהאמינות כבר כבויה, גם במשקל 0', async () => {
+    authState.onboardingMode = 2
+    try {
+      await renderPane({
+        values: { ...DEFAULT_VALUES, [N.reliabilityEnabled]: 'false', [N.reliabilityWeight]: '0' },
+      })
+      expect(screen.queryByTestId('hint-settingsSmartMatch.reliabilityOff')).toBeNull()
+    } finally {
+      delete authState.onboardingMode
+    }
+  })
+
   it('ערך-ביניים לא-חוקי (סכום 0) אינו מפיל את הפאנל', async () => {
     await renderPane({
       values: {

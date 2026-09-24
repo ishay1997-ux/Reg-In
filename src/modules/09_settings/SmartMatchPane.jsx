@@ -271,7 +271,11 @@ export default function SmartMatchPane({
           מהחישוב, והנותרים מתחלקים ביניהם") — שתי השורות יחד על אותו מסך. ⇒ הוא מוצג רק כשהשורה
           ההיא **אינה** מוצגת (`effectiveWeights` = null: אין פער, כלומר האמינות דלוקה), ואז הוא
           אומר מראש מה יקרה בכיבוי. כשהשורה מוצגת היא לבדה אומרת את זה, עם המספרים. */}
-      {reliabilityRow && !effectiveWeights && <Hint id="settingsSmartMatch.reliabilityOff" />}
+      {/* ✏️ 24/09/2026 (בודק-השער): לפי המתג עצמו, לא לפי היעדר שורת "בפועל". מרכיב כבוי שמשקלו 0
+          אינו יוצר פער, ולכן גם בלי השורה הרמז היה מבטיח משהו שכבר קרה. */}
+      {reliabilityRow && parseForDisplay(reliabilityEntry, values?.[RELIABILITY_NAME]) === true && (
+        <Hint id="settingsSmartMatch.reliabilityOff" />
+      )}
     </div>
   )
 }

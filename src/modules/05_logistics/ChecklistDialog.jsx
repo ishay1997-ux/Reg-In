@@ -453,9 +453,15 @@ function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
         )}
       </DialogHeader>
 
-      {isCancelled && <CancelBanner project={project} />}
+      {isCancelled && <CancelBanner project={project} canEdit={canEdit} />}
       {/* ✏️ 24/09/2026 (מבקרים טריים): ‏"רשמי כאן את הכמות" — רק למי שיכולה לרשום (`edit`). */}
-      {isCancelled && canEdit && <Hint id="checklist.cancelledOrdered" />}
+      {/* ✏️ 24/09/2026 (בודק-השער): רק כשיש בפועל שדה-כמות פתוח — פריט שהוזמן או מוכן. בלי אחד כזה
+          הרמז הסביר שדה שאינו על המסך. אותו תנאי, הפוך, של `checklist.qtyLocked`. */}
+      {isCancelled &&
+        canEdit &&
+        sorted.some((row) => row.item_status === 'ordered' || row.item_status === 'ready') && (
+          <Hint id="checklist.cancelledOrdered" />
+        )}
       {locked && !isCancelled && (
         <div
           role="status"
@@ -588,7 +594,7 @@ function ChecklistFooter({ onOpenChange }) {
 
 // ㉝ כפי שצומצמה ב-㊴. ענבר ולא אדום: זו הודעה על מצב **תקין-וסופי**, לא כשל-מערכת
 // (תקציב-הצבע: אפס אדום בשני מסכי המודול).
-function CancelBanner({ project }) {
+function CancelBanner({ project, canEdit }) {
   return (
     <div
       role="status"
@@ -606,7 +612,9 @@ function CancelBanner({ project }) {
           ירדו (R18 · R27 — הפקדים המושבתים כבר אומרים זאת), והנימוק על פריט שהוזמן עבר לשכבה
           (`checklist.cancelledOrdered`). */}
       {/* ✏️ 24/09/2026 (מבקרים טריים): "פקדים" ⇐ "שדות" — מילה שהמשתמשת אומרת. */}
-      אפשר עדיין לרשום כמות שהגיעה — שאר השדות נעולים.
+      {/* ✏️ 24/09/2026 (בודק-השער): רק למי שיש לה עריכה. ל-`view` השורה הבטיחה פעולה שאין לה —
+          ויש היום משתמשת פעילה כזו (מנהלת-פרויקטים, 'לוגיסטיקה' = view). */}
+      {canEdit && 'אפשר עדיין לרשום כמות שהגיעה — שאר השדות נעולים.'}
     </div>
   )
 }
