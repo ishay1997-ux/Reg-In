@@ -57,6 +57,7 @@ import {
 } from '@/lib/projectLogistics'
 import { getParamValues } from '@/api/params'
 import ChecklistDialog from './ChecklistDialog'
+import UpcomingOrders from './UpcomingOrders'
 import { listActiveProjects, listLogisticsRows, listProducts } from './api'
 
 // 🔄 סף-הענבר (⑳) ירד מקבוע-קוד ל-`params` (מודול 9 · צעד 2.3). **למודול 5 לא היה
@@ -316,6 +317,8 @@ export default function LogisticsPage() {
           </>
         )}
       </Card>
+      {/* 🆕 24/09/2026 (0ג פריט 4) — "להזמין לחודש הקרוב", מתחת לתור. טעינה משלו: כשל כאן לא מפיל את התור. */}
+      <UpcomingOrders />
       {/* משטח 2 הוא **דיאלוג ואינו ראוט** (㉔) — התור נשאר גלוי מאחוריו. הדיאלוג שולף את
           הדאטה של עצמו בפתיחה (㊲) ואינו מקבל אותה מכאן. */}
       {openProjectId !== null && (

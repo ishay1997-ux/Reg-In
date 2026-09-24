@@ -13,13 +13,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import LogisticsPage from './LogisticsPage'
-import { listActiveProjects, listLogisticsRows, listProducts } from './api'
+import { getUpcomingOrders, listActiveProjects, listLogisticsRows, listProducts } from './api'
 import { getParamValues } from '@/api/params'
 
 vi.mock('./api', () => ({
   listActiveProjects: vi.fn(),
   listLogisticsRows: vi.fn(),
   listProducts: vi.fn(),
+  getUpcomingOrders: vi.fn(),
 }))
 
 // 🆕 שלב 9 (לילה-הטקסטים) — `<Hint>` (בתוך `AmberLegend`) מייבא `useAuth`, שמייבא
@@ -146,6 +147,7 @@ function queueOrder() {
 beforeEach(() => {
   vi.clearAllMocks()
   listProducts.mockResolvedValue(PRODUCTS)
+  getUpcomingOrders.mockResolvedValue({ from: '2026-09-25', to: '2026-10-24', rows: [] })
   getParamValues.mockResolvedValue({ סף_לוגיסטיקה_ימי_עסקים: '10' })
   loadBoard(board())
 })
@@ -623,5 +625,43 @@ describe('LogisticsPage — מצב ③: ריק אחרי גלולה', () => {
     render(<LogisticsPage />)
     await screen.findByTestId('logistics-empty-filtered')
     expect(screen.getByTestId('logistics-outbound-table')).toBeInTheDocument()
+  })
+})
+
+// 🆕 24/09/2026 (ליטושי-הכנס 0ג פריט 4) — "להזמין לחודש הקרוב" מתחת לתור. מצב-טעינה משלו, תלת-ערכי:
+// כשל כאן אינו "אין מה להזמין" ואינו מפיל את התור.
+describe('LogisticsPage — להזמין לחודש הקרוב', () => {
+  it('שורות: פריט · כמות · אירועים, והטווח בכותרת', async () => {
+    getUpcomingOrders.mockResolvedValue({
+      from: '2026-09-25',
+      to: '2026-10-24',
+      rows: [{ sku: 'B-SAT-LAN', item_name: 'שרוך סאטן - ממותג', qty: 2540, events: 8 }],
+    })
+    render(<LogisticsPage />)
+    const row = await screen.findByTestId('logistics-upcoming-orders-row')
+    expect(row).toHaveTextContent('שרוך סאטן - ממותג')
+    expect(row).toHaveTextContent('2,540')
+    expect(row).toHaveTextContent('8')
+    expect(screen.getByTestId('logistics-upcoming-orders-range')).toHaveTextContent(
+      '25/09/2026–24/10/2026',
+    )
+  })
+
+  it('אין מה להזמין — משפט, לא טבלה ריקה', async () => {
+    render(<LogisticsPage />)
+    expect(await screen.findByTestId('logistics-upcoming-orders-empty')).toHaveTextContent(
+      'אין ציוד להזמין',
+    )
+  })
+
+  it('כשל — "נסי שוב", לא "אין מה להזמין", והתור עדיין על המסך', async () => {
+    getUpcomingOrders.mockRejectedValue(new Error('שגיאה בטעינת רשימת ההזמנה.'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    render(<LogisticsPage />)
+    const section = await screen.findByTestId('logistics-upcoming-orders')
+    expect(await within(section).findByText('שגיאה בטעינת רשימת ההזמנה.')).toBeInTheDocument()
+    expect(within(section).getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(within(section).queryByTestId('logistics-upcoming-orders-empty')).toBeNull()
+    expect(screen.getByTestId('logistics-queue-table')).toBeInTheDocument()
   })
 })
