@@ -144,7 +144,8 @@ test.describe('מודול 8 · כספים — E2E פנימי (S1/S2/S3), קרי�
     await expect(page.getByTestId('finance-page')).toBeVisible()
 
     // 🕓 הלשונית נקראת מהמסך בזמן-ריצה, לא נעוצה — ר' `openTabHoldingKnownProject` למעלה.
-    const tab = await openTabHoldingKnownProject(page)
+    // 🔄 24/09/2026: הערך המוחזר אינו נשמר יותר — הענף למטה נגזר מהדיאלוג עצמו, לא מהלשונית.
+    await openTabHoldingKnownProject(page)
     const row = page.getByTestId(`finance-row-${KNOWN_PROJECT_ID}`)
     await expect(row).toBeVisible({ timeout: 30_000 })
     await row.click()
@@ -158,23 +159,32 @@ test.describe('מודול 8 · כספים — E2E פנימי (S1/S2/S3), קרי�
     await expect(page.getByTestId('closing-meta')).toBeVisible()
 
     // 🔑 **האינווריאנט הנבדק זהה בכל שלוש הלשוניות: הפקד הכותב של השלב חסום עד שתנאיו
-    // מתמלאים** — וזה מה שנשאר נכון גם אחרי ש-5.1 יזיז את #12. הענף נבחר לפי הלשונית
-    // שנמצאה בפועל, ולא לפי הנחה על מצב-המסד.
-    if (tab === 'awaiting_invoice') {
-      // גייט-נוט (P1 card, "שמור ושלח" חסום עד קובץ מצורף). `invoice_sent=false` — נמדד
-      // חי בזמן-כתיבה, ומאומת כאן מחדש דרך הלשונית שבה השורה נמצאה.
-      await expect(page.getByTestId('closing-invoice-block')).toBeVisible()
+    // מתמלאים.** 🔄 24/09/2026: הענף **לא** נבחר יותר לפי `tab` (הלשונית שבה השורה נמצאה
+    // ברשימה) — `tab` נגזר ב-`get_finance_overview` אך ורק מ-`project_status`
+    // (‏`20260827144459...sql:212-219`), בעוד שהדיאלוג עצמו קובע "נעול" לפי
+    // `archived_at != null || status === 'finished'` (‏`ClosingWindowDialog.jsx:314`) — **שני
+    // איתותים עצמאיים בכוונה** (התיעוד ב-314 מגן במפורש על המקרה שבו `archived_at` כבר
+    // נקבע לפני ש-`project_status` הודבק, בדיוק מה ש-#12 הראה בפועל: לשונית "ממתין
+    // לתשלום" + דיאלוג נעול-לארכיון). ⇒ **נועלים את האינווריאנט ולא את המצב** (אותו דפוס
+    // כמו ה-`.or()` ב-S3 למטה): מזהים איזה משלושת הגושים המסך *בפועל* מציג, ומאמתים את
+    // השער הנכון עבורו — בלי להניח שהלשונית מנבאת אותו.
+    const invoiceBlock = page.getByTestId('closing-invoice-block')
+    const paymentBlock = page.getByTestId('closing-payment-block')
+    const lockedBanner = page.getByTestId('closing-locked-banner')
+    await expect(invoiceBlock.or(paymentBlock).or(lockedBanner)).toBeVisible({ timeout: 15_000 })
+
+    if (await invoiceBlock.count()) {
+      // גייט-נוט (P1 card, "שמור ושלח" חסום עד קובץ מצורף).
       await expect(page.getByTestId('closing-invoice-gate')).toBeVisible()
       await expect(page.getByTestId('closing-send-invoice')).toBeDisabled()
-    } else if (tab === 'awaiting_payment') {
+    } else if (await paymentBlock.count()) {
       // אותו אינווריאנט בשלב הבא: "שמור תשלום" חסום כל עוד שדה-התאריך ריק
       // (`disabled={value === ''}`), ובפתיחה הוא ריק.
-      await expect(page.getByTestId('closing-payment-block')).toBeVisible()
       await expect(page.getByTestId('closing-payment-date')).toHaveValue('')
       await expect(page.getByTestId('closing-save-payment')).toBeDisabled()
     } else {
       // ארכיון: התיק נעול, ואין בו פקד-כתיבה כלל.
-      await expect(page.getByTestId('closing-locked-banner')).toBeVisible()
+      await expect(lockedBanner).toBeVisible()
     }
 
     // סגירה ב-Escape בלבד — לא בכפתור עסקי. לוחצים ומוודאים שהדיאלוג נעלם ושום
