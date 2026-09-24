@@ -29,6 +29,8 @@
 
 // ⚠️ הגרסה נעולה במדויק, כמו בשתי הפונקציות האחרות: `@2` היה שובר את שער-הטיפוסים ב-CI מעצמו.
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2.112.0'
+import { ARABIC_SCRIPT_PROBLEM, draftProblem } from './draftGuard.ts'
+import { callWithRetry } from './providerRetry.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -51,21 +53,24 @@ const THINKING_LEVEL_BY_MODEL: Record<string, string> = {
   'gemini-3.8-flash': 'low',
   'gemini-3.7-flash': 'low',
 }
-// ‏0.4 ולא 0: סיווג צריך להיות משוחזר; מייל צריך להישמע כמו אדם. אין כאן מדד-הסכמה שנשבר מגיוון.
-const TEMPERATURE = 0.4
+// ‏0 — כמו ב-`classify-feedback`. ✏️ 25/09/2026 (הכרעת-הסגן, אבחון D2): היה 0.4 ("מייל צריך
+// להישמע כמו אדם"), וזה אחד משלושת ההבדלים מול הפונקציה שעונה. משנים את שלושתם יחד (ר' תקציב-הזמן למטה).
+const TEMPERATURE = 0
 
-// ⏱️ **היעד: טיוטה תוך ≤10 שניות** (התוכנית §6ה-ה) — וזו **תקרה**, לא הזמן הצפוי. הלקוח מחכה
-// `FOLLOWUP_DRAFT_TIMEOUT_MS` (35 שניות, `src/lib/quoteFollowup.js`), והשרת חייב לענות לפניו.
-// 🔴 **נמדד 24/09/2026 10:58 UTC, בקריאה החיה הראשונה: הספק לא ענה תוך 18 שניות** (`execution_time_ms`
-// ‏18,728 ביומן-הקצה, 502). התקרה הקודמת (18 שניות) הפכה ספק איטי לכשל, והמשתמשת קיבלה "נסי שוב" על
-// טיוטה שאולי הייתה מגיעה בשנייה ה-20. ⇒ התקרה עולה ל-25 שניות, ותקציב-הבקשה כולו ל-27 — 8 שניות לפני
-// הלקוח. ⚠️ **זה לא מתקן את האיטיות** — זה רק מונע ממנה להיות כשל. המדידה כתובה ב-`README.md`
-// (גם הקריאה השנייה, עם תקרת 25 שניות, לא קיבלה תשובה).
-const PROVIDER_TIMEOUT_MS = 25_000
-const BUDGET_MS = 27_000
-// ניסיון-חוזר **אחד**, על 5xx/רשת בלבד — אותו לקח של `classify-feedback` (5xx "high demand" חולף
-// תוך שניות). 🚫 **לא על 429:** מכסה שנגמרה לא נפתחת בשנייה וחצי, וכל ניסיון שורף עוד בקשה ממנה.
-const RETRY_WAIT_MS = 1_500
+// ⏱️ **המתנה לספק ותקציב — מועתקים מ-`classify-feedback` (‏`RUN_BUDGET_MS` 90 · `PROVIDER_TIMEOUT_MS` 60).**
+// 📏 **שלוש קריאות-אמת ב-24/09/2026, שלושתן בלי תשובה:** 10:58 UTC (תקרה 18 שנ') · 11:05 (25) · 13:15 (25,
+// כבר עם `max_output_tokens`). ‏`classify-feedback`, עם אותו מפתח ודגם, מחכה 60 שניות ומנסה שוב גם אחרי
+// פסק-זמן — ו-D2 ויתרה אחרי 25 בלי ניסיון נוסף. ⇒ הכרעת-הסגן 25/09: אותה המתנה ואותו ניסיון-חוזר, כדי
+// לדעת אם D2 **איטית** או **לא נענית**. ⚠️ **היעד ≤10 שניות (התוכנית §6ה-ה) לא משתנה** — זו תקרה, לא הזמן
+// הצפוי. הכפתור מוסתר (`FOLLOWUP_AI_AVAILABLE`), ולכן ההמתנה הארוכה לא פוגשת משתמשת.
+// 🔗 **הלקוח מחכה יותר מהמקרה הגרוע** — `FOLLOWUP_DRAFT_TIMEOUT_MS` (`src/lib/quoteFollowup.js`): ניסיון
+// מתחיל רק לפני ה-deadline ותקרתו נחתכת למה שנשאר (`providerRetry.ts`), ולכן השרת עונה עד `BUDGET_MS` ועוד
+// זמן-המסד — הרבה מתחת ל-150 שניות של הפלטפורמה. בדיקה ב-`quoteFollowup.test.js` קוראת את המספר מכאן.
+const PROVIDER_TIMEOUT_MS = 60_000
+const BUDGET_MS = 90_000
+// ניסיון-חוזר על **כל 5xx, כולל פסק-זמן (504)** — הדפוס של `classify-feedback`, בקובץ `providerRetry.ts`
+// (המתנות 2/5 שניות, ותקרת כל ניסיון נחתכת למה שנשאר מ-`BUDGET_MS`). 🚫 **לא על 429:** מכסה שנגמרה לא נפתחת
+// בשניות, וכל ניסיון שורף עוד בקשה ממנה. 400/401/403 = הבקשה שלנו, ושום המתנה לא תתקן אותם.
 // 🧪 **תקרת-פלט, ו-`store: false` — אבחון 24/09/2026 (סשן 2, קריאה-בלבד ביומנים):** אותו מפתח, אותו
 // endpoint ואותו דגם (`GEMINI_MODEL`) עונים ל-`classify-feedback` תוך ~10 שניות לאצוות 30 הערות, ואילו
 // בקשת-טיוטה **אחת וקצרה** לא ענתה תוך 25 שניות — פעמיים. מה ששונה כאן: טמפרטורה 0.4, שדה `body` חופשי
@@ -75,7 +80,6 @@ const RETRY_WAIT_MS = 1_500
 // ‏`store: false` — איננו משתמשים ב-`previous_interaction_id`, ואין סיבה שהספק ישמור כל טיוטה.
 const MAX_OUTPUT_TOKENS = 1024
 const PROVIDER_ERROR_CHARS = 600
-const MAX_BODY_CHARS = 2_000
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 // מצייני-המקום — **המפתחות היחידים שהמודל רואה.** סוגריים מסולסלים ולא מרובעים בכוונה: אסימוני
@@ -350,48 +354,25 @@ function extractText(payload: Record<string, unknown>): string {
   return chunks.join('')
 }
 
-async function callProvider(
+// ⏱️ הלולאה עצמה ב-`providerRetry.ts` (טהורה, נבדקת בשעון מזויף). כאן רק מה ששייך לספק הזה: מה נחשב
+// כשל זמני, ומה נזרק כשהתקציב נגמר לפני ניסיון — 504, כמו פסק-זמן, כדי שהמסלול אחריו לא ישתנה.
+function callProvider(
   apiKey: string,
   model: string,
   facts: Record<string, unknown>,
   deadline: number,
 ): Promise<{ subject: string; body: string }> {
-  try {
-    return await callProviderOnce(apiKey, model, facts, PROVIDER_TIMEOUT_MS)
-  } catch (err) {
-    // ניסיון-חוזר רק על 5xx **מהיר** — פסק-זמן כבר אכל את התקציב, ו-429 לא ייפתח בשנייה וחצי.
-    // הניסיון השני מקבל רק את מה שנשאר מהתקציב, כדי שהשרת יענה לפני שהלקוח מוותר.
-    const transient =
-      err instanceof ProviderError && err.httpStatus >= 500 && err.httpStatus !== 504
-    const left = deadline - Date.now() - RETRY_WAIT_MS
-    if (!transient || left < 5_000) throw err
-    console.error('gemini retry after', (err as ProviderError).httpStatus)
-    await new Promise((resolve) => setTimeout(resolve, RETRY_WAIT_MS))
-    return await callProviderOnce(apiKey, model, facts, left)
-  }
+  return callWithRetry((timeoutMs) => callProviderOnce(apiKey, model, facts, timeoutMs), {
+    deadline,
+    attemptMs: PROVIDER_TIMEOUT_MS,
+    isTransient: (err) => err instanceof ProviderError && err.httpStatus >= 500,
+    exhausted: () => new ProviderError('הספק לא ענה.', 504, 'budget exhausted before an attempt'),
+    onRetry: (n, err) =>
+      console.error('gemini retry', n, 'after', (err as ProviderError).httpStatus),
+  })
 }
 
-// ── שומר-הטיוטה: מה שלא עובר כאן **לא** מגיע למשתמשת ─────────────────────────────────
-// 🔴 **"טיוטה שבורה" גרועה מ"הניסוח נכשל":** מציין-מקום שהמודל המציא (`{{מחיר}}`) היה נשאר על
-// המסך כסוגריים, וסכום או הנחה שהמודל המציא היו נשלחים ללקוח כהתחייבות. ⇒ נכשלים ב-502 ומבקשים
-// "נסי שוב", במקום להציג משהו שאסור לשלוח. אין כאן ספרות אסורות: `days_since_sent` הוא עובדה שמותר
-// למודל להזכיר, ולכן הבדיקה היא על סימני-כסף והנחה, לא על כל ספרה.
-// ✏️ 24/09/2026 (ממצא-הבודק): הרמז בחלון אומר שהמחיר וההנחה לא נשלחים ל-AI — והשומר הוא מה שמונע
-// ממנו להמציא אותם. נוספו: "אחוז" במילים, וסכום-במילים צמוד לספרה ("5 אלף", "3,000 שקלים" כבר נתפס).
-const MONEY_OR_DISCOUNT = /₪|%|ש"ח|ש״ח|שקל|הנחה|הנחות|אחוז|\d[\d,.]*\s*(?:אלף|אלפים|מיליון)/
-const PLACEHOLDER_TOKEN = /\{\{[^{}]*\}\}/g
-
-function draftProblem(text: string, allowed: string[]): string | null {
-  if (text.trim() === '') return 'empty'
-  const tokens = text.match(PLACEHOLDER_TOKEN) ?? []
-  const unknown = tokens.filter((token) => !allowed.includes(token))
-  if (unknown.length > 0) return `unknown placeholder ${unknown.join(',')}`
-  if (text.replace(PLACEHOLDER_TOKEN, '').includes('{{')) return 'broken placeholder'
-  if (MONEY_OR_DISCOUNT.test(text)) return 'money or discount'
-  if (text.length > MAX_BODY_CHARS) return 'too long'
-  return null
-}
-
+// ── שומר-הטיוטה — בקובץ נפרד (`draftGuard.ts`), כדי שבדיקת-יחידה ב-Vitest תוכל לייבא אותו בלי Deno ──
 function fill(text: string, values: Record<string, string>): string {
   let out = text
   for (const [token, value] of Object.entries(values)) out = out.replaceAll(token, value)
@@ -465,6 +446,17 @@ Deno.serve(async (req) => {
   }
 })
 
+// כשל של הספק ⇒ תשובת-HTTP: 429 = מכסה (בלי "נסי שוב"), כל השאר = 502 "הניסוח נכשל".
+function providerFailure(err: unknown): Response {
+  if (err instanceof ProviderError && err.httpStatus === 429) {
+    console.error('draft-followup quota:', err.detail)
+    return json({ status: 'quota', error: MSG.quota, provider_error: err.detail }, 429)
+  }
+  const detail = err instanceof ProviderError ? err.detail || err.message : 'unknown'
+  console.error('draft-followup provider failure:', detail)
+  return json({ status: 'failed', error: MSG.failed, provider_error: detail }, 502)
+}
+
 async function draft(
   asUser: SupabaseClient,
   apiKey: string,
@@ -537,16 +529,22 @@ async function draft(
   try {
     raw = await callProvider(apiKey, model, facts, deadline)
   } catch (err) {
-    if (err instanceof ProviderError && err.httpStatus === 429) {
-      console.error('draft-followup quota:', err.detail)
-      return json({ status: 'quota', error: MSG.quota, provider_error: err.detail }, 429)
-    }
-    const detail = err instanceof ProviderError ? err.detail || err.message : 'unknown'
-    console.error('draft-followup provider failure:', detail)
-    return json({ status: 'failed', error: MSG.failed, provider_error: detail }, 502)
+    return providerFailure(err)
   }
 
-  const problem = draftProblem(raw.subject, allowed) ?? draftProblem(raw.body, allowed)
+  let problem = draftProblem(raw.subject, allowed) ?? draftProblem(raw.body, allowed)
+  // 🔁 **אות ערבית ⇒ ניסיון AI אחד נוסף, בתוך אותו תקציב** (הכרעת-הסגן 25/09/2026). נמדד 24/09 22:07 UTC (01:07 שעון ישראל):
+  // טיוטה אחת מתוך שלוש כתבה "מו<U+0639><U+062F>" (ע' ו-ד' ערביות בתוך מילה עברית). זו תקלה אקראית של המודל ולא של הבקשה,
+  // ולכן ניסיון שני סביר שיצליח. שאר הפסילות (כסף, מציין-מקום) הן תוכן — ניסיון שני לא נותן להן יותר.
+  if (problem === ARABIC_SCRIPT_PROBLEM && Date.now() < deadline) {
+    console.error('draft-followup rejected model draft, asking once more:', problem)
+    try {
+      raw = await callProvider(apiKey, model, facts, deadline)
+    } catch (err) {
+      return providerFailure(err)
+    }
+    problem = draftProblem(raw.subject, allowed) ?? draftProblem(raw.body, allowed)
+  }
   if (problem) {
     // הטקסט לפני המילוי — מצייני-מקום בלבד, בטוח ללוג.
     console.error('draft-followup rejected model draft:', problem, excerpt(raw.body))
