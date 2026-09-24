@@ -755,8 +755,8 @@ const ISOLATE_CHARS = /[\u2066\u2067\u2068\u2069]/
 const HEBREW_LETTER = /[\u0590-\u05FF]/
 const NO_VALUE_MARK = '—'
 
-// הפורמטים ש-`FORMATTERS` (`src/lib/reportsFormat.js`) מבודד בעצמו. ‏`gini` **אינו** כאן
-// בכוונה — הוא מחזיר `toFixed(2)` חשוף, ודרישת-בידוד עליו הייתה טענה שגויה.
+// הפורמטים ש-`FORMATTERS` (`src/lib/reportsFormat.js`) מבודד בעצמו. ✂️ 24/09/2026 — הפורמט
+// הלא-מבודד היחיד שהיה כאן (מדד-הריכוזיות, `toFixed(2)` חשוף) נמחק יחד עם האריח שלו.
 const ISOLATING_FORMATS = new Set(['money', 'percent', 'int', 'days', 'ratio', 'score', 'textLtr'])
 
 const stripIsolates = (text) => String(text ?? '').replace(/[\u2066\u2067\u2068\u2069]/g, '')

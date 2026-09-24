@@ -26,7 +26,7 @@ const ALIGN_CLASS = { end: 'text-left', start: 'text-right' }
 
 // ‏`id` בפנים **רק לצורך היישור**: מזהה נסרק בעין כטור-ספרות בדיוק כמו מונה, והפגם
 // שתוקן ב-17/09 היה המפריד ולא היישור. (עיצוב-הערך עצמו נגזר ב-`reportsFormat`.)
-const NUMERIC_FORMATS = new Set(['money', 'percent', 'gini', 'int', 'days', 'ratio', 'id'])
+const NUMERIC_FORMATS = new Set(['money', 'percent', 'int', 'days', 'ratio', 'id'])
 
 function alignFor(column) {
   if (column.align) return ALIGN_CLASS[column.align] ?? ALIGN_CLASS.start
