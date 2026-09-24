@@ -161,9 +161,14 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
       'ללקוח עם הצעה מאושרת אין פרויקטים — policy-הקריאה על projects חסרה?',
     ).toBeGreaterThan(0)
     await projectsTab.click()
-    await expect(
-      page.locator('[data-testid^="customer-project-"]:not([data-testid*="-link-"])'),
-    ).toHaveCount(Math.min(projectCount, 50))
+    // 🔄 24/09/2026: `[data-testid^="customer-project-"]:not([data-testid*="-link-"])` נשבר —
+    // ScoreCell (04/09/2026, CustomerDetailsPage.jsx:1569) מוסיף `customer-project-score-{id}`
+    // שמתחיל באותו prefix ואינו מכיל "-link-", ולכן נספר פעמיים לכל פרויקט. שורת הפרויקט
+    // היא ה-`<tr>` היחיד עם ה-prefix הזה (בדיוק כמו `customer-quote-` למעלה) — תיחום לפי תג
+    // מונע את הכפילות בלי לצמצם את כוונת האסרציה (עדיין סופר שורות-פרויקט בפועל).
+    await expect(page.locator('tr[data-testid^="customer-project-"]')).toHaveCount(
+      Math.min(projectCount, 50),
+    )
 
     // ארבע פעולות על הצעה בתהליך · צפייה בלבד על סגורה (הסגורות נעולות ב-DB ממילא).
     // **חובה שזו תהיה הצעה `in_progress` אמיתית** — על סגורה שלוש האסרציות היו עוברות
