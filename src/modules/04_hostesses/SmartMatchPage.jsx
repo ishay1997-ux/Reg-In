@@ -156,28 +156,23 @@ export default function SmartMatchPage({ projectId, onBack }) {
   const eventStartsAt = eventStartInstant(project?.final_event_date, project?.final_start_time)
   const finalDay = isWithinFinalDay(eventStartsAt, now, inviteCutoffHours)
 
-  // 🔴 **הזווית "תענה הכי מהר" נשענת על `responded_at` — ונמדדת מהדאטה, לא מונחת.**
-  // כל עוד אף דיילת לא ענתה דרך הקישור, מיון לפי עמודה ריקה **משקר בשקט**.
-  const hasResponseTimes = useMemo(
-    () => (data?.assignments ?? []).some((row) => row.responded_at),
-    [data?.assignments],
-  )
-  const availability = { hasResponseTimes }
-  const activeAngle =
-    angle ?? defaultSortAngle(isUrgentEvent(eventStartsAt, now, urgentEventHours), availability)
-
   // ── ארבע השכבות ────────────────────────────────────────────────────────────
   // ⚠️ **המועמדות מחושבות על כל המאגר**, גם על מי שתיפסל בשער: `C` (ממוצע-החברה) מחושב
   // עליהן, וסינון מוקדם היה משנה אותו ואת כל הדירוג (`§11.3`).
   // 🔴 **`eventDate` לשער חייב להיות תאריך-האירוע, לא "היום" — נתפס 11/08/2026 בזרע-הדגמה
   // של צעד 4.2.** `rankCandidates` מעביר אותו ל-`isUnavailableOn` בלבד (השער האמינותי היחיד
-  // שתלוי בו); `today` נשאר הפרמטר הנכון ל-`buildSmartMatchCandidates` (שבועות-מאז-עבדה/
-  // ספירת-רבעון — אלה כן נמדדים מ"עכשיו"). ⚠️ **הבדיקות הקיימות של השכבה הטהורה
-  // (`smartMatch.test.js`) לא תפסו את זה** כי הן מזינות `eventDate` מפורש כפרמטר-בדיקה
-  // ולעולם לא "היום" — הפגם ישב רק בחיווט של המסך, לא בנוסחה עצמה.
+  // שתלוי בו). ‏`today` הוא הפרמטר של `buildSmartMatchCandidates` — ממנו נמדדים חלון-החישוב,
+  // "אירוע שכבר עבר" והצ'יפ "עבדה לאחרונה"; ✏️ **ומנוף-ההוגנות נמדד משם עד תאריך-האירוע**
+  // (הכרעת-ישי 25/09/2026 — השכבה קוראת אותו מ-`data.project`). ⚠️ **הבדיקות הקיימות של
+  // השכבה הטהורה (`smartMatch.test.js`) לא תפסו את פגם-החיווט של 11/08** כי הן מזינות
+  // `eventDate` מפורש — ולכן יש עכשיו בדיקה שמרנדרת את המסך (`SmartMatchPage.order.test.jsx`).
   const ranked = useMemo(() => {
     if (!data || !params) return []
-    const candidates = buildSmartMatchCandidates(data, today)
+    const candidates = buildSmartMatchCandidates(data, today, {
+      months: params.windowMonths,
+      extendedMonths: params.extendedWindowMonths,
+      minAnswers: params.minAnswersForScore,
+    })
     return rankCandidates(candidates, { params, eventDate: project?.final_event_date, projectId })
   }, [data, params, today, project, projectId])
 
@@ -186,12 +181,22 @@ export default function SmartMatchPage({ projectId, onBack }) {
   // הייתה מזמינה זימון כפול. **וזה אינו סוגר את הדלת:** דיילת שסירבה או שוחררה חוזרת
   // דרך `פתח זימון חדש` שבתפריט-השורה — הערוץ שנועד לכך במפורש.
   const assignedIds = useMemo(() => new Set(eventRows.map((row) => row.hostess_id)), [eventRows])
+  const eligible = useMemo(
+    () => ranked.filter((c) => !assignedIds.has(c.hostess_id)),
+    [ranked, assignedIds],
+  )
+
+  // 🔴 **הזווית "תענה הכי מהר" נמדדת מהדאטה, לא מונחת — ועל המועמדות של האירוע הזה.**
+  // ✏️ 25/09/2026: עד אז נבדק "יש `responded_at` בשורה כלשהי בחברה", והכפתור נדלק גם כשלאף
+  // מועמדת ברשימה לא היה זמן-תגובה — ואז מיין בהגרלה (אודיט השיבוץ-החכם, פער 2).
+  const hasResponseTimes = eligible.some((c) => c.medianResponseHours !== null)
+  const availability = { hasResponseTimes }
+  const activeAngle =
+    angle ?? defaultSortAngle(isUrgentEvent(eventStartsAt, now, urgentEventHours), availability)
+
   // ⚠️ בלי `useMemo` במכוון: `activeAngle` נגזר מ-state ומ-`now`, וקומפיילר-React של
   // הפרויקט דוחה מזכור ידני שתלוי בו (`preserve-manual-memoization`). הוא ממזכר לבד.
-  const candidates = sortByAngle(
-    ranked.filter((c) => !assignedIds.has(c.hostess_id)),
-    activeAngle,
-  )
+  const candidates = sortByAngle(eligible, activeAngle)
 
   const weights = params ? activeWeights(params) : null
 
@@ -278,7 +283,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
         // המוזמנות מקום אחד למטה, ודוח 14א היה סופר "לקחה את השנייה" כשעל המסך היא הייתה
         // הראשונה הזמינה. זה מיישב את כרטיס ת5 ("השלישית ברשימה") עם צעד 1.5 ("ranked ולא
         // candidates") — שניהם מדברים על סדר-הציון של המערכת, לא על סדר-התצוגה.
-        ranks: buildRecommendedRanks(ranked.filter((c) => !assignedIds.has(c.hostess_id))),
+        ranks: buildRecommendedRanks(eligible),
         // 🔗 `window.location.origin` ולא קבוע: מייל שנשלח מסביבת-פיתוח חייב להצביע
         // לסביבת-פיתוח, אחרת "בדקתי את הקישור" בודק את הפרודקשן ולא את מה שנבנה.
         origin: window.location.origin,
@@ -678,7 +683,9 @@ export default function SmartMatchPage({ projectId, onBack }) {
               ברירת-מחדל 'קרבה' — `defaultSortAngle`), ואף משווה שם אינו קורא את הציון; ומי שנכנסת
               לרשימה נקבע בשער (`passesGate`), לא בציון. הציון סמוי ונשמר רק כדרג-ההמלצה (`ranks`).
               ⇒ אין מה לומר למשתמשת שמשנה את מה שהיא עושה — הרמז נמחק, ו-`smartMatch.angles` שמעליו
-              כבר אומר שהזוויות קובעות את הסדר. */}
+              כבר אומר שהזוויות קובעות את הסדר.
+              ✏️ 25/09/2026: מאז הכרעת-ישי ברירת-המחדל היא "המלצת המערכת" — כלומר המשפט הזה נכון
+              עכשיו **בעדשת ברירת-המחדל**. הרמז לא הוחזר: נוסח-מסך חדש הוא הכרעת-קופי, לא תיקון-באג. */}
 
           {candidates.length === 0 ? (
             <>
@@ -849,10 +856,12 @@ function CandidateCard({
 }) {
   const streak = unansweredStreakTag(candidate.assignmentRows, unansweredN)
   const weeksCap = params?.fairnessWeeksCap
+  // ✏️ **`weeksSinceWorkedToday` ולא `weeksSinceWorked`** (25/09/2026): השני הוא קלט המנוף ונמדד עד
+  // תאריך-האירוע; הצ'יפ אומר "לפני N שבועות" — עובדה על היום (אודיט השיבוץ-החכם, פער 4).
   const staleWeeks =
-    candidate.weeksSinceWorked !== null &&
+    candidate.weeksSinceWorkedToday !== null &&
     weeksCap !== null &&
-    candidate.weeksSinceWorked >= weeksCap
+    candidate.weeksSinceWorkedToday >= weeksCap
 
   return (
     <li
@@ -938,7 +947,7 @@ function CandidateCard({
           )}
 
           {staleWeeks && (
-            <Chip family="warn">{`עבדה לאחרונה לפני ${candidate.weeksSinceWorked} שבועות`}</Chip>
+            <Chip family="warn">{`עבדה לאחרונה לפני ${candidate.weeksSinceWorkedToday} שבועות`}</Chip>
           )}
 
           {/* 🔴 **מוצג למנהלת, ואינו מעניש בציון** — אי-מענה נשאר מחוץ לנוסחה בכוונה

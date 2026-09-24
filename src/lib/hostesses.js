@@ -362,7 +362,12 @@ export function eventWasCancelled(row) {
   return row?.projects?.project_status === 'cancelled'
 }
 
-export function weeksSinceLastWorked(rows, todayIso) {
+// ✏️ **`untilIso` — עד מתי סופרים. הכרעת-ישי 25/09/2026 (אודיט השיבוץ-החכם, פער 4):**
+// למנוף-ההוגנות **עד תאריך-האירוע** — הציון מתאר אותה *לאירוע הזה* (הנחה 1 שאושרה בבלופרינט,
+// `module-4.md` §Assumptions); לצ'יפ `עבדה לאחרונה לפני N שבועות` **עד היום** (ברירת-המחדל),
+// כי הוא עובדה על עכשיו. ⚠️ **"מתי עבדה" נשאר אירוע שכבר עבר (`< todayIso`) בשני המקרים** —
+// שיבוץ עתידי מאושר שלפני האירוע אינו "עבדה", כי הוא עוד יכול להתבטל.
+export function weeksSinceLastWorked(rows, todayIso, untilIso = todayIso) {
   const lastWorked = (rows ?? [])
     .filter((row) => row?.assignment_status === 'finally_approved' && !eventWasCancelled(row))
     .map((row) => row.projects?.final_event_date)
@@ -371,7 +376,7 @@ export function weeksSinceLastWorked(rows, todayIso) {
     .at(-1)
   if (!lastWorked) return null
 
-  const elapsed = Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${lastWorked}T00:00:00Z`)
+  const elapsed = Date.parse(`${untilIso}T00:00:00Z`) - Date.parse(`${lastWorked}T00:00:00Z`)
   return Number.isNaN(elapsed) ? null : Math.floor(elapsed / (7 * 24 * MS_PER_HOUR))
 }
 
