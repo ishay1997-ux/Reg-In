@@ -176,6 +176,52 @@ curl -s -X POST "$SB_URL/functions/v1/draft-followup" \
   -H 'Content-Type: application/json' -d '{"quote_id":31}' -w '\nHTTP %{http_code}\n'
 ```
 
-## Live verification
+## Live verification (24/09/2026)
 
-_Filled in after the first deploy — see below._
+**Deploys** (Supabase MCP `deploy_edge_function`, `verify_jwt: true`): version 1 at 10:52:24 UTC ·
+version 2 at 11:04:37 UTC (the 25 s ceiling below). Deployed source compared section-by-section with
+this file via `get_edge_function` — not byte-hashed. ⚠️ **The UI that calls it is only on branch
+`ishay/system-polish`** — until that branch reaches `main`, no production screen can reach the function.
+
+**The gates, against the live function** (a Node script that signs in the `.env.local` test users and
+prints status + body only; none of these reach the provider, so no AI quota was spent):
+
+```
+1 no Authorization header                     → HTTP 401 {"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}   (platform gateway, verify_jwt)
+2 anon key as bearer (valid JWT, no user)     → HTTP 401 {"error":"לא מחובר."}
+3 finance (view on quotes), empty body        → HTTP 403 {"error":"אין לך הרשאה לנסח מייל מעקב."}   ← 403 before 400
+4 finance (view on quotes), valid body        → HTTP 403 {"error":"אין לך הרשאה לנסח מייל מעקב."}
+5 CEO, empty body                             → HTTP 400 {"error":"גוף הבקשה אינו תקין."}
+6 CEO, quote_id "abc"                         → HTTP 400 {"error":"גוף הבקשה אינו תקין."}
+7 CEO, nonexistent quote                      → HTTP 404 {"error":"ההצעה לא נמצאה, או שאין לך הרשאה אליה."}
+8 CEO, approved quote                         → HTTP 409 {"error":"אפשר לנסח מייל מעקב רק להצעה פתוחה, או להצעה שפג תוקפה."}
+9 CEO, open quote never sent                  → HTTP 409 {"error":"ההצעה עוד לא נשלחה ללקוח."}
+```
+
+**`GEMINI_API_KEY` is installed** — proven behaviourally: calls 2–9 passed gate 1, which answers 500
+`מפתח ה-AI לא הוגדר במערכת` before anything else when the secret is missing.
+
+### 🔴 The real draft — two live calls, both timed out (open)
+
+Both calls: CEO, from report ה1 → quote **2068** (expired) → `נסחי מייל מעקב`, in the browser.
+
+| # | UTC | Version | Ceiling | Result |
+|---|---|---|---|---|
+| 1 | 10:58:07 → 10:58:25 | 1 | 18 s | **502** after `execution_time_ms` 18,728 (edge log); nothing in the function log — the timeout path did not log (fixed in v2) |
+| 2 | 11:05:14 → 11:05:40 | 2 | 25 s | **502**; function log: `gemini did not answer 25000 ms Signal timed out.` |
+
+The provider returned **no response headers** within the ceiling. The dialog behaved as designed both
+times: `הניסוח נכשל — נסי שוב.` with a retry button, never an empty editor. **The same key and model
+work:** `feedback_ai_runs` run 7 (`gemini-3.5-flash-lite`, 24/09/2026 08:04 UTC) classified 43 notes
+in 2 batches in 19 s.
+
+**Not verified — the cause.** Hypotheses, most likely first, each checkable with **one** call:
+1. **Runaway generation in structured-output mode** (the model keeps emitting tokens inside a free
+   `string` field until the output limit) — would explain "no headers for 25 s" on a 5-line email while
+   30-note batches take ~10 s. Test: add `generation_config.max_output_tokens` (listed in the
+   `interactions-api-v1` field table, per the comment in `classify-feedback/index.ts`; not yet exercised
+   live by either function) at ~1,024, redeploy, one call.
+2. `temperature` 0.4 (classify uses 0) interacting with (1) — test together with (1) at 0.
+3. Transient provider latency at 10:58–11:05 UTC — a later retry of the unchanged function would show it.
+
+Stopped at two calls on purpose: the free-tier quota is unknown and shared with `classify-feedback`.
