@@ -109,9 +109,13 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     const status = screen.getByTestId('followup-status')
     expect(status).toHaveAttribute('aria-live', 'polite')
     expect(status).toHaveTextContent('מנסחת טיוטה — זה יכול לקחת עד חצי דקה.')
+    // "נוסחה בעזרת AI" מתאר טיוטה שקיימת — בזמן הניסוח עוד אין כזו (נמצא ע"י סוכן D2, 24/09).
+    expect(screen.queryByText(/נוסחה בעזרת AI/)).not.toBeInTheDocument()
+    expect(screen.getByText(/הצעת מחיר 31/)).toBeInTheDocument()
     await act(async () => resolve({ data: DRAFT, error: null }))
     expect(screen.queryByTestId('followup-skeleton')).not.toBeInTheDocument()
     expect(status).toHaveTextContent('הטיוטה מוכנה.')
+    expect(screen.getByText(/נוסחה בעזרת AI/)).toBeInTheDocument()
   })
 
   it('נושא וגוף ניתנים-לעריכה עם `<label>`, החתימה של מי שלחצה מתחת, והאזהרה קבועה', async () => {
@@ -210,6 +214,8 @@ describe('חלון-הטיוטה — כשל, מכסה, ולעולם לא טיוט
     expect(screen.queryByTestId('followup-draft')).not.toBeInTheDocument()
     // בכשל אין טיוטה לבדוק ⇒ גם אין "טיוטה — בדקי לפני שליחה." (הייתה רעש, נמצא בצילום 24/09).
     expect(screen.queryByTestId('followup-notice')).not.toBeInTheDocument()
+    // ובכשל גם אין "נוסחה בעזרת AI" — שום דבר לא נוסח.
+    expect(screen.queryByText(/נוסחה בעזרת AI/)).not.toBeInTheDocument()
   })
 
   it('כשל-ספק (502) ⇒ "הניסוח נכשל — נסי שוב." + ניסיון-חוזר שמצליח', async () => {

@@ -66,6 +66,14 @@ const BUDGET_MS = 27_000
 // ניסיון-חוזר **אחד**, על 5xx/רשת בלבד — אותו לקח של `classify-feedback` (5xx "high demand" חולף
 // תוך שניות). 🚫 **לא על 429:** מכסה שנגמרה לא נפתחת בשנייה וחצי, וכל ניסיון שורף עוד בקשה ממנה.
 const RETRY_WAIT_MS = 1_500
+// 🧪 **תקרת-פלט, ו-`store: false` — אבחון 24/09/2026 (סשן 2, קריאה-בלבד ביומנים):** אותו מפתח, אותו
+// endpoint ואותו דגם (`GEMINI_MODEL`) עונים ל-`classify-feedback` תוך ~10 שניות לאצוות 30 הערות, ואילו
+// בקשת-טיוטה **אחת וקצרה** לא ענתה תוך 25 שניות — פעמיים. מה ששונה כאן: טמפרטורה 0.4, שדה `body` חופשי
+// במצב-JSON, **ובלי שום תקרת-פלט**. 💭 ההשערה: ייצור שבורח (חזרות/רווחים) עד תקרת-ברירת-המחדל של הספק.
+// ‏1024 טוקנים = ~פי-4 ממייל-מעקב של 120 מילים, כך שטיוטה תקינה לא נחתכת; ריצה שבורחת נעצרת מהר ומדווחת
+// `status: incomplete` (תיעוד `interactions-api`) במקום להיחתך בפסק-זמן בלי עקבה.
+// ‏`store: false` — איננו משתמשים ב-`previous_interaction_id`, ואין סיבה שהספק ישמור כל טיוטה.
+const MAX_OUTPUT_TOKENS = 1024
 const PROVIDER_ERROR_CHARS = 600
 const MAX_BODY_CHARS = 2_000
 const MS_PER_DAY = 24 * 60 * 60 * 1000
@@ -225,8 +233,12 @@ async function callProviderOnce(
   timeoutMs: number,
 ): Promise<{ subject: string; body: string }> {
   const thinkingLevel = THINKING_LEVEL_BY_MODEL[model]
-  const generationConfig: Record<string, unknown> = { temperature: TEMPERATURE }
+  const generationConfig: Record<string, unknown> = {
+    temperature: TEMPERATURE,
+    max_output_tokens: MAX_OUTPUT_TOKENS,
+  }
   if (thinkingLevel !== undefined) generationConfig.thinking_level = thinkingLevel
+  const startedAt = Date.now()
 
   let res: Response
   try {
@@ -240,19 +252,33 @@ async function callProviderOnce(
         system_instruction: SYSTEM_INSTRUCTION,
         response_format: { type: 'text', mime_type: 'application/json', schema: RESPONSE_SCHEMA },
         generation_config: generationConfig,
+        store: false,
       }),
     })
   } catch (err) {
     const detail = err instanceof Error ? err.message : 'network error'
     // 🔴 נרשם ללוג — בקריאה החיה הראשונה (24/09) פסק-הזמן **לא השאיר שום עקבה** ביומן-הפונקציה,
     // ורק `execution_time_ms` ביומן-הקצה סיפר מה קרה.
-    console.error('gemini did not answer', timeoutMs, 'ms', detail)
+    console.error(
+      'gemini did not answer',
+      timeoutMs,
+      'ms',
+      detail,
+      'elapsed',
+      Date.now() - startedAt,
+    )
     throw new ProviderError('הספק לא ענה.', 504, detail)
   }
 
   const rawBody = await res.text().catch(() => '')
   if (!res.ok) {
-    console.error('gemini responded', res.status, excerpt(rawBody))
+    console.error(
+      'gemini responded',
+      res.status,
+      excerpt(rawBody),
+      'elapsed',
+      Date.now() - startedAt,
+    )
     throw new ProviderError(`הספק החזיר שגיאה (${res.status}).`, res.status, excerpt(rawBody))
   }
 
@@ -262,6 +288,19 @@ async function callProviderOnce(
   } catch {
     throw new ProviderError('תשובת הספק אינה JSON.', 502, excerpt(rawBody))
   }
+  // 📏 שורת-מדידה לכל ניסיון שהספק ענה עליו: סיבת-הסיום (`status`: completed / incomplete = נחתך
+  // בתקרת-הפלט) · הזמן · מספר טוקני-הפלט. בלי תוכן — רק מספרים ומצב.
+  const usage = (payload.usage ?? {}) as Record<string, unknown>
+  console.log(
+    'gemini attempt',
+    model,
+    'status',
+    payload.status ?? 'none',
+    'elapsed',
+    Date.now() - startedAt,
+    'output_tokens',
+    usage.total_output_tokens ?? 'n/a',
+  )
   if (payload.status === 'failed' || payload.status === 'cancelled') {
     throw new ProviderError('הספק דיווח שהקריאה נכשלה.', 502, excerpt(rawBody))
   }

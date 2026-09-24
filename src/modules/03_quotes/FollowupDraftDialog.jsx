@@ -201,6 +201,9 @@ function FollowupDraftPanel({ quoteId }) {
 
       {ready && (
         <div className="flex flex-col gap-3" data-testid="followup-draft">
+          <p className="text-sm text-slate-600" data-testid="followup-ai-origin">
+            נוסחה בעזרת AI
+          </p>
           <p className="text-sm text-slate-600">
             אל:{' '}
             {to ? (
@@ -319,8 +322,10 @@ export default function FollowupDraftDialog({ quote, disabledReason = '' }) {
               <Sparkles aria-hidden="true" className="size-4 text-teal-700" />
               טיוטת מייל מעקב
             </DialogTitle>
+            {/* "נוסחה בעזרת AI" אינו כאן: הכותרת קבועה, והמשפט מתאר טיוטה שקיימת — בזמן הניסוח ואחרי
+                כשל עוד אין כזו (נמצא ע"י סוכן D2, 24/09). הוא מוצג בראש הטיוטה עצמה, ב-`FollowupDraftPanel`. */}
             <DialogDescription>
-              נוסחה בעזרת AI · הצעת מחיר {quote?.quote_id} — {quote?.event_name}
+              הצעת מחיר {quote?.quote_id} — {quote?.event_name}
             </DialogDescription>
           </DialogHeader>
           <FollowupDraftPanel quoteId={quote?.quote_id} />

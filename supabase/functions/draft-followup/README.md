@@ -227,3 +227,11 @@ in 2 batches in 19 s.
 3. Transient provider latency at 10:58–11:05 UTC — a later retry of the unchanged function would show it.
 
 Stopped at two calls on purpose: the free-tier quota is unknown and shared with `classify-feedback`.
+
+**Hypothesis 1 applied (24/09/2026, session 2, on the deputy's ruling):** `generation_config.max_output_tokens`
+= 1024 (`MAX_OUTPUT_TOKENS`) · `store: false` (we never use `previous_interaction_id`) · every attempt the
+provider answers logs one line — `gemini attempt <model> status <completed|incomplete|…> elapsed <ms>
+output_tokens <n>` — and the timeout/error lines now carry `elapsed` too. Field names and the `status`
+values (`incomplete` = stopped at the output limit) are from https://ai.google.dev/api/interactions-api.
+Temperature left at 0.4 (one change at a time). The one measured live call is recorded below.
+**No fallback model** — that is a separate ruling, after this measurement.
