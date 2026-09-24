@@ -33,3 +33,13 @@ export function withReturnTo(href, returnTo) {
 export function returnToLabel(returnTo) {
   return returnTo === '/' ? 'חזרה למסך הבית' : 'חזרה לדוח'
 }
+
+// ✏️ 24/09/2026 (ביקורת-קוד, דרך הסגן) — **סגירה חוזרת ל-`returnTo` רק כשנסגר הפריט שהדלת פתחה.**
+// הבאג: כרטיס ריק במסך הבית מוביל לרשימה עצמה (`/quotes?returnTo=/`), המשתמשת פותחת בה פריט בעצמה,
+// ו-`returnTo` שנשמר בכתובת הטיס אותה למסך הבית בסגירה. ‏`doorId` = המזהה שהיה בכתובת **ברינדור
+// הראשון** (הדלת); פריט אחר ⇒ סגירה רגילה, והיא נשארת ברשימה. הקישור בראש המסך נשאר כל עוד יש `returnTo`.
+export function shouldReturnOnClose({ returnTo, closingId, doorId }) {
+  if (!safeReturnTo(returnTo)) return false
+  if (closingId == null || doorId == null) return false
+  return String(closingId) === String(doorId)
+}

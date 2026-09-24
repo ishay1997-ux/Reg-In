@@ -54,7 +54,12 @@ function quote(overrides) {
 
 function Where() {
   const location = useLocation()
-  return <p data-testid="where">{location.search}</p>
+  return (
+    <>
+      <p data-testid="where">{location.search}</p>
+      <p data-testid="path">{location.pathname}</p>
+    </>
+  )
 }
 
 function renderAt(entry) {
@@ -102,6 +107,39 @@ describe('?view= — מסמך-ההצעה מהכתובת', () => {
     const link = await screen.findByTestId('return-to-link')
     expect(link).toHaveTextContent('חזרה לדוח')
     expect(link).toHaveAttribute('href', back)
+  })
+
+  // ✏️ 24/09/2026 (ביקורת-קוד): חזרה-בסגירה **רק** לפריט שהדלת פתחה.
+  it('מדוח: סגירת ההצעה שהדלת פתחה ⇒ חוזרים לדוח', async () => {
+    listQuotes.mockResolvedValue([quote({ quote_id: 2317 })])
+    renderAt(`/quotes?view=2317&returnTo=${encodeURIComponent('/reports?tab=exec&report=trends')}`)
+    await screen.findByTestId('document-stub-id')
+    fireEvent.click(screen.getByRole('button', { name: 'סגירה' }))
+    expect(
+      await screen.findByText('/reports', { selector: '[data-testid="path"]' }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('where')).toHaveTextContent('report=trends')
+  })
+
+  it('מכרטיס ריק במסך הבית (`?returnTo=/`): הצעה שנפתחה מהרשימה ונסגרה ⇒ נשארים ברשימה', async () => {
+    const future = new Date(Date.now() + 40 * 86400000).toISOString().slice(0, 10)
+    listQuotes.mockResolvedValue([
+      quote({
+        quote_id: 5,
+        quote_status: 'in_progress',
+        rejection_reason: null,
+        estimated_event_date: future,
+      }),
+    ])
+    renderAt('/quotes?returnTo=%2F')
+    fireEvent.click(await screen.findByTestId('quote-document-5'))
+    expect(await screen.findByTestId('document-stub-id')).toHaveTextContent('5')
+    fireEvent.click(screen.getByRole('button', { name: 'סגירה' }))
+    expect(screen.queryByTestId('document-stub')).not.toBeInTheDocument()
+    expect(screen.getByTestId('path')).toHaveTextContent('/quotes')
+    expect(screen.getByTestId('where')).not.toHaveTextContent('view=')
+    // הקישור בראש המסך נשאר — `returnTo` לא נמחק.
+    expect(screen.getByTestId('return-to-link')).toHaveTextContent('חזרה למסך הבית')
   })
 
   it('מספר שאינו ברשימה — נאמר במפורש, ולא חלון שפשוט לא נפתח', async () => {

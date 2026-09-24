@@ -17,6 +17,7 @@ import HostessViewCard from './HostessViewCard'
 import SmartMatchPage from './SmartMatchPage'
 import { resendExpiredInvites } from './api'
 import ReturnToLink, { useReturnTo } from '@/components/ReturnToLink'
+import { shouldReturnOnClose } from '@/lib/returnTo'
 
 const TABS = {
   overview: 'מעקב פניות ושיבוצים',
@@ -86,9 +87,14 @@ export default function HostessesPage() {
 
   // 0ב (24/09/2026): כרטיס שנפתח מדוח (`?returnTo=`) — הסגירה חוזרת לדוח, באותו מסנן. `navigate` רגיל
   // (דחיפה ולא החלפה) — כפתור-אחורה של הדפדפן ממשיך לעבוד.
+  // ✏️ 24/09/2026 (ביקורת-קוד): **רק כשנסגר הכרטיס שהדלת פתחה** (`doorHostess` = ה-`hostess` שהיה בכתובת
+  // ברינדור הראשון). מכרטיס "דיילות" ריק במסך הבית (`/hostesses?returnTo=/`) — כרטיס שהיא פתחה בעצמה
+  // נסגר סגירה רגילה והיא נשארת ברשימה. `shouldReturnOnClose` (`src/lib/returnTo.js`).
+  const [doorHostess] = useState(() => searchParams.get('hostess'))
   function closeCard() {
-    if (returnTo) navigate(returnTo)
-    else writeParams({ hostess: undefined })
+    if (shouldReturnOnClose({ returnTo, closingId: rawCardHostessId, doorId: doorHostess })) {
+      navigate(returnTo)
+    } else writeParams({ hostess: undefined })
   }
 
   function handleSaved() {

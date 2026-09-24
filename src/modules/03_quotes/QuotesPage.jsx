@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Hint from '@/components/Hint'
 import ReturnToLink, { useReturnTo } from '@/components/ReturnToLink'
+import { shouldReturnOnClose } from '@/lib/returnTo'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -230,8 +231,12 @@ export default function QuotesPage() {
   const viewMissing = Boolean(viewParam) && !loading && !loadError && documentQuote === null
 
   // 0ב (24/09/2026): חלון שנפתח מדוח (`?returnTo=`) — הסגירה חוזרת לדוח (דחיפה, לא החלפה).
+  // ✏️ 24/09/2026 (ביקורת-קוד): **רק כשנסגרת ההצעה שהדלת פתחה** — `doorView` הוא ה-`view` שהיה בכתובת
+  // ברינדור הראשון. מכרטיס "הצעות" ריק במסך הבית (`/quotes?returnTo=/`) אין `view` ⇒ הצעה שהיא פתחה
+  // בעצמה נסגרת סגירה רגילה והיא נשארת ברשימה (עד היום — הועפה למסך הבית). `shouldReturnOnClose`.
+  const [doorView] = useState(() => searchParams.get('view'))
   function setDocumentQuote(quote) {
-    if (!quote && returnTo) {
+    if (!quote && shouldReturnOnClose({ returnTo, closingId: viewParam, doorId: doorView })) {
       navigate(returnTo)
       return
     }
