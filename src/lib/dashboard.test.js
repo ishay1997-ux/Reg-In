@@ -680,6 +680,38 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     expect(staffing.noun).toBe('אירועים חסרי דיילות')
   })
 
+  // ✏️ 25/09/2026 (הכרעת הסגן, סריקת-תחנות): המסך הציג "1 אירועים חסרי דיילות". ביום הכנס
+  // תחנה 1 מראה בדיוק אירוע אחד (1615) ⇒ **אחד ⇒ יחיד**, ושניים ומעלה — רבים, כמו תמיד.
+  it('אירוע אחד ⇒ שם-עצם ביחיד; שניים ⇒ רבים (והסייג של החלון נשאר)', () => {
+    const short = (id, date) => ({
+      project_id: id,
+      event_name: `אירוע ${id}`,
+      project_status: 'in_progress',
+      final_event_date: date,
+      required_hostess_count: 2,
+      hostesses_confirmed: 1,
+    })
+    const summaryOf = (projects) => ({
+      today: TODAY,
+      projects,
+      params: { event_warning_days: 14 },
+      quotes_visible: false,
+      pending_quotes: null,
+    })
+    const one = attentionCategories(summaryOf([short(1, '2026-09-10')]), TODAY)
+    const staffingOne = one.find((c) => c.kind === 'staffing')
+    expect(staffingOne.count).toBe(1)
+    expect(staffingOne.noun).toBe('אירוע חסר דיילות ב-14 הימים הקרובים')
+
+    const two = attentionCategories(
+      summaryOf([short(1, '2026-09-10'), short(2, '2026-09-12')]),
+      TODAY,
+    )
+    const staffingTwo = two.find((c) => c.kind === 'staffing')
+    expect(staffingTwo.count).toBe(2)
+    expect(staffingTwo.noun).toBe('אירועים חסרי דיילות ב-14 הימים הקרובים')
+  })
+
   it('quotes_visible=false ⇒ כרטיס-ההצעות ממוסך (§7.97, MASKED_TEXT), לא "0"', () => {
     const categories = attentionCategories(
       { ...bigSummary, quotes_visible: false, pending_quotes: null },
