@@ -725,7 +725,8 @@ describe('ChecklistDialog — ㊲ מרוץ-הביטול ונעילת ㉝/㊴', (
     expect(banner).toHaveTextContent('הסיבה שנרשמה: "הלקוח דחה את האירוע לרבעון הבא".')
     // ✅ O-4 — הנוסח המתוקן, ולא המצויר ("מצב, כמות או הערה") שסתר את ㊴.
     expect(banner).not.toHaveTextContent('אין לעדכן מצב או הערה')
-    expect(banner).toHaveTextContent('אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.')
+    // ✏️ 24/09/2026 (מבקרים טריים): "פקדים" ⇐ "שדות".
+    expect(banner).toHaveTextContent('אפשר עדיין לרשום כמות שהגיעה — שאר השדות נעולים.')
 
     // כפתורי-המצב: מושבתים, גלויים ומנומקים (㉚) — ולא מוסרים.
     for (const status of ['not_started', 'ordered', 'ready']) {
@@ -747,7 +748,27 @@ describe('ChecklistDialog — ㊲ מרוץ-הביטול ונעילת ㉝/㊴', (
     // §⑧-9ב — שורת-המשנה מושמטת בתצוגה המבוטלת; המדד נשאר כי הוא עובדה.
     expect(screen.getByTestId('checklist-metric')).toHaveTextContent('0 מתוך 2')
     expect(screen.queryByText('2 פריטים טרם מוכנים')).toBeNull()
-    expect(screen.getByTestId('checklist-locked-note')).toBeInTheDocument()
+    // ✏️ 24/09/2026 (מבקרים טריים): השורה התחתונה שחזרה על הבאנר ירדה — "נעול" פעם אחת בבאנר.
+    expect(screen.queryByTestId('checklist-locked-note')).toBeNull()
+  })
+
+  // ✏️ 24/09/2026 (מבקרים טריים): ‏"רשמי כאן את הכמות" — רק למי שיכולה לרשום.
+  it('מצב 2: `checklist.cancelledOrdered` מוצג ל-`edit` ולא ל-`view`', async () => {
+    authState.onboardingMode = 2
+    try {
+      await renderDialog({ envelope: cancelledEnvelope })
+      await screen.findByTestId('checklist-banner-cancelled')
+      expect(screen.getByTestId('hint-checklist.cancelledOrdered')).toBeInTheDocument()
+      // ובמבוטל אין 'מוכן' לסמן ואין 'הוזמן' לפתוח ⇒ שני רמזי-ההקלדה יורדים.
+      expect(screen.queryByTestId('hint-checklist.autoSave')).toBeNull()
+      expect(screen.queryByTestId('hint-checklist.qtyLocked')).toBeNull()
+      cleanup()
+      await renderDialog({ envelope: cancelledEnvelope, permissions: { לוגיסטיקה: 'view' } })
+      await screen.findByTestId('checklist-banner-cancelled')
+      expect(screen.queryByTestId('hint-checklist.cancelledOrdered')).toBeNull()
+    } finally {
+      delete authState.onboardingMode
+    }
   })
 
   it('㊴ — כתיבת כמות על פרויקט מבוטל אכן נשלחת', async () => {
@@ -782,6 +803,30 @@ describe('ChecklistDialog — ㊲ מרוץ-הביטול ונעילת ㉝/㊴', (
     expect(screen.getByTestId('checklist-qty-B-REG-TAG-1')).toBeDisabled()
     expect(screen.getByTestId('checklist-note-B-REG-TAG-1')).toBeDisabled()
     expect(screen.getByTestId('checklist-status-B-REG-TAG-1-ready')).toBeDisabled()
+  })
+
+  // ✏️ 24/09/2026 (מבקרים טריים): רמזי-ההקלדה מסבירים מה קורה כשמקלידים ומסמנים — ובאירוע
+  // שהסתיים אין מה להקליד ואין מה לסמן. השורה `טרם החל` כאן היא מה שהיה מדליק את `qtyLocked`.
+  it('מצב 2: אירוע שהסתיים — `checklist.autoSave` ו-`checklist.qtyLocked` אינם מוצגים', async () => {
+    authState.onboardingMode = 2
+    try {
+      await renderDialog({
+        envelope: checklist({
+          project: { ...PROJECT, project_status: 'event_finished' },
+          rows: [
+            row({ sku: 'B-REG-TAG', item_status: 'ordered', actual_qty: 20 }),
+            row({ sku: 'B-SAT-LAN' }),
+          ],
+        }),
+      })
+      await screen.findByTestId('checklist-banner-closed')
+      expect(screen.queryByTestId('hint-checklist.autoSave')).toBeNull()
+      expect(screen.queryByTestId('hint-checklist.qtyLocked')).toBeNull()
+      // ועובדת-הבסיס נשארת — היא אינה רמז.
+      expect(screen.getByTestId('checklist-autosave-note')).toHaveTextContent('כל שינוי נשמר מיד.')
+    } finally {
+      delete authState.onboardingMode
+    }
   })
 })
 
