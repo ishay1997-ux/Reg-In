@@ -50,6 +50,7 @@
 - Deputy handover 20:36 (outgoing `local_d2ad07e4` at 84% context → heir `local_b8709acb`); Ishay renamed three workers: צלם-דוחות · בונה מ12 · מסביר-דוחות (board §7ה).
 - Applied, check ① passed on both: `module11_m12_measured_past_only` (m12 table, "ordered vs arrived" chart and measured-rows count = events before today; 01WEB gap 12.5% → 4.5%, measured 92 → 74; md5 `92315606…`) and `module11_m02_revenue_tile_no_door` (the m02 revenue tile opened `report_m03_trends`, now the quote-closing report since `4281d924`; md5 `e5d48b5a…`, other three doors intact). Both called under a real 'כספים'-edit identity via `request.jwt.claims`.
 - Gotcha: an in-place report upgrade (same rpc, same slug, new question) silently re-targets every tile door that pointed at the old report — grep `'report', '<rpc>'` in all report bodies after such an upgrade.
+- Shipped 21:3X: PR #159 → dev (`c6c9d54d`), PR #160 → main (`37f05ccc`), Vercel Production `6644867090` success; live bundle `index-B1q0w9L-.js` carries the new m12 hint. `ishay/module-12-integration` deleted; next branch `ishay/module-12-reports-review` from dev.
 - Next: Ishay asked for a KPI-by-KPI walkthrough of every report ("חלק מהדוחות לא מובנים לי"); prep running (explainer JSON + live screenshots in `Reg-In-evidence\reports-review-2026-09-25\`).
 
 ### 24/09/2026 evening — Conference polish in production (deputy)
