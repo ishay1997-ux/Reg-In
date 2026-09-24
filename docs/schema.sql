@@ -2339,8 +2339,9 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   SD · stable · plpgsql · [authenticated, service_role]
 --   → supabase/migrations/20260924081000_module5_upcoming_orders.sql
 -- m11_upcoming_equipment_orders(p_to date, p_customer_id integer default null) returns jsonb
---   פנימית (SSOT של "כמה להזמין" — 30 הימים שאחרי p_to, בלי מבוטלים); קוראות: report_m12_equipment · logistics_upcoming_orders
+--   פנימית (SSOT של "כמה להזמין" — 30 הימים שאחרי p_to, בלי מבוטלים, רק פריטים פיזיים ב-item_status='not_started'); קוראות: report_m12_equipment · logistics_upcoming_orders
 --   INVOKER · stable · sql · [service_role] (אין grant ל-authenticated/anon — נקראת רק מתוך SD של הבעלים)
+--   → supabase/migrations/20260924120000_module5_upcoming_orders_not_started.sql (הגוף החי — ✏️ 24/09 הסינון not_started + category <> 'site')
 --   → supabase/migrations/20260924081000_module5_upcoming_orders.sql
 
 
@@ -2628,7 +2629,8 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (סבב קודם)
 --   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (סבב 5 — חצאי-ההשוואה = 'אשתקד' · `project_id` ב-`format:'id'` (ב-`meta.extra_tables`))
 --   → supabase/migrations/20260924080000_module11_m3_walkthrough_fixes.sql (ⓘ-התקופה = תאריכים)
---   → supabase/migrations/20260924081000_module5_upcoming_orders.sql (הגוף החי — טבלת-ההזמנה קוראת ל-m11_upcoming_equipment_orders)
+--   → supabase/migrations/20260924081000_module5_upcoming_orders.sql (טבלת-ההזמנה קוראת ל-m11_upcoming_equipment_orders)
+--   → supabase/migrations/20260924120000_module5_upcoming_orders_not_started.sql (הגוף החי — "אז מה" נגזר מטבלת-ההזמנה עצמה · definitions · תווית-האוכלוסייה)
 -- report_m14_hostess_overview(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   → supabase/migrations/20260916052359_module11_f_rpcs_hostesses.sql (המקור)
