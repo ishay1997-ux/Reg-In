@@ -46,6 +46,13 @@
 
 ## Session Log (newest first)
 
+### 24/09/2026 15:5X — system polish, D2 agent: the deputy's items after D2 (`ishay/system-polish`, plan §12)
+- Built + committed: "להזמין" = physical `not_started` only, m12 so-what from the order table (`a06fe57a`; migrations `20260924120000` · `20260924130000`, live md5 `9ccdfd20` · `cd459b15` · `2b7b4062`) · 0ב ReturnToLink on /finance /logistics /quotes (`eac11eab`) · logistics fold at >=1360px (`6b32f0d0`) · code-review fixes (`47056935` · `dd8bcc5b` · `f55a4a37`) · D2 follow-ups: client 35 s, visible loading sentence, clipboard-failure wording (`1580daa3`; function v3 12:24 UTC, comment only, deployed source diffed identical) · roadmap m10 deferred / m12 in execution + PROJECT_MASTER §6 line (`c6331e6b`) · bidi comment fix (`1a0f30ec`).
+- Reported, not changed: m12 "measured rows" (18 future rows with actual 0 inflate the all-time gap; waits for Ishay). ≤10 s D2 target not met (18.7 s, 25 s, no provider answer).
+- Cancelled by the deputy mid-build: output cap for `draft-followup` (`max_output_tokens` · `store: false`) — edit reverted, nothing deployed; moved to another agent.
+- Verified: `gate` exit 0 (135 files · 3,305 tests; lint = the one pre-existing warning) · e2e quote-followup + accessibility + quote-document 15/15 · loading-sentence screenshots mode 0/2 in `Reg-In-evidence\system-polish-2026-09-24\d2\`.
+- Gotchas: (1) `check:bidi` also scans JSX comments — "1536×864" in a `{/* */}` comment fails the gate (CI does not run it, so only the local gate catches it). (2) On Windows, stopping the Bash background task leaves the `node vite` child listening — kill the PID (`netstat -ano`).
+
 ### 24/09/2026 — system polish D2 "AI follow-up draft" (build agent in place of "session 3", `ishay/system-polish`, plan §12)
 - Built: Edge Function `supabase/functions/draft-followup` (classify-feedback gate order; JWT-only reads, no service role; placeholders-only to Gemini, server fills them; draft guard rejects invented placeholders and money/discount markers) + README + a separate CI `deno check` step · `draftFollowupEmail` (03_quotes/api.js) · `src/lib/quoteFollowup.js` · `נסחי מייל מעקב` in `QuoteDocumentDialog` + `FollowupDraftDialog` · hint `quoteFollowup.privacy` · e2e `quote-followup.spec.js` (keyboard-only) · 2 new axe scans. Commits `dd02fd1f` `bea39888` `2903057e` `23403ec8` `0fa4ff55` `128b053f` `fd0a65d0`; pushed, not merged.
 - Deployed via MCP: v1 10:52 UTC, v2 11:04 UTC. Live gates (Node script, status+body only, no AI): 401 ×2 · 403 before 400 · 400 · 404 · 409 ×2 ⇒ the Gemini key is installed.
