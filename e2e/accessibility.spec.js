@@ -391,6 +391,103 @@ test.describe('נגישות (axe-core) — מסכים ראשיים על פני �
       await scan(page, label)
     }
   })
+
+  // ── ליטושי-הכנס (נוסף 24/09/2026, התוכנית §6ה-ד "הרחבת הסריקה") — המשטחים שנגעו בהם ──────
+  // ‏"הצ'קליסט" שהתוכנית מונה **כבר נסרק** למעלה (מודול 5, משטח 2, כולל הווריאנט המבוטל) — לא
+  // נוספה סריקה כפולה. נוספו: חלון-המסמך של הצעה (חבילה 0 · D2), חלון טיוטת-המייל (D2), כרטיס-
+  // דיילת **עם העדפות** (C1) ופס ה-AI במ22 (D1).
+  // 🔴 **ואפס קריאות-AI:** `draft-followup` מיורט (מלכודת 12). ההצעה נבחרת מהתשובה החיה של רשימת-
+  // ההצעות — קריאה בלבד, בלי מזהה קשיח (`e2e/CLAUDE.md` §2.2).
+  async function pickExpiredQuoteId(page) {
+    const pending = []
+    const rows = []
+    const onResponse = (res) => {
+      if (!res.url().includes('/rest/v1/quotes') || res.request().method() !== 'GET') return
+      pending.push(
+        res
+          .json()
+          .then((data) => Array.isArray(data) && rows.push(...data))
+          .catch(() => {}),
+      )
+    }
+    page.on('response', onResponse)
+    await page.goto('/quotes')
+    await expect(page.getByTestId('quotes-table')).toBeVisible({ timeout: 30_000 })
+    await page.waitForLoadState('networkidle')
+    page.off('response', onResponse)
+    await Promise.all(pending)
+    const expired = rows.find(
+      (q) => q.quote_status === 'rejected' && q.rejection_reason === 'פג תוקף',
+    )
+    expect(expired, 'אין הצעה שפג תוקפה — אין חלון-טיוטה לסרוק').toBeTruthy()
+    return expired.quote_id
+  }
+
+  test('סריקה על חלון-המסמך של הצעה ועל חלון טיוטת-המייל (מודול 3 · D2)', async ({ page }) => {
+    test.setTimeout(120_000)
+    await login(page)
+    const quoteId = await pickExpiredQuoteId(page)
+    await page.route('**/functions/v1/draft-followup', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          draft: {
+            subject: 'מעקב אחרי הצעת המחיר',
+            body: 'שלום רב,\nרצינו לבדוק אם האירוע עדיין רלוונטי.\nבברכה,',
+          },
+          to: 'client@example.com',
+        }),
+      }),
+    )
+
+    await page.goto(`/quotes?view=${quoteId}`)
+    await expect(page.getByTestId('quote-document-title')).toContainText(String(quoteId))
+    // המכנה: המסמך הופק (או נכשל בגלוי) — לא "מפיקה את המסמך…" — והשורה החדשה נוכחת.
+    await expect(
+      page.getByTestId('quote-document-frame').or(page.getByTestId('quote-document-error')),
+    ).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('quote-followup-open')).toBeEnabled()
+    await scan(page, 'הצעות · חלון-המסמך (מודול 3)')
+
+    await page.getByTestId('quote-followup-open').click()
+    await expect(page.getByTestId('followup-draft')).toBeVisible()
+    await expect(page.getByTestId('followup-body')).not.toHaveValue('')
+    await scan(page, 'הצעות · חלון טיוטת-המייל (D2)')
+  })
+
+  test('סריקה על כרטיס-דיילת עם העדפות (C1) ועל פס ה-AI בניתוח-ההערות (D1)', async ({ page }) => {
+    test.setTimeout(150_000)
+    await login(page)
+    await page.goto('/hostesses')
+    await page.getByTestId('hostesses-tab-repository').click()
+    const rows = page.locator('[data-testid^="repository-row-"]')
+    await expect(rows.first()).toBeVisible({ timeout: 30_000 })
+
+    // הכרטיס הראשון **שיש בו העדפות** — הסריקה נועדה לבלוק ההעדפות ש-C1 בנה, ו"טרם נרשמו"
+    // הוא מכנה ריק. עד חמש שורות; אחרת נכשלים במפורש ולא "עוברים" על כרטיס ריק.
+    let found = false
+    for (let i = 0; i < 5 && !found; i += 1) {
+      await rows.nth(i).locator('td').nth(1).click()
+      await expect(page.getByTestId('hostess-card-title')).toBeVisible({ timeout: 15_000 })
+      await expect(page.getByTestId('hostess-preferences-loading')).toHaveCount(0, {
+        timeout: 30_000,
+      })
+      found = (await page.getByTestId('hostess-preferences').count()) > 0
+      if (!found) {
+        await page.keyboard.press('Escape')
+        await expect(page.getByTestId('hostess-card-title')).toHaveCount(0)
+      }
+    }
+    expect(found, 'אף אחד מחמשת הכרטיסים הראשונים לא הציג העדפות — מכנה ריק').toBe(true)
+    await scan(page, 'דיילות · כרטיס-דיילת עם העדפות (מודול 4, C1)')
+    await page.keyboard.press('Escape')
+
+    await page.goto('/reports?tab=customers&report=notes')
+    await expect(page.getByTestId('m25-run-bar')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('m25-run-text')).not.toBeEmpty()
+    await scan(page, 'דוחות · ניתוח הערות — פס ה-AI (מודול 11, D1)')
+  })
 })
 
 // ── מודול 9 · "ההגדרות שלי" — נסרק **כמנהלת הכספים ולא כמנכ"ל** (נוסף 02/09/2026) ───────
