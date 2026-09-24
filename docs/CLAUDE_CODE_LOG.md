@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 24/09/2026 afternoon — Deputy shift after compaction (board `docs/micro_guides/module-12.md`)
+- Board kept live on `ishay/module-12-integration` (`7c135eae`…`86281af4`). D2 subagent finished `ishay/system-polish` @ `9b72d46d`; it had auto-compacted at 15:27 at its 1M window — post-compaction commits checked against its queue. Session 2 is now the writer on that branch (output cap for `draft-followup` + subtitle fix); the tester started the read-only parts of the final gate early.
+- D2 live calls: two 502s at 18.7 s / 26.7 s, no 429 ⇒ not quota; `generation_config` has no `max_output_tokens` (`index.ts:228`) ⇒ runaway generation is the working hypothesis. The ≤10 s target is not met yet.
+- Ishay rulings recorded verbatim on the board §5: a worker's verbatim quote of him counts as explicit; migration authority to the deputy like merges. The written gate (`supabase/migrations/CLAUDE.md`) is not updated yet — board §4 step 6.
+- Operational gotcha: a subagent has no `get_usage` figure; its size is in its own transcript `usage`. The deputy's per-turn state line with each worker's context never ran (0 of 178 messages) — the root of the day's misses. Recorded in `~/.claude/references/retro-ledger.md`.
+
 ### 24/09/2026 — M12 conference demo script + refresh-script gate (`ishay/module-12-integration`, worker for the deputy)
 - Commits `48f3a7f6` + `66d63ebe` (`docs/guides/conference-demo-script.md`: one-customer 8-station path, fallback per live service, merge-dependent stations) · `927e555d` (`scripts/conference-refresh/refresh-before-conference.sql`). Pushed; no PR (deputy's instruction).
 - Found by measurement: all 33 open quotes had `updated_at` 09/09 23:32 UTC ⇒ the `module3-quote-expiry` cron would have expired them 10/10 01:00 UTC, before the 14/10 refresh, which would then touch 0 rows while check ② reported "0 expiring" as a pass. The deputy ran step ① early (24/09 11:33 UTC, 33→33, expiry now 24/10). Script now: gate ⓪ (raise when open < 33) + ① in one DO block (psql without ON_ERROR_STOP would otherwise run past a failed gate) · ② returns open_quotes too · ③ had no `from staffing` (42703, measured) — fixed. Script not run by me.
