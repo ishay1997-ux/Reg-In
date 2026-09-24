@@ -65,7 +65,8 @@ function DraftSkeleton() {
 
 // מה האזור-החי אומר עכשיו — פונקציה ולא טרנארי-מקונן (SonarJS).
 function statusText(phase, failure, notice) {
-  if (phase === 'loading') return 'מנסחת טיוטה…'
+  // ✏️ 24/09/2026 (הסגן): כנות במצב-המערכת — שתי המדידות החיות לא הגיעו לתשובה תוך 18–25 שניות.
+  if (phase === 'loading') return 'מנסחת טיוטה — זה יכול לקחת עד חצי דקה.'
   if (phase === 'error') return failure?.message
   if (notice === 'copied') return 'הועתק.'
   if (notice === 'bodyCopied') return 'גוף הטיוטה הועתק — הדביקי אותו במייל שנפתח.'
@@ -145,8 +146,9 @@ function FollowupDraftPanel({ quoteId }) {
       await navigator.clipboard.writeText(text)
       announce(kind)
     } catch {
-      // אותו נוסח של אזור-השיווק (`MarketingPanel.jsx`) — אותה תקלה, אותן מילים (R30).
-      toast.error('העתקה נכשלה — ניתן להעתיק ידנית.')
+      // אותו נוסח של אזור-השיווק (`MarketingPanel.jsx`) — אותה תקלה, אותן מילים (R30). ✏️ 24/09 (הסגן):
+      // סביל ⇐ ציווי-נקבה, מדריך-הסגנון §1 — ובשני המקומות יחד.
+      toast.error('העתקה נכשלה — סמני את הטקסט והעתיקי ידנית.')
     }
   }
 

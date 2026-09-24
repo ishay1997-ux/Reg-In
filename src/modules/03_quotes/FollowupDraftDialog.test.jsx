@@ -100,7 +100,7 @@ describe('הכפתור בחלון-המסמך', () => {
 })
 
 describe('חלון-הטיוטה — המצב המוצלח', () => {
-  it('שלד + "מנסחת טיוטה…" בזמן ההמתנה, ובאזור-חי', async () => {
+  it('שלד + "מנסחת טיוטה — זה יכול לקחת עד חצי דקה." בזמן ההמתנה, ובאזור-חי', async () => {
     let resolve
     invoke.mockReturnValue(new Promise((r) => (resolve = r)))
     renderDialog()
@@ -108,7 +108,7 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     expect(await screen.findByTestId('followup-skeleton')).toBeInTheDocument()
     const status = screen.getByTestId('followup-status')
     expect(status).toHaveAttribute('aria-live', 'polite')
-    expect(status).toHaveTextContent('מנסחת טיוטה…')
+    expect(status).toHaveTextContent('מנסחת טיוטה — זה יכול לקחת עד חצי דקה.')
     await act(async () => resolve({ data: DRAFT, error: null }))
     expect(screen.queryByTestId('followup-skeleton')).not.toBeInTheDocument()
     expect(status).toHaveTextContent('הטיוטה מוכנה.')
@@ -276,5 +276,19 @@ describe('מקלדת', () => {
     fireEvent.keyDown(screen.getByTestId('followup-dialog'), { key: 'Escape' })
     await waitFor(() => expect(screen.queryByTestId('followup-dialog')).not.toBeInTheDocument())
     await waitFor(() => expect(trigger).toHaveFocus())
+  })
+})
+
+// ✏️ 24/09/2026 (הסגן): הנוסח בציווי-נקבה (מדריך-הסגנון §1), זהה לאזור-השיווק (R30).
+describe('העתקה שנכשלה', () => {
+  it('הלוח חסום ⇒ "העתקה נכשלה — סמני את הטקסט והעתיקי ידנית."', async () => {
+    invoke.mockResolvedValue({ data: DRAFT, error: null })
+    writeText.mockRejectedValue(new Error('denied'))
+    renderDialog()
+    await openAndWaitForDraft()
+    fireEvent.click(screen.getByTestId('followup-copy'))
+    expect(
+      await screen.findByText('העתקה נכשלה — סמני את הטקסט והעתיקי ידנית.'),
+    ).toBeInTheDocument()
   })
 })

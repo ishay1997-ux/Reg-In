@@ -179,8 +179,10 @@ curl -s -X POST "$SB_URL/functions/v1/draft-followup" \
 ## Live verification (24/09/2026)
 
 **Deploys** (Supabase MCP `deploy_edge_function`, `verify_jwt: true`): version 1 at 10:52:24 UTC ·
-version 2 at 11:04:37 UTC (the 25 s ceiling below). Deployed source compared section-by-section with
-this file via `get_edge_function` — not byte-hashed. ⚠️ **The UI that calls it is only on branch
+version 2 at 11:04:37 UTC (the 25 s ceiling below) · version 3 at 12:24:15 UTC (comment only: the
+client now waits 35 s, `FOLLOWUP_DRAFT_TIMEOUT_MS`). Version 3's source, fetched back with
+`get_edge_function` and diffed against this file: **identical** (507 lines, 29,863 bytes).
+⚠️ **The UI that calls it is only on branch
 `ishay/system-polish`** — until that branch reaches `main`, no production screen can reach the function.
 
 **The gates, against the live function** (a Node script that signs in the `.env.local` test users and
