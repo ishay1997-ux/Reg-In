@@ -98,6 +98,10 @@ jobs:
       # שמונה שני קבצים עוצר בראשון שנופל, והשני לא נבדק כלל באותה ריצה.
       - name: Type-check classify-feedback
         run: deno check --node-modules-dir=none supabase/functions/classify-feedback/index.ts
+      # ‏`draft-followup` (ליטושי-הכנס D2, 24/09/2026) — שלב שלישי, מאותה סיבה בדיוק: צעד שמונה
+      # כמה קבצים עוצר בראשון שנופל, והפונקציה שאחריו לא נבדקת כלל באותה ריצה.
+      - name: Type-check draft-followup
+        run: deno check --node-modules-dir=none supabase/functions/draft-followup/index.ts
 
   secret-scan:
     name: Secret scan (gitleaks)
