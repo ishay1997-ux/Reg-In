@@ -1,4 +1,4 @@
-// בדיקות לשונית "דיילות" (מ14 · מ15 · מ16 · מ17).
+// בדיקות לשונית "דיילות" (מ14 · מ15 · מ17; מ16 הוסר 24/09/2026).
 //
 // 🔑 **מה נבדק כאן ומה במכוון לא:** הלשונית אינה מציירת אריח/טבלה/ייצוא בעצמה — `ReportSurface`
 // עושה זאת, ויש לו בדיקות משלו. ⇒ כאן נבדק **מה שהלשונית באמת מוסיפה**: ארבע נקודות-ההרחבה
@@ -58,7 +58,6 @@ vi.mock('../api', async (importOriginal) => {
 import { isolateLtr } from '@/lib/reportsFormat'
 import { M11_HOSTESSES_COPY } from '@/lib/onboardingCopy.m11.hostesses'
 import HostessesTab from './HostessesTab'
-import ReportSurface from '../components/ReportSurface'
 
 const SURFACES = {
   m14: {
@@ -73,13 +72,6 @@ const SURFACES = {
     slug: 'reliability',
     rpc: 'report_m15_reliability',
     name: 'אמינות והתייצבות',
-    drill: false,
-  },
-  m16: {
-    id: 'מ16',
-    slug: 'quality-cost',
-    rpc: 'report_m16_quality_cost',
-    name: 'איכות מול עלות',
     drill: false,
   },
   m17: {
@@ -325,98 +317,6 @@ const m15 = (selectedDow = null) =>
           rows: [{ rating_label: '3', months12: 6.6, ever: 14.6 }],
         },
       ],
-    },
-  })
-
-// ── מ16 · איכות מול עלות ────────────────────────────────────────────────────
-const m16 = () =>
-  base({
-    population: {
-      n: 50,
-      label: 'אוכלוסייה: דיילות פעילות בלבד — n=50 מתוך 186 רשומות',
-      excluded: {},
-    },
-    tiles: [
-      {
-        key: 'no_rating',
-        label: 'דיילות בלי דירוג',
-        value: 17,
-        format: 'int',
-        window: 'נכון ל-16/09/2026',
-        compare: null,
-        target: null,
-      },
-      {
-        key: 'median_rate',
-        label: 'תעריף שעתי חציוני',
-        value: 43.27,
-        format: 'money',
-        window: 'נכון ל-16/09/2026',
-        compare: { label: 'חציון כלל המאגר (186)', value: 44, direction: 'down' },
-        target: null,
-      },
-    ],
-    chart: {
-      type: 'scatter',
-      title: 'תעריף שעתי מול דירוג · הדיילות הפעילות',
-      xKey: 'hourly_rate',
-      unit: 'money',
-      domain: [1, 5],
-      // ✏️ i2: ‏`x_domain` נועל את ציר-התעריף ל-⁦38⁩–⁦51⁩ במקום לפתוח אותו מאפס (📐5 נכתב
-      // לסכומים; תעריף שעתי שכל ערכיו 41–49 נמחץ לימין הכרטיס). נמדד במטען החי היום.
-      x_domain: [38, 51],
-      series: [
-        { key: 'hourly_rate', label: 'תעריף שעתי' },
-        { key: 'rating', label: 'דירוג' },
-      ],
-      data: [
-        { hourly_rate: 49.39, rating: 5, hostess_name: 'שקד ניסים' },
-        { hourly_rate: 47.98, rating: 5, hostess_name: 'גלי אוחיון' },
-      ],
-      // ✏️ I1: תווית קו-הייחוס עברה לשקלים שלמים (📐4), והערת-הגרף מצהירה על 17 הנקודות
-      // שאינן עליו — שתיהן נמדדו במטען החי היום (`results/payloads_h5`).
-      refLines: [{ axis: 'x', value: 43.27, label: 'חציון התעריף 43 ₪' }],
-      note: "⁦17⁩ דיילות ללא דירוג אינן בגרף — ראי את השבב 'בלי דירוג בלבד' בטבלה.",
-    },
-    columns: [
-      { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
-      { key: 'hourly_rate', label: 'תעריף שעתי', format: 'money', align: 'end' },
-      { key: 'rating', label: 'דירוג', format: 'int', align: 'end' },
-    ],
-    // ⚠️ `hourly_rate` יושב **גם** בשורות ו**גם** ב-`chart.xKey`, בדיוק כמו במטען החי —
-    // וזה מה שמפעיל את הזיהוי-האוטומטי של המעטפת. פיקסצ'ר בלי זה היה הופך את מבחן-הכיבוי
-    // לריק (נמדד: הוא נכשל, וזו הייתה הסיבה).
-    rows: [
-      {
-        row_key: 1,
-        hostess_name: 'אביב יוסף',
-        hourly_rate: 41.73,
-        rating: null,
-        drill_key: { kind: 'hostess', id: 394 },
-      },
-      {
-        row_key: 2,
-        hostess_name: 'שקד ניסים',
-        hourly_rate: 49.39,
-        rating: 5,
-        drill_key: { kind: 'hostess', id: 497 },
-      },
-      {
-        row_key: 3,
-        hostess_name: 'גלי אוחיון',
-        hourly_rate: 47.98,
-        rating: 5,
-        drill_key: { kind: 'hostess', id: 496 },
-      },
-    ],
-    so_what: 'להוריד את התעריף של 2 הדיילות שמעל חציון-המאגר.',
-    definitions: 'הגדרות: תעריף שעתי = …',
-    meta: {
-      missing_params: [],
-      notes: [],
-      default_filter: 'no_rating',
-      no_rating_count: 1,
-      row_total: 3,
     },
   })
 
@@ -764,58 +664,7 @@ describe('מ15 · אמינות והתייצבות', () => {
   })
 })
 
-describe('מ16 · איכות מול עלות', () => {
-  it('נפתח מסונן ל"בלי דירוג" (ברירת-מחדל), והכיבוי מחזיר את כל הפעילות', async () => {
-    callReport.mockResolvedValue(m16())
-    renderTab(SURFACES.m16)
-    const chip = await screen.findByTestId('reports-chips-quality-cost-onlyNoRating')
-    expect(chip).toHaveAttribute('aria-pressed', 'true')
-    expect(rowCount()).toBe(1)
-    expect(screen.getByTestId('report-table-title')).toHaveTextContent(
-      'הדיילות הפעילות שאין להן דירוג',
-    )
-
-    fireEvent.click(chip)
-    expect(rowCount()).toBe(3)
-    expect(screen.getByTestId('report-table-title')).toHaveTextContent('כל הדיילות הפעילות')
-  })
-})
-
 describe('הסינון-הצולב של המעטפת', () => {
-  it('מ16 · הפיזור מכובה מפורשות — `hourly_rate` אינו משמעות-הדף', async () => {
-    // 🔴 **מבחן דו-צדדי, אחרת הוא ריק:** ‏`ReportSurface` מוסר `onSelect` ל-`ChartCard`
-    // **רק** כשנפתר מפתח-סינון, ולכן היעדר כפתורי-הבחירה בטבלת-קורא-המסך הוא בדיוק
-    // ההוכחה. ① דרך הלשונית — אין אף כפתור. ② אותו מטען דרך המעטפת **בלי** הטרנספורמציה —
-    // הזיהוי-האוטומטי תופס `hourly_rate` ומייצר אותם. הצד השני הוא מה שמוכיח שהכיבוי
-    // הוא שלי ולא מקריות של הפיקסצ'ר.
-    callReport.mockResolvedValue(m16())
-    const { unmount } = render(
-      <HostessesTab
-        surface={SURFACES.m16}
-        filters={filters}
-        drill={null}
-        onDrill={vi.fn()}
-        onWindow={() => {}}
-      />,
-    )
-    await screen.findByTestId('report-table-title')
-    expect(screen.queryAllByTestId(/^chart-select-/)).toHaveLength(0)
-    unmount()
-
-    callReport.mockResolvedValue(m16())
-    render(
-      <ReportSurface
-        surface={SURFACES.m16}
-        filters={filters}
-        drill={null}
-        onDrill={vi.fn()}
-        onWindow={() => {}}
-      />,
-    )
-    await screen.findByTestId('report-tiles')
-    expect(screen.queryAllByTestId(/^chart-select-/).length).toBeGreaterThan(0)
-  })
-
   it('מ14 · מ15 · מ17 — אין מפתח-סינון אוטומטי (month · dow · x אינם מפתחות-שורה)', async () => {
     for (const [surface, payload] of [
       [SURFACES.m14, m14()],
@@ -877,7 +726,6 @@ describe('מ17 · הוגנות השיבוץ', () => {
 const SURFACE_CASES = [
   ['מ14 · מבט-על דיילות', SURFACES.m14, m14, ['הגעה בזמן', 'דיילות אדומות', 'אירועים עם חוסר']],
   ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, ['הגעה בזמן', 'דיילות מסומנות']],
-  ['מ16 · איכות מול עלות', SURFACES.m16, m16, ['דיילות בלי דירוג', 'תעריף שעתי חציוני']],
   [
     'מ17 · הוגנות השיבוץ',
     SURFACES.m17,
@@ -987,7 +835,6 @@ const follows = (first, second) =>
 const HINT_PLACEMENT = [
   ['מ14 · מבט-על דיילות', SURFACES.m14, m14, 'hostessOverview', 'redCount', null, 'redTableSort'],
   ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, 'reliability', null, null, 'absenceColumns'],
-  ['מ16 · איכות מול עלות', SURFACES.m16, m16, 'qualityCost', null, 'scatterBasis', 'tableSort'],
   ['מ17 · הוגנות השיבוץ', SURFACES.m17, m17, 'fairness', null, 'giniBasis', null],
 ]
 
@@ -1057,13 +904,14 @@ describe('שלמות מפתחות-ההטמעה', () => {
     }
   })
 
-  it('אין מפתח בקובץ-הקופי שאיש אינו שותל — ו-14 הם כל מה שהלשונית שותלת', () => {
+  it('אין מפתח בקובץ-הקופי שאיש אינו שותל — ו-11 הם כל מה שהלשונית שותלת', () => {
     for (const key of Object.keys(M11_HOSTESSES_COPY)) {
       expect(used.has(key), `מפתח שאינו בשימוש: ${key}`).toBe(true)
     }
     // ✏️ 23/09/2026 — 38 ⇒ 14: המונחים ירדו מהשכבה (התוכנית §4ה, 2.3 · 2.5).
-    expect(Object.keys(M11_HOSTESSES_COPY)).toHaveLength(14)
-    expect(used.size).toBe(14)
+    // ✏️ 24/09/2026 — 14 ⇒ 11: שלושת מפתחות מ16 נמחקו עם המשטח.
+    expect(Object.keys(M11_HOSTESSES_COPY)).toHaveLength(11)
+    expect(used.size).toBe(11)
   })
 
   it('אין `pointer` באף ערך — רק רמה 2 נכתבת (הכרעת-ישי)', () => {

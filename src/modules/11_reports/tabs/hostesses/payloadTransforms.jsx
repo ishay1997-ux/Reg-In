@@ -42,30 +42,11 @@ export function filterRows(payload, keep) {
   return { ...payload, rows: payload.rows.filter(keep) }
 }
 
-// 🔴 **מ16 · כיבוי מפורש של הסינון-הצולב — וזו הכרעת-משמעות, לא כיוונון.**
-// המעטפת מזהה מפתח-סינון אוטומטית כש-`chart.xKey` הוא גם מפתח-שורה, וערכיהם נפגשים
-// (`ReportSurface.autoFilterKey`). בפיזור של מ16 שני התנאים מתקיימים על **`hourly_rate`**
-// — נמדד: `xKey='hourly_rate'`, העמודה קיימת, והערכים נפגשים ⇒ הזיהוי תופס.
-// ⚠️ **ומה שהיה קורה אז:** לחיצה על נקודה הייתה מסננת את הטבלה **לכל הדיילות שתעריפן זהה**
-// — קבוצה שאין לה שום משמעות מוצרית. שאלת-הדף היא *"מי שווה את התעריף שלה"*, כלומר
-// ה**נקודה** היא דיילת, לא התעריף. 🚫 מזהה-דיילת אינו במטען-הגרף כמפתח-שורה
-// (`hostess_id` בגרף מול `drill_key.id` בשורות), ולכן אין מה לסנן לפיו **מהלקוח**.
-// ⇒ **כבוי כאן בשורה אחת**, והתיקון הנכון — `chart.filter_key: 'hostess_id'` מהשרת עם
-// אותו מפתח בשורות — מדווח ואינו נעשה כאן (`C8` · `ReportSurface` ①).
-export function disableCrossFilter(payload) {
-  if (!payload.chart || Array.isArray(payload.chart)) return payload
-  if (payload.chart.filter_key === false) return payload
-  return { ...payload, chart: { ...payload.chart, filter_key: false } }
-}
-
 /** מ15 · שבב *"אדומות וענבר בלבד"* — ‏`rows[].band` הוא `'red'`/`'amber'`, ו-`null` ללא-מסומנת. */
 export const isFlagged = (row) => row.band != null
 
 /** מ15 · שבב *"פעילות בלבד"* — התווית נקראת מ-`HOSTESS_STATUS_LABELS` ואינה מתורגמת מחדש. */
 export const isActive = (row) => row.status === HOSTESS_STATUS_LABELS.active
-
-/** מ16 · שבב *"בלי דירוג בלבד"*, דלוק כברירת-מחדל (`meta.default_filter === 'no_rating'`). */
-export const hasNoRating = (row) => row.rating === null || row.rating === undefined
 
 // 🔴 **תיקון-יחידה בצד-הלקוח — ומאז 16/09 12:0X הוא שומר-נסיגה בלבד, לא תיקון פעיל.**
 // ‏`report_m17_fairness` החזיר את שני זמני-התגובה ב**שעות** (‏`9.9` · `20.7`, כרטיס §③)

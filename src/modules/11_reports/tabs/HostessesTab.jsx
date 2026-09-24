@@ -1,4 +1,4 @@
-// לשונית דיילות — ארבעת המשטחים מ14 · מ15 · מ16 · מ17 (צעד 3.3).
+// לשונית דיילות — שלושת המשטחים מ14 · מ15 · מ17 (צעד 3.3; מ16 הוסר מהממשק 24/09/2026).
 // **המוקאפ:** `approved/04_tab_hostesses_approved.html` · **הכרטיסים:** `stage2-cards/cards-hostesses.md`.
 //
 // 🔑 **מה הקובץ הזה עושה, ומה הוא במפורש אינו:** ‏`ReportSurface` מצייר את **כל** מטען-C8
@@ -12,8 +12,7 @@
 //    ‏`onDrill` כאן משמש לשניים: בחירת יום-בשבוע של מ15 (‏`p_drill` אמיתי בשרת), ו**דלתות**
 //    — אריח עם `target` ושורה עם `drill_key` — שנתב-הדלתות של המעטפת מנתב (11f347a9).
 // ② **מ17 מחזיר את זמני-התגובה בשעות ומכריז `days`** — ר' `payloadTransforms.js` · הדיווח.
-// ③ **הסינון-הצולב של מ16 כבוי מפורשות** (`disableCrossFilter`): הזיהוי-האוטומטי של
-//    המעטפת תופס שם `hourly_rate`, וסינון-לפי-תעריף אינו המשמעות של הדף. ר' הנימוק בשם.
+// ③ ✂️ מ16 (ושבב "בלי דירוג בלבד" + כיבוי-הסינון-הצולב שלו) הוסר מהממשק 24/09/2026.
 // ✏️ **16/09 11:2X — שלוש עקיפות שהיו כאן נמחקו כי השכבה המשותפת סגרה אותן:** ‏`KpiTile`
 //    מרנדר עכשיו `tiles[].sub` ו-`compare.note` ומעצב את חצי-ההשוואה דרך
 //    `compare.format ?? tile.format` ⇒ `inheritCompareFormat` נמחקה · שורת-תקרת-השורות
@@ -26,16 +25,14 @@ import ReportSurface from '../components/ReportSurface'
 import ChipRow from './hostesses/ChipRow'
 import HintBlock from './hostesses/HintBlock'
 import {
-  disableCrossFilter,
   filterRows,
   fixResponseTimeUnit,
-  hasNoRating,
   isActive,
   isFlagged,
   mapChartLabels,
 } from './hostesses/payloadTransforms'
 
-// 🔒 **ארבעה-עשר המפתחות של הלשונית** (✏️ 23/09/2026 — היו 38; ששת המונחים בכל דף ירדו,
+// 🔒 **אחד-עשר המפתחות של הלשונית** (✏️ 24/09/2026 — 14 ⇒ 11 עם הסרת מ16; ✏️ 23/09/2026 — היו 38; ששת המונחים בכל דף ירדו,
 // ר׳ `onboardingCopy.m11.hostesses.js`). המפתחות עצמם מטבלאות §⑩ של ארבעת הכרטיסים.
 // המוקאפים נושאים ארבע קונבנציות-סימון, ואף אחת מהן אינה הצורה שמגיעה לייצור.
 // ⚠️ **מפתח שגוי מרנדר `null` בשקט** — ולכן הרשימה הזו היא גם מה שהבדיקה מייבאת ומוודאת
@@ -57,13 +54,6 @@ const HINTS = {
     beforeTable: ['reports.reliability.absenceColumns', 'reports.reliability.queuePopulation'],
     extras: [],
   },
-  'quality-cost': {
-    afterSoWhat: ['reports.qualityCost.purpose'],
-    beforeChart: [],
-    chartFooter: ['reports.qualityCost.scatterBasis'],
-    beforeTable: ['reports.qualityCost.tableSort'],
-    extras: [],
-  },
   fairness: {
     afterSoWhat: ['reports.fairness.purpose'],
     beforeChart: [],
@@ -73,12 +63,10 @@ const HINTS = {
   },
 }
 
-// מצב-השבבים ההתחלתי פר-משטח. 🔴 **`onlyNoRating` דלוק כברירת-מחדל** — הכרטיס ①7 והמוקאפ
-// (`state.onlyNoRating = true`, שורה 1423), וגם השרת מצהיר זאת ב-`meta.default_filter`.
+// מצב-השבבים ההתחלתי פר-משטח.
 const DEFAULT_CHIPS = {
   'hostess-overview': {},
   reliability: { onlyFlag: false, onlyActive: false },
-  'quality-cost': { onlyNoRating: true },
   fairness: {},
 }
 
@@ -92,18 +80,13 @@ const TABLE_TITLES = {
       ? 'אין דיילות מתחת לסף'
       : `${isolateLtr(payload.rows.length)} הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך`,
   reliability: () => 'דיילות לפי ציון-אמינות · מהנמוך לגבוה',
-  'quality-cost': (payload, chips) =>
-    chips.onlyNoRating
-      ? 'הדיילות הפעילות שאין להן דירוג · מיון לפי משמרות, מהעמוסה'
-      : 'כל הדיילות הפעילות · מיון לפי משמרות, מהעמוסה',
   fairness: () => 'הדיילות לפי מספר המשמרות בחלון · מהעמוסה',
 }
 
-// 🔍 **הסינון-הצולב של המעטפת, פר-משטח — נמדד ולא הונח** (סקריפט על ארבעת המטענים החיים,
+// 🔍 **הסינון-הצולב של המעטפת, פר-משטח — נמדד ולא הונח** (סקריפט על המטענים החיים,
 // 16/09 11:2X, שמריץ את `autoFilterKey` של `ReportSurface` מילה-במילה):
 // ‏**מ14** `xKey='month'` · **מ15** `xKey='dow'` · **מ17** `xKey='x'` — אף אחד מהם אינו
-// מפתח-שורה ⇒ הזיהוי מחזיר `null` וממילא אין סינון-צולב. **מ16** `xKey='hourly_rate'` —
-// **כן** מפתח-שורה, והערכים נפגשים ⇒ הזיהוי תופס, ולכן הוא מכובה במפורש.
+// מפתח-שורה ⇒ הזיהוי מחזיר `null` וממילא אין סינון-צולב.
 function transformFor(slug, payload, chips) {
   if (slug === 'reliability') {
     // מיפוי תוויות-הציר קודם לסינון: שתי הפעולות עצמאיות, והסדר נבחר כך שבורר-היום
@@ -112,10 +95,6 @@ function transformFor(slug, payload, chips) {
     if (chips.onlyFlag) next = filterRows(next, isFlagged)
     if (chips.onlyActive) next = filterRows(next, isActive)
     return next
-  }
-  if (slug === 'quality-cost') {
-    const next = disableCrossFilter(payload)
-    return chips.onlyNoRating ? filterRows(next, hasNoRating) : next
   }
   if (slug === 'fairness') return fixResponseTimeUnit(payload)
   return payload
@@ -233,23 +212,6 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
         </>
       )
     }
-    if (surface.slug === 'quality-cost') {
-      return (
-        <ChipRow
-          label="מסנני-דף"
-          chips={[
-            {
-              key: 'onlyNoRating',
-              text: 'בלי דירוג בלבד',
-              on: chips.onlyNoRating,
-              onToggle: () => setChip('onlyNoRating', !chips.onlyNoRating),
-            },
-          ]}
-          announcement={`מוצגות ${isolateLtr(payload.rows.length)} שורות`}
-          testId="reports-chips-quality-cost"
-        />
-      )
-    }
     return null
   }
 
@@ -273,7 +235,7 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
       )}
       // רמזי-אריח (מ14 ב · ג) — מתחת לרצועת-האריחים ולפני הגרף, כפי שהיו.
       renderBeforeChart={() => <HintBlock ids={hints.beforeChart} testId="report-hints-chart" />}
-      // ✏️ רמזי-**קריאת-גרף** יורדים אל תוך כרטיס-הגרף, מתחת לדמות (מ16 ב · מ17 ב).
+      // ✏️ רמזי-**קריאת-גרף** יורדים אל תוך כרטיס-הגרף, מתחת לדמות (מ17 ב).
       // ‏`index === 0` כי לשני המשטחים האלה יש גרף אחד; משטח עם שניים היה חייב לבחור.
       renderChartFooter={(payload, index) =>
         index === 0 ? (

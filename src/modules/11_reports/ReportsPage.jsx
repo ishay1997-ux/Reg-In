@@ -24,7 +24,13 @@ import { MASKED_TEXT } from '@/lib/dashboard'
 import { formatIsraelDate, formatWindowLabel } from '@/lib/reportsFormat'
 import { cn } from '@/lib/utils'
 import { DRILL_INTENT, ROW_DOOR_KINDS } from './api'
-import { REPORT_TABS, canOpenTab, findSurface, findTab } from './reportsCatalog'
+import {
+  REPORT_TABS,
+  RETIRED_REPORT_TARGETS,
+  canOpenTab,
+  findSurface,
+  findTab,
+} from './reportsCatalog'
 import Envelope from './components/Envelope'
 import FiltersBar from './components/FiltersBar'
 import { DEFAULT_PERIOD, PERIOD_OPTIONS, parsePeriodParam, periodRange } from './reportsPeriod'
@@ -403,6 +409,8 @@ export default function ReportsPage() {
    */
   const canOpenTarget = useCallback(
     (target) => {
+      // ✂️ יעד שהוסר **במכוון** (מ16, 24/09/2026) — האריח נשאר עם הערך, בלי דלת. ר' `reportsCatalog.js`.
+      if (RETIRED_REPORT_TARGETS.includes(target?.report)) return false
       const door = locateDoor(target)
       if (!door) return true
       return canOpenTab(door.tab, permissions)

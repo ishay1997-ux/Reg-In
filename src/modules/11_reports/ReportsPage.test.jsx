@@ -668,6 +668,30 @@ describe('מ1 — מנתב-הדלתות', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
     expect(callReport.mock.calls.at(-1)[1].drill).toBeNull()
   })
+
+  // ✂️ 24/09/2026 (ליטושי-הכנס 0ג פריט 3): מ16 הוסר מהממשק, ואריח "דיילות פעילות" במ14 עדיין
+  // מצביע עליו מהמסד (נמדד חי). **יעד שהוסר במכוון ⇒ הערך נשאר, הדלת נעלמת** — בשונה מיעד לא-מוכר
+  // (הבדיקה שמעל), שנשאר דלת כדי לא לבלוע פגם-מטען.
+  it('יעד שהוסר במכוון (מ16) — הערך נשאר, הדלת נעלמת', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({
+        tiles: [
+          {
+            key: 'red',
+            label: 'דיילות פעילות',
+            value: 50,
+            format: 'int',
+            compare: null,
+            target: { tab: 'דיילות', report: 'report_m16_quality_cost', drill: null },
+          },
+        ],
+      }),
+    )
+    renderDoors()
+    expect(await screen.findByTestId('report-tile-red')).toHaveTextContent('דיילות פעילות')
+    expect(screen.queryByTestId('report-tile-link-red')).toBeNull()
+  })
 })
 
 // ── ✏️ סבב-3: 📐17 · שורת-המסננים · ניסוח ─────────────────────────────────
