@@ -917,14 +917,15 @@ describe('שלמות מפתחות-ההטמעה', () => {
     }
   })
 
-  it('אין מפתח בקובץ-הקופי שאיש אינו שותל — ו-11 הם כל מה שהלשונית שותלת', () => {
+  it('אין מפתח בקובץ-הקופי שאיש אינו שותל — ו-12 הם כל מה שהלשונית שותלת', () => {
     for (const key of Object.keys(M11_HOSTESSES_COPY)) {
       expect(used.has(key), `מפתח שאינו בשימוש: ${key}`).toBe(true)
     }
     // ✏️ 23/09/2026 — 38 ⇒ 14: המונחים ירדו מהשכבה (התוכנית §4ה, 2.3 · 2.5).
     // ✏️ 24/09/2026 — 14 ⇒ 11: שלושת מפתחות מ16 נמחקו עם המשטח.
-    expect(Object.keys(M11_HOSTESSES_COPY)).toHaveLength(11)
-    expect(used.size).toBe(11)
+    // ✏️ 25/09/2026 — 11 ⇒ 12: ‏`reports.hostessOverview.gapEvents` (הסבר שעבר משורת-המשנה של האריח לרמז — הכלל של ישי 02:2X).
+    expect(Object.keys(M11_HOSTESSES_COPY)).toHaveLength(12)
+    expect(used.size).toBe(12)
   })
 
   it('אין `pointer` באף ערך — רק רמה 2 נכתבת (הכרעת-ישי)', () => {
