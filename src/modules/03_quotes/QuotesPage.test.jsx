@@ -174,3 +174,35 @@ describe('מעבר-לשונית מאפס את העמוד', () => {
     expect(await screen.findByTestId('list-pager-page')).toHaveTextContent('1')
   })
 })
+
+// ✏️ 24/09/2026 (מבקרים טריים): הרמז משווה בין "פג בקרוב" ל"אירועים קרובים" — ולכן רק כשצ'יפ
+// "פג בקרוב" עצמו על המסך. ב"מאושרות" הוא מוסתר (אין תפוגה להצעה מאושרת) ו"אירועים קרובים" נשאר.
+describe('מצב 2: `quotes.expiringVsEventSoon` רק כש"פג בקרוב" מוצג', () => {
+  it('בתהליך — מוצג · מאושרות (רק "אירועים קרובים") — לא', async () => {
+    authState.onboardingMode = 2
+    try {
+      mockApi([
+        quoteFixture({ quote_id: 1101, event_name: 'בתהליך' }),
+        quoteFixture({
+          quote_id: 1102,
+          event_name: 'מאושרת קרובה',
+          quote_status: 'approved',
+          estimated_event_date: offsetIso(5),
+        }),
+      ])
+      renderQuotesPage()
+
+      await screen.findByTestId('quote-row-1101')
+      expect(screen.getByTestId('quotes-chip-expiring')).toBeInTheDocument()
+      expect(screen.getByTestId('hint-quotes.expiringVsEventSoon')).toBeInTheDocument()
+
+      fireEvent.click(screen.getByTestId('quotes-tab-approved'))
+      await screen.findByTestId('quote-row-1102')
+      expect(screen.getByTestId('quotes-chip-event-soon')).toBeInTheDocument()
+      expect(screen.queryByTestId('quotes-chip-expiring')).toBeNull()
+      expect(screen.queryByTestId('hint-quotes.expiringVsEventSoon')).toBeNull()
+    } finally {
+      delete authState.onboardingMode
+    }
+  })
+})

@@ -673,11 +673,12 @@ export default function SmartMatchPage({ projectId, onBack }) {
           )}
 
           {candidates.length > 0 && <Hint id="smartMatch.angles" />}
-          {/* 🆕 24/09/2026 (ליטושי-הכנס, B): "למה היא ראשונה?" כשהאמינות **דלוקה** — כשהיא כבויה,
-              הבאנר `sm-reliability-off` כבר אומר על מה הדירוג מבוסס. */}
-          {candidates.length > 0 && params?.reliabilityEnabled !== false && (
-            <Hint id="smartMatch.weightsWhy" />
-          )}
+          {/* ✂️ 24/09/2026 (מבקרים טריים, דרך הסגן): כאן ישב `smartMatch.weightsWhy` — "מי שבראש הרשימה
+              קיבלה את הציון המשוקלל הגבוה". **שקר:** הסדר על המסך הוא של הזווית (`sortByAngle`,
+              ברירת-מחדל 'קרבה' — `defaultSortAngle`), ואף משווה שם אינו קורא את הציון; ומי שנכנסת
+              לרשימה נקבע בשער (`passesGate`), לא בציון. הציון סמוי ונשמר רק כדרג-ההמלצה (`ranks`).
+              ⇒ אין מה לומר למשתמשת שמשנה את מה שהיא עושה — הרמז נמחק, ו-`smartMatch.angles` שמעליו
+              כבר אומר שהזוויות קובעות את הסדר. */}
 
           {candidates.length === 0 ? (
             <>

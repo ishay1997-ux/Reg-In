@@ -454,7 +454,8 @@ function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
       </DialogHeader>
 
       {isCancelled && <CancelBanner project={project} />}
-      {isCancelled && <Hint id="checklist.cancelledOrdered" />}
+      {/* ✏️ 24/09/2026 (מבקרים טריים): ‏"רשמי כאן את הכמות" — רק למי שיכולה לרשום (`edit`). */}
+      {isCancelled && canEdit && <Hint id="checklist.cancelledOrdered" />}
       {locked && !isCancelled && (
         <div
           role="status"
@@ -546,22 +547,22 @@ function ChecklistBody({ projectId, onOpenChange, onSaveSettledAfterClose }) {
             {EXPLAINER_SAVE}
           </p>
           {/* ✏️ 24/09/2026 (ביקורת-קוד): הרמז מסביר מה קורה כשמקלידים — רק למי שיכולה להקליד (`edit`),
-              כמו הרמז שמתחתיו. ל-`view` הוא היה מסביר פקדים שאין לה. */}
-          {canEdit && <Hint id="checklist.autoSave" />}
+              כמו הרמז שמתחתיו. ל-`view` הוא היה מסביר פקדים שאין לה.
+              ✏️ 24/09/2026 (מבקרים טריים, דרך הסגן): ושני הרמזים — רק כשהפרויקט **פעיל** (`!locked`).
+              באירוע שהסתיים אין מה להקליד ואין מה לסמן, ובמבוטל אי-אפשר לשנות מצב — לא 'הוזמן' ולא
+              'מוכן' — ושם `checklist.cancelledOrdered` שמעל הטבלה אומר מה כן עושים. */}
+          {canEdit && !locked && <Hint id="checklist.autoSave" />}
           {canEdit &&
-            !isCancelled &&
+            !locked &&
             sorted.some((row) => row.item_status !== 'ordered' && row.item_status !== 'ready') && (
               <Hint id="checklist.qtyLocked" />
             )}
         </div>
       )}
 
-      {isCancelled && (
-        <p className="text-xs text-slate-500" data-testid="checklist-locked-note">
-          הפרויקט בוטל — הפקדים נעולים, חוץ מרישום כמות שהגיעה.
-        </p>
-      )}
-
+      {/* ✏️ 24/09/2026 (מבקרים טריים, דרך הסגן): כאן ישבה שורה תחתונה (`checklist-locked-note`)
+          שחזרה על הבאנר מילה-במילה — "נעול" הופיע שלוש פעמים באותו חלון. הבאנר לבדו אומר את
+          העובדה ואת החריג. */}
       <ChecklistFooter onOpenChange={onOpenChange} />
     </>
   )
@@ -604,7 +605,8 @@ function CancelBanner({ project }) {
       {/* ✏️ 24/09/2026 (A4): העובדה + החריג בלבד. "אין לעדכן…" ו"הנעילה חלה על כל המשתמשות"
           ירדו (R18 · R27 — הפקדים המושבתים כבר אומרים זאת), והנימוק על פריט שהוזמן עבר לשכבה
           (`checklist.cancelledOrdered`). */}
-      אפשר עדיין לרשום כמות שהגיעה — שאר הפקדים נעולים.
+      {/* ✏️ 24/09/2026 (מבקרים טריים): "פקדים" ⇐ "שדות" — מילה שהמשתמשת אומרת. */}
+      אפשר עדיין לרשום כמות שהגיעה — שאר השדות נעולים.
     </div>
   )
 }
