@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   NO_VALUE,
+  customerIgnoredTilesLine,
   finiteNumber,
   formatAxisTick,
   formatByType,
@@ -366,5 +367,38 @@ describe('formatWindowLabel — תווית-השרת, נוסח-הגלולה וה�
       }),
     ).toBe(`${LRI}01/01/2026–06/09/2026${PDI}`)
     expect(formatWindowLabel({ surfaceLabel: 'נכון להיום', hideCustomer: true })).toBe('נכון להיום')
+  })
+})
+
+// ✏️ 25/09/2026 (הכרעת הסגן, מ21 F2) — אריחים שמתעלמים מהלקוח שנבחר אומרים את זה.
+describe('customerIgnoredTilesLine', () => {
+  const tiles = [
+    { key: 'drifting_count', label: 'לקוחות מתרחקים' },
+    { key: 'oldest_in_list', label: 'הוותיק ברשימה' },
+  ]
+
+  it('בלי לקוח נבחר ⇒ אין שורה', () => {
+    expect(customerIgnoredTilesLine(tiles, ['drifting_count', 'oldest_in_list'], null)).toBeNull()
+  })
+
+  it('`true` (משטחי הדיילות) או מערך ריק (מ20) ⇒ אין שורה — שם בורר-הלקוח מוסתר או שהכול מסונן', () => {
+    expect(customerIgnoredTilesLine(tiles, true, 213)).toBeNull()
+    expect(customerIgnoredTilesLine(tiles, [], 213)).toBeNull()
+  })
+
+  it('כל האריחים שעל המסך ברשימה ⇒ משפט אחד על כולם', () => {
+    expect(customerIgnoredTilesLine(tiles, ['drifting_count', 'oldest_in_list', 'x'], 213)).toBe(
+      'האריחים מחושבים על כל הלקוחות, לא רק על הלקוח שנבחר.',
+    )
+  })
+
+  it('אריח אחד מתוך כמה ⇒ ביחיד ובשמו', () => {
+    expect(customerIgnoredTilesLine(tiles, ['oldest_in_list'], 213)).toBe(
+      'האריח "הוותיק ברשימה" מחושב על כל הלקוחות, לא רק על הלקוח שנבחר.',
+    )
+  })
+
+  it('אף אריח שעל המסך אינו ברשימה ⇒ אין שורה', () => {
+    expect(customerIgnoredTilesLine(tiles, ['free_notes'], 213)).toBeNull()
   })
 })

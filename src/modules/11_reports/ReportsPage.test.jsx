@@ -474,6 +474,8 @@ function HostessDoorScreen() {
     <>
       <p>מסך דיילות</p>
       <p data-testid="hostess-door-param">{params.get('hostess') ?? ''}</p>
+      <p data-testid="hostess-door-filter">{params.get('filter') ?? ''}</p>
+      <p data-testid="hostess-door-return">{params.get('returnTo') ?? ''}</p>
     </>
   )
 }
@@ -692,6 +694,50 @@ describe('מ1 — מנתב-הדלתות', () => {
     renderDoors()
     expect(await screen.findByTestId('report-tile-red')).toHaveTextContent('דיילות פעילות')
     expect(screen.queryByTestId('report-tile-link-red')).toBeNull()
+  })
+
+  // ✏️ 25/09/2026 (הכרעת הסגן #1): אריח "אירועים עם חוסר" במ14 ⇐ `{ path: '/hostesses?filter=missing',
+  // module: 'דיילות' }` — דלת אל מסך מחוץ לדוחות, עם כתובת-הדוח לחזרה.
+  const pathTile = (target) => ({
+    key: 'gap',
+    label: 'אירועים עם חוסר',
+    value: 4,
+    format: 'int',
+    compare: null,
+    target,
+  })
+
+  it('יעד `path` ⇒ ניווט למסך, עם המסנן ועם כתובת-הדוח לחזרה', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({ tiles: [pathTile({ path: '/hostesses?filter=missing', module: 'דיילות' })] }),
+    )
+    renderDoors()
+    await click(await screen.findByTestId('report-tile-link-gap'))
+    expect(await screen.findByText('מסך דיילות')).toBeInTheDocument()
+    expect(screen.getByTestId('hostess-door-filter')).toHaveTextContent('missing')
+    expect(screen.getByTestId('hostess-door-return')).toHaveTextContent('/reports?tab=hostesses')
+  })
+
+  // המנכ"ל (CEO כאן) אינו נושא 'לוגיסטיקה' במפה ⇒ יעד שדורש אותה אינו דלת, והאריח עצמו נשאר.
+  it('יעד `path` בלי הרשאה על המודול ⇒ הערך נשאר, הדלת נעלמת', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({ tiles: [pathTile({ path: '/logistics', module: 'לוגיסטיקה' })] }),
+    )
+    renderDoors()
+    expect(await screen.findByTestId('report-tile-gap')).toHaveTextContent('אירועים עם חוסר')
+    expect(screen.queryByTestId('report-tile-link-gap')).toBeNull()
+  })
+
+  it('🔒 יעד `path` שאינו נתיב פנימי (`//…`) ⇒ אינו דלת', async () => {
+    permissions = CEO
+    callReport.mockResolvedValue(
+      doorPayload({ tiles: [pathTile({ path: '//evil.example/x', module: 'דיילות' })] }),
+    )
+    renderDoors()
+    expect(await screen.findByTestId('report-tile-gap')).toHaveTextContent('אירועים עם חוסר')
+    expect(screen.queryByTestId('report-tile-link-gap')).toBeNull()
   })
 })
 

@@ -18,7 +18,7 @@ import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Disclosure from '@/components/Disclosure'
 import FilterPill from '@/components/FilterPill'
-import { formatByType } from '@/lib/reportsFormat'
+import { customerIgnoredTilesLine, formatByType } from '@/lib/reportsFormat'
 import { missingReportParamsMessage } from '@/lib/reportsParams'
 import { DRILL_INTENT, ROW_DOOR_KINDS, callReport, normalizeCharts } from '../api'
 import ChartCard from './ChartCard'
@@ -170,6 +170,13 @@ function ExtraTable({ table, onDrill }) {
   return (
     <section className="mb-4" data-testid="report-extra-table">
       <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{table.title}</h3>
+      {/* ✏️ 25/09/2026 (הכרעת הסגן, מ15 F1): ‏`table.note` הגיע מהשרת ולא היה לו קורא (‏`git grep table.note` = 0).
+          במ15 זו הערה שמשנה את הקריאה — *"אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות"*. */}
+      {table.note && (
+        <p className="mb-1.5 text-sm text-slate-600" data-testid="report-extra-table-note">
+          {table.note}
+        </p>
+      )}
       <ReportTable
         columns={table.columns}
         rows={table.rows}
@@ -647,6 +654,11 @@ export default function ReportSurface({
   const charts = normalizeCharts(payload.chart)
   // ר' `isEmptyAfterLoad` למעלה — שני התנאים והנימוק המלא של כל אחד.
   const isEmptyPage = isEmptyAfterLoad(payload, customerId)
+  const customerIgnoredLine = customerIgnoredTilesLine(
+    payload.tiles,
+    payload.meta?.customer_filter_ignored,
+    customerId,
+  )
 
   const crumbs = payload.drill?.crumbs ?? []
   const drillLabel = crumbs.length > 1 ? crumbs[crumbs.length - 1].label : null
@@ -742,6 +754,11 @@ export default function ReportSurface({
       {/* ✏️ ⑩א — **בין "אז מה" לאריחים**, בדיוק במקום שהכרטיסים מעגנים בו את רמז-ה-`why`. */}
       {renderAfterSoWhat?.(payload)}
 
+      {customerIgnoredLine && (
+        <p className="mb-2 text-sm text-slate-600" data-testid="report-tiles-all-customers">
+          {customerIgnoredLine}
+        </p>
+      )}
       <Tiles tiles={payload.tiles} onOpenTarget={(target) => onDrill(target)} />
 
       {charts.length > 0 && renderBeforeChart?.(payload)}

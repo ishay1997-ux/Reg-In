@@ -106,6 +106,19 @@ function locateDoor(next) {
  * שורה** (`src/modules/04_hostesses/HostessesPage.jsx`, `writeParams` — אותו אידיום
  * כמו `CustomersPage`/`ProjectsPage`, ר' `src/CLAUDE.md §3`).
  */
+/**
+ * 🚪 **דלת-אריח אל מסך מחוץ לדוחות — `{ path, module }`** (25/09/2026, הכרעת הסגן #1: אריח "אירועים עם
+ * חוסר" במ14 ⇐ `/hostesses?filter=missing`). ‏`module` = שם-המודול בטבלת-ההרשאות; בלי קריאה עליו האריח
+ * אינו דלת (`canOpenTarget`), והמסך עצמו גדור גם ב-`ProtectedRoute`.
+ * 🔒 רק נתיב פנימי (`/…`, לא `//…`) — יעד שמגיע מהמסד לא מנווט אל מחוץ לאתר.
+ * ⚠️ **הקוד שלפני 25/09 (`main` 94db912d) שובר על הצורה הזו** — מצייר דלת, והלחיצה כותבת `?drill={"path":…}`.
+ * ⇒ המיגרציה שמוסיפה יעד כזה (`20260925010350`) מוחלת רק אחרי שהקובץ הזה עולה לאוויר.
+ */
+const isInternalPath = (path) =>
+  typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')
+const canReadModule = (module, permissions) =>
+  !module || permissions?.[module] === 'edit' || permissions?.[module] === 'view'
+
 const DOOR_PATHS = Object.freeze({
   project: (id) => `/projects/${id}`,
   customer: (id) => `/customers/${id}`,
@@ -412,6 +425,9 @@ export default function ReportsPage() {
     (target) => {
       // ✂️ יעד שהוסר **במכוון** (מ16, 24/09/2026) — האריח נשאר עם הערך, בלי דלת. ר' `reportsCatalog.js`.
       if (RETIRED_REPORT_TARGETS.includes(target?.report)) return false
+      if (target?.path !== undefined) {
+        return isInternalPath(target.path) && canReadModule(target.module, permissions)
+      }
       const door = locateDoor(target)
       if (!door) return true
       return canOpenTab(door.tab, permissions)
@@ -427,6 +443,12 @@ export default function ReportsPage() {
 
   // 🚪 שלושת הענפים — ר' `locateDoor`/`DOOR_PATHS` למעלה.
   function openDoor(next, row, intent) {
+    // 🚪 דלת אל מסך מחוץ לדוחות (ר' `isInternalPath`) — עם כתובת-הדוח לחזרה, כמו דלת-שורה.
+    if (next?.path !== undefined) {
+      if (!isInternalPath(next.path) || !canReadModule(next.module, permissions)) return
+      navigate(withReturnTo(next.path, `/reports?${searchParams.toString()}`))
+      return
+    }
     if (next?.tab && next?.report) {
       const door = locateDoor(next)
       // 🚫 יעד שאינו בקטלוג (משטח נדחה · שם שהשתנה) ⇒ **לא מנווטים ולא כותבים מצב-זבל**;
