@@ -114,6 +114,38 @@ describe('KpiTile — 📐1/📐4 · חצי-ההשוואה מעוצב בפורמ
     expect(line).not.toHaveTextContent('—')
   })
 
+  // 🆕 24/09/2026 (ליטושי-הכנס 0ג פריט 6): מ20 הציג *"4.0 ▲ אשתקד: 4.0"* — החץ נכון (4.006 מול
+  // 3.993), אבל על המסך שני מספרים זהים וחץ. ⇒ כשהערך וההשוואה **מוצגים** זהים: בלי חץ, "ללא שינוי".
+  it('ערך והשוואה שמוצגים זהים — בלי חץ, והמילים "ללא שינוי"', () => {
+    const tile = {
+      key: 'avg',
+      label: 'ציון ממוצע',
+      value: 4.006,
+      format: 'ratio',
+      compare: { value: 3.993, label: 'אשתקד', direction: 'up' },
+    }
+    const { container } = render(<KpiTile tile={tile} />)
+    const line = screen.getByTestId('kpi-compare')
+    expect(line).toHaveTextContent('אשתקד: ללא שינוי')
+    expect(line).not.toHaveTextContent('4.0')
+    expect(container.querySelector('[aria-hidden="true"]')?.textContent ?? '').not.toContain('▲')
+  })
+
+  it('ערכים שמוצגים שונים — החץ והמספר נשארים', () => {
+    const tile = {
+      key: 'avg',
+      label: 'ציון ממוצע',
+      value: 4.06,
+      format: 'ratio',
+      compare: { value: 3.99, label: 'אשתקד', direction: 'up' },
+    }
+    render(<KpiTile tile={tile} />)
+    const line = screen.getByTestId('kpi-compare')
+    expect(line).toHaveTextContent('▲')
+    expect(line).toHaveTextContent('4.0')
+    expect(line).not.toHaveTextContent('ללא שינוי')
+  })
+
   // 🚫 החץ אינו צבוע (📐1) ואינו נקרא לקורא-מסך — הוא סימן-כיוון, לא שיפוט.
   it('החץ קיים, aria-hidden, ובלי מחלקת-צבע', () => {
     const { container } = render(<KpiTile tile={TILE} />)

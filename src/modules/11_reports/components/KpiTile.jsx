@@ -59,14 +59,23 @@ function SubLine({ sub }) {
  * ⚠️ **וערך שכבר מחרוזת עובר כמות-שהוא** — לשונית שתיקנה את זה אצלה בטרנספורם מוסרת
  * מחרוזת מעוצבת, ועיצוב-כפול היה מחזיר `—` (‏`Number("⁦206,002 ₪⁩")` אינו מספר).
  */
-function CompareLine({ compare, fallbackFormat }) {
+function CompareLine({ compare, fallbackFormat, tileValueText }) {
   if (!compare) return null
   const format = compare.format ?? fallbackFormat
-  const glyph = ARROW[compare.direction]
   const delta = compare.delta === undefined ? null : formatDelta(compare.delta, format)
   const hasValue = compare.value !== null && compare.value !== undefined
   const valueText =
     typeof compare.value === 'string' ? compare.value : formatByType(compare.value, format)
+  // 🆕 24/09/2026 (ליטושי-הכנס 0ג פריט 6): **ערך והשוואה שמוצגים זהים ⇒ "ללא שינוי", בלי חץ.**
+  // נמדד במ20: *"4.0 ▲ אשתקד: 4.0"* — החץ נכון במספרים הגולמיים (4.006 מול 3.993), אבל על המסך
+  // הקורא רואה שני מספרים זהים וחץ שסותר אותם. ההשוואה היא על **הטקסט המוצג** (אחרי העיגול), כי
+  // זה מה שהעין משווה. רק להשוואה-עם-כיוון (תקופה קודמת) — "מתוך N" שווה לערך אינו "ללא שינוי".
+  const unchanged =
+    hasValue &&
+    Boolean(compare.direction) &&
+    tileValueText !== undefined &&
+    stripIsolates(valueText) === stripIsolates(tileValueText)
+  const glyph = unchanged ? null : ARROW[compare.direction]
   return (
     <>
       {/* ⚠️ `display:block` ולא `flex` — 🔴 **זה היה שורש רב-קבצי** (§⑥, תיקון 10/09/2026):
@@ -91,7 +100,8 @@ function CompareLine({ compare, fallbackFormat }) {
             במ21/מ22 מוסרים `label` שלם עם `value: null`, והמסך הציג *"… לא סכום שצפוי
             להיאבד: —"* — מקף שנקרא כ"אין לי את הנתון" על משפט שמלכתחילה אינו נושא מספר.
             ⇒ התווית לבדה, בלי נקודתיים ובלי `—`. */}
-        {hasValue && (
+        {hasValue && unchanged && <>: ללא שינוי</>}
+        {hasValue && !unchanged && (
           <>
             : <Ltr>{valueText}</Ltr>
             {delta && delta !== NO_VALUE && <> ({delta})</>}
@@ -143,7 +153,8 @@ function CompareLine({ compare, fallbackFormat }) {
 // 📏 **30 תווים גלויים** — "35 חשבוניות פתוחות" (18) נשאר; "0 מחמשת הגדולים (44.4% מההכנסה)
 // מסומנים 'מתרחק'" (52) עובר ל-ⓘ. תווי-הבידוד אינם נספרים — הם בלתי-נראים.
 const SUB_VISIBLE_MAX = 30
-const visibleLength = (text) => String(text ?? '').replace(/[⁦-⁩]/g, '').length
+const stripIsolates = (text) => String(text ?? '').replace(/[⁦-⁩]/g, '')
+const visibleLength = (text) => stripIsolates(text).length
 
 function splitLines(tile, masked) {
   if (masked) return { showSub: false, showCompare: false, details: { window: tile.window } }
@@ -205,7 +216,11 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
             {/* סדר-המוקאפ: המכנה ואז ההשוואה (`.sub · .cmp`). */}
             {showSub && <SubLine sub={tile.sub} />}
             {showCompare && (
-              <CompareLine compare={{ ...tile.compare, note: null }} fallbackFormat={tile.format} />
+              <CompareLine
+                compare={{ ...tile.compare, note: null }}
+                fallbackFormat={tile.format}
+                tileValueText={formatByType(tile.value, tile.format)}
+              />
             )}
           </>
         ) : null
