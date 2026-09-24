@@ -220,9 +220,9 @@ export function buildSmartMatchCandidates(
       // ולדיילת יש רק עיר, שני הצדדים נוחתים על אותה נקודה בדיוק ⇒ מרחק `0` ⇒ ציון-קרבה
       // מושלם. כלומר **ככל שיש עליה פחות מידע כך היא מדורגת גבוה יותר.** הדלת היחידה.
       distanceKm: candidateDistanceKm({ lat: hostess.lat, lng: hostess.lng }, eventPoint),
-      // ✏️ **הקלט של מנוף-ההוגנות — עד תאריך-האירוע** (הכרעת-ישי 25/09/2026). הצ'יפ על הכרטיס
-      // קורא את `weeksSinceWorkedToday` שמתחת, כי הוא עובדה על היום.
-      weeksSinceWorked: weeksSinceLastWorked(finalRows, todayIso, eventDate),
+      // ✏️ **הקלט של מנוף-ההוגנות — נכון לתאריך-האירוע** (הכרעת-ישי 25/09/2026): כולל שיבוץ
+      // סופי עתידי שלפניו. הצ'יפ על הכרטיס קורא את `weeksSinceWorkedToday` שמתחת — עובדה על היום.
+      weeksSinceWorked: weeksSinceLastWorked(finalRows, eventDate),
       weeksSinceWorkedToday: weeksSinceLastWorked(finalRows, todayIso),
       unavailability: hostess.hostess_unavailability ?? [],
       hasSameDayFinalAssignment: sameDay.has(hostess.hostess_id),

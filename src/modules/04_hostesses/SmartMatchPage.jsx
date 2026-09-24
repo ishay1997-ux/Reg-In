@@ -30,6 +30,7 @@ import {
   activeWeights,
 } from '@/lib/smartMatch'
 import { buildSmartMatchCandidates } from '@/lib/smartMatchCandidates'
+import { todayIsoInJerusalem } from '@/lib/projectChanges'
 import { SORT_ANGLES, sortByAngle, isAngleAvailable, defaultSortAngle } from '@/lib/sortAngles'
 import {
   ASSIGNMENT_ACTION,
@@ -112,7 +113,10 @@ export default function SmartMatchPage({ projectId, onBack }) {
     }
   }, [projectId, reloadTick])
 
-  const today = now.slice(0, 10)
+  // 🐞 **תאריך ישראל, לא UTC** (ממצא הבודק על `d4b4627c`, #4): `now.slice(0, 10)` הוא התאריך
+  // ב-UTC, כלומר עד 02:00–03:00 בלילה "היום" היה עדיין אתמול — וחלון-החישוב, "אירוע שכבר עבר"
+  // והצ'יפ "עבדה לאחרונה" זזו ביום. הפונקציה הקיימת של הפרויקט, לא עותק חדש.
+  const today = todayIsoInJerusalem(now)
   const project = data?.project ?? null
 
   const params = useMemo(() => (data?.params ? parseSmartMatchParams(data.params) : null), [data])

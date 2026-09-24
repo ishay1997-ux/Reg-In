@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildSmartMatchCandidates } from './smartMatchCandidates'
+import { fairnessLeverage } from './smartMatch'
 
 // ── שכבת-ההרכבה: שורות-מסד ⇒ הקלט ש-`rankCandidates` דורש ────────────────────
 //
@@ -534,5 +535,42 @@ describe('buildSmartMatchCandidates — medianResponseHours', () => {
         answered(3, 1, '2023-01-01'),
       ]),
     ).toBe(null)
+  })
+})
+
+// ── מנוף-ההוגנות "נכון לתאריך-האירוע" — ממצא הבודק על d4b4627c (#1) ─────────────────────
+describe('buildSmartMatchCandidates — "עבדה" למנוף נמדד נכון לתאריך-האירוע', () => {
+  // ‏09/08 היום · 22/08 האירוע. עבדה ב-01/06 (עבר) · ומשובצת סופית ל-20/08 (עתידי, לפני האירוע).
+  const past = () => row(30, 1, 'finally_approved', '2026-06-01', 1, 55)
+  const upcoming = () => row(31, 1, 'finally_approved', '2026-08-20', 1, 55)
+
+  function build(assignments) {
+    return buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments,
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+      WINDOW,
+    )[0]
+  }
+
+  it('🔴 שיבוץ סופי עתידי שלפני האירוע ⇒ "עבדה" לפני 0 שבועות ⇒ מנוף ×1.00, לא התקרה', () => {
+    const c = build([past(), upcoming()])
+    expect(c.weeksSinceWorked).toBe(0) // 20/08 ⇐ 22/08
+    expect(fairnessLeverage(c.weeksSinceWorked, 0.02, 8)).toBe(1)
+    // הצ'יפ נשאר עובדה על היום: רק 01/06 עבר ⇒ 69 יום = 9 שבועות.
+    expect(c.weeksSinceWorkedToday).toBe(9)
+  })
+
+  it('🔴 ואותו שיבוץ שבוטל אינו "עבדה" ⇒ הבונוס חוזר (01/06 ⇐ 22/08 = 11 ⇒ התקרה 8)', () => {
+    const cancelled = upcoming()
+    cancelled.projects.project_status = 'cancelled'
+    const c = build([past(), cancelled])
+    expect(c.weeksSinceWorked).toBe(11)
+    expect(fairnessLeverage(c.weeksSinceWorked, 0.02, 8)).toBeCloseTo(1.16, 10)
   })
 })

@@ -141,7 +141,8 @@ function jerusalemWallClockToUtcMs(year, month, day, hour, minute) {
 }
 
 // תאריך `YYYY-MM-DD` של "עכשיו" בשעון ישראל — נקודת-הפתיחה לספירת ימי-העסקים.
-function todayIsoInJerusalem(now) {
+// ✏️ מיוצא 25/09/2026 — צרכן שני: "היום" של השיבוץ-החכם (`SmartMatchPage.jsx`), שחושב כתאריך UTC.
+export function todayIsoInJerusalem(now) {
   const instant = now instanceof Date ? now : new Date(now)
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Jerusalem',
