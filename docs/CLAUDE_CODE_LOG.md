@@ -46,6 +46,15 @@
 
 ## Session Log (newest first)
 
+### 24/09/2026 evening — M12 follow-up after production (`ishay/module-12-integration`, executor for the deputy; board `docs/micro_guides/module-12.md` §4 step 6)
+- Merged `origin/dev` (`9c3fefa9`; in `main` as `b5ef4255`, Production deployment `6642131150` success — checked with `gh api`) → `5829bb2b`. Conflicts only in STATUS and this log; both sides kept, newest first by commit time. The board file was not touched by dev.
+- Written, NOT applied: `supabase/migrations/20260924190500_module11_drop_m16_quality_cost.sql` — a guard that raises if any other function body calls `report_m16_quality_cost(` (plpgsql leaves no `pg_depend` row, so a plain drop would not fail on such a caller), then the exact-signature drop, no `if exists`, no `cascade`. No caller in `src` · `e2e` · `supabase/functions` · `scripts`, in the branch and in `origin/main`. `db_roadmap.md` §10ב ⏳ row · `PROJECT_MASTER` §6 `hourly_rate` row marked closed by the file, apply ⏳, and the freeze it imposed (`RepositoryTab` export) explicitly not released.
+- Rule text for the deputy's migration authority, Ishay verbatim: `supabase/migrations/CLAUDE.md` §2 step 2 (+ one-line pointers in its §1 table and §4 step 4) and root `CLAUDE.md` §2.4.
+- Stop hook `check-docs-updated.sh`: `stop_hook_active` true ⇒ no second block; enforcement 1–3 now measures only CHANGED ∩ marker (same cut as enforcement 0). `*` in the marker keeps the old behaviour; the empty-CHANGED early exit (Ishay 12/08) untouched. New `.claude/hooks/test-check-docs.sh` (throwaway repos): new hook 6/6, old hook 4/6 — fails exactly cases 3 (`stop_hook_active`) and 4 (other-folder marker).
+- CI: `npm run check:bidi` step after Lint (ran locally first: clean).
+- Verified: `npm run gate` exit 0 (136 files · 3,319 tests; lint = the one pre-existing warning; docs-structure 171 files 0 findings) — run on the tree with every item's edit, before this LOG/STATUS entry. `npm ci` was needed first (no `node_modules` in this worktree).
+- Gotchas: (1) the 24/09 block was caused by a *nested* worktree — the deputy session's marker held only `.claude/worktrees/agent-abb466…/…` paths, which fall inside the main checkout's toplevel; sibling worktrees (`Reg-In-*-wt`) are outside it and never recorded at all. (2) `db_roadmap.md` §10ב still lists `20260924140000` and `20260924141000` as ⏳ WRITTEN while the board (§4 step 3) says the deputy applied them — not re-measured here.
+
 ### 24/09/2026 afternoon — Deputy shift after compaction (board `docs/micro_guides/module-12.md`)
 - Board kept live on `ishay/module-12-integration` (`7c135eae`…`86281af4`). D2 subagent finished `ishay/system-polish` @ `9b72d46d`; it had auto-compacted at 15:27 at its 1M window — post-compaction commits checked against its queue. Session 2 is now the writer on that branch (output cap for `draft-followup` + subtitle fix); the tester started the read-only parts of the final gate early.
 - D2 live calls: two 502s at 18.7 s / 26.7 s, no 429 ⇒ not quota; `generation_config` has no `max_output_tokens` (`index.ts:228`) ⇒ runaway generation is the working hypothesis. The ≤10 s target is not met yet.
