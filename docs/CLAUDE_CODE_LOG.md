@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 24/09/2026 evening — Conference polish in production (deputy)
+- `main` @ `b5ef4255` (PR #157 system-polish ⇐ dev, #158 dev ⇐ main); Vercel Production `6642131150` success; live bundle carries the new code. Gate by the tester on `9c922b04`: e2e 199 passed / 0 failed, axe 0 critical/serious, demo records unchanged. The tester found a real smoke failure (`logistics_upcoming_orders` missing from the read-only list) — fixed `9c922b04`.
+- D2 draft button hidden (`FOLLOWUP_AI_AVAILABLE = false`): three live calls got no provider answer, with and without an output cap.
+- Applied: `module11_m07_singular_invoice`, `module5_m12_status_names`, `module11_drop_m16_quality_cost` (backup of the exact body in `seed_snapshot.function_backups`, md5 verified, not exposed). Iron rule 10 and the migration gate got the deputy exception (Ishay 24/09, quoted in both files).
+- Gotcha: the docs stop hook measured the main checkout for edits made in other worktrees and looped without `stop_hook_active` — fixed in `.claude/hooks/check-docs-updated.sh` on this branch (demo 6/6, old 4/6). Branches cleaned: system-polish, system-polish-copy, e2e-stale-fixes-agent2.
+
 ### 24/09/2026 evening — M12 follow-up after production (`ishay/module-12-integration`, executor for the deputy; board `docs/micro_guides/module-12.md` §4 step 6)
 - Merged `origin/dev` (`9c3fefa9`; in `main` as `b5ef4255`, Production deployment `6642131150` success — checked with `gh api`) → `5829bb2b`. Conflicts only in STATUS and this log; both sides kept, newest first by commit time. The board file was not touched by dev.
 - Written, NOT applied: `supabase/migrations/20260924190500_module11_drop_m16_quality_cost.sql` — a guard that raises if any other function body calls `report_m16_quality_cost(` (plpgsql leaves no `pg_depend` row, so a plain drop would not fail on such a caller), then the exact-signature drop, no `if exists`, no `cascade`. No caller in `src` · `e2e` · `supabase/functions` · `scripts`, in the branch and in `origin/main`. `db_roadmap.md` §10ב ⏳ row · `PROJECT_MASTER` §6 `hourly_rate` row marked closed by the file, apply ⏳, and the freeze it imposed (`RepositoryTab` export) explicitly not released.
