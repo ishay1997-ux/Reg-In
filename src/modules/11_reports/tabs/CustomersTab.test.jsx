@@ -316,7 +316,8 @@ const driftingPayload = () =>
         format: 'int',
         sub: '⁦161,009 ₪⁩ בשנה האחרונה',
         window: 'נכון ל-16/09',
-        compare: null,
+        // ✏️ 25/09/2026 (`20260925000100`): הצורה שהמסד שולח — מה שכלל-120-הימים מוצא לבדו, בלי כיוון.
+        compare: { value: 11, label: 'כלל «רדום» לבדו מוצא', direction: null },
         target: null,
         detail: { only_personal: 3, dormant_rule_finds: 11 },
       },
@@ -707,6 +708,11 @@ describe('מ21 · לקוחות מתרחקים', () => {
     const personal = screen.getByTestId('report-tile-only_personal_cadence')
     expect(personal).not.toHaveTextContent('₪')
     expect(personal).toHaveTextContent('⁦3⁩')
+    // ✏️ 25/09/2026 (`20260925000100`): ההשוואה אומרת מה שהכלל מוצא, ולא "ללא שינוי".
+    const personalCompare = within(personal).getByTestId('kpi-compare')
+    expect(personalCompare).toHaveTextContent('כלל «רדום» לבדו מוצא: ')
+    expect(personalCompare).toHaveTextContent('11')
+    expect(personalCompare).not.toHaveTextContent('ללא שינוי')
 
     // 🔴 **הדליפה שסבב-הביקורת תפס (ממצא 1, חוסם):** הדף הסתיר את הסכום באריח, בשורת-המשנה
     // ובעמודה — והדפיס אותו בשורת-"אז מה" שמעליהם. אין ₪ בשום מקום בדף הזה לזהות הזו.
