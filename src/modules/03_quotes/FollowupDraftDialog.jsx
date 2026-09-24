@@ -218,6 +218,7 @@ function FollowupDraftPanel({ quoteId }) {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               className="text-right"
+              placeholder="לדוגמה: מעקב אחרי הצעת המחיר"
               data-testid="followup-subject"
             />
           </div>
@@ -231,6 +232,7 @@ function FollowupDraftPanel({ quoteId }) {
               onChange={(e) => setBody(e.target.value)}
               rows={10}
               className={`${FIELD} resize-y leading-relaxed`}
+              placeholder="לדוגמה: שלום, רצינו לבדוק אם עלו שאלות על ההצעה."
               data-testid="followup-body"
             />
           </div>
