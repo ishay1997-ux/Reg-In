@@ -659,7 +659,10 @@ export default function QuotesPage() {
           </div>
         </div>
 
-        {showChips && <Hint id="quotes.expiringVsEventSoon" className="mb-2" />}
+        {/* ✏️ 24/09/2026 (מבקרים טריים): הרמז משווה בין שני הצ'יפים — ולכן רק כשצ'יפ "פג בקרוב" עצמו
+            מוצג. ב"מאושרות"/"נדחו" הוא מוסתר (תפוגה קיימת רק ל-in_progress) ו"אירועים קרובים" לבדו
+            נשאר — `showChips` היה מציג שם הסבר על צ'יפ שאינו על המסך. */}
+        {showExpiringChip && <Hint id="quotes.expiringVsEventSoon" className="mb-2" />}
 
         {/* חלון-הזמן — שורה עצמאית מתחת לשורת-הסינון (הרחבת השורה הקיימת נמדדה שוברת אותה,
             ר' ההערה למעלה על 1,174px בתוך 960px). מציג-ומאפס עמוד יחד (הכרעת-ישי 04/09/2026). */}

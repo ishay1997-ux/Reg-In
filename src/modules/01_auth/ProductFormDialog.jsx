@@ -312,7 +312,9 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
                 data-testid="product-form-base-price"
               />
               <FieldError name="base_price" message={fieldErrors.base_price} />
-              <Hint id="prices.openQuotes" />
+              {/* ✏️ 24/09/2026 (מבקרים טריים): "שינוי מחיר כאן" — רק בעריכה. למוצר חדש אין עדיין
+                  אף הצעה שהמחיר שלו יכול לגעת בה. */}
+              {isEdit && <Hint id="prices.openQuotes" />}
             </div>
 
             <div className="flex flex-col gap-1.5">
