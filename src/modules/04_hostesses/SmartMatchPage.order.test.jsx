@@ -205,3 +205,48 @@ describe('🎯 שיבוץ חכם — הסדר שהמנהלת רואה על המ�
     expect(screen.getByTestId('sm-angle-note').textContent).toContain('זמן-תגובה')
   })
 })
+
+// ⏱️ **אירוע מתחת ל-72 שעות** — "תענה הכי מהר" מתחת ל-72 שעות, אחרת "המלצת המערכת".
+// הכרעת-ישי 30/07/2026 (`spec.md` §ארבע הזוויות) עומדת; זו של 25/09 החליפה רק את ה"אחרת".
+// "היום" = 20/08 09:00 ⇒ כ-57 שעות לפני 22/08 18:00 (מתחת ל-72, ומעל חלון ה-24).
+describe('⏱️ אירוע מתחת ל-72 שעות — ברירת-המחדל תלויה בנתוני-זמן של המועמדות', () => {
+  // שלוש תשובות דרך הקישור לכל אחת מ-`hostessHours` — מספיק לחציון (סף 3).
+  function withResponseTimes(data, hostessHours) {
+    const sent = Date.parse('2026-03-01T09:00:00Z')
+    const used = new Map()
+    const assignments = data.assignments.map((r) => {
+      const hours = hostessHours[r.hostess_id]
+      const count = used.get(r.hostess_id) ?? 0
+      if (hours === undefined || count >= 3) return r
+      used.set(r.hostess_id, count + 1)
+      return {
+        ...r,
+        invite_sent_at: new Date(sent).toISOString(),
+        responded_at: new Date(sent + hours * 3_600_000).toISOString(),
+      }
+    })
+    return { ...data, assignments }
+  }
+
+  beforeEach(() => {
+    vi.setSystemTime(new Date('2026-08-20T09:00:00Z'))
+  })
+
+  it('🔴 יש למועמדות זמן-תגובה ⇒ "תענה הכי מהר": דנה (שעה) ← נועה (20 שעות) ← מיכל (לא ידוע)', async () => {
+    // הנתונים מבחינים: הסדר הזה שונה גם מההמלצה (נועה←מיכל←דנה) וגם מהקרבה (דנה←מיכל←נועה).
+    getSmartMatchData.mockResolvedValue(withResponseTimes(anchorData(), { 1: 20, 2: 1 }))
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+
+    expect(await candidateNamesOnScreen()).toEqual(['דנה', 'נועה', 'מיכל'])
+    expect(screen.getByTestId('sm-angle-fastest').className).toContain('bg-teal-50')
+  })
+
+  it('🔴 אין למועמדות זמן-תגובה ⇒ נופלים להמלצה, לא למיון לפי שדה ריק', async () => {
+    getSmartMatchData.mockResolvedValue(anchorData())
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+
+    expect(await candidateNamesOnScreen()).toEqual(['נועה', 'מיכל', 'דנה'])
+    expect(screen.getByTestId('sm-angle-recommended').className).toContain('bg-teal-50')
+    expect(screen.getByTestId('sm-angle-fastest').disabled).toBe(true)
+  })
+})
