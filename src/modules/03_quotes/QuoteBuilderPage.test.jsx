@@ -15,6 +15,9 @@ import QuoteBuilderPage from './QuoteBuilderPage'
 import { getPricingCatalog, getQuote, getQuoteScreenParams } from '@/modules/03_quotes/api'
 import { listCustomers } from '@/modules/02_customers/api'
 
+// ✏️ 24/09/2026: ב-CI אין `.env.local` — `src/api/email.js` (שהדף מייבא) יוצר את הלקוח בזמן-טעינה ונפל
+// על "supabaseUrl is required" (השחזור: `VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY= npx vitest run <file>`).
+vi.mock('@/supabaseClient', () => ({ supabase: {} }))
 vi.mock('@/modules/03_quotes/api', () => ({
   createQuote: vi.fn(),
   getPricingCatalog: vi.fn(),
