@@ -1,10 +1,13 @@
 // בדיקות-יחידה ל-`quoteFollowup.js` — טיוטת מייל-המעקב בעזרת AI (ליטושי-הכנס D2, 24/09/2026).
 // מה נשמר כאן: **מתי הכפתור מוצג ומושבת** (מטריצת הסטטוס × היומן × ההרשאה) · **סיווג-הכשל** (מכסה
 // לעולם לא מציעה "נסי שוב") · **טיוטה ריקה אינה טיוטה** · **mailto שלא נחתך באמצע משפט**.
+import fs from 'node:fs'
+import path from 'node:path'
 import { describe, it, expect } from 'vitest'
 import {
   FOLLOWUP_AI_AVAILABLE,
   FOLLOWUP_CHECKING_REASON,
+  FOLLOWUP_DRAFT_TIMEOUT_MS,
   FOLLOWUP_FAILED_MESSAGE,
   FOLLOWUP_NOT_SENT_REASON,
   FOLLOWUP_QUOTA_MESSAGE,
@@ -172,5 +175,26 @@ describe('buildFollowupMailto — קישור שלם, או בלי גוף; לעו�
     expect(bodyIncluded).toBe(false)
     expect(href).not.toContain('body=')
     expect(href).toContain(`subject=${encodeURIComponent('מעקב')}`)
+  })
+})
+
+// 🔗 **החלון מחכה יותר מהשרת — נבדק מול קוד-השרת עצמו, לא מול מספר שהועתק.** השרת מנסה שוב על 5xx
+// כל עוד לא עבר `BUDGET_MS`, וכל ניסיון מחכה עד `PROVIDER_TIMEOUT_MS`; ⇒ הוא עונה לכל המאוחר אחרי
+// סכומם. חלון שמוותר קודם מציג "הניסוח נכשל" על טיוטה שעוד בדרך. פונקציית-השרת היא Deno ולא ניתנת
+// לייבוא כאן, ולכן המספרים נקראים מהטקסט שלה.
+describe('FOLLOWUP_DRAFT_TIMEOUT_MS מול תקציב-השרת', () => {
+  const serverSource = fs.readFileSync(
+    path.resolve(process.cwd(), 'supabase/functions/draft-followup/index.ts'),
+    'utf8',
+  )
+  const readMs = (name) => {
+    const match = serverSource.match(new RegExp(`const ${name} = ([0-9_]+)`))
+    expect(match, `${name} לא נמצא בקוד-השרת`).not.toBeNull()
+    return Number(match[1].replaceAll('_', ''))
+  }
+
+  it('ארוך מהמקרה הגרוע של השרת (תקציב + ניסיון אחרון), עם מרווח לרשת', () => {
+    const worstServerMs = readMs('BUDGET_MS') + readMs('PROVIDER_TIMEOUT_MS')
+    expect(FOLLOWUP_DRAFT_TIMEOUT_MS).toBeGreaterThanOrEqual(worstServerMs + 5_000)
   })
 })

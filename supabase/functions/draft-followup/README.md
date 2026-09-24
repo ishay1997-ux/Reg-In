@@ -56,8 +56,7 @@ blocked user sending a bad body gets 400 and learns she *would* have passed.
 | quote is neither `in_progress` nor `rejected` with `rejection_reason = 'פג תוקף'` | **409** | `{error: 'אפשר לנסח מייל מעקב רק להצעה פתוחה, או להצעה שפג תוקפה.'}` |
 | `in_progress` quote with no successful send in `email_log` | **409** | `{error: 'ההצעה עוד לא נשלחה ללקוח.'}` — the same sentence the dialog shows beside the disabled button |
 | provider **429** (quota) | **429** | `{status: 'quota', error: 'הגעת למכסת ה-AI — נסי שוב מאוחר יותר.', provider_error}` — **not** retried |
-| provider 5xx (fast) | retried **once** (1.5 s wait, with only what is left of the 27 s budget), then **502** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
-| provider timeout (25 s) / network | **not** retried — the budget is spent; **502** | same `failed` body |
+| provider 5xx, including timeout (60 s) / network (504) | retried like `classify-feedback`: waits 2 s then 5 s, each retry only if the wait ends before the 90 s budget; then **502** (worst case ≈ 150 s — the dialog waits 160 s) | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
 | provider 400/401/403, non-JSON, empty text, model JSON invalid | **502** | same `failed` body |
 | model draft fails the guard (below) | **502** | same `failed` body, `provider_error` names the rule |
 | database read error | **500** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.'}` |
@@ -126,8 +125,8 @@ Hebrew · business-polite, warm, not fawning · **gender-neutral** (the email go
 guide §6: *"במסמך ובמייל ללקוח היא ניטרלית"*; the feminine imperative belongs to the screens) · 4–6
 short lines · opens with `שלום {{איש_קשר}},` · ends with `בברכה,` and no name · pending ⇒ "are there
 questions" + valid-until · expired ⇒ "is it still relevant, shall we renew" · event passed ⇒ "an upcoming
-event we can help with". `temperature` 0.4 (an email should sound human; there is no agreement metric
-to protect, unlike classification).
+event we can help with". `temperature` 0 — the same as `classify-feedback` (it was 0.4 until 25/09/2026; changed with the timeout
+and the retry, deputy's ruling, see the last section).
 
 ## Secrets
 
@@ -256,3 +255,11 @@ now 500 `תקלה זמנית — נסי שוב.` (it used to read as "no row" �
 המייל ידנית.`, a final state in the dialog (no retry) — this message is **no longer** byte-identical to
 `classify-feedback`, by ruling · 401 says `החיבור פג — התחברי מחדש.` · the draft guard also rejects
 `אחוז` and a number followed by `אלף/אלפים/מיליון`.
+
+**Version 6 — 25/09/2026, deputy's ruling (branch `ishay/d2-followup-fix`):** the three remaining
+differences from `classify-feedback` that could explain "no answer" are removed together, so the next
+measured calls tell *slow* from *not answering*: provider wait 25 s ⇒ **60 s** (`PROVIDER_TIMEOUT_MS`) ·
+budget 27 s ⇒ **90 s** (`BUDGET_MS`) · retry on **every** 5xx including the 504 timeout, waits 2 s / 5 s,
+copied from `callProvider` in `classify-feedback` · `temperature` 0.4 ⇒ **0**. The dialog's timeout
+(`FOLLOWUP_DRAFT_TIMEOUT_MS`) is 160 s, and a unit test reads both server numbers from `index.ts` and
+fails if the dialog would give up first. The button stays hidden; the ≤10 s target is unchanged.

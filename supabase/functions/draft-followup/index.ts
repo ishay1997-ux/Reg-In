@@ -51,21 +51,25 @@ const THINKING_LEVEL_BY_MODEL: Record<string, string> = {
   'gemini-3.8-flash': 'low',
   'gemini-3.7-flash': 'low',
 }
-// ‏0.4 ולא 0: סיווג צריך להיות משוחזר; מייל צריך להישמע כמו אדם. אין כאן מדד-הסכמה שנשבר מגיוון.
-const TEMPERATURE = 0.4
+// ‏0 — כמו ב-`classify-feedback`. ✏️ 25/09/2026 (הכרעת-הסגן, אבחון D2): היה 0.4 ("מייל צריך
+// להישמע כמו אדם"), וזה אחד משלושת ההבדלים מול הפונקציה שעונה. משנים את שלושתם יחד (ר' תקציב-הזמן למטה).
+const TEMPERATURE = 0
 
-// ⏱️ **היעד: טיוטה תוך ≤10 שניות** (התוכנית §6ה-ה) — וזו **תקרה**, לא הזמן הצפוי. הלקוח מחכה
-// `FOLLOWUP_DRAFT_TIMEOUT_MS` (35 שניות, `src/lib/quoteFollowup.js`), והשרת חייב לענות לפניו.
-// 🔴 **נמדד 24/09/2026 10:58 UTC, בקריאה החיה הראשונה: הספק לא ענה תוך 18 שניות** (`execution_time_ms`
-// ‏18,728 ביומן-הקצה, 502). התקרה הקודמת (18 שניות) הפכה ספק איטי לכשל, והמשתמשת קיבלה "נסי שוב" על
-// טיוטה שאולי הייתה מגיעה בשנייה ה-20. ⇒ התקרה עולה ל-25 שניות, ותקציב-הבקשה כולו ל-27 — 8 שניות לפני
-// הלקוח. ⚠️ **זה לא מתקן את האיטיות** — זה רק מונע ממנה להיות כשל. המדידה כתובה ב-`README.md`
-// (גם הקריאה השנייה, עם תקרת 25 שניות, לא קיבלה תשובה).
-const PROVIDER_TIMEOUT_MS = 25_000
-const BUDGET_MS = 27_000
-// ניסיון-חוזר **אחד**, על 5xx/רשת בלבד — אותו לקח של `classify-feedback` (5xx "high demand" חולף
-// תוך שניות). 🚫 **לא על 429:** מכסה שנגמרה לא נפתחת בשנייה וחצי, וכל ניסיון שורף עוד בקשה ממנה.
-const RETRY_WAIT_MS = 1_500
+// ⏱️ **המתנה לספק ותקציב — מועתקים מ-`classify-feedback` (‏`RUN_BUDGET_MS` 90 · `PROVIDER_TIMEOUT_MS` 60).**
+// 📏 **שלוש קריאות-אמת ב-24/09/2026, שלושתן בלי תשובה:** 10:58 UTC (תקרה 18 שנ') · 11:05 (25) · 13:15 (25,
+// כבר עם `max_output_tokens`). ‏`classify-feedback`, עם אותו מפתח ודגם, מחכה 60 שניות ומנסה שוב גם אחרי
+// פסק-זמן — ו-D2 ויתרה אחרי 25 בלי ניסיון נוסף. ⇒ הכרעת-הסגן 25/09: אותה המתנה ואותו ניסיון-חוזר, כדי
+// לדעת אם D2 **איטית** או **לא נענית**. ⚠️ **היעד ≤10 שניות (התוכנית §6ה-ה) לא משתנה** — זו תקרה, לא הזמן
+// הצפוי. הכפתור מוסתר (`FOLLOWUP_AI_AVAILABLE`), ולכן ההמתנה הארוכה לא פוגשת משתמשת.
+// 🔗 **הלקוח מחכה יותר מהמקרה הגרוע** — `FOLLOWUP_DRAFT_TIMEOUT_MS` (`src/lib/quoteFollowup.js`): ניסיון
+// מתחיל רק לפני ה-deadline, ולכן השרת עונה לכל המאוחר אחרי `BUDGET_MS + PROVIDER_TIMEOUT_MS`. בדיקה
+// ב-`quoteFollowup.test.js` קוראת את שני המספרים מכאן ונכשלת אם הלקוח קצר מהם.
+const PROVIDER_TIMEOUT_MS = 60_000
+const BUDGET_MS = 90_000
+// ניסיון-חוזר על **כל 5xx, כולל פסק-זמן (504)** — הדפוס של `classify-feedback` (‏`RETRY_WAITS_MS` ·
+// `isTransient` · `callProvider`), שנולד מ-"high demand" חולף (16/09/2026). 🚫 **לא על 429:** מכסה שנגמרה
+// לא נפתחת בשניות, וכל ניסיון שורף עוד בקשה ממנה. 400/401/403 = הבקשה שלנו, ושום המתנה לא תתקן אותם.
+const RETRY_WAITS_MS = [2_000, 5_000]
 // 🧪 **תקרת-פלט, ו-`store: false` — אבחון 24/09/2026 (סשן 2, קריאה-בלבד ביומנים):** אותו מפתח, אותו
 // endpoint ואותו דגם (`GEMINI_MODEL`) עונים ל-`classify-feedback` תוך ~10 שניות לאצוות 30 הערות, ואילו
 // בקשת-טיוטה **אחת וקצרה** לא ענתה תוך 25 שניות — פעמיים. מה ששונה כאן: טמפרטורה 0.4, שדה `body` חופשי
@@ -350,24 +354,27 @@ function extractText(payload: Record<string, unknown>): string {
   return chunks.join('')
 }
 
+function isTransient(status: number): boolean {
+  return status >= 500
+}
+
+// ⏱️ ניסיון נוסף רק אם ההמתנה לא חוצה את ה-deadline — בדיוק כמו `callProvider` ב-`classify-feedback`.
 async function callProvider(
   apiKey: string,
   model: string,
   facts: Record<string, unknown>,
   deadline: number,
 ): Promise<{ subject: string; body: string }> {
-  try {
-    return await callProviderOnce(apiKey, model, facts, PROVIDER_TIMEOUT_MS)
-  } catch (err) {
-    // ניסיון-חוזר רק על 5xx **מהיר** — פסק-זמן כבר אכל את התקציב, ו-429 לא ייפתח בשנייה וחצי.
-    // הניסיון השני מקבל רק את מה שנשאר מהתקציב, כדי שהשרת יענה לפני שהלקוח מוותר.
-    const transient =
-      err instanceof ProviderError && err.httpStatus >= 500 && err.httpStatus !== 504
-    const left = deadline - Date.now() - RETRY_WAIT_MS
-    if (!transient || left < 5_000) throw err
-    console.error('gemini retry after', (err as ProviderError).httpStatus)
-    await new Promise((resolve) => setTimeout(resolve, RETRY_WAIT_MS))
-    return await callProviderOnce(apiKey, model, facts, left)
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await callProviderOnce(apiKey, model, facts, PROVIDER_TIMEOUT_MS)
+    } catch (err) {
+      if (!(err instanceof ProviderError) || !isTransient(err.httpStatus)) throw err
+      const wait = RETRY_WAITS_MS[attempt]
+      if (wait === undefined || Date.now() + wait >= deadline) throw err
+      console.error('gemini retry', attempt + 1, 'after', err.httpStatus)
+      await new Promise((resolve) => setTimeout(resolve, wait))
+    }
   }
 }
 
