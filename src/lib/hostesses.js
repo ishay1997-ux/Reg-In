@@ -362,16 +362,25 @@ export function eventWasCancelled(row) {
   return row?.projects?.project_status === 'cancelled'
 }
 
-export function weeksSinceLastWorked(rows, todayIso) {
+// ✏️ **`asOfIso` — "נכון לאיזה יום" — וזה קובע גם מה נחשב "עבדה" וגם עד מתי סופרים.**
+// ‏**הצ'יפ** `עבדה לאחרונה לפני N שבועות` ⇐ **היום**: עובדה על עכשיו, רק אירועים שכבר עברו.
+// ‏**מנוף-ההוגנות** ⇐ **תאריך-האירוע** (הכרעת-ישי 25/09/2026, אודיט השיבוץ-החכם פער 4 · הנחה 1
+// בבלופרינט: *"הציון מתאר אותה לאירוע הזה"*) — ולכן **גם שיבוץ "אושרה סופית" עתידי שלפני האירוע
+// נספר כ"עבדה"**: ביום האירוע היא כבר עבדה אותו.
+// 🐞 **נתפס ע"י בודק נפרד על `d4b4627c`:** הגרסה הראשונה מדדה עד תאריך-האירוע אבל ספרה רק מה
+// שעבר עד היום — ב-1620 דנה ברק, משובצת סופית ל-20/10 ול-28/10, קיבלה ×1.16 ("לא עבדה 8
+// שבועות") על אירוע ב-02/11, ו-29 דיילות היו באותו מצב. **בונוס שהולך הפוך מהמטרה** (`spec.md`:
+// "דחיפה למי שלא עבדה זמן רב"). ⚠️ שיבוץ שבוטל אינו נספר בשום צד — כמו תמיד.
+export function weeksSinceLastWorked(rows, asOfIso) {
   const lastWorked = (rows ?? [])
     .filter((row) => row?.assignment_status === 'finally_approved' && !eventWasCancelled(row))
     .map((row) => row.projects?.final_event_date)
-    .filter((date) => date && String(date) < String(todayIso))
+    .filter((date) => date && String(date) < String(asOfIso))
     .sort()
     .at(-1)
   if (!lastWorked) return null
 
-  const elapsed = Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${lastWorked}T00:00:00Z`)
+  const elapsed = Date.parse(`${asOfIso}T00:00:00Z`) - Date.parse(`${lastWorked}T00:00:00Z`)
   return Number.isNaN(elapsed) ? null : Math.floor(elapsed / (7 * 24 * MS_PER_HOUR))
 }
 
