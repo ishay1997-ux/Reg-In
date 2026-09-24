@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { countProductLines } from '../src/lib/projectLogistics.js'
 
 // E2E מודול 6 — **מבט-העל והכרטיס, קריאה-בלבד** (צעד 5.1).
 //
@@ -241,18 +242,50 @@ test.describe('מודול 6 · לשונית-לוגיסטיקה — ריק-כדי
     // הסריקה אינה מסתיימת — ובהכרעת-ישי (03/09: "בכל אירוע חייב לפחות פריט של תגים ושרוכים")
     // ייתכן שאין כזה כלל. ⇒ הבחירה עוברת ל-REST (אנטי-join על `logistics`), והדילוג-כדין
     // נשאר בדיוק כפי שהיה: אין נושא ⇒ הריק-כדין אינו בר-השגה, וזה נאמר.
-    const subjectId = await page.evaluate(
+    // 🔴 **תוקן 24/09/2026 — "בלי שורת-לוגיסטיקה" ≠ "הצעה בלי שורות-מוצר".**
+    // ‏`LogisticsTab.jsx:106-120` מבחינה בין שני מצבים ששניהם "0 שורות-לוגיסטיקה": 'legal'
+    // (ל-0 שורות `quote_services` שאינן `hostess`) מול 'broken' (יש שורות-מוצר בהצעה, אבל
+    // אין להן עדיין שורות-לוגיסטיקה — `testId="logistics-state-broken"`, לא
+    // `logistics-state-legal-empty`). הסינון הישן (`logistics=is.null` בלבד) תפס גם
+    // מועמדים 'broken' — וזה בדיוק מה ש-#1647 ("אירוע השקה") הראה: יש לו הצעה עם פריטי-מוצר
+    // אמיתיים, ורק חסרה לו הצעה-לוגיסטיקה שעדיין לא נוצרה. מסננים בפועל לפי אותו מבחין
+    // שהמסך עצמו משתמש בו — `countProductLines` (‏`src/lib/projectLogistics.js:264-271`,
+    // הייבוא למעלה) — ולא רק אנטי-join על `logistics`.
+    const { candidates, productsCatalog, quoteServicesByQuoteId } = await page.evaluate(
       async ({ url, anon }) => {
         const key = Object.keys(sessionStorage).find((k) => k.startsWith('sb-'))
         const token = JSON.parse(sessionStorage.getItem(key)).access_token
-        const res = await fetch(
-          `${url}/rest/v1/projects?select=project_id,logistics!left(project_id)&logistics=is.null&project_status=neq.cancelled&order=project_id.desc&limit=1`,
-          { headers: { apikey: anon, Authorization: `Bearer ${token}` } },
+        const headers = { apikey: anon, Authorization: `Bearer ${token}` }
+        const [candidatesRes, productsRes] = await Promise.all([
+          fetch(
+            `${url}/rest/v1/projects?select=project_id,quote_id,logistics!left(project_id)&logistics=is.null&project_status=neq.cancelled&order=project_id.desc&limit=50`,
+            { headers },
+          ),
+          fetch(`${url}/rest/v1/products?select=sku,category`, { headers }),
+        ])
+        const candidates = await candidatesRes.json()
+        const productsCatalog = await productsRes.json()
+        const entries = await Promise.all(
+          candidates.map(async (c) => {
+            const res = await fetch(
+              `${url}/rest/v1/quote_services?select=sku&quote_id=eq.${c.quote_id}`,
+              { headers },
+            )
+            return [c.quote_id, await res.json()]
+          }),
         )
-        return (await res.json())[0]?.project_id ?? null
+        return { candidates, productsCatalog, quoteServicesByQuoteId: Object.fromEntries(entries) }
       },
       { url: SUPABASE_URL, anon: SUPABASE_ANON },
     )
+    const subjectId =
+      candidates.find(
+        (c) =>
+          countProductLines(
+            { quote_services: quoteServicesByQuoteId[c.quote_id] },
+            productsCatalog,
+          ) === 0,
+      )?.project_id ?? null
     test.skip(
       subjectId === null,
       'אין פרויקט שהצעתו נטולת-מוצרים — הריק-כדין אינו בר-השגה בלוח החי היום',
