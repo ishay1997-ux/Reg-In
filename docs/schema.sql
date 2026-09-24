@@ -2646,7 +2646,8 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   → supabase/migrations/20260916194500_module11_i2_rpc_round3.sql (סבב 3)
 --   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (סבב 4)
 --   → supabase/migrations/20260917021500_module11_j2_rpc_round5.sql (הגוף החי, סבב 5 — חצאי-ההשוואה = 'אשתקד' · 'חלון קבוע' במקום 'קפוא' (תווית-החלון · ארבעה אריחים · ההגדרות))
--- report_m16_quality_cost(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb
+-- ✂️ report_m16_quality_cost(p_from date, p_to date, p_customer_id integer, p_drill jsonb) returns jsonb — **DROPPED 24/09/2026**
+--   (`20260924190500_module11_drop_m16_quality_cost`; exact body kept in `seed_snapshot.function_backups`). History below:
 --   SD · stable · plpgsql · [authenticated, service_role]   ← **חדשה** · שער 'דיילות'
 --   → supabase/migrations/20260916114500_module11_i1_rpc_formats_and_notes.sql (פורמטים ויחידות, סבב 2)
 --   → supabase/migrations/20260917005500_module11_j1_rpc_round4.sql (הגוף החי, סבב 4)
