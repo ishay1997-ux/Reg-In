@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 24/09/2026 night — Heir deputy: two report migrations applied, m12 branch to PR (`ishay/module-12-integration`)
+- Deputy handover 20:36 (outgoing `local_d2ad07e4` at 84% context → heir `local_b8709acb`); Ishay renamed three workers: צלם-דוחות · בונה מ12 · מסביר-דוחות (board §7ה).
+- Applied, check ① passed on both: `module11_m12_measured_past_only` (m12 table, "ordered vs arrived" chart and measured-rows count = events before today; 01WEB gap 12.5% → 4.5%, measured 92 → 74; md5 `92315606…`) and `module11_m02_revenue_tile_no_door` (the m02 revenue tile opened `report_m03_trends`, now the quote-closing report since `4281d924`; md5 `e5d48b5a…`, other three doors intact). Both called under a real 'כספים'-edit identity via `request.jwt.claims`.
+- Gotcha: an in-place report upgrade (same rpc, same slug, new question) silently re-targets every tile door that pointed at the old report — grep `'report', '<rpc>'` in all report bodies after such an upgrade.
+- Next: Ishay asked for a KPI-by-KPI walkthrough of every report ("חלק מהדוחות לא מובנים לי"); prep running (explainer JSON + live screenshots in `Reg-In-evidence\reports-review-2026-09-25\`).
+
 ### 24/09/2026 evening — Conference polish in production (deputy)
 - `main` @ `b5ef4255` (PR #157 system-polish ⇐ dev, #158 dev ⇐ main); Vercel Production `6642131150` success; live bundle carries the new code. Gate by the tester on `9c922b04`: e2e 199 passed / 0 failed, axe 0 critical/serious, demo records unchanged. The tester found a real smoke failure (`logistics_upcoming_orders` missing from the read-only list) — fixed `9c922b04`.
 - D2 draft button hidden (`FOLLOWUP_AI_AVAILABLE = false`): three live calls got no provider answer, with and without an output cap.
