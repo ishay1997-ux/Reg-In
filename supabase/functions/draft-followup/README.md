@@ -56,7 +56,8 @@ blocked user sending a bad body gets 400 and learns she *would* have passed.
 | quote is neither `in_progress` nor `rejected` with `rejection_reason = 'פג תוקף'` | **409** | `{error: 'אפשר לנסח מייל מעקב רק להצעה פתוחה, או להצעה שפג תוקפה.'}` |
 | `in_progress` quote with no successful send in `email_log` | **409** | `{error: 'ההצעה עוד לא נשלחה ללקוח.'}` — the same sentence the dialog shows beside the disabled button |
 | provider **429** (quota) | **429** | `{status: 'quota', error: 'הגעת למכסת ה-AI — נסי שוב מאוחר יותר.', provider_error}` — **not** retried |
-| provider 5xx / timeout / network | retried **once** (1.5 s) if the 24 s budget allows, then **502** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
+| provider 5xx (fast) | retried **once** (1.5 s wait, with only what is left of the 27 s budget), then **502** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
+| provider timeout (25 s) / network | **not** retried — the budget is spent; **502** | same `failed` body |
 | provider 400/401/403, non-JSON, empty text, model JSON invalid | **502** | same `failed` body |
 | model draft fails the guard (below) | **502** | same `failed` body, `provider_error` names the rule |
 | database read error | **500** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.'}` |

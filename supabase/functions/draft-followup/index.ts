@@ -54,11 +54,14 @@ const THINKING_LEVEL_BY_MODEL: Record<string, string> = {
 // ‏0.4 ולא 0: סיווג צריך להיות משוחזר; מייל צריך להישמע כמו אדם. אין כאן מדד-הסכמה שנשבר מגיוון.
 const TEMPERATURE = 0.4
 
-// ⏱️ **היעד: טיוטה תוך ≤10 שניות** (התוכנית §6ה-ה). קריאה אחת קצרה ל-flash-lite צפויה בשניות;
-// התקציב הזה הוא התקרה שבה מוותרים ואומרים "נסי שוב", לא הזמן הצפוי. הלקוח מחכה 30 שניות
-// (`FOLLOWUP_DRAFT_TIMEOUT_MS`), כך שהשרת תמיד עונה לפני שהלקוח מוותר.
-const PROVIDER_TIMEOUT_MS = 18_000
-const BUDGET_MS = 24_000
+// ⏱️ **היעד: טיוטה תוך ≤10 שניות** (התוכנית §6ה-ה) — וזו **תקרה**, לא הזמן הצפוי. הלקוח מחכה 30 שניות
+// (`FOLLOWUP_DRAFT_TIMEOUT_MS`), והשרת חייב לענות לפניו.
+// 🔴 **נמדד 24/09/2026 10:58 UTC, בקריאה החיה הראשונה: הספק לא ענה תוך 18 שניות** (`execution_time_ms`
+// ‏18,728 ביומן-הקצה, 502). התקרה הקודמת (18 שניות) הפכה ספק איטי לכשל, והמשתמשת קיבלה "נסי שוב" על
+// טיוטה שאולי הייתה מגיעה בשנייה ה-20. ⇒ התקרה עולה ל-25 שניות, ותקציב-הבקשה כולו ל-27 — עדיין לפני ה-30
+// של הלקוח. ⚠️ **זה לא מתקן את האיטיות** — זה רק מונע ממנה להיות כשל. המדידה כתובה ב-`README.md`.
+const PROVIDER_TIMEOUT_MS = 25_000
+const BUDGET_MS = 27_000
 // ניסיון-חוזר **אחד**, על 5xx/רשת בלבד — אותו לקח של `classify-feedback` (5xx "high demand" חולף
 // תוך שניות). 🚫 **לא על 429:** מכסה שנגמרה לא נפתחת בשנייה וחצי, וכל ניסיון שורף עוד בקשה ממנה.
 const RETRY_WAIT_MS = 1_500
@@ -218,6 +221,7 @@ async function callProviderOnce(
   apiKey: string,
   model: string,
   facts: Record<string, unknown>,
+  timeoutMs: number,
 ): Promise<{ subject: string; body: string }> {
   const thinkingLevel = THINKING_LEVEL_BY_MODEL[model]
   const generationConfig: Record<string, unknown> = { temperature: TEMPERATURE }
@@ -228,7 +232,7 @@ async function callProviderOnce(
     res = await fetch(PROVIDER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
       body: JSON.stringify({
         model,
         input: JSON.stringify(facts),
@@ -239,6 +243,9 @@ async function callProviderOnce(
     })
   } catch (err) {
     const detail = err instanceof Error ? err.message : 'network error'
+    // 🔴 נרשם ללוג — בקריאה החיה הראשונה (24/09) פסק-הזמן **לא השאיר שום עקבה** ביומן-הפונקציה,
+    // ורק `execution_time_ms` ביומן-הקצה סיפר מה קרה.
+    console.error('gemini did not answer', timeoutMs, 'ms', detail)
     throw new ProviderError('הספק לא ענה.', 504, detail)
   }
 
@@ -305,13 +312,17 @@ async function callProvider(
   deadline: number,
 ): Promise<{ subject: string; body: string }> {
   try {
-    return await callProviderOnce(apiKey, model, facts)
+    return await callProviderOnce(apiKey, model, facts, PROVIDER_TIMEOUT_MS)
   } catch (err) {
-    const transient = err instanceof ProviderError && err.httpStatus >= 500
-    if (!transient || Date.now() + RETRY_WAIT_MS + PROVIDER_TIMEOUT_MS / 2 >= deadline) throw err
+    // ניסיון-חוזר רק על 5xx **מהיר** — פסק-זמן כבר אכל את התקציב, ו-429 לא ייפתח בשנייה וחצי.
+    // הניסיון השני מקבל רק את מה שנשאר מהתקציב, כדי שהשרת יענה לפני שהלקוח מוותר.
+    const transient =
+      err instanceof ProviderError && err.httpStatus >= 500 && err.httpStatus !== 504
+    const left = deadline - Date.now() - RETRY_WAIT_MS
+    if (!transient || left < 5_000) throw err
     console.error('gemini retry after', (err as ProviderError).httpStatus)
     await new Promise((resolve) => setTimeout(resolve, RETRY_WAIT_MS))
-    return await callProviderOnce(apiKey, model, facts)
+    return await callProviderOnce(apiKey, model, facts, left)
   }
 }
 
@@ -470,9 +481,11 @@ async function draft(
     raw = await callProvider(apiKey, model, facts, deadline)
   } catch (err) {
     if (err instanceof ProviderError && err.httpStatus === 429) {
+      console.error('draft-followup quota:', err.detail)
       return json({ status: 'quota', error: MSG.quota, provider_error: err.detail }, 429)
     }
     const detail = err instanceof ProviderError ? err.detail || err.message : 'unknown'
+    console.error('draft-followup provider failure:', detail)
     return json({ status: 'failed', error: MSG.failed, provider_error: detail }, 502)
   }
 
