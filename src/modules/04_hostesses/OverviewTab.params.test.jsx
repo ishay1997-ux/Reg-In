@@ -263,3 +263,15 @@ describe('"שלחי שוב" — כל מספר אומר מה הוא סופר', ()
     expect(missingButton).toHaveTextContent('שלחי שוב (1)')
   })
 })
+
+// ✏️ 25/09/2026 (screens-pass s18): מונה 0 בעמודת-המצב אינו צבוע בצבע-אזהרה.
+describe('מוני-השורה — אפס באפור', () => {
+  it('"0 ממתינות" אפור, לא כתום', async () => {
+    renderTab()
+    await screen.findByTestId('overview-table')
+    const zero = screen.getAllByText('ממתינות')[0].previousSibling
+    expect(zero).toHaveTextContent('0')
+    expect(zero.className).toContain('text-slate-300')
+    expect(zero.className).not.toContain('text-amber-700')
+  })
+})

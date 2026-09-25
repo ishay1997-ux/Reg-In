@@ -463,10 +463,15 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
   )
 }
 
+// ✏️ 25/09/2026 (screens-pass s18): "0 ממתינות" עמד בכתום ב-51 שורות — צבע-אזהרה על כלום. אפס ⇒ אפור.
 function Counter({ n, label, tone, children }) {
   return (
     <span className="min-w-[46px] text-center">
-      <span className={`block text-base font-bold leading-tight ${tone}`}>{n}</span>
+      <span
+        className={`block text-base font-bold leading-tight ${n === 0 ? 'text-slate-300' : tone}`}
+      >
+        {n}
+      </span>
       <span className="block text-xs text-slate-500">{label}</span>
       {children}
     </span>
