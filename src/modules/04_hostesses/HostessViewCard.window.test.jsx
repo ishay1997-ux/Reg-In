@@ -129,3 +129,26 @@ describe('כרטיס-דיילת — חלון-זמן + דפדוף על ההיסט
     expect(await screen.findByTestId('list-pager-range')).toHaveTextContent('1–')
   })
 })
+
+// ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #10): "שיבוצים קרובים" הציג אירוע מבוטל (1626) בלי שום סימון.
+describe('שיבוצים קרובים — אירוע שבוטל מסומן', () => {
+  function isoDaysAhead(days) {
+    return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10)
+  }
+
+  it('אירוע מבוטל ⇒ "האירוע בוטל" במקום סטטוס-השיבוץ; אירוע רגיל ⇒ סטטוס-השיבוץ', async () => {
+    const cancelled = historyRow(1626, isoDaysAhead(40))
+    cancelled.projects.project_status = 'cancelled'
+    const live = historyRow(1627, isoDaysAhead(41))
+    live.projects.project_status = 'ready'
+    mockCard([cancelled, live])
+    renderCard()
+
+    await screen.findByTestId('hostess-card-title')
+    const cancelledRow = screen.getByText('אירוע 1626').closest('tr')
+    expect(cancelledRow).toHaveTextContent('האירוע בוטל')
+    expect(cancelledRow).not.toHaveTextContent('אושרה סופית')
+    const liveRow = screen.getByText('אירוע 1627').closest('tr')
+    expect(liveRow).not.toHaveTextContent('בוטל')
+  })
+})
