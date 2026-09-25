@@ -150,6 +150,20 @@ describe('ProjectCardPage — מעטפת ואזור-זהות', () => {
     expect(cell.textContent).toContain('15%')
   })
 
+  // ✏️ 25/09/2026 (screens-pass s12): הנחה 0 אינה "אחרי הנחה של 0%".
+  it('הנחה 0% ⇒ "לפני מע"מ" בלבד, בלי "אחרי הנחה של 0%"', async () => {
+    getProjectQuoteMeta.mockResolvedValue({
+      estimated_guests: 300,
+      applied_customer_discount: 0,
+      manual_discount: 0,
+    })
+    renderPage()
+    await findCard()
+    const cell = screen.getByTestId('project-cell-revenue')
+    expect(cell.textContent).toContain('לפני מע"מ')
+    expect(cell.textContent).not.toContain('אחרי הנחה')
+  })
+
   it('🔴 S-2: ‏planned_revenue null ⇒ `—` (גם אין-הצעה וגם אין-הרשאה), ואפס אמיתי ⇒ 0.00 ₪', async () => {
     listProjectsOverview.mockResolvedValue([overviewRow({ planned_revenue: null })])
     const first = renderPage()
