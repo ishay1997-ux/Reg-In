@@ -1061,7 +1061,9 @@ export default function CustomerDetailsPage() {
                     ['all', 'הכול'],
                     ['in_progress', 'בתהליך'],
                     ['approved', 'מאושרות'],
-                    ['rejected', 'נדחו'],
+                    // ✏️ 25/09/2026 (מעבר-העיניים #7): "נדחו 11" מול 9 שורות "נדחתה" ו-2 "פגה" — הצעה שפגה
+                    // נשמרת כ-`rejected` עם סיבה 'פג תוקף' (ר' הערת "פגה" למעלה), והשבב סופר את שתיהן.
+                    ['rejected', 'נדחו או פגו'],
                   ].map(([key, label]) => (
                     <button
                       key={key}
