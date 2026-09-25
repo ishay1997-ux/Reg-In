@@ -207,34 +207,52 @@ export function attentionRows(summary, todayIso) {
 
   return [
     ...unbilledRows(projects, today),
+    ...closingRows(projects, today),
     ...staffingShortageRows(projects, today, warning),
     ...logisticsShortageRows(projects, today, warning),
     ...quoteExpiringRows(summary?.pending_quotes, today, summary?.params),
   ]
 }
 
-// (א) הסתיים ולא חויב: event_finished/awaiting_invoice שתאריכם כבר עבר. ממוין
-// מהוותיק לחדש (ימים-שעברו יורד) — הכי דחוף למעלה.
-function unbilledRows(projects, todayIso) {
+// (א) הסתיים ולא חויב: awaiting_invoice שתאריכו כבר עבר. ממוין מהוותיק לחדש (ימים-שעברו
+// יורד) — הכי דחוף למעלה.
+// ✏️ 25/09/2026 — ישי בשיחת הסגן (14:4X): *"המשך הכל לפי המלצתך"*. היה: גם `event_finished`. אבל אירוע
+// שממתין לסגירה-תפעולית אינו בידי מנהלת הכספים — היא לא יכולה לחייב לפני הסגירה (`night/home33-vs-fin29.md`:
+// 8 כאלה ישבו בכרטיס שלה). הם עוברים לכרטיס של מנהלת הפרויקטים (`closingRows` למטה), כי כל קטגוריה
+// שייכת לתפקיד אחד (ההערה מעל `ATTENTION_CATEGORY_DEFS`).
+function pastEventRows(projects, todayIso, status) {
   return projects
-    .filter((p) => p.project_status === 'event_finished' || p.project_status === 'awaiting_invoice')
+    .filter((p) => p.project_status === status)
     .map((p) => ({ p, days: eventDaysFromToday(p.final_event_date, todayIso) }))
     .filter(({ days }) => days !== null && days < 0)
     .sort((a, b) => a.days - b.days)
-    .map(({ p, days }) => ({
-      kind: 'unbilled',
-      tone: 'red',
-      title: p.event_name,
-      why: unbilledWhy(-days),
-      href: `/projects/${p.project_id}`,
-    }))
+}
+
+function unbilledRows(projects, todayIso) {
+  return pastEventRows(projects, todayIso, 'awaiting_invoice').map(({ p, days }) => ({
+    kind: 'unbilled',
+    tone: 'red',
+    title: p.event_name,
+    why: `${endedAgo(-days)}, לא חויב`,
+    href: `/projects/${p.project_id}`,
+  }))
+}
+
+// (א2) ממתין לסגירה: `event_finished` שתאריכו עבר — של מנהלת הפרויקטים. ה"למה" = ימים מאז האירוע, כמו ב-(א).
+function closingRows(projects, todayIso) {
+  return pastEventRows(projects, todayIso, 'event_finished').map(({ p, days }) => ({
+    kind: 'closing',
+    tone: 'yellow',
+    title: p.event_name,
+    why: endedAgo(-days),
+    href: `/projects/${p.project_id}`,
+  }))
 }
 
 // "אתמול" ליום בודד — אותו תקדים-לשון-יחיד כמו proximitySentence ב-projects.js
 // (days===-1 ⇒ 'התקיים אתמול'). "הסתיים לפני 1 ימים" הייתה עברית שבורה על המסך.
-function unbilledWhy(daysPassed) {
-  const whenPart = daysPassed === 1 ? 'הסתיים אתמול' : `הסתיים לפני ${daysPassed} ימים`
-  return `${whenPart}, לא חויב`
+function endedAgo(daysPassed) {
+  return daysPassed === 1 ? 'הסתיים אתמול' : `הסתיים לפני ${daysPassed} ימים`
 }
 
 // (ב) חוסר וקרוב, מפוצל לשני ממדים (R2/R6, 09/09/2026 — היה ענף אחד "shortage").
@@ -364,6 +382,17 @@ const ATTENTION_CATEGORY_DEFS = [
     noun: 'אירועים שהסתיימו ולא חויבו',
     nounOne: 'אירוע שהסתיים ולא חויב',
   },
+  // ✏️ 25/09/2026 — אירועים שממתינים לסגירה-תפעולית, מכרטיס-הכספים לכאן. בלי נוסח חדש: שם-הסטטוס עצמו
+  // (`PROJECT_STATUS_LABELS.event_finished`, מה שמסך הפרויקטים מציג).
+  {
+    kind: 'closing',
+    label: 'פרויקטים',
+    role: 'מנהלת פרויקטים',
+    href: '/projects',
+    tone: 'yellow',
+    noun: PROJECT_STATUS_LABELS.event_finished,
+    nounOne: PROJECT_STATUS_LABELS.event_finished,
+  },
   {
     kind: 'staffing',
     label: 'דיילות',
@@ -433,6 +462,7 @@ export function attentionCategories(summary, todayIso) {
 
   const rowsByKind = {
     unbilled: unbilledRows(projects, today),
+    closing: closingRows(projects, today),
     staffing: staffingShortageRows(projects, today, warning),
     logistics: logisticsShortageRows(projects, today, warning),
     quote: quotesVisible

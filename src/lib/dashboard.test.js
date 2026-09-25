@@ -361,16 +361,17 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
   // בלי קשר לקרבת-התאריך בין שתי הקבוצות.
   it('הסדר המלא: הסתיים-ולא-חויב (ותיק→חדש) → חוסר-איוש → חוסר-לוגיסטיקה → הצעה-פגה', () => {
     const rows = attentionRows(summary, TODAY)
+    // ✏️ 25/09/2026: 101 (`event_finished`) עבר ל-'closing' — של מנהלת הפרויקטים, לא של הכספים.
     expect(rows.map((r) => r.title)).toEqual([
-      'פסטיבל קיץ עירוני',
       'השקת מוצר — סייברארק',
+      'פסטיבל קיץ עירוני',
       'כנס לקוחות שנתי',
       'כנס פתיחת שנה',
       'הצעה #41',
     ])
     expect(rows.map((r) => r.kind)).toEqual([
       'unbilled',
-      'unbilled',
+      'closing',
       'staffing',
       'logistics',
       'quote',
@@ -381,10 +382,15 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
     const rows = attentionRows(summary, TODAY)
     expect(rows[0]).toMatchObject({
       tone: 'red',
-      why: 'הסתיים לפני 8 ימים, לא חויב',
+      why: 'הסתיים לפני 2 ימים, לא חויב',
+      href: '/projects/102',
+    })
+    // ✏️ 25/09/2026: ממתין לסגירה — "למה" = ימים מאז האירוע, בלי "לא חויב" (עוד לא אמור לחייב).
+    expect(rows[1]).toMatchObject({
+      tone: 'yellow',
+      why: 'הסתיים לפני 8 ימים',
       href: '/projects/101',
     })
-    expect(rows[1]).toMatchObject({ tone: 'red', why: 'הסתיים לפני 2 ימים, לא חויב' })
     // R2: tone הפך מ-yellow ל-red — אותה הגדרת-חוסר-וקרוב בדיוק כמו הצבע האדום בלוח.
     expect(rows[2]).toMatchObject({
       tone: 'red',
@@ -417,7 +423,7 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
 
   it('todayIso לא נמסר ⇒ נופלים ל-summary.today', () => {
     const rows = attentionRows(summary) // בלי הפרמטר השני
-    expect(rows[0].title).toBe('פסטיבל קיץ עירוני')
+    expect(rows[0].title).toBe('השקת מוצר — סייברארק')
   })
 
   it('event_warning_days חסר ⇒ אין שורות-חוסר בכלל (בלי ברירת-מחדל מומצאת)', () => {
@@ -468,7 +474,7 @@ describe('attentionRows — ניסוחי-קצה: יום בודד', () => {
           project_id: 1,
           event_name: 'אירוע-אתמול',
           final_event_date: '2026-09-02',
-          project_status: 'event_finished',
+          project_status: 'awaiting_invoice',
           required_hostess_count: 1,
           hostesses_confirmed: 1,
           logistics_ready: 0,
@@ -477,6 +483,12 @@ describe('attentionRows — ניסוחי-קצה: יום בודד', () => {
       ],
     }
     expect(attentionRows(summary, TODAY)[0].why).toBe('הסתיים אתמול, לא חויב')
+    // ✏️ 25/09/2026: אותו יום בודד כשהאירוע ממתין לסגירה — "הסתיים אתמול", בכרטיס של מנהלת הפרויקטים.
+    const closing = attentionRows(
+      { ...summary, projects: [{ ...summary.projects[0], project_status: 'event_finished' }] },
+      TODAY,
+    )
+    expect(closing[0]).toMatchObject({ kind: 'closing', why: 'הסתיים אתמול' })
   })
 
   it('הצעה פגה היום (0) והצעה פגה מחר (1) — שני הניסוחים המיוחדים', () => {
@@ -514,7 +526,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
         project_id: 301,
         event_name: 'הסתיים 1',
         final_event_date: '2026-08-29',
-        project_status: 'event_finished',
+        project_status: 'awaiting_invoice',
         required_hostess_count: 1,
         hostesses_confirmed: 1,
         logistics_ready: 1,
@@ -524,7 +536,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
         project_id: 302,
         event_name: 'הסתיים 2',
         final_event_date: '2026-08-30',
-        project_status: 'event_finished',
+        project_status: 'awaiting_invoice',
         required_hostess_count: 1,
         hostesses_confirmed: 1,
         logistics_ready: 1,
@@ -534,7 +546,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
         project_id: 303,
         event_name: 'הסתיים 3',
         final_event_date: '2026-08-31',
-        project_status: 'event_finished',
+        project_status: 'awaiting_invoice',
         required_hostess_count: 1,
         hostesses_confirmed: 1,
         logistics_ready: 1,
@@ -544,7 +556,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
         project_id: 304,
         event_name: 'הסתיים 4',
         final_event_date: '2026-09-01',
-        project_status: 'event_finished',
+        project_status: 'awaiting_invoice',
         required_hostess_count: 1,
         hostesses_confirmed: 1,
         logistics_ready: 1,
@@ -553,6 +565,27 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
       {
         project_id: 305,
         event_name: 'הסתיים 5',
+        final_event_date: '2026-09-02',
+        project_status: 'awaiting_invoice',
+        required_hostess_count: 1,
+        hostesses_confirmed: 1,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      // (א2) ✏️ 25/09/2026 — שניים "ממתין לסגירה" (`event_finished`), לכרטיס של מנהלת הפרויקטים.
+      {
+        project_id: 311,
+        event_name: 'לסגירה 1',
+        final_event_date: '2026-08-28',
+        project_status: 'event_finished',
+        required_hostess_count: 1,
+        hostesses_confirmed: 1,
+        logistics_ready: 1,
+        logistics_total: 1,
+      },
+      {
+        project_id: 312,
+        event_name: 'לסגירה 2',
         final_event_date: '2026-09-02',
         project_status: 'event_finished',
         required_hostess_count: 1,
@@ -620,8 +653,14 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
 
   it('ארבעה כרטיסים בסדר קבוע, עם המונה הנכון לכל אחד', () => {
     const categories = attentionCategories(bigSummary, TODAY)
-    expect(categories.map((c) => c.kind)).toEqual(['unbilled', 'staffing', 'logistics', 'quote'])
-    expect(categories.map((c) => c.count)).toEqual([5, 5, 0, 2])
+    expect(categories.map((c) => c.kind)).toEqual([
+      'unbilled',
+      'closing',
+      'staffing',
+      'logistics',
+      'quote',
+    ])
+    expect(categories.map((c) => c.count)).toEqual([5, 2, 5, 0, 2])
   })
 
   it('topLine הוא הפריט הדחוף ביותר בכל קטגוריה — שם + "למה", ואותו ניסוח כמו attentionRows', () => {
@@ -630,6 +669,8 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     expect(byKind.unbilled.topLine).toBe('הסתיים 1 — הסתיים לפני 5 ימים, לא חויב')
     expect(byKind.staffing.topLine).toBe('חוסר 1 — 0/2 דיילות, 04/09')
     expect(byKind.quote.topLine).toBe('הצעה #70 — פגה היום')
+    expect(byKind.closing.topLine).toBe('לסגירה 1 — הסתיים לפני 6 ימים')
+    expect(byKind.closing.href).toBe('/projects/311')
   })
 
   it('קטגוריה בת-0 (logistics): count=0, topLine=null — הכרטיס נשאר, לא נעלם', () => {
@@ -642,6 +683,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     const categories = attentionCategories(bigSummary, TODAY)
     expect(categories.map((c) => [c.kind, c.label, c.role, c.tone])).toEqual([
       ['unbilled', 'כספים', 'מנהלת כספים', 'red'],
+      ['closing', 'פרויקטים', 'מנהלת פרויקטים', 'yellow'],
       ['staffing', 'דיילות', 'מנהלת גיוס', 'red'],
       ['logistics', 'לוגיסטיקה', 'מנהלת לוגיסטיקה', 'red'],
       ['quote', 'הצעות', 'מנהלת פרויקטים', 'yellow'],
@@ -670,6 +712,8 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     expect(byKind.logistics.noun).toBe('אירועים חסרי ציוד ב-14 הימים הקרובים')
     expect(byKind.unbilled.noun).toBe('אירועים שהסתיימו ולא חויבו')
     expect(byKind.quote.noun).toBe('הצעות שפגות בקרוב')
+    // בלי נוסח חדש — שם-הסטטוס עצמו, כמו במסך הפרויקטים.
+    expect(byKind.closing.noun).toBe('ממתין לסגירה')
   })
 
   it('סף-אזהרה לא-נטען ⇒ שם-העצם בלי סייג, בלי מספר מומצא', () => {
@@ -727,7 +771,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
       { today: TODAY, projects: [], pending_quotes: [] },
       TODAY,
     )
-    expect(categories.map((c) => c.count)).toEqual([0, 0, 0, null])
+    expect(categories.map((c) => c.count)).toEqual([0, 0, 0, 0, null])
     expect(categories.find((c) => c.kind === 'quote').masked).toBe(true)
   })
 })

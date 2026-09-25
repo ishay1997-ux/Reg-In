@@ -389,10 +389,15 @@ describe('DashboardPage — מה דורש טיפול (R6 09/09/2026: ארבעה 
     renderPage()
     await screen.findByTestId('kpi-active')
 
+    // ✏️ 25/09/2026: "פסטיבל קיץ עירוני" ממתין לסגירה (`event_finished`) ⇒ בכרטיס של מנהלת הפרויקטים,
+    // לא בכרטיס-הכספים (שם הוא ישב, והיא לא יכולה לחייב לפני הסגירה).
     const unbilledCard = screen.getByTestId('dashboard-attention-card-unbilled')
     expect(within(unbilledCard).getByText(/מנהלת כספים/)).toBeInTheDocument()
-    expect(within(unbilledCard).getByText(/פסטיבל קיץ עירוני/)).toBeInTheDocument()
-    expect(within(unbilledCard).getByText(/הסתיים לפני 8 ימים, לא חויב/)).toBeInTheDocument()
+    expect(within(unbilledCard).queryByText(/פסטיבל קיץ עירוני/)).toBeNull()
+    const closingCard = screen.getByTestId('dashboard-attention-card-closing')
+    expect(within(closingCard).getByText(/מנהלת פרויקטים/)).toBeInTheDocument()
+    expect(within(closingCard).getByText(/פסטיבל קיץ עירוני/)).toBeInTheDocument()
+    expect(within(closingCard).getByText(/הסתיים לפני 8 ימים/)).toBeInTheDocument()
 
     const staffingCard = screen.getByTestId('dashboard-attention-card-staffing')
     expect(within(staffingCard).getByText(/מנהלת גיוס/)).toBeInTheDocument()
@@ -414,7 +419,7 @@ describe('DashboardPage — מה דורש טיפול (R6 09/09/2026: ארבעה 
     getDashboardSummary.mockResolvedValue(summaryFixture({ projects: [], pending_quotes: [] }))
     renderPage()
     await screen.findByTestId('kpi-active')
-    expect(screen.getAllByText(/^✓ אין /)).toHaveLength(4)
+    expect(screen.getAllByText(/^✓ אין /)).toHaveLength(5)
     const quoteCard = screen.getByTestId('dashboard-attention-card-quote')
     expect(within(quoteCard).getByText('✓ אין הצעות שפגות בקרוב')).toBeInTheDocument()
   })
