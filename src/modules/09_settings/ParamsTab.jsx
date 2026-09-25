@@ -67,7 +67,7 @@ const DEFAULT_PANE_COMPONENTS = { templates: TemplateEditor, smart_match: SmartM
 const GROUP_LEADS = {
   pricing_timing:
     'שינוי כאן משפיע על הצעות חדשות בלבד — הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.',
-  smart_match: 'הערכים שקובעים איך המערכת מדרגת מועמדות לשיבוץ.',
+  // ✂️ 25/09/2026 (בודק-ניסוח #28): משפט-הפתיחה של "התאמת דיילות" ירד — האזהרה שמתחתיו כבר אומרת.
 }
 
 // סדר-התצוגה בתוך קבוצה = סדר-המרשם (ה-SSOT לתצוגה). ‏`listParams` ממיין לפי
@@ -233,7 +233,8 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר"
+          // ✏️ 25/09 (#21): "שם הפרמטר" הוא שם-המסד, שאינו מוצג בשום מקום; החיפוש בו ממשיך לעבוד.
+          placeholder="חיפוש הגדרה"
           className="h-auto rounded-lg border-slate-300 py-2.5 pr-10 pl-3 text-right"
           data-testid="settings-search"
         />

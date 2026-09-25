@@ -445,7 +445,9 @@ export default function QuotesPage() {
           <StatTile
             label="שווי הצעות פתוחות"
             value={metrics.openValue}
-            sub={`${metrics.openCount} ממתינות לתשובת הלקוח`}
+            // ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #7): היה "33 ממתינות לתשובת הלקוח" — ו-31 מהן טרם
+            // נשלחו ללקוח. "פתוחה" = `in_progress`, וזה מה שהמונה סופר.
+            sub={metrics.openCount === 1 ? 'הצעה פתוחה אחת' : `${metrics.openCount} הצעות פתוחות`}
             testId="quotes-metric-open-value"
           />
           {/* שיעור שאין ממנו מדגם מוצג כ-"—" ולא כ-0%: 0% על אפס הצעות סגורות אינו

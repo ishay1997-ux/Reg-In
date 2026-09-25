@@ -18,7 +18,8 @@ import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Disclosure from '@/components/Disclosure'
 import FilterPill from '@/components/FilterPill'
-import { formatByType } from '@/lib/reportsFormat'
+import Hint from '@/components/Hint'
+import { customerIgnoredTilesLine, formatByType } from '@/lib/reportsFormat'
 import { missingReportParamsMessage } from '@/lib/reportsParams'
 import { DRILL_INTENT, ROW_DOOR_KINDS, callReport, normalizeCharts } from '../api'
 import ChartCard from './ChartCard'
@@ -170,6 +171,10 @@ function ExtraTable({ table, onDrill }) {
   return (
     <section className="mb-4" data-testid="report-extra-table">
       <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{table.title}</h3>
+      {/* ✏️ 25/09/2026 (הכרעת הסגן, מ15 F1): ‏`table.note` הגיע מהשרת ולא היה לו קורא (‏`git grep table.note` = 0).
+          במ15 זו הערה שמשנה את הקריאה — *"אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות"*. היא **הסבר**,
+          ולכן רמז של מצב ההטמעה ולא טקסט במסך הרגיל — הכלל של ישי (25/09 02:2X, דרך הסגן). */}
+      {table.note && <Hint id="report-extra-table-note" text={table.note} className="mb-1.5" />}
       <ReportTable
         columns={table.columns}
         rows={table.rows}
@@ -233,7 +238,8 @@ function TopNTitle({ label, rowTotal, shown }) {
  *
  * 🔴 **ושלב-האימות שבסוף אינו "ליתר ביטחון" — הוא תפס פגם אמיתי בשני משטחים:** במ9
  * העמודה מחזיקה `bucket: "1–30"` (**תווית**) והשורות `bucket: "d1_30"` (**מפתח**); במ8
- * הגרף מצייר את ⁦15⁩ הסטיות הגדולות והטבלה שורות אחרות לגמרי. בשני המקרים השם תואם
+ * הגרף צייר את ⁦15⁩ הסטיות הגדולות והטבלה שורות אחרות לגמרי (✏️ מ-25/09 הגרף בוחר לפי כיוון,
+ * ופרויקט יכול להיות בשניהם ⇒ מ8 מצהיר `filter_key: false` — כרטיס: "לא לחיץ"). בשני המקרים השם תואם
  * והערכים אינם נפגשים — כלומר לחיצה הייתה מסננת ל**אפס שורות** בלי שגיאה ובלי רמז.
  * ⇒ המפתח מאומת מול הדאטה: אין ולו שורה אחת שנפגשת עם דאטום ⇒ **אין קרוס-פילטר.**
  */
@@ -646,6 +652,11 @@ export default function ReportSurface({
   const charts = normalizeCharts(payload.chart)
   // ר' `isEmptyAfterLoad` למעלה — שני התנאים והנימוק המלא של כל אחד.
   const isEmptyPage = isEmptyAfterLoad(payload, customerId)
+  const customerIgnoredLine = customerIgnoredTilesLine(
+    payload.tiles,
+    payload.meta?.customer_filter_ignored,
+    customerId,
+  )
 
   const crumbs = payload.drill?.crumbs ?? []
   const drillLabel = crumbs.length > 1 ? crumbs[crumbs.length - 1].label : null
@@ -741,6 +752,11 @@ export default function ReportSurface({
       {/* ✏️ ⑩א — **בין "אז מה" לאריחים**, בדיוק במקום שהכרטיסים מעגנים בו את רמז-ה-`why`. */}
       {renderAfterSoWhat?.(payload)}
 
+      {customerIgnoredLine && (
+        <p className="mb-2 text-sm text-slate-600" data-testid="report-tiles-all-customers">
+          {customerIgnoredLine}
+        </p>
+      )}
       <Tiles tiles={payload.tiles} onOpenTarget={(target) => onDrill(target)} />
 
       {charts.length > 0 && renderBeforeChart?.(payload)}

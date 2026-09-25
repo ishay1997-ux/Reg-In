@@ -17,6 +17,7 @@ import useParamsForm, {
   DISTANCE_ORDER_ERROR,
   CANCELLATION_ORDER_ERROR,
   EXPIRY_WARNING_ORDER_ERROR,
+  RELIABILITY_ORDER_ERROR,
   saveFailedMessage,
 } from './useParamsForm'
 import { updateParams } from '@/modules/09_settings/api'
@@ -58,6 +59,11 @@ const COMPENSATION_ROWS = [
   row('שעות_פיצוי_ביטול_מלא', '24', 'control_alerts'),
   row('שעות_פיצוי_ביטול_חלקי', '72', 'control_alerts'),
 ]
+const COEFFICIENT_ROWS = [
+  row('מקדם_אמינות_אדום', '0.8', 'control_alerts'),
+  row('מקדם_אמינות_ענבר', '0.9', 'control_alerts'),
+]
+
 const EXPIRY_ROWS = [
   row('ימי_אזהרה_הצעה_פגה', '7', 'pricing_timing'),
   row('ימי_תוקף_הצעה', '30', 'pricing_timing'),
@@ -150,6 +156,13 @@ describe('useParamsForm — ולידציה', () => {
     expect(messagesOf(result.current.crossFieldErrors)).toContain(CANCELLATION_ORDER_ERROR)
     act(() => result.current.setValue('שעות_פיצוי_ביטול_מלא', '24'))
     expect(result.current.crossFieldErrors).toEqual([])
+  })
+
+  // ✏️ 25/09/2026 (בודק-ניסוח #14) — ההערה על שורת הענבר אומרת "חייב להיות גבוה מהמקדם האדום".
+  it('מקדם ענבר שאינו גבוה מהאדום נחסם', () => {
+    const { result } = setup(COEFFICIENT_ROWS, { canEditAll: true })
+    act(() => result.current.setValue('מקדם_אמינות_ענבר', '0.75'))
+    expect(messagesOf(result.current.crossFieldErrors)).toContain(RELIABILITY_ORDER_ERROR)
   })
 
   it('ימי-אזהרה ארוכים מימי-התוקף נחסמים', () => {

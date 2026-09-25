@@ -146,6 +146,32 @@ describe('KpiTile — 📐1/📐4 · חצי-ההשוואה מעוצב בפורמ
     expect(line).not.toHaveTextContent('ללא שינוי')
   })
 
+  // 🆕 25/09/2026 (מעבר-הדוחות, ממצא 3 · `20260925000100`): במ21 חצי-ההשוואה נשא את ערך-האריח עצמו
+  // עם `direction: 'flat'`, והמסך הדפיס *"כלל «רדום» מוצא: ללא שינוי"* בזמן שהכלל מוצא 11.
+  // ⇒ **השוואה בלי כיוון היא עובדה ולא שינוי בזמן** — המספר מוצג תמיד, גם כשהוא שווה לערך-האריח.
+  it('השוואה בלי כיוון — המספר מוצג, גם כשהוא שווה לערך, ולעולם לא "ללא שינוי"', () => {
+    const base = { key: 'only', label: 'נתפסים רק בקצב האישי', value: 4, format: 'int' }
+    const { rerender } = render(
+      <KpiTile
+        tile={{ ...base, compare: { value: 11, label: 'כלל «רדום» לבדו מוצא', direction: null } }}
+      />,
+    )
+    let line = screen.getByTestId('kpi-compare')
+    expect(line).toHaveTextContent('כלל «רדום» לבדו מוצא: ')
+    expect(line).toHaveTextContent('11')
+    expect(line).not.toHaveTextContent('ללא שינוי')
+    expect(line.textContent).not.toMatch(/[▲▼]/)
+
+    rerender(
+      <KpiTile
+        tile={{ ...base, compare: { value: 4, label: 'כלל «רדום» לבדו מוצא', direction: null } }}
+      />,
+    )
+    line = screen.getByTestId('kpi-compare')
+    expect(line).toHaveTextContent('4')
+    expect(line).not.toHaveTextContent('ללא שינוי')
+  })
+
   // 🚫 החץ אינו צבוע (📐1) ואינו נקרא לקורא-מסך — הוא סימן-כיוון, לא שיפוט.
   it('החץ קיים, aria-hidden, ובלי מחלקת-צבע', () => {
     const { container } = render(<KpiTile tile={TILE} />)

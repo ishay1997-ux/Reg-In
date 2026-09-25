@@ -6,6 +6,7 @@ import {
   validateParamValue,
   cancellationOrderOk,
   expiryWarningOrderOk,
+  reliabilityCoefficientOrderOk,
   weightsSumOk,
   distanceOrderOk,
   matchesParamSearch,
@@ -500,6 +501,14 @@ describe('כללי-רוחב יחסיים — סדר, לא תקרה', () => {
     expect(cancellationOrderOk('', '72')).toBe(true)
   })
 
+  // ✏️ 25/09/2026 (בודק-ניסוח #14): ההערה אמרה "גבוה מהמקדם האדום" ושום דבר לא אכף.
+  it('מקדמי-האמינות: אדום מתחת לענבר תקין; שווה או הפוך נחסם', () => {
+    expect(reliabilityCoefficientOrderOk('0.8', '0.9')).toBe(true)
+    expect(reliabilityCoefficientOrderOk('0.9', '0.9')).toBe(false)
+    expect(reliabilityCoefficientOrderOk('0.95', '0.9')).toBe(false)
+    expect(reliabilityCoefficientOrderOk(undefined, '0.9')).toBe(true)
+  })
+
   it('אזהרה מול תוקף: 7 מתוך 30 תקין, ואזהרה ארוכה מהתוקף נחסמת', () => {
     expect(expiryWarningOrderOk('7', '30')).toBe(true)
     expect(expiryWarningOrderOk('40', '30')).toBe(false)
@@ -564,5 +573,42 @@ describe('paramLabel — שם-פרמטר ⇐ המילים שעל המסך', () =
   })
   it("אף תווית במרשם אינה נושאת קו-תחתון (ז'רגון-מסד על המסך)", () => {
     expect(PARAM_REGISTRY.filter((entry) => entry.label.includes('_'))).toEqual([])
+  })
+})
+
+// ── נוסחי-המסך מבדיקת-הניסוח של 25/09/2026 (`params-copy-review.md`) — נועלים את מה שתוקן ──
+describe('נוסחי ההגדרות — מה שנאמר על המסך נכון', () => {
+  it('🔴 תוקף הצעה: ה-↳ אומר שהצעות קיימות נדחות בלילה (עבודת-הלילה נבדקה חי)', () => {
+    expect(getParamEntry('ימי_תוקף_הצעה').affects).toContain('נדחית אוטומטית בלילה')
+    expect(getParamEntry('ימי_תוקף_הצעה').affects).toContain('גם הצעות קיימות')
+  })
+
+  it('🔴 שלוש המשקולות: רק לאמינות יש ↳ — "פועל רק כשמרכיב-האמינות דלוק"', () => {
+    expect(getParamEntry(SMART_MATCH_PARAM_NAMES.responsivenessWeight).affects).toBeUndefined()
+    expect(getParamEntry(SMART_MATCH_PARAM_NAMES.proximityWeight).affects).toBeUndefined()
+    expect(getParamEntry(SMART_MATCH_PARAM_NAMES.reliabilityWeight).affects).toBe(
+      'פועל רק כשמרכיב-האמינות דלוק',
+    )
+  })
+
+  it('🔴 הגולפוסט אומר שהוא גם קו-הפסילה לבלי-רכב — והתווית וההערה הנעולות לא זזו', () => {
+    const entry = getParamEntry(SMART_MATCH_PARAM_NAMES.goalpostDistanceKm)
+    expect(entry.affects).toContain('בלי רכב')
+    expect(entry.label).toBe('מרחק שבו ציון-הקרבה מגיע ל-0')
+    expect(entry.hint).toBe('חייב להיות קטן או שווה למרחק-הפסילה')
+  })
+
+  it('"מינימום תשובות" לא מבטיח ציון גלוי — ציון אינו מוצג בשום מקום', () => {
+    const entry = getParamEntry(SMART_MATCH_PARAM_NAMES.minAnswersForScore)
+    expect(entry.label).toBe('מינימום תשובות')
+    expect(entry.hint).not.toMatch(/מוצג ציון/)
+    expect(entry.hint).toContain('דיילת חדשה')
+  })
+
+  it('כל `layerHint` במרשם קיים בקובץ-הקופי — אחרת `Hint` נעלם בשקט', async () => {
+    const { ONBOARDING_COPY } = await import('./onboardingCopy')
+    const keys = PARAM_REGISTRY.map((entry) => entry.layerHint).filter(Boolean)
+    expect(keys).toEqual(['params.dampingWhy', 'params.fairnessWhy'])
+    for (const key of keys) expect(Object.hasOwn(ONBOARDING_COPY, key)).toBe(true)
   })
 })

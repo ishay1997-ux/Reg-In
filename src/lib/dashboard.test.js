@@ -388,12 +388,12 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
     // R2: tone הפך מ-yellow ל-red — אותה הגדרת-חוסר-וקרוב בדיוק כמו הצבע האדום בלוח.
     expect(rows[2]).toMatchObject({
       tone: 'red',
-      why: '0/6 דיילות, 17 בחודש',
+      why: '0/6 דיילות, 17/09',
       href: '/projects/103',
     })
     expect(rows[3]).toMatchObject({
       tone: 'red',
-      why: 'לוגיסטיקה 1/3, 8 בחודש',
+      why: 'לוגיסטיקה 1/3, 08/09',
       href: '/projects/104',
     })
     expect(rows[4]).toMatchObject({
@@ -453,7 +453,8 @@ describe('attentionRows — ענף-החוסר יושר מול צבע-הלוח (0
       kind: 'staffing',
       tone: 'red',
       title: 'אירוע שעבר ועדיין פעיל',
-      why: '1/4 דיילות, 29 בחודש',
+      // ✏️ 25/09/2026: יום/חודש מלא — "29 בחודש" תחת לוח של ספטמבר היה נקרא כ-29/09.
+      why: '1/4 דיילות, 29/08',
     })
   })
 })
@@ -627,7 +628,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     const categories = attentionCategories(bigSummary, TODAY)
     const byKind = Object.fromEntries(categories.map((c) => [c.kind, c]))
     expect(byKind.unbilled.topLine).toBe('הסתיים 1 — הסתיים לפני 5 ימים, לא חויב')
-    expect(byKind.staffing.topLine).toBe('חוסר 1 — 0/2 דיילות, 4 בחודש')
+    expect(byKind.staffing.topLine).toBe('חוסר 1 — 0/2 דיילות, 04/09')
     expect(byKind.quote.topLine).toBe('הצעה #70 — פגה היום')
   })
 
@@ -678,6 +679,38 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     )
     const staffing = categories.find((c) => c.kind === 'staffing')
     expect(staffing.noun).toBe('אירועים חסרי דיילות')
+  })
+
+  // ✏️ 25/09/2026 (הכרעת הסגן, סריקת-תחנות): המסך הציג "1 אירועים חסרי דיילות". ביום הכנס
+  // תחנה 1 מראה בדיוק אירוע אחד (1615) ⇒ **אחד ⇒ יחיד**, ושניים ומעלה — רבים, כמו תמיד.
+  it('אירוע אחד ⇒ שם-עצם ביחיד; שניים ⇒ רבים (והסייג של החלון נשאר)', () => {
+    const short = (id, date) => ({
+      project_id: id,
+      event_name: `אירוע ${id}`,
+      project_status: 'in_progress',
+      final_event_date: date,
+      required_hostess_count: 2,
+      hostesses_confirmed: 1,
+    })
+    const summaryOf = (projects) => ({
+      today: TODAY,
+      projects,
+      params: { event_warning_days: 14 },
+      quotes_visible: false,
+      pending_quotes: null,
+    })
+    const one = attentionCategories(summaryOf([short(1, '2026-09-10')]), TODAY)
+    const staffingOne = one.find((c) => c.kind === 'staffing')
+    expect(staffingOne.count).toBe(1)
+    expect(staffingOne.noun).toBe('אירוע חסר דיילות ב-14 הימים הקרובים')
+
+    const two = attentionCategories(
+      summaryOf([short(1, '2026-09-10'), short(2, '2026-09-12')]),
+      TODAY,
+    )
+    const staffingTwo = two.find((c) => c.kind === 'staffing')
+    expect(staffingTwo.count).toBe(2)
+    expect(staffingTwo.noun).toBe('אירועים חסרי דיילות ב-14 הימים הקרובים')
   })
 
   it('quotes_visible=false ⇒ כרטיס-ההצעות ממוסך (§7.97, MASKED_TEXT), לא "0"', () => {

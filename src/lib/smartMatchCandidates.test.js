@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildSmartMatchCandidates } from './smartMatchCandidates'
+import { fairnessLeverage } from './smartMatch'
 
 // ── שכבת-ההרכבה: שורות-מסד ⇒ הקלט ש-`rankCandidates` דורש ────────────────────
 //
@@ -11,6 +12,9 @@ import { buildSmartMatchCandidates } from './smartMatchCandidates'
 
 const EVENT_DATE = '2026-08-22'
 const TODAY = '2026-08-09'
+// חלון-החישוב כפי שהוא ב-`params` (`research §11.1`): 12 חודשים, 24 במורחב, סף 3 תשובות.
+// ⚠️ כל שורות-העוגן כאן (`2026-01-01`) בתוך 12 החודשים — החלון אינו משנה את העוגן.
+const WINDOW = { months: 12, extendedMonths: 24, minAnswers: 3 }
 
 const project = {
   project_id: 8,
@@ -72,6 +76,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
     const candidates = buildSmartMatchCandidates(
       { project, hostesses, assignments, sameDayHostessIds: [], preferences: [] },
       TODAY,
+      WINDOW,
     )
 
     expect(candidates).toHaveLength(5)
@@ -97,6 +102,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect([candidates[0].answered, candidates[0].confirmed]).toEqual([1, 1])
   })
@@ -116,6 +122,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect([candidates[0].answered, candidates[0].confirmed]).toEqual([1, 1])
   })
@@ -127,6 +134,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
       return buildSmartMatchCandidates(
         { project, hostesses, assignments, sameDayHostessIds: [], preferences: [] },
         TODAY,
+        WINDOW,
       )[0].workedForCustomerCount
     }
 
@@ -170,7 +178,9 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
     })
   })
 
-  it('`weeksSinceWorked` נמדד מהאירוע האחרון שהושלם, ו-`null` למי שטרם עבדה', () => {
+  // ✏️ 25/09/2026 (הכרעת-ישי, פער 4): **שני שעונים.** `weeksSinceWorked` — קלט המנוף — עד
+  // תאריך-האירוע (22/08); `weeksSinceWorkedToday` — הצ'יפ — עד היום (09/08).
+  it("`weeksSinceWorked` נמדד עד תאריך-האירוע והצ'יפ עד היום · `null` למי שטרם עבדה", () => {
     const built = buildSmartMatchCandidates(
       {
         project,
@@ -183,10 +193,14 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     const byId = Object.fromEntries(built.map((c) => [c.hostess_id, c]))
-    expect(byId[1].weeksSinceWorked).toBe(4)
+    // 12/07 ⇐ 22/08 = 41 יום = 5 שבועות שלמים · 12/07 ⇐ 09/08 = 28 יום = 4.
+    expect(byId[1].weeksSinceWorked).toBe(5)
+    expect(byId[1].weeksSinceWorkedToday).toBe(4)
     expect(byId[2].weeksSinceWorked).toBe(null)
+    expect(byId[2].weeksSinceWorkedToday).toBe(null)
   })
 
   it('שער-היום ושער-ההעדפה מועברים כמו שהם — הפסילה עצמה היא של האלגוריתם', () => {
@@ -202,6 +216,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
         preferences: [{ hostess_id: 2, preference: 'לא_לשלוח' }],
       },
       TODAY,
+      WINDOW,
     )
     const byId = Object.fromEntries(built.map((c) => [c.hostess_id, c]))
     expect(byId[1].hasSameDayFinalAssignment).toBe(true)
@@ -219,6 +234,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect(built[0].distanceKm).toBe(null)
   })
@@ -240,6 +256,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect(built[0].distanceKm).toBe(null)
   })
@@ -254,6 +271,7 @@ describe('buildSmartMatchCandidates — ההרכבה שמזינה את הדיר�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect(built[0].distanceKm).toBe(null)
   })
@@ -276,6 +294,7 @@ describe('buildSmartMatchCandidates — attendance מוזנת משורות אמ�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect(built[0].attendance).toHaveLength(1)
     expect(built[0].attendance[0]).toMatchObject({
@@ -297,6 +316,7 @@ describe('buildSmartMatchCandidates — attendance מוזנת משורות אמ�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect(built[0].attendance).toHaveLength(1)
     expect(built[0].attendance[0]).toMatchObject({
@@ -316,6 +336,7 @@ describe('buildSmartMatchCandidates — attendance מוזנת משורות אמ�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect(built[0].attendance).toEqual([])
   })
@@ -330,6 +351,7 @@ describe('buildSmartMatchCandidates — attendance מוזנת משורות אמ�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     expect(built[0].attendance).toEqual([])
   })
@@ -355,6 +377,7 @@ describe('buildSmartMatchCandidates — attendance מוזנת משורות אמ�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
 
     expect(built[0].attendance).toHaveLength(2)
@@ -382,9 +405,172 @@ describe('buildSmartMatchCandidates — attendance מוזנת משורות אמ�
         preferences: [],
       },
       TODAY,
+      WINDOW,
     )
     const byId = Object.fromEntries(built.map((c) => [c.hostess_id, c]))
     expect(byId[1].attendance).toHaveLength(1)
     expect(byId[2].attendance).toEqual([])
+  })
+})
+
+// ── חלון-החישוב · 12 ⇐ 24 חודשים (הכרעת-ישי 25/09/2026, אודיט השיבוץ-החכם פער 3) ────────
+describe('buildSmartMatchCandidates — חלון-החישוב', () => {
+  function build(assignments, window = WINDOW) {
+    return buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments,
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+      window,
+    )[0]
+  }
+
+  it('🔴 סופר רק את 12 החודשים — שורות ישנות אינן נספרות כשיש מספיק תשובות בחלון', () => {
+    // ‏**נתונים מבחינים:** בחלון 3 תשובות, 3 אישורים; מחוצה לו (2024) 4 סירובים.
+    // מימוש שסופר את כל ההיסטוריה מחזיר `7/3`, לא `3/3`.
+    const c = build([
+      row(1, 1, 'confirmed_available', '2026-03-01'),
+      row(2, 1, 'confirmed_available', '2026-04-01'),
+      row(3, 1, 'confirmed_available', '2026-05-01'),
+      ...Array.from({ length: 4 }, (_, i) => row(10 + i, 1, 'declined', '2024-06-01')),
+    ])
+    expect([c.answered, c.confirmed]).toEqual([3, 3])
+  })
+
+  it('🔴 פחות מהסף בחלון ⇒ מתרחב ל-24 חודשים — אבל לא מעבר להם', () => {
+    // בחלון: תשובה אחת (מתחת ל-3) ⇒ מרחיבים. ב-24: עוד שתיים (2025). מעבר (2023): לא נספרת.
+    const c = build([
+      row(1, 1, 'confirmed_available', '2026-03-01'),
+      row(2, 1, 'declined', '2025-02-01'),
+      row(3, 1, 'confirmed_available', '2024-10-01'),
+      row(4, 1, 'declined', '2023-01-01'),
+    ])
+    expect([c.answered, c.confirmed]).toEqual([3, 2])
+    // ‏`C` של החברה נשאר על החלון הבסיסי (הנחה 4) — כאן תשובה אחת.
+    expect([c.baseAnswered, c.baseConfirmed]).toEqual([1, 1])
+  })
+
+  it('גבול החלון: בדיוק 12 חודשים אחורה — בפנים; יום לפני — בחוץ', () => {
+    const c = build([
+      ...Array.from({ length: 3 }, (_, i) => row(1 + i, 1, 'confirmed_available', '2026-05-01')),
+      row(10, 1, 'declined', '2025-08-09'), // בדיוק 12 חודשים לפני 09/08/2026
+      row(11, 1, 'declined', '2025-08-08'), // יום לפני — בחוץ
+    ])
+    expect(c.answered).toBe(4)
+  })
+
+  it('שורה בלי תאריך-אירוע נשארת בחלון — לא נזרקת על סמך נתון חסר', () => {
+    const noDate = row(1, 1, 'confirmed_available', null)
+    const c = build([noDate])
+    expect(c.answered).toBe(1)
+  })
+
+  it('🛑 חלון חסר עוצר — אין נפילה שקטה ל"כל ההיסטוריה"', () => {
+    // ‏`null` ולא `undefined` — `undefined` היה מפעיל את ברירת-המחדל של העוזר `build` עצמו.
+    expect(() => build([], null)).toThrow('חלון-החישוב')
+    expect(() => build([], { months: 12, extendedMonths: null, minAnswers: 3 })).toThrow()
+  })
+})
+
+// ── "תענה הכי מהר" · זמן-התגובה החציוני (הכרעת-ישי 25/09/2026, פער 2) ──────────────────
+describe('buildSmartMatchCandidates — medianResponseHours', () => {
+  // שורה שנענתה דרך הקישור: נשלחה ב-09:00, נענתה אחרי `hours` שעות.
+  function answered(projectId, hours, eventDate = '2026-06-01') {
+    const sent = Date.parse('2026-05-01T09:00:00Z')
+    return {
+      ...row(projectId, 1, 'confirmed_available', eventDate),
+      invite_sent_at: new Date(sent).toISOString(),
+      responded_at: new Date(sent + hours * 3_600_000).toISOString(),
+    }
+  }
+
+  function median(assignments) {
+    return buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments,
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+      WINDOW,
+    )[0].medianResponseHours
+  }
+
+  it('🔴 חציון ולא ממוצע — תשובה אחת איטית אינה גוררת דיילת מהירה', () => {
+    // 1 · 2 · 100 ⇒ חציון 2 (ממוצע היה 34.3).
+    expect(median([answered(1, 1), answered(2, 100), answered(3, 2)])).toBe(2)
+  })
+
+  it('מספר זוגי של תשובות ⇒ ממוצע שתי האמצעיות', () => {
+    expect(median([answered(1, 1), answered(2, 3), answered(3, 5), answered(4, 7)])).toBe(4)
+  })
+
+  it('🔴 פחות מהסף ⇒ `null` ("לא ידוע") — לא "הכי מהירה"', () => {
+    expect(median([answered(1, 1), answered(2, 1)])).toBe(null)
+    expect(median([])).toBe(null)
+  })
+
+  it('רק שורות עם שני הזמנים נמדדות — סימון ידני (בלי `responded_at`) אינו זמן אפס', () => {
+    const manual = row(9, 1, 'confirmed_available', '2026-06-01')
+    manual.invite_sent_at = '2026-05-01T09:00:00Z'
+    expect(median([answered(1, 5), answered(2, 6), manual])).toBe(null)
+  })
+
+  it('זמן שלילי מדולג — הוא עדות לרענון-שליחה, לא למהירות', () => {
+    const negative = { ...answered(9, 1), responded_at: '2026-04-30T09:00:00Z' }
+    expect(median([answered(1, 5), answered(2, 6), answered(3, 7), negative])).toBe(6)
+  })
+
+  it('רק בתוך החלון — תשובות מלפני 24 חודשים אינן נמדדות', () => {
+    expect(
+      median([
+        answered(1, 1, '2023-01-01'),
+        answered(2, 1, '2023-01-01'),
+        answered(3, 1, '2023-01-01'),
+      ]),
+    ).toBe(null)
+  })
+})
+
+// ── מנוף-ההוגנות "נכון לתאריך-האירוע" — ממצא הבודק על d4b4627c (#1) ─────────────────────
+describe('buildSmartMatchCandidates — "עבדה" למנוף נמדד נכון לתאריך-האירוע', () => {
+  // ‏09/08 היום · 22/08 האירוע. עבדה ב-01/06 (עבר) · ומשובצת סופית ל-20/08 (עתידי, לפני האירוע).
+  const past = () => row(30, 1, 'finally_approved', '2026-06-01', 1, 55)
+  const upcoming = () => row(31, 1, 'finally_approved', '2026-08-20', 1, 55)
+
+  function build(assignments) {
+    return buildSmartMatchCandidates(
+      {
+        project,
+        hostesses: [{ hostess_id: 1, status: 'active' }],
+        assignments,
+        sameDayHostessIds: [],
+        preferences: [],
+      },
+      TODAY,
+      WINDOW,
+    )[0]
+  }
+
+  it('🔴 שיבוץ סופי עתידי שלפני האירוע ⇒ "עבדה" לפני 0 שבועות ⇒ מנוף ×1.00, לא התקרה', () => {
+    const c = build([past(), upcoming()])
+    expect(c.weeksSinceWorked).toBe(0) // 20/08 ⇐ 22/08
+    expect(fairnessLeverage(c.weeksSinceWorked, 0.02, 8)).toBe(1)
+    // הצ'יפ נשאר עובדה על היום: רק 01/06 עבר ⇒ 69 יום = 9 שבועות.
+    expect(c.weeksSinceWorkedToday).toBe(9)
+  })
+
+  it('🔴 ואותו שיבוץ שבוטל אינו "עבדה" ⇒ הבונוס חוזר (01/06 ⇐ 22/08 = 11 ⇒ התקרה 8)', () => {
+    const cancelled = upcoming()
+    cancelled.projects.project_status = 'cancelled'
+    const c = build([past(), cancelled])
+    expect(c.weeksSinceWorked).toBe(11)
+    expect(fairnessLeverage(c.weeksSinceWorked, 0.02, 8)).toBeCloseTo(1.16, 10)
   })
 })

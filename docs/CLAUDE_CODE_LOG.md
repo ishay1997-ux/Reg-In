@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 25/09/2026 night — Smart match: default order = the system recommendation (`ishay/smartmatch-score-order`, worker for the deputy)
+- Ishay ruled on the night audit (`Reg-In-evidence/reports-review-2026-09-25/night/smart-match-audit.md`): the score now decides the default order on screen 2 (fifth lens "המלצת המערכת"; pinned first; angles by click; "תענה הכי מהר" under 72h per the 30/07 ruling). Also: calculation window 12→24, median response time from `responded_at`, fairness leverage as of the event date, Israel-local "today". Commits `d4b4627c` · `1bf0e526` · `eaa6c1ab` + ripples; gate exit 0.
+- 1620 on live data: before Yarden📌 · Dana Barak📌 · Galit📌 · Noa Sagi · … (km) ⇒ after Dana Barak📌 · Galit📌 · Yarden📌 · Talya Amar · Shelly Elkayam · Noa Sagi · Orly Shani · Roni Almog. Hostesses at the ×1.16 cap: 29 ⇒ 1 after the reviewer's fix.
+- Gotcha: a test named "display order" checked `rankCandidates` and was green while the screen showed the reverse — screen order is now tested by rendering `SmartMatchPage` and reading the DOM (`SmartMatchPage.order.test.jsx`), red on the old default (verified).
+- Details, interpretations and the known resend limitation: `docs/micro_guides/module-4.md` (last §10 entry).
+
 ### 24/09/2026 night — Heir deputy: two report migrations applied, m12 branch to PR (`ishay/module-12-integration`)
 - Deputy handover 20:36 (outgoing `local_d2ad07e4` at 84% context → heir `local_b8709acb`); Ishay renamed three workers: צלם-דוחות · בונה מ12 · מסביר-דוחות (board §7ה).
 - Applied, check ① passed on both: `module11_m12_measured_past_only` (m12 table, "ordered vs arrived" chart and measured-rows count = events before today; 01WEB gap 12.5% → 4.5%, measured 92 → 74; md5 `92315606…`) and `module11_m02_revenue_tile_no_door` (the m02 revenue tile opened `report_m03_trends`, now the quote-closing report since `4281d924`; md5 `e5d48b5a…`, other three doors intact). Both called under a real 'כספים'-edit identity via `request.jwt.claims`.
@@ -53,6 +59,7 @@
 - Session 2 ("בונה מ12", `local_a8a17cd2`) this evening: UAT pack `3f4be80c` · conference backup pack (27 files, outside the repo) · demo station 5 fix `bf1266b7` · m12 past-only migration file `f6ca06fe` · three pre-PR fixes `181492f3` (m12 guided hint, m02 revenue-tile migration file, board and roadmap rows; gate exit 0, 3,319 tests).
 - Shipped 21:3X: PR #159 → dev (`c6c9d54d`), PR #160 → main (`37f05ccc`), Vercel Production `6644867090` success; live bundle `index-B1q0w9L-.js` carries the new m12 hint. `ishay/module-12-integration` deleted; next branch `ishay/module-12-reports-review` from dev.
 - Next: Ishay asked for a KPI-by-KPI walkthrough of every report ("חלק מהדוחות לא מובנים לי"); prep running (explainer JSON + live screenshots in `Reg-In-evidence\reports-review-2026-09-25\`).
+- Shipped again 23:0X: PR #161 → dev (`b6ae258c`), PR #162 → main (`94db912d`), Vercel Production `6646959296` success. What shipped: Gini/Lorenz off every surface (m14/m17), "within a week" closing (20 events closed, 17 equipment rows fixed, m12 measures closed events only), refresh step ④ for 14/10, and demo-script numbers. Board §7ה; proof rows in `db_roadmap.md` §10ב. `ishay/module-12-reports-review` deleted; next branch `ishay/module-12-walkthrough` from dev.
 
 ### 24/09/2026 evening — Conference polish in production (deputy)
 - `main` @ `b5ef4255` (PR #157 system-polish ⇐ dev, #158 dev ⇐ main); Vercel Production `6642131150` success; live bundle carries the new code. Gate by the tester on `9c922b04`: e2e 199 passed / 0 failed, axe 0 critical/serious, demo records unchanged. The tester found a real smoke failure (`logistics_upcoming_orders` missing from the read-only list) — fixed `9c922b04`.
