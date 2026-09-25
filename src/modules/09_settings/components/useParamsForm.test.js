@@ -118,7 +118,7 @@ describe('useParamsForm — ולידציה', () => {
     const { result } = setup(PRICING_ROWS, { canEditAll: true })
     act(() => result.current.setValue('אחוז_מעמ', '150'))
     expect(result.current.errors['אחוז_מעמ']).toBe(
-      'ערך חוקי: מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה',
+      'הזיני מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה',
     )
   })
 

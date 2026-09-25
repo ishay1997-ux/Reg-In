@@ -16,7 +16,7 @@ describe('SaveRow', () => {
   it('קבוצה בת שורה אחת בלי שינוי אומרת "לא שינית כלום", לא "שינית 0 מתוך 1"', () => {
     render(<SaveRow dirtyCount={0} total={1} onCancel={() => {}} onSave={() => {}} />)
     const counter = screen.getByTestId('settings-dirty-count')
-    expect(counter).toHaveTextContent('לא שינית כלום')
+    expect(counter).toHaveTextContent('אין שינויים')
     expect(counter.textContent).not.toContain('מתוך')
   })
 

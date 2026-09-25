@@ -124,7 +124,7 @@ describe('ParamsTab — ולידציה ושמירה', () => {
     fireEvent.change(screen.getByTestId('settings-value-אחוז_מעמ'), { target: { value: '150' } })
 
     expect(
-      await screen.findByText('ערך חוקי: מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה'),
+      await screen.findByText('הזיני מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה'),
     ).toBeInTheDocument()
     expect(screen.getByTestId('settings-save-button')).toBeDisabled()
 
@@ -146,7 +146,7 @@ describe('ParamsTab — ולידציה ושמירה', () => {
     fireEvent.click(screen.getByTestId('settings-save-button'))
     expect(await screen.findByTestId('toast-success')).toHaveTextContent('ההגדרות נשמרו')
     await waitFor(() =>
-      expect(screen.getByTestId('settings-dirty-count')).toHaveTextContent('שינית 0 מתוך 4'),
+      expect(screen.getByTestId('settings-dirty-count')).toHaveTextContent('אין שינויים'),
     )
   })
 
@@ -293,7 +293,7 @@ describe('ParamsTab — חיווט-גל-2: הפאנלים האמיתיים מר�
     'משוב לקוח',
     'חשבונית מס',
     'ביטול משמרת',
-    'אישור סופי שיבוץ',
+    'אישור שיבוץ סופי',
     'תזכורת משמרת (לא נשלחת עדיין)',
     'דוח שכר',
     'שחרור ממשמרת',

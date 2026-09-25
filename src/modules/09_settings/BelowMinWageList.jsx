@@ -31,6 +31,8 @@ export default function BelowMinWageList({ threshold, draftThreshold, refreshKey
   const [loading, setLoading] = useState(true)
   const [blocked, setBlocked] = useState(false)
   const [error, setError] = useState('')
+  // ✏️ 25/09/2026 (בודק-ניסוח #34): כשל-טעינה מציע 'נסי שוב' — העלאת המונה מריצה את הטעינה מחדש.
+  const [retryTick, setRetryTick] = useState(0)
 
   const previewValue = Number(draftThreshold)
   const isPreviewing =
@@ -80,7 +82,7 @@ export default function BelowMinWageList({ threshold, draftThreshold, refreshKey
     return () => {
       cancelled = true
     }
-  }, [activeThreshold, refreshKey])
+  }, [activeThreshold, refreshKey, retryTick])
 
   if (blocked) return null
 
@@ -109,7 +111,11 @@ export default function BelowMinWageList({ threshold, draftThreshold, refreshKey
       )}
 
       {loading || error ? (
-        <LoadingOrError loading={loading} error={error} />
+        <LoadingOrError
+          loading={loading}
+          error={error}
+          onRetry={() => setRetryTick((tick) => tick + 1)}
+        />
       ) : rows.length === 0 ? (
         <p className="text-xs text-slate-500" data-testid="settings-below-min-wage-empty">
           אין דיילות פעילות מתחת לרף הנוכחי

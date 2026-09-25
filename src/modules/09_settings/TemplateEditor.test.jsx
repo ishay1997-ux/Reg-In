@@ -193,9 +193,7 @@ describe('TemplateEditor', () => {
     })
     const blocked = screen.getByTestId('settings-template-blocked')
     expect(blocked.textContent).toContain('משתנה לא מוכר בתבנית')
-    expect(blocked.textContent).toContain(
-      'השמירה חסומה. צריך למחוק את המשתנה מהטקסט — הוא לא קיים במערכת.',
-    )
+    expect(blocked.textContent).toContain('מחקי את המשתנה מהטקסט — עד אז אי-אפשר לשמור')
     expect(blocked.textContent).not.toContain('אפשר להחזיר את המשתנה מהרשימה שלמטה')
   })
 
@@ -204,7 +202,7 @@ describe('TemplateEditor', () => {
       values: { [SHIFT_INVITE_ROW.param_name]: FULL_BODY.replace('[לינק_אישור_משמרת]', '') },
     })
     expect(screen.getByTestId('settings-template-blocked').textContent).toContain(
-      'השמירה חסומה. אפשר להחזיר את המשתנה מהרשימה שלמטה.',
+      'החזירי את המשתנה מהרשימה שלמטה — עד אז אי-אפשר לשמור',
     )
   })
 
