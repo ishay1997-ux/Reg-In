@@ -152,3 +152,33 @@ describe('שיבוצים קרובים — אירוע שבוטל מסומן', () 
     expect(liveRow).not.toHaveTextContent('בוטל')
   })
 })
+
+// ✏️ 25/09/2026 (צלם-דוחות על האתר החי): התג "סימנה אי-זמינות" מעולם לא הופיע בכרטיס — טבלת "שיבוצים קרובים"
+// לא קיבלה `ranges`/`today`, והיחידה שקיבלה (ההיסטוריה) היא בדיוק זו שבה אין תג לעולם (אירוע שעבר).
+describe('שיבוצים קרובים — תג "סימנה אי-זמינות" על שיבוץ מאושר בתוך טווח אי-זמינות', () => {
+  function isoDaysAhead(days) {
+    return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10)
+  }
+
+  it('שיבוץ מאושר-סופית בתוך טווח אי-זמינות ⇒ התג מופיע בשורה שלו בטבלת הקרובים', async () => {
+    const eventDate = isoDaysAhead(30)
+    const inside = historyRow(1620, eventDate)
+    inside.projects.project_status = 'in_progress'
+    const outside = historyRow(1700, isoDaysAhead(60))
+    outside.projects.project_status = 'ready'
+    getHostess.mockResolvedValue({
+      ...HOSTESS,
+      hostess_unavailability: [
+        { start_date: isoDaysAhead(28), end_date: isoDaysAhead(32), note: 'חופשה' },
+      ],
+    })
+    getHostessAssignments.mockResolvedValue([inside, outside])
+    getHostessScreenParams.mockResolvedValue({})
+    getHostessClientPreferences.mockResolvedValue([])
+    renderCard()
+
+    await screen.findByTestId('hostess-card-title')
+    expect(screen.getByTestId('hostess-unavailable-1620')).toBeInTheDocument()
+    expect(screen.queryByTestId('hostess-unavailable-1700')).not.toBeInTheDocument()
+  })
+})
