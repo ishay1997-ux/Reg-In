@@ -125,7 +125,9 @@ export function gapSentence(project) {
   if (gap === 1 && confirmedAvailable === 1 && !pending) {
     return 'הדיילת היחידה אישרה זמינות וממתינה לאישור סופי ממך'
   }
-  if (pending > 0) return pendingInvitesSentence(pending, gap)
+  // ✏️ 25/09/2026 (screens-pass s08, אופק 11/11 ו-13/13): אירוע מאויש במלואו עם לוגיסטיקה לא-מוכנה נקרא
+  // "N זימונים ממתינים" — זימונים שכבר לא משנים דבר. כשאין חוסר-דיילות, מה שחסר הוא הלוגיסטיקה (למטה).
+  if (pending > 0 && gap > 0) return pendingInvitesSentence(pending, gap)
   // לשון-יחיד לחוסר בודד — "חסרות 1" היא עברית שבורה, ובאותה שורה ממש עמודת-הדיילות
   // אומרת "חסרה 1" (gapWord). אותה תבנית-יחיד שאושרה פעמיים (נוסחי-הולידציה · זימון בודד).
   if (gap > 0) return gapWord(gap)
