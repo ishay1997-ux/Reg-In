@@ -86,6 +86,11 @@ const SUB_TONES = {
 // שורת-המיון — טקסט בלבד (⑧): קיימת כי סדר לא-מוסבר הוא חידה, וכותרות-העמודות אינן
 // לחיצות בכוונה — מיון לפי "תאריך" היה מחזיר בדיוק את הטעות ש-⑧ נועדה למנוע.
 const SORT_LINE = 'ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע'
+// ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים): בלשונית "לסגירה" כל שורה נחשבת "חסרה" (`overviewHasGap` מחזירה
+// true לכל `event_finished` — מה שחסר שם הוא הסגירה עצמה), ולכן הסדר בפועל הוא קרבה בלבד. השורה אמרה "חסרים
+// תחילה", והשורה עם 7/8 ישבה שלישית. ⇒ השורה אומרת את הסדר האמיתי. (ולא שינינו את הסדר: 7/8 באירוע שכבר
+// התקיים הוא עובדה לסגירה, לא חוסר שאפשר עוד להשלים.)
+const SORT_LINE_CLOSING = 'ממוין לפי קרבת האירוע'
 
 // "היום" מחושב פעם אחת בטעינה ומוחזק ב-state (react-hooks/purity אוסר שעון ברינדור,
 // והדפוס זהה ל-OverviewTab של מודול 4) — ומתעדכן עם כל רענון-נתונים.
@@ -413,7 +418,9 @@ export default function ProjectsPage() {
               {/* חלון-הזמן יושב באותה שורת-המסננים, אחרי הגלולות — אותו מיקום בדיוק בשני
                   המסכים (חוזה §4). */}
               <WindowChips value={windowKey} onChange={setWindowKey} hiddenCount={hiddenCount} />
-              <span className="mr-auto text-sm text-slate-400">{SORT_LINE}</span>
+              <span className="mr-auto text-sm text-slate-400" data-testid="projects-sort-line">
+                {tab === 'closing' ? SORT_LINE_CLOSING : SORT_LINE}
+              </span>
               {/* הכפתור יושב בשורת-המסננים, בדיוק כמו במודול 11 — אותו מיקום בכל מסך
                   שמחובר לחלון. 🔑 **פעיל תמיד**: החלון עצמאי ואומר בעצמו כשאין מה לייצא
                   (הכרעת-ישי 17/09, ת4ב) — כפתור מנוטרל אינו אומר למשתמשת למה. */}
@@ -428,7 +435,8 @@ export default function ProjectsPage() {
                 ייצוא
               </Button>
             </div>
-            {visible.length > 0 && <Hint id="projects.sort" />}
+            {/* הרמז מסביר "החסרים עולים למעלה" — לא נכון בלשונית "לסגירה" (ר' SORT_LINE_CLOSING). */}
+            {visible.length > 0 && tab !== 'closing' && <Hint id="projects.sort" />}
             {visible.length === 0 ? (
               <EmptyRows
                 filtered={tab === 'all' && statusFilter !== 'all'}
