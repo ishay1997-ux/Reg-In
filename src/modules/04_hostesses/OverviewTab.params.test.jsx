@@ -271,7 +271,7 @@ describe('מוני-השורה — אפס באפור', () => {
     await screen.findByTestId('overview-table')
     const zero = screen.getAllByText('ממתינות')[0].previousSibling
     expect(zero).toHaveTextContent('0')
-    expect(zero.className).toContain('text-slate-300')
+    expect(zero.className).toContain('text-slate-500')
     expect(zero.className).not.toContain('text-amber-700')
   })
 })

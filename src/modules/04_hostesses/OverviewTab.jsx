@@ -464,11 +464,12 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
 }
 
 // ✏️ 25/09/2026 (screens-pass s18): "0 ממתינות" עמד בכתום ב-51 שורות — צבע-אזהרה על כלום. אפס ⇒ אפור.
+// ‏slate-500 ולא 300/400 (הכרעת הסגן אחרי בודק): ‏300 ≈ ‏1.5:1 ו-400 ≈ ‏2.6:1 על לבן — מתחת ל-AA; ‏500 ≈ ‏4.8:1.
 function Counter({ n, label, tone, children }) {
   return (
     <span className="min-w-[46px] text-center">
       <span
-        className={`block text-base font-bold leading-tight ${n === 0 ? 'text-slate-300' : tone}`}
+        className={`block text-base font-bold leading-tight ${n === 0 ? 'text-slate-500' : tone}`}
       >
         {n}
       </span>
