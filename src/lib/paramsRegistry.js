@@ -276,7 +276,7 @@ export function parseForDisplay(entry, rawText) {
 }
 
 // ── המרשם עצמו — 47 שורות (43 + ארבע שורות מודול 11, M11-5) ──────────────
-// כל שורה: { name, label, hint, kind, unit?, min?, max?, decimals?, group, affects?, layerHint? }.
+// כל שורה: { name, label, hint, kind, unit?, min?, max?, decimals?, group, affects?, layerHint?, note? }.
 // `layerHint` (25/09/2026): מפתח ב-`onboardingCopy.js` — ה"למה" של השורה, מוצג רק במצב-ההטמעה (`ParamRow`).
 // `group` הוא ה-`type` (מפתח ל-PARAM_GROUPS), לא התווית — מקור-אמת יחיד לתווית.
 // `affects` (§2.8, §3.7): משפט-עברי-יחיד שמשמעותו "השינוי הזה נראה במסך של תפקיד אחר" —
@@ -295,6 +295,8 @@ export const PARAM_REGISTRY = [
     decimals: 2,
     group: 'pricing_timing',
     // ✏️ 25/09/2026 (בודק-ניסוח #30): ה-↳ ירד — אמר שוב את ההערה ואת משפט-הקבוצה (3 פעמים אותו דבר).
+    // ✏️ 25/09/2026 — הכרעת-ישי (סבב 2): המשפט הנעול עבר לכאן מראש הקבוצה, מילה-במילה — הוא נכון רק למע"מ.
+    note: 'שינוי כאן משפיע על הצעות חדשות בלבד — הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.',
   },
   {
     name: 'יחס_אורחים_לדיילת',

@@ -71,6 +71,17 @@ describe('ParamRow', () => {
     expect(screen.getByText(/פגה אוטומטית בלילה/)).toBeInTheDocument()
   })
 
+  // ✏️ 25/09/2026 — הכרעת-ישי (סבב 2): המשפט הנעול יושב בשורת המע"מ בלבד, מילה-במילה.
+  it('שורת המע"מ נושאת את המשפט הנעול; שורת-התוקף — לא', () => {
+    const SENTENCE =
+      'שינוי כאן משפיע על הצעות חדשות בלבד — הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.'
+    const { unmount } = renderRow({ row: row('אחוז_מעמ', '18'), value: '18' })
+    expect(screen.getByText(SENTENCE)).toBeInTheDocument()
+    unmount()
+    renderRow({ row: row('ימי_תוקף_הצעה', '30'), value: '30' })
+    expect(screen.queryByText(SENTENCE)).not.toBeInTheDocument()
+  })
+
   it('מדווח שינוי עם שם-הפרמטר', () => {
     const onChange = vi.fn()
     renderRow({ row: row('אחוז_מעמ', '18'), value: '18', onChange })

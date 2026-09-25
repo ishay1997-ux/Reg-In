@@ -343,7 +343,7 @@ const m17 = () =>
       },
       {
         key: 'rank1_adoption',
-        label: 'אימוץ המלצת Smart Match',
+        label: 'אימוץ המלצת השיבוץ החכם',
         value: null,
         format: 'percent',
         window: 'טרם נמדד',
@@ -412,7 +412,7 @@ const m17 = () =>
     definitions: 'הגדרות: זמן-תגובה = … בשעות',
     meta: {
       missing_params: [],
-      notes: ['אימוץ המלצת Smart Match — אין עדיין נתון'],
+      notes: ['אימוץ המלצת השיבוץ החכם — אין עדיין נתון'],
       extra_tables: [
         {
           title: 'הדיילות שעונות הכי לאט',
@@ -687,7 +687,7 @@ describe('מ17 · הוגנות השיבוץ', () => {
     callReport.mockResolvedValue(m17())
     renderTab(SURFACES.m17)
     const tile = await screen.findByTestId('report-tile-rank1_adoption')
-    expect(tile).toHaveTextContent('אימוץ המלצת Smart Match')
+    expect(tile).toHaveTextContent('אימוץ המלצת השיבוץ החכם')
     expect(tile).toHaveTextContent('טרם נמדד')
     // 🔴 **הטענה היא על ה*ערך*, לא על נוכחות התו `%` באריח** — וזה תוקן אחרי i2:
     // תת-השורה עצמה **מצטטת** את *"המדד מציג '—' ולא ⁦0%⁩"*, כלומר מסבירה למה אין אחוז.
@@ -743,7 +743,7 @@ const SURFACE_CASES = [
     'מ17 · הוגנות השיבוץ',
     SURFACES.m17,
     m17,
-    ['אימוץ המלצת Smart Match', 'זמן-תגובה חציוני לזימון', 'אחוז היענות לזימון'],
+    ['אימוץ המלצת השיבוץ החכם', 'זמן-תגובה חציוני לזימון', 'אחוז היענות לזימון'],
   ],
 ]
 

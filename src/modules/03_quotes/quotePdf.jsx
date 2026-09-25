@@ -13,6 +13,7 @@ import {
   parseVatPercent,
 } from '@/lib/pricing'
 import { NO_COLOR_LABEL } from '@/lib/catalog'
+import { validityDaysPhrase } from '@/lib/quotes'
 
 // ── מוקש 1: פורמט הגופן ────────────────────────────────────────────────────
 // ‏fontkit של react-pdf קורא TTF/OTF בלבד. קובצי woff/woff2 (מה שכל חבילת-גופנים מודרנית
@@ -245,15 +246,20 @@ export function formatTimeRange(start, end) {
 // ההצעה עצמה, ועמוד 2 הוא "תנאים כלליים" גנריים כמקובל בשוק. שני התנאים הראשונים הם
 // מהטמפלט המקורי (quote_template_draft.docx); היתר נוסחו כאן והם placeholder עד ניסוח
 // משפטי של החברה.
-export const QUOTE_TERMS = [
-  'המחירים כוללים את הציוד והשירותים המפורטים בהצעה זו בלבד.',
-  'אישור הצעה זו מהווה חתימה על הסכם התקשרות מול REG-IN.',
-  'ההצעה תקפה 30 יום ממועד הפקתה, אלא אם צוין אחרת.',
-  'המחירים בשקלים חדשים; מע"מ מחושב בשורת הסיכום על פי השיעור בתוקף במועד ההפקה.',
-  'תוספות ושינויים שיתבקשו לאחר האישור יתומחרו בנפרד ויעוגנו בעדכון בכתב.',
-  'ביטול הזמנה לאחר אישורה כפוף לחיוב בגין עלויות שכבר הוצאו בפועל.',
-  'אספקת השירותים מותנית בקבלת מלוא פרטי האירוע מהלקוח במועד סביר מראש.',
-]
+// ✏️ 25/09/2026: מספר-הימים בתנאי-התוקף נלקח מהפרמטר `ימי_תוקף_הצעה` (`validityDaysPhrase`, src/lib/quotes.js —
+// שם, כדי שגם טופס-ההצעה ישתמש בו בלי לגרור את מנוע ה-PDF).
+
+export function quoteTerms(validityDays) {
+  return [
+    'המחירים כוללים את הציוד והשירותים המפורטים בהצעה זו בלבד.',
+    'אישור הצעה זו מהווה חתימה על הסכם התקשרות מול REG-IN.',
+    `ההצעה תקפה ${validityDaysPhrase(validityDays)} ממועד הפקתה, אלא אם צוין אחרת.`,
+    'המחירים בשקלים חדשים; מע"מ מחושב בשורת הסיכום על פי השיעור בתוקף במועד ההפקה.',
+    'תוספות ושינויים שיתבקשו לאחר האישור יתומחרו בנפרד ויעוגנו בעדכון בכתב.',
+    'ביטול הזמנה לאחר אישורה כפוף לחיוב בגין עלויות שכבר הוצאו בפועל.',
+    'אספקת השירותים מותנית בקבלת מלוא פרטי האירוע מהלקוח במועד סביר מראש.',
+  ]
+}
 
 function LinesTable({ lines }) {
   return (
@@ -433,7 +439,7 @@ export function buildQuoteDocument(quote) {
             העסקית לבדה, והתנאים לא נדחסים ולא שוברים אותה באמצע. */}
         <View style={styles.section} break>
           <Text style={styles.sectionTitle}>תנאים כלליים</Text>
-          {QUOTE_TERMS.map((term) => (
+          {quoteTerms(quote?.validityDays).map((term) => (
             <View key={term} style={styles.term}>
               <Text style={styles.bullet}>•</Text>
               <Text style={styles.termText}>{term}</Text>

@@ -114,7 +114,7 @@ function requireParams(params, keys) {
   const missing = keys.filter((key) => params?.[key] === null || params?.[key] === undefined)
   if (missing.length > 0) {
     const names = missing.map((key) => paramLabel(SMART_MATCH_PARAM_NAMES[key])).join(', ')
-    throw new Error(`חסרים פרמטרים של Smart Match בהגדרות המערכת: ${names}`)
+    throw new Error(`חסרים פרמטרים של השיבוץ החכם בהגדרות המערכת: ${names}`)
   }
 }
 
@@ -131,7 +131,7 @@ export function activeWeights(params) {
 
   const reliability = params.reliabilityEnabled ? params.reliabilityWeight : 0
   const total = params.responsivenessWeight + reliability + params.proximityWeight
-  if (total <= 0) throw new Error('סכום משקולות Smart Match אינו חיובי — לא ניתן לדרג.')
+  if (total <= 0) throw new Error('סכום משקולות השיבוץ החכם אינו חיובי — לא ניתן לדרג.')
 
   return {
     responsiveness: params.responsivenessWeight / total,

@@ -23,8 +23,8 @@ const expired = { quote_id: 7, quote_status: 'rejected', rejection_reason: 'פג
 const sentRow = { created_at: '2026-08-28T10:00:00Z', recipient: 'a@b.co' }
 
 describe('FOLLOWUP_AI_AVAILABLE — המתג שמסתיר את הכפתור', () => {
-  it('כבוי: שלוש קריאות-אמת לספק (24/09/2026) לא החזירו טיוטה — כפתור שתמיד נכשל גרוע מאין-כפתור', () => {
-    expect(FOLLOWUP_AI_AVAILABLE).toBe(false)
+  it('דלוק: אישור ישי 25/09/2026 14:0X, בשיחת הסגן', () => {
+    expect(FOLLOWUP_AI_AVAILABLE).toBe(true)
   })
 })
 
