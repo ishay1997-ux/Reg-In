@@ -385,3 +385,39 @@ describe('מקטע שינויי-התכולה בכמות הדיילות', () => {
     expect(screen.getByTestId('team-tile-required')).toHaveTextContent('עודכן בשינוי-תכולה')
   })
 })
+
+// ✏️ 25/09/2026 — ענבר ב-1620: אושרה סופית, וסימנה אי-זמינות על תאריך האירוע. אותו כלל של השער.
+describe('תג "סימנה אי-זמינות" — שיבוץ פעיל מול אי-זמינות מוצהרת', () => {
+  const eventDate = daysFromNow(9)
+  function withRange(start, end) {
+    return boardFixture().map((row) =>
+      row.hostess_id === 'h1'
+        ? {
+            ...row,
+            hostesses: {
+              ...row.hostesses,
+              hostess_unavailability: [{ start_date: start, end_date: end }],
+            },
+          }
+        : row,
+    )
+  }
+
+  it('טווח שחל על תאריך האירוע ⇒ תג ליד השם', async () => {
+    getProjectAssignments.mockResolvedValue(withRange(eventDate, daysFromNow(12)))
+    await renderTab()
+    expect(screen.getByTestId('team-unavailable-h1')).toHaveTextContent('סימנה אי-זמינות')
+  })
+
+  it('טווח שלא חל על התאריך ⇒ בלי תג', async () => {
+    getProjectAssignments.mockResolvedValue(withRange(daysFromNow(10), daysFromNow(12)))
+    await renderTab()
+    expect(screen.queryByTestId('team-unavailable-h1')).not.toBeInTheDocument()
+  })
+
+  it('אירוע שעבר ⇒ בלי תג', async () => {
+    getProjectAssignments.mockResolvedValue(withRange(daysFromNow(-3), daysFromNow(3)))
+    await renderTab({ project: project({ final_event_date: daysFromNow(-1) }) })
+    expect(screen.queryByTestId('team-unavailable-h1')).not.toBeInTheDocument()
+  })
+})

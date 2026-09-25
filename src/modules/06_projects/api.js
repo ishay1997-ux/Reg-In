@@ -112,7 +112,10 @@ export async function getProjectAssignments(projectId) {
     // (AR-5) וצריכים כתובת ואיש-קשר; הצירוף כולו מגודר על 'דיילות' — מי שחסומה שם מקבלת
     // אפס שורות בלי שגיאה, וזה בדיוק הסימן שהמסך מתרגם ל"אין דרך לשלוח מכאן".
     // ‏city נוסף בצעד 4.2: המוקאפ המאושר (04_tab_team) מצייר תת-שורת-עיר מתחת לשם — נדחה מ-3.4 כי העמודה חסרה בצירוף.
-    .select('*, hostesses(full_name, hostess_id, email, phone, city)')
+    // ‏hostess_unavailability נוסף 25/09/2026 — תג "סימנה אי-זמינות" (`approvedButUnavailable`). אותה הרשאה ('דיילות').
+    .select(
+      '*, hostesses(full_name, hostess_id, email, phone, city, hostess_unavailability(start_date, end_date))',
+    )
     .eq('project_id', projectId)
     .order('hostess_id')
     .order('assignment_number')

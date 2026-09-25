@@ -625,6 +625,20 @@ export function futureActiveAssignments(rows, todayIso) {
     .sort((a, b) => a.eventDate.localeCompare(b.eventDate))
 }
 
+// ✏️ 25/09/2026 — **אושרה, ואחר-כך (או לפני) סימנה אי-זמינות על אותו תאריך.** ישי בשיחת הסגן, 14:0X:
+// *"נגיד יומיים לפני היא חולה או משו... עשיתי שהמערכת תדע להתמודד עם כל המקרי קצה"*. המקרה נמדד: ענבר
+// שפירא ב-1620. השער של השיבוץ החכם פוסל מועמדת כזו (`isUnavailableOn`, `smartMatch.js` `passesGate`) — אבל
+// דיילת שכבר אושרה אינה עוברת בשער שוב, ולכן אף מסך לא אמר זאת. **אותו כלל בדיוק, לא עותק:** אותה
+// `isUnavailableOn` על אותו `final_event_date`, ורק לשיבוץ פעיל (`ACTIVE_COMMITMENT_STATUSES`) לאירוע שלא עבר.
+// 🚫 תג בלבד — בלי התראה ובלי תהליך (קנה-המידה של ישי: "פרויקט אקדמי").
+export const UNAVAILABLE_CONFLICT_LABEL = 'סימנה אי-זמינות'
+
+export function approvedButUnavailable(assignmentStatus, ranges, eventDate, todayIso) {
+  if (!ACTIVE_COMMITMENT_STATUSES.includes(assignmentStatus)) return false
+  if (!eventDate || !todayIso || isPastEvent(eventDate, todayIso)) return false
+  return isUnavailableOn(ranges, eventDate)
+}
+
 // ── תרגום שגיאות-המסד ────────────────────────────────────────────────────────
 
 // זיהוי לפי **שם האילוץ** ולא לפי נוסח ההודעה: את הנוסח PostgreSQL מנסח, ואילו השם
