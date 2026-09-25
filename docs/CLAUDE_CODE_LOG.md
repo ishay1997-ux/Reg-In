@@ -48,7 +48,9 @@
 
 ### 25/09/2026 afternoon — four small PR fixes (builder m12, deputy task after Ishay's "מאשר הכל לפי המלצתך")
 - Unavailability tag on approved assignments (`approvedButUnavailable`, the gate's rule) · AI follow-up button on · PDF validity days from the param · m17 "Smart Match" ⇒ Hebrew (migration 140000, not applied). Records: module-3/4/6 §10, db_roadmap §10ב.
+- Items 5–6 (round 2): the locked pricing sentence moved verbatim to the VAT row (registry `note`); `projects.js` comment on "הלוגיסטיקה טרם מוכנה" corrected — it was already nodded 18/08 (module-6 §10). Items 1–4 committed aa570677 · ae81b024 · 0122b06c · 4ab4d41f.
 - Items 7 and 8 held as blocking questions to the deputy: 7 would drop 8 event_finished projects from the home attention list entirely; 8's definition (`not actual_qty_autofilled`) matches the model — 1588 is seed data the RPC cannot produce (autofilled=true with actual≠planned), 1577 is default-0 vs never-entered.
+- Items 7–8 after the deputy's answers: home `closing` card (33 ⇒ 25 + 8); m12 "נמדד" = hand-entered **and** arrived + the 1588 seed flag fix (migrations 150000/150100, ⏳).
 - Lesson: a component-local variable passed into a child's JSX (`today` in CardBody) crashed the card and ESLint stayed silent — only the card's window tests caught it.
 
 ### 25/09/2026 early morning — copy-review fixes, reports + settings (builder m12, `ishay/module-12-walkthrough`, deputy task)

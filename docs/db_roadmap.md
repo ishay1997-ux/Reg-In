@@ -530,6 +530,10 @@ protection is false until it does.
 
 ## 10ב. Applied migrations — running log (newest first)
 
+- ⏳ **m12 "נמדד" pair, 25/09 ~15:2X — builder m12, Ishay in the deputy chat 14:4X "המשך הכל לפי המלצתך"; not applied — the deputy applies. Order: either (independent), both needed for the intended result.**
+  - ⏳ `20260925150000_data_fix_1588_autofill_flag` — data fix: 1588 ECO-TAG (470⇐410) and FAB-LAN (480⇐420) `actual_qty_autofilled` true ⇒ false. The RPC cannot produce autofilled=true with actual≠planned; both rows came from the 10/09 02:23 seed run. Before-values (and row md5 `b47d175c…` / `6742b9f6…`) in the header; fails unless exactly 2 rows.
+  - ⏳ `20260925150100_module11_m12_measured_arrived_only` — "נמדד" = not autofilled **and** `item_status = 'ready'` (1577: never ordered, actual=0 by column default). `report_m12_equipment` live `c9f9348e835b8d7547a59ed18f1f6654` (18,886) ⇒ `7508974ebe59c0802134d674405d3540` (19,042). Joint dry-run as the CEO (`set local role authenticated`), rolled back: measured rows 2 ⇒ 2 — **1577 out (2 ⇒ 0), 1588 in (0 ⇒ 2)**; tiles unchanged.
+
 - ⏳ `20260925140000_module11_m17_smart_match_hebrew_label` — written 25/09 ~14:3X by builder m12 (deputy task, after Ishay's "מאשר הכל לפי המלצתך" in the deputy's chat 14:0X), **not applied — the deputy applies.** m17 tile `rank1_adoption`: "אימוץ המלצת Smart Match" ⇒ "אימוץ המלצת השיבוץ החכם" (the only "Smart Match" in the body). `report_m17_fairness` live `16314e547de0f0a7495eae620e7a3c51` (23,273) ⇒ `23c00d62c353675f69748cc150e1699c` (23,273). Dry-run as the CEO (`set local role authenticated`), rolled back: only that tile's label changed.
 
 - ⏳ **Copy-review round, 25/09/2026 ~06:1X–06:4X — two files written by builder m12 on the deputy's task (source: `Reg-In-evidence/reports-review-2026-09-25/night/tonight-copy-review.md`, findings 0-3 and 0-9), not applied — waiting for Ishay's approval.** Both L7, dry-run as the CEO in a pg_temp copy that ends in a raise; each block md5-checked against its file in the DB. Live bases measured 25/09 06:1X.
