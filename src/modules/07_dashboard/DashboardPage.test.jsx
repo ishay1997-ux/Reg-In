@@ -398,6 +398,10 @@ describe('DashboardPage — מה דורש טיפול (R6 09/09/2026: ארבעה 
     expect(within(closingCard).getByText(/מנהלת פרויקטים/)).toBeInTheDocument()
     expect(within(closingCard).getByText(/פסטיבל קיץ עירוני/)).toBeInTheDocument()
     expect(within(closingCard).getByText(/הסתיים לפני 8 ימים/)).toBeInTheDocument()
+    // ✏️ 25/09/2026 (הכרעת הסגן): שורת-הדוגמה נחתכת רק אחרי שתי שורות — לא שורה אחת (התאריך נחתך ב-1536).
+    const topLine = within(closingCard).getByTestId('attention-top-line')
+    expect(topLine.className).toContain('line-clamp-2')
+    expect(topLine.className).not.toContain('truncate')
 
     const staffingCard = screen.getByTestId('dashboard-attention-card-staffing')
     expect(within(staffingCard).getByText(/מנהלת גיוס/)).toBeInTheDocument()

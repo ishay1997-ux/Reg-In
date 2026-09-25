@@ -67,8 +67,15 @@ export default function AttentionPanel({ summary }) {
                     {cat.noun}
                   </span>
                 )}
+                {/* ✏️ 25/09/2026 (הכרעת הסגן, צלם-דוחות ב-1536): חמישה כרטיסים בשורה, ושורה אחת חתכה בדיוק את התאריך
+                    ("…1/2 דיילות, 09"). עד שתי שורות לפני חיתוך; הפריסה (חמישה בשורה) לא זזה. */}
                 {cat.topLine && (
-                  <span className="block truncate text-xs text-slate-500">{cat.topLine}</span>
+                  <span
+                    className="line-clamp-2 text-xs text-slate-500"
+                    data-testid="attention-top-line"
+                  >
+                    {cat.topLine}
+                  </span>
                 )}
               </>
             )}
