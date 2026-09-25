@@ -42,7 +42,12 @@ const HINTS = {
   // ‏`extras` מחזיק רק את מה שיושב מתחת לטבלה-הנוספת (זמני-התגובה של מ17) — לא מילון-מונחים.
   'hostess-overview': {
     afterSoWhat: ['reports.hostessOverview.purpose'],
-    beforeChart: ['reports.hostessOverview.redCount', 'reports.hostessOverview.topQuarter'],
+    // ✏️ 25/09/2026: ‏`gapEvents` — "למה באריח ארבעה ובמסך הדיילות יותר" (הכלל של ישי 02:2X: הסבר = רמז).
+    beforeChart: [
+      'reports.hostessOverview.redCount',
+      'reports.hostessOverview.topQuarter',
+      'reports.hostessOverview.gapEvents',
+    ],
     chartFooter: [],
     beforeTable: ['reports.hostessOverview.redTableSort'],
     extras: [],

@@ -34,6 +34,13 @@ vi.mock('recharts', () => {
     ResponsiveContainer Scatter ScatterChart Tooltip XAxis YAxis ZAxis`.split(/\s+/)
   return Object.fromEntries(names.map((name) => [name, stub(name)]))
 })
+// ✏️ 25/09/2026: הערת טבלה-נוספת היא `<Hint>` (מצב ההטמעה בלבד) ⇒ רמת-ההטמעה נשלטת כאן.
+// ברירת-המחדל 0 — כמו לפני, כשלא היה ספק והרמז נפל ל-CLEAN.
+const onboardingMode = { value: 0 }
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ onboardingMode: onboardingMode.value }),
+}))
+
 const callReport = vi.fn()
 vi.mock('../api', async (importOriginal) => {
   const actual = await importOriginal()
@@ -138,30 +145,42 @@ describe('ReportSurface — extension slots', () => {
     // ‏`table.sort` של ה-RPC מנצח את `columns[].sorted` — אחרת אין `aria-sort` על טבלה נוספת.
     expect(within(extra).getAllByRole('columnheader')[0]).toHaveAttribute('aria-sort', 'ascending')
     // בלי `note` — אין שורת-הערה ריקה.
-    expect(within(extra).queryByTestId('report-extra-table-note')).toBeNull()
+    expect(within(extra).queryByTestId('hint-report-extra-table-note')).toBeNull()
   })
 
-  // ✏️ 25/09/2026 (הכרעת הסגן, מ15 F1): ‏`table.note` מהשרת לא הוצג בשום מקום.
-  it('an extra table note from the server is shown under its title', async () => {
-    callReport.mockResolvedValueOnce(
-      payload({
-        meta: {
-          extra_tables: [
-            {
-              title: 'אי-הגעה לפי דירוג',
-              note: 'אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות.',
-              columns: [{ key: 'rating', label: 'דירוג', format: 'int' }],
-              rows: [{ row_key: 3, rating: 3 }],
-            },
-          ],
-        },
-      }),
-    )
+  // ✏️ 25/09/2026 (הכרעת הסגן, מ15 F1): ‏`table.note` מהשרת לא הוצג בשום מקום. הוא הסבר ⇒ רמז של מצב ההטמעה
+  // בלבד (הכלל של ישי 02:2X): במצב 2 מתחת לכותרת, במצב 0 — לא.
+  const noteTable = () =>
+    payload({
+      meta: {
+        extra_tables: [
+          {
+            title: 'אי-הגעה לפי דירוג',
+            note: 'אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות.',
+            columns: [{ key: 'rating', label: 'דירוג', format: 'int' }],
+            rows: [{ row_key: 3, rating: 3 }],
+          },
+        ],
+      },
+    })
+
+  it('an extra table note from the server is a guided-mode hint under its title', async () => {
+    onboardingMode.value = 2
+    callReport.mockResolvedValueOnce(noteTable())
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={() => {}} />)
     const extra = await screen.findByTestId('report-extra-table')
-    expect(within(extra).getByTestId('report-extra-table-note')).toHaveTextContent(
+    expect(within(extra).getByTestId('hint-report-extra-table-note')).toHaveTextContent(
       'אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות.',
     )
+    onboardingMode.value = 0
+  })
+
+  it('in mode 0 the extra table note is not on the screen', async () => {
+    onboardingMode.value = 0
+    callReport.mockResolvedValueOnce(noteTable())
+    render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={() => {}} />)
+    const extra = await screen.findByTestId('report-extra-table')
+    expect(within(extra).queryByTestId('hint-report-extra-table-note')).toBeNull()
   })
 
   // ✏️ 25/09/2026 (הכרעת הסגן, מ21 F2): אריחים שמחושבים על כל הלקוחות אומרים את זה כשנבחר לקוח.

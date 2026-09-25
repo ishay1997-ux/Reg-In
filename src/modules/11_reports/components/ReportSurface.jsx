@@ -18,6 +18,7 @@ import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Disclosure from '@/components/Disclosure'
 import FilterPill from '@/components/FilterPill'
+import Hint from '@/components/Hint'
 import { customerIgnoredTilesLine, formatByType } from '@/lib/reportsFormat'
 import { missingReportParamsMessage } from '@/lib/reportsParams'
 import { DRILL_INTENT, ROW_DOOR_KINDS, callReport, normalizeCharts } from '../api'
@@ -171,12 +172,9 @@ function ExtraTable({ table, onDrill }) {
     <section className="mb-4" data-testid="report-extra-table">
       <h3 className="mb-1.5 text-sm font-semibold text-slate-700">{table.title}</h3>
       {/* ✏️ 25/09/2026 (הכרעת הסגן, מ15 F1): ‏`table.note` הגיע מהשרת ולא היה לו קורא (‏`git grep table.note` = 0).
-          במ15 זו הערה שמשנה את הקריאה — *"אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות"*. */}
-      {table.note && (
-        <p className="mb-1.5 text-sm text-slate-600" data-testid="report-extra-table-note">
-          {table.note}
-        </p>
-      )}
+          במ15 זו הערה שמשנה את הקריאה — *"אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות"*. היא **הסבר**,
+          ולכן רמז של מצב ההטמעה ולא טקסט במסך הרגיל — הכלל של ישי (25/09 02:2X, דרך הסגן). */}
+      {table.note && <Hint id="report-extra-table-note" text={table.note} className="mb-1.5" />}
       <ReportTable
         columns={table.columns}
         rows={table.rows}
