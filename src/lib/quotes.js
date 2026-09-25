@@ -758,6 +758,8 @@ export function quoteToPdfModel(quote, productsBySku, defaultVatRate, validityDa
     // תוקף ההצעה נספר מ-updated_at ולא מ-issue_date (F4) — אותו שעון שהמסך מציג
     // ושעבודת-הרקע פועלת לפיו, אחרת המסמך ללקוח היה נוקב בתאריך אחר מהמערכת.
     validUntil: days !== null && updated !== null ? toIsoDate(updated + days * MS_PER_DAY) : null,
+    // מספר-הימים עצמו — לתנאי-התוקף בעמוד 2 (`quoteTerms`, quotePdf.jsx). null ⇒ המנוע נופל ל-30.
+    validityDays: days,
     // N2: איש-הקשר הראשי אינו quote.customers.contact_name/phone יותר — הוא שורת customer_contacts
     // עם is_primary, ו-primaryContact היא נקודת-הבחירה היחידה (ר' ייבוא בראש הקובץ).
     customer: {

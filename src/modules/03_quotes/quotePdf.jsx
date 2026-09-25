@@ -245,15 +245,30 @@ export function formatTimeRange(start, end) {
 // ההצעה עצמה, ועמוד 2 הוא "תנאים כלליים" גנריים כמקובל בשוק. שני התנאים הראשונים הם
 // מהטמפלט המקורי (quote_template_draft.docx); היתר נוסחו כאן והם placeholder עד ניסוח
 // משפטי של החברה.
-export const QUOTE_TERMS = [
-  'המחירים כוללים את הציוד והשירותים המפורטים בהצעה זו בלבד.',
-  'אישור הצעה זו מהווה חתימה על הסכם התקשרות מול REG-IN.',
-  'ההצעה תקפה 30 יום ממועד הפקתה, אלא אם צוין אחרת.',
-  'המחירים בשקלים חדשים; מע"מ מחושב בשורת הסיכום על פי השיעור בתוקף במועד ההפקה.',
-  'תוספות ושינויים שיתבקשו לאחר האישור יתומחרו בנפרד ויעוגנו בעדכון בכתב.',
-  'ביטול הזמנה לאחר אישורה כפוף לחיוב בגין עלויות שכבר הוצאו בפועל.',
-  'אספקת השירותים מותנית בקבלת מלוא פרטי האירוע מהלקוח במועד סביר מראש.',
-]
+// ✏️ 25/09/2026 (ישי, בשיחת הסגן 14:0X: "מאשר הכל לפי המלצתך"): מספר-הימים בתנאי-התוקף היה קבוע (30), בזמן
+// שהפרמטר `ימי_תוקף_הצעה` קובע מתי ההצעה פגה בפועל. עכשיו הוא נלקח מהפרמטר; חסר או לא-מספרי ⇒ 30.
+const DEFAULT_QUOTE_VALIDITY_DAYS = 30
+
+function validityDaysPhrase(validityDays) {
+  const n = Number(validityDays)
+  const days =
+    validityDays != null && Number.isInteger(n) && n > 0 ? n : DEFAULT_QUOTE_VALIDITY_DAYS
+  if (days === 1) return 'יום אחד'
+  // 2–10: "5 ימים"; מעל 10 — "30 יום", כמו בשאר המסמך.
+  return days <= 10 ? `${days} ימים` : `${days} יום`
+}
+
+export function quoteTerms(validityDays) {
+  return [
+    'המחירים כוללים את הציוד והשירותים המפורטים בהצעה זו בלבד.',
+    'אישור הצעה זו מהווה חתימה על הסכם התקשרות מול REG-IN.',
+    `ההצעה תקפה ${validityDaysPhrase(validityDays)} ממועד הפקתה, אלא אם צוין אחרת.`,
+    'המחירים בשקלים חדשים; מע"מ מחושב בשורת הסיכום על פי השיעור בתוקף במועד ההפקה.',
+    'תוספות ושינויים שיתבקשו לאחר האישור יתומחרו בנפרד ויעוגנו בעדכון בכתב.',
+    'ביטול הזמנה לאחר אישורה כפוף לחיוב בגין עלויות שכבר הוצאו בפועל.',
+    'אספקת השירותים מותנית בקבלת מלוא פרטי האירוע מהלקוח במועד סביר מראש.',
+  ]
+}
 
 function LinesTable({ lines }) {
   return (
@@ -433,7 +448,7 @@ export function buildQuoteDocument(quote) {
             העסקית לבדה, והתנאים לא נדחסים ולא שוברים אותה באמצע. */}
         <View style={styles.section} break>
           <Text style={styles.sectionTitle}>תנאים כלליים</Text>
-          {QUOTE_TERMS.map((term) => (
+          {quoteTerms(quote?.validityDays).map((term) => (
             <View key={term} style={styles.term}>
               <Text style={styles.bullet}>•</Text>
               <Text style={styles.termText}>{term}</Text>
