@@ -102,12 +102,12 @@ const KIND_RULES = {
   int: { test: isValidPositiveInt, base: 'מספר שלם', min: 1, decimals: 0, integer: true },
   decimal: { test: isValidNonNegativePrice, base: 'מספר', min: 0, decimals: 2 },
   weight: { test: isValidWeight, base: 'מספר', min: 0, max: 1, decimals: 2 },
-  boolean: { test: isValidBooleanText, message: 'ערך חוקי: כן או לא בלבד' },
+  boolean: { test: isValidBooleanText, message: 'הזיני כן או לא בלבד' },
   email: {
     test: (value) => !isBlank(value) && EMAIL_REGEX.test(String(value).trim()),
-    message: 'ערך חוקי: כתובת מייל תקינה',
+    message: 'הזיני כתובת מייל תקינה',
   },
-  url: { test: isValidHttpsUrl, message: 'ערך חוקי: קישור המתחיל ב-https://' },
+  url: { test: isValidHttpsUrl, message: 'הזיני קישור המתחיל ב-https://' },
   // 'templates' אינו מאומת כאן בכלל — §2.8: "Blank ⇒ invalid for every non-template kind".
   // גוף-התבנית מאומת ב-emailTemplates.js (templateSaveVerdict, צעד 2.2) — לא כפילות-חוזה.
 }
@@ -142,9 +142,7 @@ function numericMessage(bounds) {
   const range = rangePhrase(bounds)
   const head = range ? `${bounds.base} ${range}` : bounds.base
   // `decimals: 0` (קינד שלם) אינו נאמר — "מספר שלם" כבר אומר זאת, ומשפט כפול מבלבל.
-  return bounds.decimals
-    ? `ערך חוקי: ${head}, ${decimalsPhrase(bounds.decimals)}`
-    : `ערך חוקי: ${head}`
+  return bounds.decimals ? `הזיני ${head}, ${decimalsPhrase(bounds.decimals)}` : `הזיני ${head}`
 }
 
 // ספירת ספרות-אחרי-הנקודה מהטקסט ולא מהמספר: `Number('17.550')` הוא 17.55, ומי שהקליד
@@ -162,7 +160,7 @@ export function validateParamValue(entry, value) {
   if (!rule.base) return rule.test(value) ? { ok: true } : { ok: false, message: rule.message }
 
   // A-4 / C6: ריק אינו 0 — וההודעה עליו אומרת "חסר ערך", לא טווח. משתמשת שמחקה שדה
-  // וקיבלה "ערך חוקי: מספר בין 1 ל-5" חושבת שהמספר שלה פסול, ולא שהשדה ריק.
+  // וקיבלה "הזיני מספר בין 1 ל-5" חושבת שהמספר שלה פסול, ולא שהשדה ריק.
   if (isBlank(value)) return { ok: false, message: BLANK_NUMERIC_ERROR }
 
   const bounds = boundsFor(entry, rule)
@@ -322,7 +320,7 @@ export const PARAM_REGISTRY = [
     max: 180,
     group: 'pricing_timing',
     affects:
-      'הצעה פתוחה שלא עודכנה במשך המספר הזה נדחית אוטומטית בלילה — הקטנה תדחה גם הצעות קיימות',
+      'הצעה פתוחה שלא עודכנה במשך מספר הימים הזה פגה אוטומטית בלילה — הקטנה תסמן כפגות גם הצעות קיימות',
   },
   {
     name: 'סכום_נסיעות_למשמרת',
@@ -341,7 +339,7 @@ export const PARAM_REGISTRY = [
   {
     name: 'שכר_מינימום_שעתי',
     label: 'שכר מינימום שעתי לדיילת',
-    hint: 'התעריף המינימלי לשעת-עבודה של דיילת — דיילת מתחתיו מוצגת ברשימת דיילות מתחת לרף',
+    hint: "התעריף המינימלי לשעת-עבודה של דיילת — מי שמתחתיו מופיעה ב'מי מתחת לשכר המינימום'",
     kind: 'decimal',
     unit: '₪',
     min: 0,
@@ -402,6 +400,9 @@ export const PARAM_REGISTRY = [
     name: 'ימי_אזהרה_קדם_אירוע',
     label: 'ימי אזהרה לפני אירוע',
     hint: "כמה ימים לפני האירוע חוסר בדיילות או בציוד עולה ל'מה דורש טיפול'",
+    // ✏️ 25/09/2026 (בדיקת-ניסוח הלילה, 0-8): הפרמטר צובע גם את הלוח במסך-הבית (`dashboard.js`) וקובע את השבב
+    // "אירועים קרובים" במסך ההצעות (`quotes.js`) — מסך של תפקיד אחר, ולכן ↳.
+    affects: "משנה גם את הצבע האדום בלוח במסך-הבית ואת 'אירועים קרובים' במסך ההצעות",
     kind: 'int',
     unit: 'ימים',
     min: 1,
@@ -460,7 +461,9 @@ export const PARAM_REGISTRY = [
   {
     name: 'סף_שביעות_רצון',
     label: 'סף שביעות רצון',
-    hint: "ציון משוב שמתחתיו נדרשת סיבה, והלקוח מסומן 'טעון בירור'",
+    // ✏️ 25/09/2026 (בדיקת-ניסוח הלילה, 0-7): 'טעון בירור' נקבע לפי ממוצע המשובים (`satisfactionBand(customer.avg_feedback…)`
+    // ב-customers.js), לא לפי משוב נמוך אחד.
+    hint: "ציון משוב שמתחתיו נדרשת סיבה; לקוח שממוצע המשובים שלו מתחתיו מסומן 'טעון בירור'",
     kind: 'int',
     unit: '★',
     min: 1,
@@ -580,7 +583,7 @@ export const PARAM_REGISTRY = [
   },
   {
     name: 'תבנית_אישור_סופי_שיבוץ',
-    label: 'אישור סופי שיבוץ',
+    label: 'אישור שיבוץ סופי',
     hint: 'המייל שיוצא לדיילת כששיבוצה נסגר סופית',
     kind: 'templates',
     group: 'templates',
@@ -716,9 +719,12 @@ export const PARAM_REGISTRY = [
     name: 'קבוע_ריסון_m',
     label: 'משקל ממוצע-החברה',
     // ✏️ 25/09/2026 (בודק-ניסוח, params-copy-review.md): #16 — ה"למה" ירד לשכבה (`params.dampingWhy`).
-    hint: 'כמה משקל יש לממוצע-החברה בציון של דיילת עם מעט תשובות',
+    // ✏️ 25/09/2026 (בדיקת-ניסוח הלילה, 0-6): בלי יחידה, 5 יושב ליד משקולות של 0.00–1.00 ואי-אפשר לדעת מה הוא.
+    // ✏️ 25/09/2026 (בדיקת 39ceebe2 #4): m נוסף לכל דיילת, ובשני הציונים (`smartMatch.js` היענות + אמינות).
+    hint: 'כמה תשובות בגובה ממוצע-החברה נוספות לציוני ההיענות והאמינות של כל דיילת — ניכר בעיקר אצל מי שענתה מעט',
     layerHint: 'params.dampingWhy',
     kind: 'int',
+    unit: 'תשובות',
     min: 1,
     // עוגן פנימי: 5–15 שיבוצים בשנה הם המכנה האמיתי (הערת `smartMatch.js`) — מעל זה כל ציון נבלע בממוצע-החברה
     max: 15,
@@ -795,7 +801,7 @@ export const PARAM_REGISTRY = [
   },
   {
     name: 'מרכיב_אמינות_פעיל',
-    label: 'מרכיב האמינות פעיל',
+    label: 'מרכיב-האמינות',
     hint: 'מדליק או מכבה את שקלול מרכיב-האמינות בציון ההתאמה',
     kind: 'boolean',
     group: 'smart_match',

@@ -93,6 +93,16 @@ describe('TemplateEditor', () => {
       SHIFT_INVITE_ROW.param_name,
       expect.objectContaining({ status: 'warning' }),
     )
+    expect(warning.textContent).toContain('אפשר לשמור גם בלעדיו')
+  })
+
+  // ✏️ 25/09/2026 (בדיקת 39ceebe2 #3): שני משתני-רשות חסרים ⇒ "בלעדיהם", לא "בלעדיו".
+  it('שני משתני-רשות חסרים ⇒ האזהרה ברבים', () => {
+    const bodyMissingTwo = FULL_BODY.replace('[עיר_אירוע]', '').replace('[שם_פרויקט]', '')
+    renderEditor({ values: { [SHIFT_INVITE_ROW.param_name]: bodyMissingTwo } })
+    expect(screen.getByTestId('settings-template-warning').textContent).toContain(
+      'אפשר לשמור גם בלעדיהם',
+    )
   })
 
   // 🔬 A1 — הבאג שנמדד 03/09/2026: הצ'יפ **הוסיף בסוף** במקום להכניס בסמן, כי `selectionStart`
@@ -193,9 +203,7 @@ describe('TemplateEditor', () => {
     })
     const blocked = screen.getByTestId('settings-template-blocked')
     expect(blocked.textContent).toContain('משתנה לא מוכר בתבנית')
-    expect(blocked.textContent).toContain(
-      'השמירה חסומה. צריך למחוק את המשתנה מהטקסט — הוא לא קיים במערכת.',
-    )
+    expect(blocked.textContent).toContain('מחקי את המשתנה מהטקסט — עד אז אי-אפשר לשמור')
     expect(blocked.textContent).not.toContain('אפשר להחזיר את המשתנה מהרשימה שלמטה')
   })
 
@@ -204,7 +212,7 @@ describe('TemplateEditor', () => {
       values: { [SHIFT_INVITE_ROW.param_name]: FULL_BODY.replace('[לינק_אישור_משמרת]', '') },
     })
     expect(screen.getByTestId('settings-template-blocked').textContent).toContain(
-      'השמירה חסומה. אפשר להחזיר את המשתנה מהרשימה שלמטה.',
+      'החזירי את המשתנה מהרשימה שלמטה — עד אז אי-אפשר לשמור',
     )
   })
 

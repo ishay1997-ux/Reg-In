@@ -208,8 +208,8 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
                   והפעולה הנכונה היא למחוק אותו מהטקסט. `verdict.missingRequired` הוא מה
                   שמבחין — `templateSaveVerdict` מדווחת חובה-חסרה לפני לא-מוכר. */}
               {verdict.missingRequired?.length > 0
-                ? 'השמירה חסומה. אפשר להחזיר את המשתנה מהרשימה שלמטה.'
-                : 'השמירה חסומה. צריך למחוק את המשתנה מהטקסט — הוא לא קיים במערכת.'}
+                ? 'החזירי את המשתנה מהרשימה שלמטה — עד אז אי-אפשר לשמור'
+                : 'מחקי את המשתנה מהטקסט — עד אז אי-אפשר לשמור'}
             </div>
           )}
 
@@ -220,7 +220,10 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
             >
               <b>{verdict.message}</b>
               <br />
-              אפשר לשמור — אבל כדאי לבדוק את החוסר.
+              {/* ✏️ 25/09/2026 (בדיקת 39ceebe2 #3): יחיד/רבים לפי מספר החסרים — ההודעה שמעל כבר מונה אותם. */}
+              {verdict.missingOptional?.length > 1
+                ? 'אפשר לשמור גם בלעדיהם'
+                : 'אפשר לשמור גם בלעדיו'}
             </div>
           )}
 

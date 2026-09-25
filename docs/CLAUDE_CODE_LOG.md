@@ -46,6 +46,11 @@
 
 ## Session Log (newest first)
 
+### 25/09/2026 early morning — copy-review fixes, reports + settings (builder m12, `ishay/module-12-walkthrough`, deputy task)
+- First merged `origin/ishay/night-integration-2026-09-25` into the branch (clean; deputy ruling — the review was made on that base, 28 commits were missing here). Then every non-locked "מבלבל"/"משקר" finding of `tonight-copy-review.md` not already fixed, plus `params-copy-review.md` style #22–26, 29, 31, 34, 35. Two L7 files, **not applied** (050100 m21 so_what · 050200 m14 live invites) — expected md5 and the 010350 chain in `db_roadmap.md` §10ב. Code: `paramsRegistry.js`, `onboardingCopy*.js`, settings screens, `SmartMatchPage.jsx`; records in `module-9.md` / `module-4.md` §10.
+- 07:3X follow-up (explainer check of 39ceebe2, six findings): fix-forward 050300 restores the m21 customer prefix on the named-contact branches (050100 is committed, so no in-place edit); db_roadmap corrects 050200's "order-dependent md5" header; four copy fixes in settings/hints.
+- Lesson: a deputy task naming a branch does not prove the branch holds the reviewed code — `git merge-base --is-ancestor <reviewed-sha> HEAD` before editing.
+
 ### 25/09/2026 night — Smart match: default order = the system recommendation (`ishay/smartmatch-score-order`, worker for the deputy)
 - Ishay ruled on the night audit (`Reg-In-evidence/reports-review-2026-09-25/night/smart-match-audit.md`): the score now decides the default order on screen 2 (fifth lens "המלצת המערכת"; pinned first; angles by click; "תענה הכי מהר" under 72h per the 30/07 ruling). Also: calculation window 12→24, median response time from `responded_at`, fairness leverage as of the event date, Israel-local "today". Commits `d4b4627c` · `1bf0e526` · `eaa6c1ab` + ripples; gate exit 0.
 - 1620 on live data: before Yarden📌 · Dana Barak📌 · Galit📌 · Noa Sagi · … (km) ⇒ after Dana Barak📌 · Galit📌 · Yarden📌 · Talya Amar · Shelly Elkayam · Noa Sagi · Orly Shani · Roni Almog. Hostesses at the ×1.16 cap: 29 ⇒ 1 after the reviewer's fix.
