@@ -26,6 +26,7 @@ import {
   PRICING_PARAM_NAMES,
 } from '@/lib/pricing'
 import {
+  validityDaysPhrase,
   buildQuoteHeader,
   buildQuoteLines,
   computeEventHours,
@@ -467,7 +468,8 @@ export default function QuoteBuilderPage() {
               במסך, במסמך ובעבודת-הלילה — מהעדכון האחרון (`deriveQuoteExpiry` · `quoteToPdfModel`). */}
           {Number(screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays]) > 0 && (
             <p className="mt-0.5 text-xs text-slate-500">
-              {`תוקף ההצעה: ${Number(screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays])} יום מהעדכון האחרון`}
+              {/* ✏️ 25/09/2026: "יום אחד" ב-1 — אותו ניסוח כמו ב-PDF (`validityDaysPhrase`, quotePdf.jsx). */}
+              {`תוקף ההצעה: ${validityDaysPhrase(screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays])} מהעדכון האחרון`}
             </p>
           )}
         </div>

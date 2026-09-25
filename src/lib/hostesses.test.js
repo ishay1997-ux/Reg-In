@@ -9,6 +9,7 @@ import {
   minWageError,
   duplicateEmailWarning,
   isUnavailableOn,
+  approvedButUnavailable,
   unavailabilityLabel,
   isInviteExpired,
   inviteHoursLeft,
@@ -153,6 +154,65 @@ describe('duplicateEmailWarning — אזהרה רכה, לעולם לא חסימ�
 })
 
 // ── אי-זמינות מוצהרת — תנאי חמישי בשער ──────────────────────────────────────
+// ✏️ 25/09/2026 — אושרה, וסימנה אי-זמינות על תאריך האירוע (ענבר, 1620). אותו כלל של השער.
+describe('approvedButUnavailable — תג "סימנה אי-זמינות" על שיבוץ פעיל', () => {
+  const TODAY = '2026-09-25'
+  const EVENT = '2026-10-10'
+  const range = (start_date, end_date) => [{ start_date, end_date }]
+
+  it('טווח שמתחיל ביום האירוע ⇒ תג', () => {
+    expect(
+      approvedButUnavailable('finally_approved', range(EVENT, '2026-10-14'), EVENT, TODAY),
+    ).toBe(true)
+  })
+  it('טווח שנגמר ביום האירוע ⇒ תג', () => {
+    expect(
+      approvedButUnavailable('finally_approved', range('2026-10-05', EVENT), EVENT, TODAY),
+    ).toBe(true)
+  })
+  it('טווח שעוטף את האירוע משני הצדדים ⇒ תג (לאירוע יש תאריך אחד — final_event_date)', () => {
+    expect(
+      approvedButUnavailable(
+        'confirmed_available',
+        range('2026-10-01', '2026-10-20'),
+        EVENT,
+        TODAY,
+      ),
+    ).toBe(true)
+  })
+  it('טווח שנגמר יום לפני / מתחיל יום אחרי ⇒ בלי תג', () => {
+    expect(
+      approvedButUnavailable('finally_approved', range('2026-10-01', '2026-10-09'), EVENT, TODAY),
+    ).toBe(false)
+    expect(
+      approvedButUnavailable('finally_approved', range('2026-10-11', '2026-10-20'), EVENT, TODAY),
+    ).toBe(false)
+  })
+  it('אירוע שעבר ⇒ בלי תג, גם כשהטווח חל עליו', () => {
+    expect(
+      approvedButUnavailable(
+        'finally_approved',
+        range('2026-09-01', '2026-09-30'),
+        '2026-09-20',
+        TODAY,
+      ),
+    ).toBe(false)
+  })
+  it('אירוע היום ⇒ עדיין תג (לא עבר)', () => {
+    expect(approvedButUnavailable('finally_approved', range(TODAY, TODAY), TODAY, TODAY)).toBe(true)
+  })
+  it('שיבוץ שאינו פעיל (ממתינה / סירבה / שוחררה) ⇒ בלי תג — השער כבר פוסל אותה בזימון', () => {
+    for (const status of ['pending', 'declined', 'released', 'approval_withdrawn']) {
+      expect(approvedButUnavailable(status, range(EVENT, EVENT), EVENT, TODAY)).toBe(false)
+    }
+  })
+  it('בלי טווחים / בלי תאריך ⇒ בלי תג', () => {
+    expect(approvedButUnavailable('finally_approved', [], EVENT, TODAY)).toBe(false)
+    expect(approvedButUnavailable('finally_approved', undefined, EVENT, TODAY)).toBe(false)
+    expect(approvedButUnavailable('finally_approved', range(EVENT, EVENT), null, TODAY)).toBe(false)
+  })
+})
+
 describe('isUnavailableOn — הטווח כולל את שני הקצוות', () => {
   const ranges = [{ start_date: '2026-08-20', end_date: '2026-08-25', note: 'חופשה' }]
 

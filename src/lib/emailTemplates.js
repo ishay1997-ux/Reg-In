@@ -174,7 +174,7 @@ export function templateSaveVerdict(name, body) {
   }
 
   if (missingOptional.length > 0) {
-    const label = missingOptional.length > 1 ? 'חסרים משתנים אופציונליים' : 'חסר משתנה אופציונלי'
+    const label = missingOptional.length > 1 ? 'חסרים משתני רשות' : 'חסר משתנה רשות'
     return {
       status: 'warning',
       missingRequired,

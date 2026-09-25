@@ -68,7 +68,18 @@ describe('ParamRow', () => {
   // ✏️ 25/09/2026: ה-↳ של המע"מ ירד (בודק-ניסוח #30) — הדוגמה עברה לשורת-התוקף, שה-↳ שלה הוא תוצאה.
   it('מציג את הערת "משפיע" כשהמרשם נושא אחת', () => {
     renderRow({ row: row('ימי_תוקף_הצעה', '30'), value: '30' })
-    expect(screen.getByText(/נדחית אוטומטית בלילה/)).toBeInTheDocument()
+    expect(screen.getByText(/פגה אוטומטית בלילה/)).toBeInTheDocument()
+  })
+
+  // ✏️ 25/09/2026 — הכרעת-ישי (סבב 2): המשפט הנעול יושב בשורת המע"מ בלבד, מילה-במילה.
+  it('שורת המע"מ נושאת את המשפט הנעול; שורת-התוקף — לא', () => {
+    const SENTENCE =
+      'שינוי כאן משפיע על הצעות חדשות בלבד — הצעה שכבר אושרה שומרת את הערכים שהוקפאו בה.'
+    const { unmount } = renderRow({ row: row('אחוז_מעמ', '18'), value: '18' })
+    expect(screen.getByText(SENTENCE)).toBeInTheDocument()
+    unmount()
+    renderRow({ row: row('ימי_תוקף_הצעה', '30'), value: '30' })
+    expect(screen.queryByText(SENTENCE)).not.toBeInTheDocument()
   })
 
   it('מדווח שינוי עם שם-הפרמטר', () => {
@@ -84,11 +95,11 @@ describe('ParamRow', () => {
   })
 
   it('שגיאה מוצגת, מסומנת ומקושרת לשדה', () => {
-    renderRow({ row: row('אחוז_מעמ', ''), value: '', error: 'ערך חוקי: מספר בין 0 ל-100' })
+    renderRow({ row: row('אחוז_מעמ', ''), value: '', error: 'הזיני מספר בין 0 ל-100' })
     const input = screen.getByTestId('settings-value-אחוז_מעמ')
     expect(input).toHaveAttribute('aria-invalid', 'true')
     expect(input.getAttribute('aria-describedby')).toBe('settings-error-אחוז_מעמ')
-    expect(screen.getByRole('alert')).toHaveTextContent('ערך חוקי: מספר בין 0 ל-100')
+    expect(screen.getByRole('alert')).toHaveTextContent('הזיני מספר בין 0 ל-100')
   })
 
   it('פרמטר בוליאני מרונדר כמתג, ומדווח "true"/"false"', () => {

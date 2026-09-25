@@ -167,7 +167,7 @@ test.describe('הגדרות מערכת · לשונית הפרמטרים (מנכ"
     await vat.fill('150')
     const vatRow = page.locator('[data-param="' + VAT + '"]')
     await expect(vatRow.getByRole('alert')).toHaveText(
-      'ערך חוקי: מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה',
+      'הזיני מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה',
     )
     await expect(page.getByTestId('settings-save-button')).toBeDisabled()
     await expect(validity).toHaveValue(validityNext)

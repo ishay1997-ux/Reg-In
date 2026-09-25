@@ -320,7 +320,7 @@ export default function MySettingsPage() {
             saving={form.saving}
             disabled={hasErrors}
             blockedReason={
-              visibleCrossErrors[0]?.message || (hasErrors ? 'יש שדה עם ערך לא תקין' : '')
+              visibleCrossErrors[0]?.message || (hasErrors ? 'תקני את המסומן באדום כדי לשמור' : '')
             }
             failedMessage={form.saveError}
             onCancel={() => form.reset()}

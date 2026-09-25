@@ -4,7 +4,7 @@ import {
   formatTimeRange,
   buildQuoteDocument,
   quotePdfFileName,
-  QUOTE_TERMS,
+  quoteTerms,
   MISSING_VAT_CODE,
 } from './quotePdf'
 
@@ -102,10 +102,26 @@ describe('quotePdfFileName', () => {
   })
 })
 
-describe('QUOTE_TERMS', () => {
+describe('quoteTerms', () => {
   it('התנאים קבועים במסמך ולא מגיעים מהמסך', () => {
-    expect(QUOTE_TERMS.length).toBeGreaterThan(0)
-    expect(QUOTE_TERMS.every((t) => typeof t === 'string' && t.length > 0)).toBe(true)
+    const terms = quoteTerms(30)
+    expect(terms.length).toBeGreaterThan(0)
+    expect(terms.every((t) => typeof t === 'string' && t.length > 0)).toBe(true)
+  })
+
+  // ✏️ 25/09/2026: מספר-הימים מהפרמטר `ימי_תוקף_הצעה`, לא קבוע.
+  const validityTerm = (days) => quoteTerms(days).find((t) => t.startsWith('ההצעה תקפה'))
+  it('מספר-הימים מגיע מהפרמטר', () => {
+    expect(validityTerm(45)).toBe('ההצעה תקפה 45 יום ממועד הפקתה, אלא אם צוין אחרת.')
+    expect(validityTerm(7)).toBe('ההצעה תקפה 7 ימים ממועד הפקתה, אלא אם צוין אחרת.')
+  })
+  it('יום אחד — ביחיד', () => {
+    expect(validityTerm(1)).toBe('ההצעה תקפה יום אחד ממועד הפקתה, אלא אם צוין אחרת.')
+  })
+  it('חסר או לא-מספרי ⇒ 30', () => {
+    for (const bad of [null, undefined, '', 'abc', 0, -3, 2.5]) {
+      expect(validityTerm(bad)).toBe('ההצעה תקפה 30 יום ממועד הפקתה, אלא אם צוין אחרת.')
+    }
   })
 })
 

@@ -226,3 +226,21 @@ describe('אריח "שווי הצעות פתוחות" — שורת-המשנה', 
     )
   })
 })
+
+// ✏️ 25/09/2026 (screens-pass s04): שיעור-האישור מחושב על כל ההצעות, לא על החלון שמתחתיו — והתווית אומרת את זה.
+describe('אריח "שיעור אישור" — ההיקף בתווית', () => {
+  it('התווית אומרת "כל הזמנים", והמספר כולל גם הצעה שמחוץ לחלון', async () => {
+    mockApi([
+      quoteFixture({
+        quote_id: 1,
+        quote_status: 'approved',
+        estimated_event_date: offsetIso(-400),
+      }),
+      quoteFixture({ quote_id: 2, quote_status: 'rejected' }),
+    ])
+    renderQuotesPage()
+    const tile = await screen.findByTestId('quotes-metric-approval-rate')
+    expect(tile).toHaveTextContent('שיעור אישור · כל הזמנים')
+    expect(tile).toHaveTextContent('1 מתוך 2 שנסגרו')
+  })
+})

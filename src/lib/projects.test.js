@@ -273,6 +273,20 @@ describe('gapSentence — גבולות הזימונים-הפתוחים ולשו�
     ).toBe('2 זימונים ממתינים למענה')
   })
 
+  // ✏️ 25/09/2026 (screens-pass s08): מאויש במלואו + זימונים חיים + לוגיסטיקה לא-מוכנה ⇒ הלוגיסטיקה, לא הזימונים.
+  it('מאויש במלואו עם זימונים פתוחים ולוגיסטיקה חסרה ⇒ "הלוגיסטיקה טרם מוכנה"', () => {
+    expect(
+      gapSentence({
+        ...base,
+        required_hostess_count: 11,
+        hostesses_confirmed: 11,
+        pending_invites: 2,
+        logistics_ready: 0,
+        logistics_total: 2,
+      }),
+    ).toBe('הלוגיסטיקה טרם מוכנה')
+  })
+
   it('שלושה זימונים ⇒ "כולן"', () => {
     expect(gapSentence({ ...base, hostesses_confirmed: 1, pending_invites: 3 })).toBe(
       '3 זימונים ממתינים למענה — וגם אם כולן יאשרו, עדיין חסרות 2',

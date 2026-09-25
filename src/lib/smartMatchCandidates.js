@@ -62,7 +62,7 @@ function requireWindow(window) {
   const extendedMonths = optionalNumber(window?.extendedMonths)
   const minAnswers = optionalNumber(window?.minAnswers)
   if (months === null || extendedMonths === null || minAnswers === null) {
-    throw new Error('חסרים פרמטרים של חלון-החישוב של Smart Match בהגדרות המערכת.')
+    throw new Error('חסרים פרמטרים של חלון-החישוב של השיבוץ החכם בהגדרות המערכת.')
   }
   return { months, extendedMonths, minAnswers }
 }

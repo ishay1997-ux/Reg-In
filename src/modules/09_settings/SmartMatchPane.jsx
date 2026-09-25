@@ -25,6 +25,7 @@
 // שני מספרים *צמודים* נשברים; כאן הם אינם צמודים, כל אחד לחוד הוא הפתרון).
 
 import { useEffect, useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import Ltr from '@/components/Ltr'
 import { cn } from '@/lib/utils'
@@ -143,9 +144,13 @@ export default function SmartMatchPane({
   // "no hard-coded minimum, none was ruled") — רק המספרים כפי שהם.
   const [attendance, setAttendance] = useState(null)
   const [attendanceError, setAttendanceError] = useState('')
+  // ✏️ 25/09/2026 (בודק-ניסוח #34): 'נסי שוב' ליד שגיאת-הטעינה — העלאת המונה טוענת מחדש.
+  const [attendanceRetry, setAttendanceRetry] = useState(0)
 
   useEffect(() => {
     let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- איפוס השגיאה לפני ניסיון חוזר.
+    setAttendanceError('')
     countAttendanceRows()
       .then((counts) => {
         if (!cancelled) setAttendance(counts)
@@ -156,7 +161,7 @@ export default function SmartMatchPane({
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [attendanceRetry])
 
   const reliabilityEntry = getParamEntry(RELIABILITY_NAME)
 
@@ -254,11 +259,23 @@ export default function SmartMatchPane({
               className="mt-0.5 text-xs text-amber-800"
               data-testid="settings-smartmatch-attendance-note"
             >
-              {attendanceError
-                ? attendanceError
-                : attendance
-                  ? renderAttendanceNote(attendance)
-                  : 'טוען נתוני נוכחות…'}
+              {attendanceError ? (
+                <>
+                  {attendanceError}{' '}
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-xs"
+                    onClick={() => setAttendanceRetry((tick) => tick + 1)}
+                  >
+                    נסי שוב
+                  </Button>
+                </>
+              ) : attendance ? (
+                renderAttendanceNote(attendance)
+              ) : (
+                'טוען נתוני נוכחות…'
+              )}
             </div>
           </div>
           <Switch

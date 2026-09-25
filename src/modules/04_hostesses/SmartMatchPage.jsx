@@ -682,7 +682,11 @@ export default function SmartMatchPage({ projectId, onBack }) {
           )}
 
           {/* 🆕 25/09/2026 — רק במצב-ההטמעה (ברירת-המחדל של `Hint` היא רמה 2); במסך הנקי אין כאן משפט. */}
-          {candidates.length > 0 && <Hint id="smartMatch.recommended" />}
+          {/* ✏️ 25/09/2026 (בדיקת-ניסוח 2-1): רק בעדשת "המלצת המערכת" — באירוע דחוף הרשימה נפתחת על
+              "תענה הכי מהר", וראש-הרשימה אינו ההמלצה (אותה בעיה שבגללה ירד `weightsWhy`). */}
+          {candidates.length > 0 && activeAngle === 'recommended' && (
+            <Hint id="smartMatch.recommended" />
+          )}
           {candidates.length > 0 && <Hint id="smartMatch.angles" />}
           {/* ✂️ 24/09/2026 (מבקרים טריים, דרך הסגן): כאן ישב `smartMatch.weightsWhy` — "מי שבראש הרשימה
               קיבלה את הציון המשוקלל הגבוה". **שקר:** הסדר על המסך הוא של הזווית (`sortByAngle`,
