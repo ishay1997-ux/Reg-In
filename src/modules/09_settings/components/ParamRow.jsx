@@ -171,6 +171,8 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
         <p>{entry.hint}</p>
         {/* ✏️ 25/09/2026 — ה"למה" של השורה, רק במצב-ההטמעה (`Hint` מחזיר null במצב הנקי). */}
         {entry.layerHint && <Hint id={entry.layerHint} className="mt-1" />}
+        {/* ✏️ 25/09/2026: `note` — עובדה על השורה עצמה (לא השפעה על מסך אחר); היום רק המע"מ. */}
+        {entry.note && <p className="mt-1">{entry.note}</p>}
         {entry.affects && <p className="mt-1 text-amber-800">↳ משפיע: {entry.affects}</p>}
         {error && (
           <p id={errorId} role="alert" className="mt-1 font-medium text-red-600">
