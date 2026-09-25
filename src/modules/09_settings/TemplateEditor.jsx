@@ -220,7 +220,10 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
             >
               <b>{verdict.message}</b>
               <br />
-              אפשר לשמור גם בלעדיו
+              {/* ✏️ 25/09/2026 (בדיקת 39ceebe2 #3): יחיד/רבים לפי מספר החסרים — ההודעה שמעל כבר מונה אותם. */}
+              {verdict.missingOptional?.length > 1
+                ? 'אפשר לשמור גם בלעדיהם'
+                : 'אפשר לשמור גם בלעדיו'}
             </div>
           )}
 
