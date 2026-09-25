@@ -360,10 +360,14 @@ function CardBody({
           {derived.upcoming.length === 0 ? (
             <Muted>אין לה כרגע שיבוץ פעיל</Muted>
           ) : (
+            // ✏️ 25/09/2026 (צלם-דוחות, אתר חי): בלי `ranges`/`today` התג "סימנה אי-זמינות" לא הופיע כאן לעולם —
+            // וזו הטבלה היחידה שבה הוא יכול להופיע (בהיסטוריה האירוע כבר עבר).
             <AssignmentTable
               rows={derived.upcoming}
               now={now}
               inviteValidityHours={inviteValidityHours}
+              ranges={hostess.hostess_unavailability}
+              today={today}
             />
           )}
         </Section>
