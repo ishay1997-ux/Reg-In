@@ -971,3 +971,15 @@ export function pendingQuotesLabel(count) {
   if (count === 0) return 'אין הצעות שממתינות להחלטה'
   return count === 1 ? 'הצעה אחת ממתינה להחלטה' : `${count} הצעות ממתינות להחלטה`
 }
+
+// ✏️ 25/09/2026 — "תוקף N יום" במסמך ובטופס: ישי בשיחת הסגן 14:0X, *"מאשר הכל לפי המלצתך"*. N מ-`ימי_תוקף_הצעה`;
+// חסר או לא-מספרי ⇒ 30 (המסמך ללקוח לא נשאר בלי תנאי). 1 ⇒ "יום אחד" · 2–10 ⇒ "ימים" · מעל 10 ⇒ "יום".
+const DEFAULT_QUOTE_VALIDITY_DAYS = 30
+
+export function validityDaysPhrase(validityDays) {
+  const n = Number(validityDays)
+  const days =
+    validityDays != null && Number.isInteger(n) && n > 0 ? n : DEFAULT_QUOTE_VALIDITY_DAYS
+  if (days === 1) return 'יום אחד'
+  return days <= 10 ? `${days} ימים` : `${days} יום`
+}

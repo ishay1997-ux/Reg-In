@@ -51,6 +51,8 @@
 - Items 5–6 (round 2): the locked pricing sentence moved verbatim to the VAT row (registry `note`); `projects.js` comment on "הלוגיסטיקה טרם מוכנה" corrected — it was already nodded 18/08 (module-6 §10). Items 1–4 committed aa570677 · ae81b024 · 0122b06c · 4ab4d41f.
 - Items 7 and 8 held as blocking questions to the deputy: 7 would drop 8 event_finished projects from the home attention list entirely; 8's definition (`not actual_qty_autofilled`) matches the model — 1588 is seed data the RPC cannot produce (autofilled=true with actual≠planned), 1577 is default-0 vs never-entered.
 - Items 7–8 after the deputy's answers: home `closing` card (33 ⇒ 25 + 8); m12 "נמדד" = hand-entered **and** arrived + the 1588 seed flag fix (migrations 150000/150100, ⏳).
+- 15:3X follow-ups: closing card empty state in full Hebrew · m12 note fix-forward 150200 (⏳) · station 1 of the demo script · db_roadmap ticks for 140000/150000/150100.
+- 15:5X checker round (via the deputy): m12 gap tile gets the arrived-only rule too (150200, 400 ⇒ 120) · closing card count sentence in singular/plural · three Smart Match error strings in Hebrew · quote builder "יום אחד" via `validityDaysPhrase` moved to `src/lib/quotes.js`.
 - Lesson: a component-local variable passed into a child's JSX (`today` in CardBody) crashed the card and ESLint stayed silent — only the card's window tests caught it.
 
 ### 25/09/2026 early morning — copy-review fixes, reports + settings (builder m12, `ishay/module-12-walkthrough`, deputy task)

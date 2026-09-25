@@ -420,6 +420,9 @@ describe('DashboardPage — מה דורש טיפול (R6 09/09/2026: ארבעה 
     renderPage()
     await screen.findByTestId('kpi-active')
     expect(screen.getAllByText(/^✓ אין /)).toHaveLength(5)
+    // ✏️ 25/09/2026: משפט-הריק של הכרטיס החדש — עברית שלמה, לא שם-הסטטוס לבדו.
+    const closingCard = screen.getByTestId('dashboard-attention-card-closing')
+    expect(within(closingCard).getByText('✓ אין פרויקטים שממתינים לסגירה')).toBeInTheDocument()
     const quoteCard = screen.getByTestId('dashboard-attention-card-quote')
     expect(within(quoteCard).getByText('✓ אין הצעות שפגות בקרוב')).toBeInTheDocument()
   })

@@ -712,8 +712,8 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     expect(byKind.logistics.noun).toBe('אירועים חסרי ציוד ב-14 הימים הקרובים')
     expect(byKind.unbilled.noun).toBe('אירועים שהסתיימו ולא חויבו')
     expect(byKind.quote.noun).toBe('הצעות שפגות בקרוב')
-    // בלי נוסח חדש — שם-הסטטוס עצמו, כמו במסך הפרויקטים.
-    expect(byKind.closing.noun).toBe('ממתין לסגירה')
+    // ✏️ 25/09/2026: משפט-ספירה ביחיד/רבים ("8 ממתין לסגירה" היה עברית שבורה).
+    expect(byKind.closing.noun).toBe('פרויקטים ממתינים לסגירה')
   })
 
   it('סף-אזהרה לא-נטען ⇒ שם-העצם בלי סייג, בלי מספר מומצא', () => {
@@ -755,6 +755,22 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     const staffingTwo = two.find((c) => c.kind === 'staffing')
     expect(staffingTwo.count).toBe(2)
     expect(staffingTwo.noun).toBe('אירועים חסרי דיילות ב-14 הימים הקרובים')
+  })
+
+  // ✏️ 25/09/2026: כרטיס "ממתין לסגירה" — יחיד/רבים כמו שאר הכרטיסים.
+  it('ממתין לסגירה: פרויקט אחד ⇒ יחיד, שניים ⇒ רבים', () => {
+    const done = (id) => ({
+      project_id: id,
+      event_name: 'אירוע',
+      project_status: 'event_finished',
+      final_event_date: '2026-09-01',
+    })
+    const of = (projects) =>
+      attentionCategories({ today: TODAY, projects, params: {}, quotes_visible: false }, TODAY)
+    expect(of([done(1)]).find((c) => c.kind === 'closing').noun).toBe('פרויקט ממתין לסגירה')
+    expect(of([done(1), done(2)]).find((c) => c.kind === 'closing').noun).toBe(
+      'פרויקטים ממתינים לסגירה',
+    )
   })
 
   it('quotes_visible=false ⇒ כרטיס-ההצעות ממוסך (§7.97, MASKED_TEXT), לא "0"', () => {

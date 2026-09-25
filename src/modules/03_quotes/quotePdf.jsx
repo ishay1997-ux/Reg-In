@@ -13,6 +13,7 @@ import {
   parseVatPercent,
 } from '@/lib/pricing'
 import { NO_COLOR_LABEL } from '@/lib/catalog'
+import { validityDaysPhrase } from '@/lib/quotes'
 
 // ── מוקש 1: פורמט הגופן ────────────────────────────────────────────────────
 // ‏fontkit של react-pdf קורא TTF/OTF בלבד. קובצי woff/woff2 (מה שכל חבילת-גופנים מודרנית
@@ -245,18 +246,8 @@ export function formatTimeRange(start, end) {
 // ההצעה עצמה, ועמוד 2 הוא "תנאים כלליים" גנריים כמקובל בשוק. שני התנאים הראשונים הם
 // מהטמפלט המקורי (quote_template_draft.docx); היתר נוסחו כאן והם placeholder עד ניסוח
 // משפטי של החברה.
-// ✏️ 25/09/2026 (ישי, בשיחת הסגן 14:0X: "מאשר הכל לפי המלצתך"): מספר-הימים בתנאי-התוקף היה קבוע (30), בזמן
-// שהפרמטר `ימי_תוקף_הצעה` קובע מתי ההצעה פגה בפועל. עכשיו הוא נלקח מהפרמטר; חסר או לא-מספרי ⇒ 30.
-const DEFAULT_QUOTE_VALIDITY_DAYS = 30
-
-function validityDaysPhrase(validityDays) {
-  const n = Number(validityDays)
-  const days =
-    validityDays != null && Number.isInteger(n) && n > 0 ? n : DEFAULT_QUOTE_VALIDITY_DAYS
-  if (days === 1) return 'יום אחד'
-  // 2–10: "5 ימים"; מעל 10 — "30 יום", כמו בשאר המסמך.
-  return days <= 10 ? `${days} ימים` : `${days} יום`
-}
+// ✏️ 25/09/2026: מספר-הימים בתנאי-התוקף נלקח מהפרמטר `ימי_תוקף_הצעה` (`validityDaysPhrase`, src/lib/quotes.js —
+// שם, כדי שגם טופס-ההצעה ישתמש בו בלי לגרור את מנוע ה-PDF).
 
 export function quoteTerms(validityDays) {
   return [
