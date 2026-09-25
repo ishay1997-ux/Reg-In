@@ -46,6 +46,20 @@
 
 ## Session Log (newest first)
 
+### 25/09/2026 afternoon — four small PR fixes (builder m12, deputy task after Ishay's "מאשר הכל לפי המלצתך")
+- Unavailability tag on approved assignments (`approvedButUnavailable`, the gate's rule) · AI follow-up button on · PDF validity days from the param · m17 "Smart Match" ⇒ Hebrew (migration 140000, not applied). Records: module-3/4/6 §10, db_roadmap §10ב.
+- Items 5–6 (round 2): the locked pricing sentence moved verbatim to the VAT row (registry `note`); `projects.js` comment on "הלוגיסטיקה טרם מוכנה" corrected — it was already nodded 18/08 (module-6 §10). Items 1–4 committed aa570677 · ae81b024 · 0122b06c · 4ab4d41f.
+- Items 7 and 8 held as blocking questions to the deputy: 7 would drop 8 event_finished projects from the home attention list entirely; 8's definition (`not actual_qty_autofilled`) matches the model — 1588 is seed data the RPC cannot produce (autofilled=true with actual≠planned), 1577 is default-0 vs never-entered.
+- Items 7–8 after the deputy's answers: home `closing` card (33 ⇒ 25 + 8); m12 "נמדד" = hand-entered **and** arrived + the 1588 seed flag fix (migrations 150000/150100, ⏳).
+- 15:3X follow-ups: closing card empty state in full Hebrew · m12 note fix-forward 150200 (⏳) · station 1 of the demo script · db_roadmap ticks for 140000/150000/150100.
+- 15:5X checker round (via the deputy): m12 gap tile gets the arrived-only rule too (150200, 400 ⇒ 120) · closing card count sentence in singular/plural · three Smart Match error strings in Hebrew · quote builder "יום אחד" via `validityDaysPhrase` moved to `src/lib/quotes.js`.
+- Lesson: a component-local variable passed into a child's JSX (`today` in CardBody) crashed the card and ESLint stayed silent — only the card's window tests caught it.
+
+### 25/09/2026 early morning — copy-review fixes, reports + settings (builder m12, `ishay/module-12-walkthrough`, deputy task)
+- First merged `origin/ishay/night-integration-2026-09-25` into the branch (clean; deputy ruling — the review was made on that base, 28 commits were missing here). Then every non-locked "מבלבל"/"משקר" finding of `tonight-copy-review.md` not already fixed, plus `params-copy-review.md` style #22–26, 29, 31, 34, 35. Two L7 files, **not applied** (050100 m21 so_what · 050200 m14 live invites) — expected md5 and the 010350 chain in `db_roadmap.md` §10ב. Code: `paramsRegistry.js`, `onboardingCopy*.js`, settings screens, `SmartMatchPage.jsx`; records in `module-9.md` / `module-4.md` §10.
+- 07:3X follow-up (explainer check of 39ceebe2, six findings): fix-forward 050300 restores the m21 customer prefix on the named-contact branches (050100 is committed, so no in-place edit); db_roadmap corrects 050200's "order-dependent md5" header; four copy fixes in settings/hints.
+- Lesson: a deputy task naming a branch does not prove the branch holds the reviewed code — `git merge-base --is-ancestor <reviewed-sha> HEAD` before editing.
+
 ### 25/09/2026 night — Smart match: default order = the system recommendation (`ishay/smartmatch-score-order`, worker for the deputy)
 - Ishay ruled on the night audit (`Reg-In-evidence/reports-review-2026-09-25/night/smart-match-audit.md`): the score now decides the default order on screen 2 (fifth lens "המלצת המערכת"; pinned first; angles by click; "תענה הכי מהר" under 72h per the 30/07 ruling). Also: calculation window 12→24, median response time from `responded_at`, fairness leverage as of the event date, Israel-local "today". Commits `d4b4627c` · `1bf0e526` · `eaa6c1ab` + ripples; gate exit 0.
 - 1620 on live data: before Yarden📌 · Dana Barak📌 · Galit📌 · Noa Sagi · … (km) ⇒ after Dana Barak📌 · Galit📌 · Yarden📌 · Talya Amar · Shelly Elkayam · Noa Sagi · Orly Shani · Roni Almog. Hostesses at the ×1.16 cap: 29 ⇒ 1 after the reviewer's fix.

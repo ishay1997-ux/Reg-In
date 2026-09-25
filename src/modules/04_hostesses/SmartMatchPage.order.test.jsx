@@ -274,4 +274,17 @@ describe('💬 הרמז שמסביר את "המלצת המערכת"', () => {
     const hint = screen.getByText((text) => text.startsWith(HINT_START))
     expect(hint.textContent).not.toMatch(/%|\d/)
   })
+
+  // ✏️ 25/09/2026 (בדיקת-ניסוח 2-1): "התחילי מראש הרשימה" נכון רק כשהרשימה היא ההמלצה.
+  it('🔴 בזווית אחרת — אינו מופיע, כי ראש-הרשימה אינו ההמלצה', async () => {
+    authState.onboardingMode = 2
+    getSmartMatchData.mockResolvedValue(anchorData())
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    await candidateNamesOnScreen()
+    expect(screen.getByText((text) => text.startsWith(HINT_START))).toBeTruthy()
+
+    fireEvent.click(screen.getByTestId('sm-angle-proximity'))
+    await candidateNamesOnScreen()
+    expect(screen.queryByText((text) => text.startsWith(HINT_START))).toBeNull()
+  })
 })

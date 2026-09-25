@@ -58,7 +58,9 @@ export default function AttentionPanel({ summary }) {
                     ב-src/lib/dashboard.js (כלל 14) — הרכיב רק מציב אותם זה לצד זה. */}
                 {/* ✏️ 25/09/2026 (מעבר-העיניים #4): היה "✓ אין" לבד — אין מה? שם-העצם נאמר גם כשאין. */}
                 {cat.count === 0 ? (
-                  <span className="text-sm font-semibold text-slate-400">✓ אין {cat.noun}</span>
+                  <span className="text-sm font-semibold text-slate-400">
+                    ✓ אין {cat.emptyNoun ?? cat.noun}
+                  </span>
                 ) : (
                   <span className="text-sm leading-snug text-slate-600">
                     <Ltr className="ml-1 text-xl font-bold text-slate-800">{cat.count}</Ltr>

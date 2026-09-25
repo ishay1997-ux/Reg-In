@@ -26,6 +26,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import {
   ASSIGNMENT_STATUS_LABELS,
   HOSTESS_PARAM_NAMES,
+  UNAVAILABLE_CONFLICT_LABEL,
+  approvedButUnavailable,
   assignmentDisplayStatus,
   eventStartInstant,
   eventWasCancelled,
@@ -179,6 +181,7 @@ export default function HostessViewCard({ hostessId, onClose, onEdit }) {
           derived={derived}
           canEdit={canEdit}
           now={now}
+          today={today}
           // 🔄 סף-תוקף-הזימון מ-`params` (מודול 9 · צעד 2.3) — מגיע מהטעינה שכבר קיימת
           // בכרטיס (`getHostessScreenParams`), ולא בשליפה נוספת.
           inviteValidityHours={params[HOSTESS_PARAM_NAMES.inviteValidityHours]}
@@ -271,6 +274,7 @@ function CardBody({
   derived,
   canEdit,
   now,
+  today,
   inviteValidityHours,
   onEdit,
   preferences,
@@ -475,6 +479,8 @@ function CardBody({
                     rows={pagedHistory.pageRows}
                     now={now}
                     inviteValidityHours={inviteValidityHours}
+                    ranges={hostess.hostess_unavailability}
+                    today={today}
                   />
                   <Pager
                     page={pagedHistory.page}
@@ -496,7 +502,7 @@ function CardBody({
 
 // ‏`inviteValidityHours` = הערך הגולמי של `שעות_תוקף_זימון` מ-`params` (מודול 9 · צעד 2.3).
 // הוא מגיע מהטעינה שכבר קיימת בכרטיס (`getHostessScreenParams`) ואינו שליפה נוספת.
-function AssignmentTable({ rows, now, inviteValidityHours }) {
+function AssignmentTable({ rows, now, inviteValidityHours, ranges, today }) {
   return (
     <table className="w-full border-collapse text-sm">
       <thead>
@@ -549,6 +555,22 @@ function AssignmentTable({ rows, now, inviteValidityHours }) {
                   <StatusTag label="האירוע בוטל" tone={resolveProjectTone('בוטל')} />
                 ) : (
                   <StatusTag label={label} />
+                )}
+                {/* ✏️ 25/09/2026: אושרה, אבל סימנה אי-זמינות בתאריך האירוע — `approvedButUnavailable`. */}
+                {approvedButUnavailable(
+                  row.assignment_status,
+                  ranges,
+                  row.projects?.final_event_date,
+                  today,
+                ) && (
+                  <>
+                    {' '}
+                    <StatusTag
+                      label={UNAVAILABLE_CONFLICT_LABEL}
+                      tone="warn"
+                      testId={`hostess-unavailable-${row.project_id}`}
+                    />
+                  </>
                 )}
               </td>
             </tr>

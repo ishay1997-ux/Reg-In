@@ -758,6 +758,8 @@ export function quoteToPdfModel(quote, productsBySku, defaultVatRate, validityDa
     // תוקף ההצעה נספר מ-updated_at ולא מ-issue_date (F4) — אותו שעון שהמסך מציג
     // ושעבודת-הרקע פועלת לפיו, אחרת המסמך ללקוח היה נוקב בתאריך אחר מהמערכת.
     validUntil: days !== null && updated !== null ? toIsoDate(updated + days * MS_PER_DAY) : null,
+    // מספר-הימים עצמו — לתנאי-התוקף בעמוד 2 (`quoteTerms`, quotePdf.jsx). null ⇒ המנוע נופל ל-30.
+    validityDays: days,
     // N2: איש-הקשר הראשי אינו quote.customers.contact_name/phone יותר — הוא שורת customer_contacts
     // עם is_primary, ו-primaryContact היא נקודת-הבחירה היחידה (ר' ייבוא בראש הקובץ).
     customer: {
@@ -968,4 +970,16 @@ export function pendingQuotesLabel(count) {
   // ומשפט שלילי אחד ברור יותר משני אפסים זה מעל זה.
   if (count === 0) return 'אין הצעות שממתינות להחלטה'
   return count === 1 ? 'הצעה אחת ממתינה להחלטה' : `${count} הצעות ממתינות להחלטה`
+}
+
+// ✏️ 25/09/2026 — "תוקף N יום" במסמך ובטופס: ישי בשיחת הסגן 14:0X, *"מאשר הכל לפי המלצתך"*. N מ-`ימי_תוקף_הצעה`;
+// חסר או לא-מספרי ⇒ 30 (המסמך ללקוח לא נשאר בלי תנאי). 1 ⇒ "יום אחד" · 2–10 ⇒ "ימים" · מעל 10 ⇒ "יום".
+const DEFAULT_QUOTE_VALIDITY_DAYS = 30
+
+export function validityDaysPhrase(validityDays) {
+  const n = Number(validityDays)
+  const days =
+    validityDays != null && Number.isInteger(n) && n > 0 ? n : DEFAULT_QUOTE_VALIDITY_DAYS
+  if (days === 1) return 'יום אחד'
+  return days <= 10 ? `${days} ימים` : `${days} יום`
 }

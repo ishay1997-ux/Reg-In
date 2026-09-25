@@ -148,6 +148,22 @@ describe('SmartMatchPane', () => {
     )
   })
 
+  // ✏️ 25/09/2026 (בודק-ניסוח #34): כשל בטעינת המונה מציע "נסי שוב", והלחיצה טוענת מחדש.
+  it('כשל בטעינת המונה — "נסי שוב" טוען מחדש ומציג את המספרים', async () => {
+    countAttendanceRows
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce({ total: 40, withAttendance: 12 })
+    await renderPane()
+    const note = screen.getByTestId('settings-smartmatch-attendance-note')
+    expect(note.textContent).toContain('לא ניתן לטעון את נתוני הנוכחות.')
+    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    await waitFor(() =>
+      expect(screen.getByTestId('settings-smartmatch-attendance-note').textContent).toBe(
+        'נוכחות סומנה ב-12 מתוך 40 שיבוצים',
+      ),
+    )
+  })
+
   it('הנוסח זהה בשני הווריאנטים — זו עובדה על הדאטה, לא על מי שמסתכלת', async () => {
     const { unmount } = await renderPane({ variant: 'ceo' })
     const ceoNote = screen.getByTestId('settings-smartmatch-attendance-note').textContent

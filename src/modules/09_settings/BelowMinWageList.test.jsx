@@ -5,7 +5,7 @@
 // שכל מודול 6 בנה נגדו `DENIED_MARK` (‏`src/CLAUDE.md`).
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import BelowMinWageList from './BelowMinWageList'
 import { listBelowMinWage, PARAMS_ERROR_CODE } from './api'
 
@@ -60,6 +60,17 @@ describe('BelowMinWageList', () => {
     listBelowMinWage.mockRejectedValue(new Error('שגיאה בטעינת רשימת הדיילות.'))
     render(<BelowMinWageList threshold="35" />)
     expect(await screen.findByText('שגיאה בטעינת רשימת הדיילות.')).toBeInTheDocument()
+  })
+
+  // ✏️ 25/09/2026 (בודק-ניסוח #34): כשל-טעינה מציע "נסי שוב", והלחיצה טוענת מחדש.
+  it('תקלה — "נסי שוב" טוען מחדש, והרשימה מופיעה', async () => {
+    listBelowMinWage
+      .mockRejectedValueOnce(new Error('שגיאה בטעינת רשימת הדיילות.'))
+      .mockResolvedValueOnce([])
+    render(<BelowMinWageList threshold="35" />)
+    fireEvent.click(await screen.findByRole('button', { name: 'נסי שוב' }))
+    expect(await screen.findByTestId('settings-below-min-wage-empty')).toBeInTheDocument()
+    expect(listBelowMinWage).toHaveBeenCalledTimes(2)
   })
 
   it('`refreshKey` מפעיל שליפה מחדש — הרשימה מגיבה לרף שנשמר', async () => {

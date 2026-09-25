@@ -34,6 +34,8 @@ import {
   ASSIGNMENT_STATUS_LABELS,
   COMPLETED_ASSIGNMENT_LABEL,
   HOSTESS_PARAM_NAMES,
+  UNAVAILABLE_CONFLICT_LABEL,
+  approvedButUnavailable,
   assignmentDisplayStatus,
   countAssignmentStates,
   eventStartInstant,
@@ -42,6 +44,7 @@ import {
   isInviteExpired,
 } from '@/lib/hostesses'
 import { getParamValues } from '@/api/params'
+import { todayIsoInJerusalem } from '@/lib/projectChanges'
 import { CANCEL_TYPE_LABELS } from '@/lib/projectCard'
 import {
   CANCELLED_SCOPE_REASON,
@@ -279,7 +282,12 @@ export default function TeamTab({
           testId="team-state-no-invites"
         />
       ) : (
-        <MainTable finalRows={finalRows} now={now} inviteValidityHours={inviteValidityHours} />
+        <MainTable
+          finalRows={finalRows}
+          now={now}
+          inviteValidityHours={inviteValidityHours}
+          eventDate={project?.final_event_date}
+        />
       )}
 
       {/* ── שינויי-תכולה בכמות הדיילות — יושבים איפה שהתוצאה שלהם נראית ── */}
@@ -356,68 +364,91 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
 }
 
 // הטבלה הראשית: שורה אחת פר-דיילת (הקיפול), 4 עמודות. "מה זה אומר" — משפט, לעולם לא ציון.
-function MainTable({ finalRows, now, inviteValidityHours }) {
+function MainTable({ finalRows, now, inviteValidityHours, eventDate }) {
   const sorted = sortTeamRows(finalRows)
+  const today = todayIsoInJerusalem(now)
+  const conflicts = new Set(
+    sorted
+      .filter((row) =>
+        approvedButUnavailable(
+          row.assignment_status,
+          row.hostesses?.hostess_unavailability,
+          eventDate,
+          today,
+        ),
+      )
+      .map((row) => row.hostess_id),
+  )
   return (
-    <table className="w-full border-collapse text-sm" data-testid="team-table">
-      <thead>
-        <tr className="border-b border-slate-200 text-right text-xs font-semibold text-slate-500">
-          <th className="w-[24%] px-2.5 py-1.5">דיילת</th>
-          <th className="w-[16%] px-2.5 py-1.5">סטטוס</th>
-          <th className="w-[20%] px-2.5 py-1.5">מתי</th>
-          <th className="w-[40%] px-2.5 py-1.5">מה זה אומר</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sorted.map((row) => {
-          const displayLabel = assignmentDisplayStatus(row, now, inviteValidityHours)
-          const expired = isInviteExpired(row, now, inviteValidityHours)
-          const meaning = assignmentMeaning({
-            status: row.assignment_status,
-            expired,
-            completed: displayLabel === COMPLETED_ASSIGNMENT_LABEL,
-            isShiftLead: Boolean(row.is_shift_lead),
-            daysWithoutAnswer: expired ? daysWithoutAnswer(row.invite_sent_at, now) : null,
-            expiredOnText: expired
-              ? inviteExpiryText(row.invite_sent_at, inviteValidityHours)
-              : null,
-            hoursLeft: inviteHoursLeft(row, now, inviteValidityHours),
-          })
-          return (
-            <tr
-              key={row.hostess_id}
-              className={cn(
-                'border-b border-slate-100',
-                isMutedTeamRow(row.assignment_status) && 'bg-slate-50 text-slate-500',
-              )}
-              data-testid={`team-row-${row.hostess_id}`}
-            >
-              <td className="px-2.5 py-2.5">
-                <span className="font-semibold text-slate-800">
-                  {row.hostesses?.full_name ?? '—'}
-                </span>{' '}
-                {/* ζ: תג-אחראית בלי ★ — הגליף כבר תפוס ל"התרשמות" (RatingStars). */}
-                {row.is_shift_lead && <StatusTag label={SHIFT_LEAD_LABEL} tone="outline" />}
-                {/* תת-שורת-עיר מהמוקאפ המאושר (psub2). רק בטבלה הקובעת — היסטוריית-הסבבים ורשימת-השחרור מציגות שם בלבד. */}
-                {row.hostesses?.city && (
-                  <div className="text-xs text-slate-500">{row.hostesses.city}</div>
+    <>
+      {conflicts.size > 0 && <Hint id="team.unavailableConflict" />}
+      <table className="w-full border-collapse text-sm" data-testid="team-table">
+        <thead>
+          <tr className="border-b border-slate-200 text-right text-xs font-semibold text-slate-500">
+            <th className="w-[24%] px-2.5 py-1.5">דיילת</th>
+            <th className="w-[16%] px-2.5 py-1.5">סטטוס</th>
+            <th className="w-[20%] px-2.5 py-1.5">מתי</th>
+            <th className="w-[40%] px-2.5 py-1.5">מה זה אומר</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((row) => {
+            const displayLabel = assignmentDisplayStatus(row, now, inviteValidityHours)
+            const expired = isInviteExpired(row, now, inviteValidityHours)
+            const meaning = assignmentMeaning({
+              status: row.assignment_status,
+              expired,
+              completed: displayLabel === COMPLETED_ASSIGNMENT_LABEL,
+              isShiftLead: Boolean(row.is_shift_lead),
+              daysWithoutAnswer: expired ? daysWithoutAnswer(row.invite_sent_at, now) : null,
+              expiredOnText: expired
+                ? inviteExpiryText(row.invite_sent_at, inviteValidityHours)
+                : null,
+              hoursLeft: inviteHoursLeft(row, now, inviteValidityHours),
+            })
+            return (
+              <tr
+                key={row.hostess_id}
+                className={cn(
+                  'border-b border-slate-100',
+                  isMutedTeamRow(row.assignment_status) && 'bg-slate-50 text-slate-500',
                 )}
-              </td>
-              <td className="px-2.5 py-2.5">
-                <StatusTag label={displayLabel} testId={`team-status-${row.hostess_id}`} />
-              </td>
-              <td className="px-2.5 py-2.5 text-xs text-slate-500">{whenCell(row)}</td>
-              <td
-                className="px-2.5 py-2.5 text-sm leading-relaxed text-slate-600"
-                data-testid={`team-meaning-${row.hostess_id}`}
+                data-testid={`team-row-${row.hostess_id}`}
               >
-                {meaning}
-              </td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+                <td className="px-2.5 py-2.5">
+                  <span className="font-semibold text-slate-800">
+                    {row.hostesses?.full_name ?? '—'}
+                  </span>{' '}
+                  {/* ζ: תג-אחראית בלי ★ — הגליף כבר תפוס ל"התרשמות" (RatingStars). */}
+                  {row.is_shift_lead && <StatusTag label={SHIFT_LEAD_LABEL} tone="outline" />}
+                  {conflicts.has(row.hostess_id) && (
+                    <StatusTag
+                      label={UNAVAILABLE_CONFLICT_LABEL}
+                      tone="warn"
+                      testId={`team-unavailable-${row.hostess_id}`}
+                    />
+                  )}
+                  {/* תת-שורת-עיר מהמוקאפ המאושר (psub2). רק בטבלה הקובעת — היסטוריית-הסבבים ורשימת-השחרור מציגות שם בלבד. */}
+                  {row.hostesses?.city && (
+                    <div className="text-xs text-slate-500">{row.hostesses.city}</div>
+                  )}
+                </td>
+                <td className="px-2.5 py-2.5">
+                  <StatusTag label={displayLabel} testId={`team-status-${row.hostess_id}`} />
+                </td>
+                <td className="px-2.5 py-2.5 text-xs text-slate-500">{whenCell(row)}</td>
+                <td
+                  className="px-2.5 py-2.5 text-sm leading-relaxed text-slate-600"
+                  data-testid={`team-meaning-${row.hostess_id}`}
+                >
+                  {meaning}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </>
   )
 }
 
