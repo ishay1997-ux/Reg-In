@@ -283,3 +283,46 @@ describe('CustomerDetailsPage — חיבור לחלון-הייצוא', () => {
     await waitFor(() => expect(screen.getByTestId('export-count')).toHaveTextContent('5 שורות'))
   })
 })
+
+// ✏️ 25/09/2026 (screens-pass s03): הראשי הופיע גם ב"איש קשר" וגם ב"אנשי קשר נוספים".
+describe('CustomerDetailsPage — אנשי קשר נוספים', () => {
+  it('הראשי אינו חוזר ב"אנשי קשר נוספים"; משני — כן', async () => {
+    mockApi()
+    listCustomerContacts.mockResolvedValue([
+      {
+        contact_id: 1,
+        contact_name: 'ראשי בדיקה',
+        phone: '050-1',
+        email: 'a@x.co',
+        is_primary: true,
+      },
+      {
+        contact_id: 2,
+        contact_name: 'משני בדיקה',
+        phone: '050-2',
+        email: 'b@x.co',
+        is_primary: false,
+      },
+    ])
+    await renderPage()
+    const heading = await screen.findByText('אנשי קשר נוספים')
+    const section = heading.parentElement
+    expect(section).toHaveTextContent('משני בדיקה')
+    expect(section).not.toHaveTextContent('ראשי בדיקה')
+  })
+
+  it('רק ראשי ⇒ אין סעיף "אנשי קשר נוספים"', async () => {
+    mockApi()
+    listCustomerContacts.mockResolvedValue([
+      {
+        contact_id: 1,
+        contact_name: 'ראשי בדיקה',
+        phone: '050-1',
+        email: 'a@x.co',
+        is_primary: true,
+      },
+    ])
+    await renderPage()
+    expect(screen.queryByText('אנשי קשר נוספים')).not.toBeInTheDocument()
+  })
+})

@@ -531,6 +531,9 @@ export default function CustomerDetailsPage() {
   // עד שהטעינה מסתיימת, ולכן primaryContact מקבלת null בטוח ומחזירה null.
   const primaryCustomerContact = primaryContact(customer)
   const [contacts, setContacts] = useState([])
+  // ✏️ 25/09/2026 (screens-pass s03): מאז N2 הראשי הוא שורה ב-`customer_contacts`, ו-`listCustomerContacts` מחזירה
+  // גם אותו — הוא הופיע פעמיים: ב"איש קשר" וב"אנשי קשר נוספים". ‏"נוספים" = כל מי שאינו הראשי.
+  const additionalContacts = contacts.filter((cc) => !cc?.is_primary)
   const [quotes, setQuotes] = useState([])
   // ⚠️ **`null` = טרם ידוע, Set = נטען** (31/07/2026, אותה משפחה כמו חלון-המסמך). קבוצה ריקה
   // בכשל נקראת כ"אף הצעה לא נשלחה", והתווית "טרם נשלחה ללקוח" היא בדיוק הרמז שגורם לאדם
@@ -940,11 +943,11 @@ export default function CustomerDetailsPage() {
         </div>
 
         {/* אנשי-קשר נוספים (§7.81) — מוצגים רק כשקיימים; היום הטבלה ריקה בפועל. */}
-        {contacts.length > 0 && (
+        {additionalContacts.length > 0 && (
           <div className="px-6 pb-4">
             <h3 className="text-xs font-semibold text-slate-400 mb-2">אנשי קשר נוספים</h3>
             <div className="flex flex-col gap-2">
-              {contacts.map((cc) => (
+              {additionalContacts.map((cc) => (
                 <div
                   key={cc.contact_id}
                   className="grid grid-cols-3 gap-2 rounded-lg border border-slate-200 p-3 text-sm"
