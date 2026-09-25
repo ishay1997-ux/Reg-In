@@ -64,14 +64,15 @@ function renderAttendanceNote({ withAttendance, total }) {
   if (withAttendance === 1) {
     return (
       <>
-        שורת-נוכחות אחת בלבד מתוך <Ltr>{total}</Ltr> שיבוצים — עדיין אין מספיק נתונים כדי שהמרכיב
-        הזה ישנה משהו
+        נוכחות סומנה בשיבוץ אחד מתוך <Ltr>{total}</Ltr> — עדיין מעט מדי כדי שהמרכיב ישנה משהו
       </>
     )
   }
+  // ✏️ 25/09/2026 (בודק-ניסוח #15): "שורות" הוא מונח-מסד; והסייג "מעט מדי" נכון עוד יותר ב-0.
   return (
     <>
-      <Ltr>{withAttendance}</Ltr> שורות-נוכחות מתוך <Ltr>{total}</Ltr> שיבוצים
+      נוכחות סומנה ב-<Ltr>{withAttendance}</Ltr> מתוך <Ltr>{total}</Ltr> שיבוצים
+      {withAttendance === 0 && ' — עדיין מעט מדי כדי שהמרכיב ישנה משהו'}
     </>
   )
 }
@@ -216,6 +217,8 @@ export default function SmartMatchPane({
           {sumOk ? 'תקין' : <Ltr>{weightSum.toFixed(2)}</Ltr>}
         </span>
       </div>
+      {/* 🆕 25/09/2026 (בודק-ניסוח G1) — מצב-ההטמעה בלבד: איך המשקולות קובעות את "המלצת המערכת". */}
+      <Hint id="settingsSmartMatch.weights" />
 
       {effectiveWeights && (
         <p

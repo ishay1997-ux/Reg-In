@@ -402,16 +402,21 @@ describe('DashboardPage — מה דורש טיפול (R6 09/09/2026: ארבעה 
     expect(within(quoteCard).getByText(/הצעה #41/)).toBeInTheDocument()
     expect(within(quoteCard).getByText(/פגה בעוד 3 ימים/)).toBeInTheDocument()
 
-    // מסך-הפרויקטים כאן בלי אף פרויקט עם חוסר-לוגיסטיקה — הכרטיס נשאר, מציג "✓ אין".
+    // מסך-הפרויקטים כאן בלי אף פרויקט עם חוסר-לוגיסטיקה — הכרטיס נשאר, מציג "✓ אין" **ושם-העצם**
+    // (✏️ 25/09/2026, מעבר-העיניים #4: "✓ אין" לבד לא אמר אין מה), ונקודה אפורה במקום אדומה.
     const logisticsCard = screen.getByTestId('dashboard-attention-card-logistics')
-    expect(within(logisticsCard).getByText('✓ אין')).toBeInTheDocument()
+    expect(within(logisticsCard).getByText(/^✓ אין אירועים חסרי ציוד/)).toBeInTheDocument()
+    expect(logisticsCard.querySelector('.bg-slate-300')).not.toBeNull()
+    expect(logisticsCard.querySelector('.bg-red-500')).toBeNull()
   })
 
   it('רשימה ריקה ⇒ ארבעת הכרטיסים נשארים, כולם "✓ אין" — לא נעלמים ולא כלום', async () => {
     getDashboardSummary.mockResolvedValue(summaryFixture({ projects: [], pending_quotes: [] }))
     renderPage()
     await screen.findByTestId('kpi-active')
-    expect(screen.getAllByText('✓ אין')).toHaveLength(4)
+    expect(screen.getAllByText(/^✓ אין /)).toHaveLength(4)
+    const quoteCard = screen.getByTestId('dashboard-attention-card-quote')
+    expect(within(quoteCard).getByText('✓ אין הצעות שפגות בקרוב')).toBeInTheDocument()
   })
 
   it('מנהלת-גיוס (quotes_visible=false): כרטיס-ההצעות ממוסך, לא "0"', async () => {

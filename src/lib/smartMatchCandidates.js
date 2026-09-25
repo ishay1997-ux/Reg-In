@@ -9,7 +9,93 @@
 // וסינון מוקדם היה משנה אותו ואת כל הדירוג. נמדד כמלכודת אמיתית ב-`§11.3`.
 
 import { responsivenessCounts, candidateDistanceKm } from '@/lib/smartMatch'
-import { finalAssignmentRows, weeksSinceLastWorked, eventWasCancelled } from '@/lib/hostesses'
+import {
+  finalAssignmentRows,
+  weeksSinceLastWorked,
+  eventWasCancelled,
+  optionalNumber,
+} from '@/lib/hostesses'
+
+const MS_PER_HOUR = 60 * 60 * 1000
+
+// ── חלון-החישוב · 12 ⇐ 24 חודשים ─────────────────────────────────────────────
+//
+// ✏️ **נבנה 25/09/2026, בהכרעת-ישי (אודיט השיבוץ-החכם, פער 3).** עד אז ההיענות והאמינות נספרו
+// על **כל** ההיסטוריה — ‏50% משורות-השיבוץ במסד היו מלפני יותר משנה — בעוד שני הפרמטרים נשמרו
+// ונערכו במסך-ההגדרות, והרמז שם הודה ש"החישוב טרם משתמש בו".
+// ‏**המקור:** `research §11.1` — *"12 חודשים, מתרחב ל-24 אם <3 תשובות בחלון"* · והנחות 3–4
+// שאושרו בבלופרינט (`module-4.md` §Assumptions): **סופרים קודם בחלון הבסיסי, ומרחיבים רק אם
+// יש פחות מהסף — ואז סופרים מחדש** · **‏`C` על חלון בסיסי אחד וקבוע**, כי הוא תכונה של החברה.
+//
+// 🔑 **החלון נמדד אחורה מהיום, לא מתאריך-האירוע** — אחרת `C` היה משתנה בין שני אירועים בלי
+// ששום דבר בחברה השתנה, בדיוק מה ש-`§11.3` אוסר (*"`C` הוא תכונה של החברה בחלון-זמן, לא של
+// האירוע"*). שורה נכנסת לחלון לפי **תאריך-האירוע שלה**, ⚠️ ושורה בלי תאריך **נשארת בפנים** —
+// הוצאה על סמך נתון חסר היא בדיוק החור השקט.
+// 🔑 **והחלון נקבע פעם אחת לדיילת, לפי התשובות שלה, וחל על כל המרכיבים שלה** (היענות · אמינות ·
+// זמן-תגובה): האפיון מגדיר את ההרחבה לפי *תשובות*, ולדיילת אחת אין שני "עברים" שונים.
+function monthsBefore(isoDate, months) {
+  const [year, month, day] = String(isoDate).slice(0, 10).split('-').map(Number)
+  const target = new Date(Date.UTC(year, month - 1 - months, 1))
+  // 31/03 פחות חודש הוא 28/02 ולא 03/03 — יום-החודש נחתך לאורך החודש שאליו חוזרים.
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate()
+  target.setUTCDate(Math.min(day, lastDay))
+  return target.toISOString().slice(0, 10)
+}
+
+function rowEventDate(row) {
+  return row?.projects?.final_event_date ?? row?.event_date ?? null
+}
+
+function rowsSince(rows, cutoffIso) {
+  return rows.filter((row) => {
+    const date = rowEventDate(row)
+    return !date || String(date) >= cutoffIso
+  })
+}
+
+// 🛑 **החלון חובה — אין ברירת-מחדל של "כל ההיסטוריה".** ברירת-מחדל שקטה היא בדיוק איך
+// החלון לא עבד בלי שאיש ראה. פרמטר חסר עוצר כאן, כמו `requireParams` בדירוג.
+function requireWindow(window) {
+  const months = optionalNumber(window?.months)
+  const extendedMonths = optionalNumber(window?.extendedMonths)
+  const minAnswers = optionalNumber(window?.minAnswers)
+  if (months === null || extendedMonths === null || minAnswers === null) {
+    throw new Error('חסרים פרמטרים של חלון-החישוב של Smart Match בהגדרות המערכת.')
+  }
+  return { months, extendedMonths, minAnswers }
+}
+
+// ── "תענה הכי מהר" · זמן-התגובה החציוני ───────────────────────────────────────
+//
+// ✏️ **נבנה 25/09/2026 (אודיט השיבוץ-החכם, פער 2).** האפיון: *"`responded_at − invite_sent_at` ·
+// האירוע מחר ואין זמן לחכות"* (`spec.md` §ארבע הזוויות). עד היום הזווית מיינה לפי שדה שאיש לא
+// יצר, כלומר בהגרלה.
+// 🔑 **חציון ולא ממוצע:** תשובה אחת שנענתה אחרי שבוע הייתה גוררת ממוצע של דיילת שעונה תוך
+// שעה — והמנהלת שואלת "מי תענה מהר *בדרך-כלל*".
+// 🔴 **פחות מהסף ⇒ `null` ("לא ידוע"), והיא יורדת לסוף הרשימה בזווית הזו** — שתי תשובות
+// מהירות אינן "מהירה", והמיון כבר שולח `null` לסוף (`sortAngles.js`, `ascending`).
+// ⚠️ **שני גבולות שהנתון עצמו מציב, ולא נפתרים כאן:** ‏`responded_at` נכתב **רק בתשובה דרך
+// הקישור** — סימון ידני אחרי שיחת-טלפון אינו מודד זמן (`api.js`, `markAssignmentStatus`) ·
+// ומי שלא ענתה כלל אינה בחישוב, בדיוק כמו בציון (שתיקה אינה סירוב — `processes-approved.md §ב4`);
+// הצ'יפ `לא ענתה ל-N האחרונים` הוא שמראה אותה.
+// ⚠️ זמן שלילי (תשובה "לפני" השליחה) מדולג — הוא עדות לשורה ש-`invite_sent_at` שלה רוענן אחרי
+// המענה, לא למהירות.
+function medianResponseHours(rows, minSamples) {
+  const hours = []
+  for (const row of rows) {
+    if (!row?.invite_sent_at || !row?.responded_at) continue
+    const elapsed = Date.parse(row.responded_at) - Date.parse(row.invite_sent_at)
+    if (!Number.isFinite(elapsed) || elapsed < 0) continue
+    hours.push(elapsed / MS_PER_HOUR)
+  }
+  if (hours.length === 0 || hours.length < minSamples) return null
+
+  hours.sort((a, b) => a - b)
+  const middle = Math.floor(hours.length / 2)
+  return hours.length % 2 === 1 ? hours[middle] : (hours[middle - 1] + hours[middle]) / 2
+}
 
 // כמה אירועים **שכבר עברו** עבדה הדיילת אצל לקוח האירוע הזה.
 // 🔴 ארבעה תנאים, וכל אחד מהם הוא הכרעה (הנחה 11 בבלופרינט): **אותו לקוח** ·
@@ -78,10 +164,20 @@ function countWorkedForCustomer(finalRows, customerId, todayIso) {
   return projects.size
 }
 
+// ‏`window` = `{ months, extendedMonths, minAnswers }` — מ-`params` (`חלון_חישוב_חודשים` ·
+// `חלון_חישוב_מורחב_חודשים` · `מינימום_תשובות_להצגת_ציון`). ⚠️ **הסף להרחבה הוא סף-הצגת-הציון:**
+// §11.1 נוקב בשניהם "3", ומספר שלישי בקוד היה עותק שאיש לא היה מעדכן.
 export function buildSmartMatchCandidates(
   { project, hostesses, assignments, sameDayHostessIds, preferences },
   todayIso,
+  window,
 ) {
+  const { months, extendedMonths, minAnswers } = requireWindow(window)
+  const baseCutoff = monthsBefore(todayIso, months)
+  const extendedCutoff = monthsBefore(todayIso, extendedMonths)
+  // ✏️ מנוף-ההוגנות נמדד **עד תאריך-האירוע** (הכרעת-ישי 25/09/2026, פער 4). אירוע בלי תאריך ⇒
+  // עד היום, כמו קודם — לא `null`, שהיה מבטל את המנוף לכולן בשקט.
+  const eventDate = project?.final_event_date ?? todayIso
   const sameDay = new Set(sameDayHostessIds ?? [])
   const preferenceByHostess = new Map(
     (preferences ?? []).map((row) => [row.hostess_id, row.preference]),
@@ -102,18 +198,32 @@ export function buildSmartMatchCandidates(
   return (hostesses ?? []).map((hostess) => {
     const mine = rowsByHostess.get(hostess.hostess_id) ?? []
     const finalRows = finalAssignmentRows(mine)
-    const counts = responsivenessCounts(mine)
+
+    // החלון שלה: בסיסי, ומורחב רק אם בבסיסי יש לה פחות מהסף (הנחה 3).
+    const baseRows = rowsSince(mine, baseCutoff)
+    const baseCounts = responsivenessCounts(baseRows)
+    const widened = baseCounts.answered < minAnswers
+    const windowRows = widened ? rowsSince(mine, extendedCutoff) : baseRows
+    const counts = widened ? responsivenessCounts(windowRows) : baseCounts
 
     return {
       ...hostess,
       // ── מה שהאלגוריתם דורש ──
+      // 🔴 **בתוך החלון** — וזה גם מה שהצ'יפ `אישרה N מ-M` מציג (`screens-approved.md`:
+      // *"פחות מ-3 תשובות **בחלון**"*).
       answered: counts.answered,
       confirmed: counts.confirmed,
+      // ‏`C` (ממוצע-החברה) נסכם **על החלון הבסיסי בלבד** (הנחה 4) — גם אצל מי שהחלון שלה הורחב.
+      baseAnswered: baseCounts.answered,
+      baseConfirmed: baseCounts.confirmed,
       // 🔴 **`candidateDistanceKm` ולא `haversineKm`** — כשכתובת-אירוע נפתרה לרמת-עיר
       // ולדיילת יש רק עיר, שני הצדדים נוחתים על אותה נקודה בדיוק ⇒ מרחק `0` ⇒ ציון-קרבה
       // מושלם. כלומר **ככל שיש עליה פחות מידע כך היא מדורגת גבוה יותר.** הדלת היחידה.
       distanceKm: candidateDistanceKm({ lat: hostess.lat, lng: hostess.lng }, eventPoint),
-      weeksSinceWorked: weeksSinceLastWorked(finalRows, todayIso),
+      // ✏️ **הקלט של מנוף-ההוגנות — נכון לתאריך-האירוע** (הכרעת-ישי 25/09/2026): כולל שיבוץ
+      // סופי עתידי שלפניו. הצ'יפ על הכרטיס קורא את `weeksSinceWorkedToday` שמתחת — עובדה על היום.
+      weeksSinceWorked: weeksSinceLastWorked(finalRows, eventDate),
+      weeksSinceWorkedToday: weeksSinceLastWorked(finalRows, todayIso),
       unavailability: hostess.hostess_unavailability ?? [],
       hasSameDayFinalAssignment: sameDay.has(hostess.hostess_id),
       preference: preferenceByHostess.get(hostess.hostess_id) ?? null,
@@ -124,7 +234,11 @@ export function buildSmartMatchCandidates(
       // 🚧 מ9 ← מ4/מ6 (צעד 2.4, V-5) — אותו `attendance` הזה עכשיו גם ניזון ל-
       // `companyReliabilityAverage` (‏`smartMatch.js`, מחושב על כל המאגר בתוך `rankCandidates`)
       // ולא רק ל-`reliabilityScore` של הדיילת עצמה — אין שינוי כאן, הצורה כבר הייתה נכונה.
-      attendance: buildAttendanceRecords(finalRows, todayIso),
+      // ✏️ 25/09/2026 — בתוך החלון שלה, כמו ההיענות; ו-`baseAttendance` לממוצע-האמינות של החברה.
+      attendance: buildAttendanceRecords(finalAssignmentRows(windowRows), todayIso),
+      baseAttendance: buildAttendanceRecords(finalAssignmentRows(baseRows), todayIso),
+      // ‏"תענה הכי מהר" — חציון שעות, או `null` כשאין מספיק תשובות דרך הקישור בחלון שלה.
+      medianResponseHours: medianResponseHours(windowRows, minAnswers),
 
       // ── מה שצ'יפי-ההנמקה מציגים (אינם משפיעים על הציון) ──
       workedForCustomerCount: countWorkedForCustomer(finalRows, project?.customer_id, todayIso),

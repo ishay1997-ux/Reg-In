@@ -147,12 +147,15 @@ export function activeWeights(params) {
 // דבר בה השתנה**. נמדד שזו לא דקדוק: על מקרה-הבדיקה של האפיון, `C` פר-מאגר מחזיר
 // ‏0.65 ו**תיקו בראש הרשימה** במקום 0.60 והסדר הנקי.
 // ⚠️ הסכומים ולא ממוצע-של-ממוצעים: לדיילת עם מענה אחד אין אותו משקל כמו לוותיקה.
+// ✏️ 25/09/2026 — **על החלון הבסיסי** (`baseAnswered`/`baseConfirmed` משכבת-ההרכבה, הנחה 4
+// בבלופרינט): גם כשהחלון של דיילת מסוימת הורחב ל-24, `C` נשאר תכונה של החברה בחלון אחד.
+// קלט בלי הפיצול (העוגן המחושב-ביד) — הספירות שלו **הן** החלון.
 export function companyResponsivenessAverage(hostesses) {
   let answered = 0
   let confirmed = 0
   for (const h of hostesses ?? []) {
-    answered += Number(h?.answered) || 0
-    confirmed += Number(h?.confirmed) || 0
+    answered += Number(h?.baseAnswered ?? h?.answered) || 0
+    confirmed += Number(h?.baseConfirmed ?? h?.confirmed) || 0
   }
   return answered > 0 ? confirmed / answered : null
 }
@@ -273,11 +276,12 @@ function attendanceCounts(records) {
 // אחרת אותה דיילת הייתה מקבלת ריסון-אמינות שונה בשני אירועים בלי ששום דבר בה השתנה.
 // **אין נתון (המסד היום מחזיק אפס סימוני-נוכחות סגורים) ⇒ `null`, כמו התאום שלה** — הקורא
 // (`rankCandidates`) הוא שמחליט מה לעשות בהיעדר-ממוצע, לא הפונקציה הזו.
+// ✏️ 25/09/2026 — על החלון הבסיסי (`baseAttendance`), מאותה סיבה כמו התאום שלה.
 export function companyReliabilityAverage(candidates) {
   let count = 0
   let total = 0
   for (const candidate of candidates ?? []) {
-    const counts = attendanceCounts(candidate?.attendance)
+    const counts = attendanceCounts(candidate?.baseAttendance ?? candidate?.attendance)
     count += counts.count
     total += counts.total
   }

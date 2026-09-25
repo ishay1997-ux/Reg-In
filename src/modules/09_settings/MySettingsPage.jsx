@@ -18,6 +18,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import { useToast } from '@/components/ToastProvider'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import Hint from '@/components/Hint'
 import {
   PARAM_GROUPS,
   PARAM_REGISTRY,
@@ -193,14 +194,9 @@ export default function MySettingsPage() {
     <div className="flex flex-col gap-4" dir="rtl" data-testid="settings-my-page">
       <div>
         <h1 className="text-xl font-bold text-slate-800">ההגדרות שלי</h1>
-        {/* תת-כותרת ממוקאפ §5/§6/§7 (תיאור-ויזואלי, לא נעול — §3.7 נועל רק את הכותרת עצמה
-            ואת מחרוזת-הריק) — "הנחתי": מונה-קבוצות/שורות, מותאם לכל תפקיד. */}
-        {rows.length > 0 && (
-          <p className="mt-1 text-sm text-slate-500">
-            {rows.length === 1 ? 'הגדרה אחת בבעלותך' : `${rows.length} הגדרות בבעלותך`}
-            {ownedGroups.length === 1 ? ', בקבוצה אחת.' : `, ב-${ownedGroups.length} קבוצות.`}
-          </p>
-        )}
+        {/* ✂️ 25/09/2026 (בודק-ניסוח #27): תת-הכותרת "N הגדרות בבעלותך, ב-M קבוצות" ירדה — הכותרות כבר
+            מונות. במצב-ההטמעה בלבד: למה היא רואה רק חלק מההגדרות. */}
+        <Hint id="mySettings.scope" className="mt-1" />
       </div>
 
       {rows.length > 0 && (
@@ -209,7 +205,7 @@ export default function MySettingsPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="חיפוש לפי שם ההגדרה או שם הפרמטר"
+            placeholder="חיפוש הגדרה"
             className="h-auto rounded-lg border-slate-300 py-2.5 pr-10 pl-3 text-right"
             data-testid="settings-my-search"
           />

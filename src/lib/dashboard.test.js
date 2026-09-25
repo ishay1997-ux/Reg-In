@@ -388,12 +388,12 @@ describe('attentionRows — סדר בין שלושת הענפים ובתוך כ�
     // R2: tone הפך מ-yellow ל-red — אותה הגדרת-חוסר-וקרוב בדיוק כמו הצבע האדום בלוח.
     expect(rows[2]).toMatchObject({
       tone: 'red',
-      why: '0/6 דיילות, 17 בחודש',
+      why: '0/6 דיילות, 17/09',
       href: '/projects/103',
     })
     expect(rows[3]).toMatchObject({
       tone: 'red',
-      why: 'לוגיסטיקה 1/3, 8 בחודש',
+      why: 'לוגיסטיקה 1/3, 08/09',
       href: '/projects/104',
     })
     expect(rows[4]).toMatchObject({
@@ -453,7 +453,8 @@ describe('attentionRows — ענף-החוסר יושר מול צבע-הלוח (0
       kind: 'staffing',
       tone: 'red',
       title: 'אירוע שעבר ועדיין פעיל',
-      why: '1/4 דיילות, 29 בחודש',
+      // ✏️ 25/09/2026: יום/חודש מלא — "29 בחודש" תחת לוח של ספטמבר היה נקרא כ-29/09.
+      why: '1/4 דיילות, 29/08',
     })
   })
 })
@@ -627,7 +628,7 @@ describe('attentionCategories — ארבעה כרטיסים קבועים (5 unbi
     const categories = attentionCategories(bigSummary, TODAY)
     const byKind = Object.fromEntries(categories.map((c) => [c.kind, c]))
     expect(byKind.unbilled.topLine).toBe('הסתיים 1 — הסתיים לפני 5 ימים, לא חויב')
-    expect(byKind.staffing.topLine).toBe('חוסר 1 — 0/2 דיילות, 4 בחודש')
+    expect(byKind.staffing.topLine).toBe('חוסר 1 — 0/2 דיילות, 04/09')
     expect(byKind.quote.topLine).toBe('הצעה #70 — פגה היום')
   })
 

@@ -463,7 +463,13 @@ export default function QuoteBuilderPage() {
           <h1 className="text-lg font-bold text-slate-800">
             {isEditMode ? `עריכת הצעה #${quoteId}` : 'הצעת מחיר חדשה'}
           </h1>
-          <p className="mt-0.5 text-xs text-slate-500">תוקף ההצעה: 30 יום ממועד השליחה</p>
+          {/* 🐞 25/09/2026 (בודק-ניסוח ח2): היה "30 יום ממועד השליחה" קבוע. המספר הוא `ימי_תוקף_הצעה`, והספירה —
+              במסך, במסמך ובעבודת-הלילה — מהעדכון האחרון (`deriveQuoteExpiry` · `quoteToPdfModel`). */}
+          {Number(screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays]) > 0 && (
+            <p className="mt-0.5 text-xs text-slate-500">
+              {`תוקף ההצעה: ${Number(screenParams[QUOTE_SCREEN_PARAM_NAMES.validityDays])} יום מהעדכון האחרון`}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {/* ⚠️ במצב-עריכה בלבד: מספר-ההצעה, תאריך-ההנפקה וחלון-התוקף אינם קיימים בטופס
