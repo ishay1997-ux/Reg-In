@@ -176,7 +176,9 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
 
   // 🔴 שער-המרחק של Smart Match (`שער_מרחק_קמ`) הוא `params`, לא קבוע — ר' ההערה ליד
   // ההינט של "יש רכב?" למטה. `null` כל עוד `params` עדיין נטען (ADD פותח מיד, לפני הטעינה).
-  const gateDistanceKm = optionalNumber(params[SMART_MATCH_PARAM_NAMES.gateDistanceKm])
+  // 🐞 25/09/2026 (בודק-ניסוח ח1): כלל-הרכב משתמש ב**גולפוסט** (`passesGate` ב-`smartMatch.js`), לא
+  // בשער — ההינט הבטיח "מעל 80" כשהפסילה בפועל מעל 40.
+  const noCarLimitKm = optionalNumber(params[SMART_MATCH_PARAM_NAMES.goalpostDistanceKm])
 
   const blocked = Object.keys(errors).length > 0
 
@@ -439,12 +441,12 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
 
               <Field
                 label="יש רכב? (לא חובה)"
-                // 🔴 40 ק"מ אינו קבוע-בקוד — `שער_מרחק_קמ` הוא פרמטר (`SMART_MATCH_PARAM_NAMES`),
-                // ולכן ההינט קורא את הערך החי מ-`params` ולא כותב אותו כמספר קבוע (styleguide §4
-                // דוגמה 3). כשהוא עדיין לא נטען (רגע ה-ADD הראשון) — נוסח בלי מספר.
+                // 🔴 המספר אינו קבוע-בקוד — `גולפוסט_מרחק_קמ` הוא פרמטר (`SMART_MATCH_PARAM_NAMES`),
+                // ולכן ההינט קורא את הערך החי מ-`params` (styleguide §4 דוגמה 3). כשהוא עדיין לא
+                // נטען (רגע ה-ADD הראשון) — נוסח בלי מספר.
                 hint={
-                  gateDistanceKm !== null
-                    ? `מעל ${gateDistanceKm} ק"מ בלי רכב פוסלת מהשיבוץ, לא רק פוגעת בציון`
+                  noCarLimitKm !== null
+                    ? `מעל ${noCarLimitKm} ק"מ בלי רכב פוסלת מהשיבוץ, לא רק פוגעת בציון`
                     : 'מעבר למרחק מסוים בלי רכב פוסלת מהשיבוץ, לא רק פוגעת בציון'
                 }
               >
