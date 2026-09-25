@@ -251,6 +251,15 @@ describe('ProjectsPage — לשונית "לסגירה" (S-18: המצב מהכת�
     expect(screen.getByTestId('projects-row-7').className).toContain('bg-red-50')
   })
 
+  // ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים): בלשונית הזו כל שורה "חסרה" (הסגירה עצמה), והסדר הוא קרבה בלבד —
+  // השורה אמרה "חסרים תחילה" ושורה עם 7/8 ישבה שלישית. עכשיו היא אומרת את הסדר האמיתי.
+  it('שורת-המיון אומרת "לפי קרבת האירוע", בלי "חסרים תחילה"', async () => {
+    renderPage('/projects?tab=closing')
+    await screen.findByTestId('projects-table')
+    expect(screen.getByTestId('projects-sort-line')).toHaveTextContent('ממוין לפי קרבת האירוע')
+    expect(screen.getByTestId('projects-sort-line')).not.toHaveTextContent('חסרים תחילה')
+  })
+
   it('לחיצה על לשונית כותבת לכתובת — מעבר ל"הכול" מדליק את הגלולות', async () => {
     renderPage()
     await screen.findByTestId('projects-table')

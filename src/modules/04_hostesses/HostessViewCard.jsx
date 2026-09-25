@@ -38,6 +38,7 @@ import {
 } from '@/lib/hostesses'
 import { responsivenessCounts, SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { formatDate } from '@/lib/dates'
+import { resolveProjectTone } from '@/lib/projects'
 import { qualityLabelFromValue } from '@/lib/closingDraft'
 import {
   getHostess,
@@ -542,7 +543,13 @@ function AssignmentTable({ rows, now, inviteValidityHours }) {
                 {row.projects?.customer_name}
               </td>
               <td className="border-b border-slate-100 px-2 py-1.5">
-                <StatusTag label={label} />
+                {/* ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #10): אירוע שבוטל ישב ב"שיבוצים קרובים" עם סטטוס-השיבוץ
+                    בלבד (1626, ענבר) — נקרא כמו משמרת שמחכה לה. התג "בוטל" בטון-הפרויקט, כמו בכרטיס-הפרויקט ובלוח. */}
+                {eventWasCancelled(row) ? (
+                  <StatusTag label="האירוע בוטל" tone={resolveProjectTone('בוטל')} />
+                ) : (
+                  <StatusTag label={label} />
+                )}
               </td>
             </tr>
           )

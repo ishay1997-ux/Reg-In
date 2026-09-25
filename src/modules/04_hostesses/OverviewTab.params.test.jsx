@@ -220,3 +220,46 @@ describe('המסנן בכתובת — ?filter=missing', () => {
     expect(screen.getByTestId('overview-row-701')).toBeInTheDocument()
   })
 })
+
+// ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #9): באתר האריח אמר "מתוכם 37 פג תוקפם" והכפתור המרוכז "(7)", ועל
+// שורות של אירועים מאוישים ישב כפתור נעול עם מונה ("שלחי שוב (5)"). שני המספרים נכונים — הכפתור סופר רק
+// אירועים שעוד חסרים — אבל רק אחד אמר מה הוא סופר.
+describe('"שלחי שוב" — כל מספר אומר מה הוא סופר', () => {
+  function expiredInvite(projectId, hostessId) {
+    return {
+      project_id: projectId,
+      hostess_id: hostessId,
+      assignment_number: 1,
+      assignment_status: 'pending',
+      invite_sent_at: hoursFromNow(-100).toISOString(),
+    }
+  }
+
+  it('אירוע מאויש עם זימונים שפגו: הכפתור בשורה נעול ובלי מונה; הכפתור המרוכז אומר "באירועים שעוד חסרים"', async () => {
+    const full = {
+      ...projectInHours(801, 200),
+      required_hostess_count: 1,
+      assignments: [
+        { ...expiredInvite(801, 1), assignment_status: 'finally_approved' },
+        expiredInvite(801, 2),
+        expiredInvite(801, 3),
+      ],
+    }
+    const missing = { ...projectInHours(802, 200), assignments: [expiredInvite(802, 4)] }
+    listStaffingOverview.mockResolvedValue([full, missing])
+    renderTab()
+    await screen.findByTestId('overview-table')
+
+    expect(screen.getByTestId('overview-kpi-pending')).toHaveTextContent('מתוכם 3 פג תוקפם')
+    const bulk = screen.getByTestId('overview-resend-all')
+    expect(bulk).toHaveTextContent('באירועים שעוד חסרים (1)')
+
+    const fullButton = screen.getByTestId('overview-resend-801')
+    expect(fullButton).toBeDisabled()
+    expect(fullButton).toHaveTextContent(/^שלחי שוב$/)
+
+    const missingButton = screen.getByTestId('overview-resend-802')
+    expect(missingButton).toBeEnabled()
+    expect(missingButton).toHaveTextContent('שלחי שוב (1)')
+  })
+})

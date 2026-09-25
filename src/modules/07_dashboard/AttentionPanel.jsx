@@ -18,6 +18,8 @@ import Ltr from '@/components/Ltr'
 import { withReturnTo } from '@/lib/returnTo'
 
 const DOT_CLASS = { red: 'bg-red-500', yellow: 'bg-amber-500' }
+// ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #4): כרטיס ריק לא נושא נקודת-אזהרה צבעונית.
+const DOT_CLASS_EMPTY = 'bg-slate-300'
 
 export default function AttentionPanel({ summary }) {
   const categories = attentionCategories(summary, summary?.today)
@@ -42,7 +44,9 @@ export default function AttentionPanel({ summary }) {
             data-testid={`dashboard-attention-card-${cat.kind}`}
           >
             <span className="flex items-center gap-1.5 text-xs text-slate-500">
-              <span className={`size-[7px] shrink-0 rounded-full ${DOT_CLASS[cat.tone]}`} />
+              <span
+                className={`size-[7px] shrink-0 rounded-full ${cat.count === 0 ? DOT_CLASS_EMPTY : DOT_CLASS[cat.tone]}`}
+              />
               {cat.label} · {cat.role}
             </span>
             {cat.masked ? (
@@ -52,8 +56,9 @@ export default function AttentionPanel({ summary }) {
                 {/* 🔴 המספר לעולם לא לבדו (16/09/2026): `4` הופך ל-`4 אירועים חסרי
                     דיילות ב-14 הימים הקרובים`. שם-העצם **וגם** מסנן-האוכלוסייה נולדים
                     ב-src/lib/dashboard.js (כלל 14) — הרכיב רק מציב אותם זה לצד זה. */}
+                {/* ✏️ 25/09/2026 (מעבר-העיניים #4): היה "✓ אין" לבד — אין מה? שם-העצם נאמר גם כשאין. */}
                 {cat.count === 0 ? (
-                  <span className="text-sm font-semibold text-slate-400">✓ אין</span>
+                  <span className="text-sm font-semibold text-slate-400">✓ אין {cat.noun}</span>
                 ) : (
                   <span className="text-sm leading-snug text-slate-600">
                     <Ltr className="ml-1 text-xl font-bold text-slate-800">{cat.count}</Ltr>

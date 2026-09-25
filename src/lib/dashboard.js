@@ -268,11 +268,12 @@ function staffingShortageRows(projects, todayIso, warningDaysRaw) {
     }))
 }
 
+// ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #5): היה "9 בחודש" — היום-בחודש בלבד. חלון-האזהרה (14 יום)
+// חוצה חודשים, ו"9 בחודש" מתחת ללוח של ספטמבר נקרא כ-09/09 כשהאירוע ב-09/10. ⇒ יום/חודש מלא.
 function staffingWhy(project) {
   const required = Number(project.required_hostess_count) || 0
   const confirmed = Number(project.hostesses_confirmed) || 0
-  const dayOfMonth = dayOfMonthOf(project.final_event_date)
-  return `${confirmed}/${required} דיילות, ${dayOfMonth} בחודש`
+  return `${confirmed}/${required} דיילות, ${dayMonthOf(project.final_event_date)}`
 }
 
 function logisticsShortageRows(projects, todayIso, warningDaysRaw) {
@@ -300,8 +301,7 @@ function logisticsShortageRows(projects, todayIso, warningDaysRaw) {
 function logisticsWhy(project) {
   const total = project.logistics_total ?? 0
   const ready = project.logistics_ready ?? 0
-  const dayOfMonth = dayOfMonthOf(project.final_event_date)
-  return `לוגיסטיקה ${ready}/${total}, ${dayOfMonth} בחודש`
+  return `לוגיסטיקה ${ready}/${total}, ${dayMonthOf(project.final_event_date)}`
 }
 
 // (ג) הצעה פגה בקרוב: pending_quotes===null (מי שאינו רואה 'הצעות מחיר') ⇒ מדלגים
@@ -446,12 +446,11 @@ export function attentionCategories(summary, todayIso) {
   })
 }
 
-// יום-בחודש (timezone-safe) — אותו תרגיל Date.UTC כמו weekdayOf ב-dates.js: פענוח
-// מקומי (`new Date(iso)`) מזיז תאריכים סביב חצות בחלק מאזורי-הזמן בלבד.
-function dayOfMonthOf(isoDate) {
-  const [year, month, day] = String(isoDate).split('-').map(Number)
-  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null
-  return new Date(Date.UTC(year, month - 1, day)).getUTCDate()
+// "DD/MM" מתוך ISO — חיתוך-מחרוזת ולא Date, ולכן בלי תלות באזור-זמן (פענוח מקומי מזיז תאריכים סביב חצות).
+function dayMonthOf(isoDate) {
+  const [, month, day] = String(isoDate).split('-')
+  if (!/^\d{2}$/.test(month ?? '') || !/^\d{2}/.test(day ?? '')) return ''
+  return `${day.slice(0, 2)}/${month}`
 }
 
 // ── לוח-החודש (שבוע מתחיל ביום ראשון — כותרת המוקאפ: א ב ג ד ה ו ש) ──────────
