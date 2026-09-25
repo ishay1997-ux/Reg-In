@@ -206,3 +206,23 @@ describe('מצב 2: `quotes.expiringVsEventSoon` רק כש"פג בקרוב" מו
     }
   })
 })
+
+// ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #7): האריח אמר "N ממתינות לתשובת הלקוח" גם על הצעות שטרם
+// נשלחו ללקוח (31 מתוך 33 באתר החי). המונה סופר `in_progress` — "פתוחה", לא "ממתינה לתשובה".
+describe('אריח "שווי הצעות פתוחות" — שורת-המשנה', () => {
+  it('רבים: "N הצעות פתוחות", בלי "ממתינות לתשובת הלקוח"', async () => {
+    mockApi([quoteFixture({ quote_id: 1 }), quoteFixture({ quote_id: 2 })])
+    renderQuotesPage()
+    const tile = await screen.findByTestId('quotes-metric-open-value')
+    expect(tile).toHaveTextContent('2 הצעות פתוחות')
+    expect(tile).not.toHaveTextContent('ממתינות לתשובת הלקוח')
+  })
+
+  it('יחיד: "הצעה פתוחה אחת"', async () => {
+    mockApi([quoteFixture({ quote_id: 1 })])
+    renderQuotesPage()
+    expect(await screen.findByTestId('quotes-metric-open-value')).toHaveTextContent(
+      'הצעה פתוחה אחת',
+    )
+  })
+})

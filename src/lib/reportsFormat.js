@@ -279,3 +279,20 @@ export function formatWindowLabel({
   if (scope && !parts.some((part) => part.includes(scope))) parts.push(scope)
   return parts.join(' · ')
 }
+
+/**
+ * ✏️ 25/09/2026 (הכרעת הסגן, מ21 F2): *"customer_filter_ignored על האריחים. אם המסך לא אומר את זה למנהלת, זה שקר."*
+ * ‏`meta.customer_filter_ignored` הוא **מערך של מפתחות-אריחים** במ19 · מ21 · מ22 (נמדד במסד 25/09), ו-`readScope`
+ * (`ReportsPage.jsx`) קורא רק `=== true` — ולכן כשנבחר לקוח, אריחים של כל העסק ישבו מתחת לשם-הלקוח בלי מילה.
+ * ⇒ שורה אחת מעל האריחים, רק כשנבחר לקוח ורק אם אחד האריחים שעל המסך ברשימה. אחרת `null`.
+ */
+export function customerIgnoredTilesLine(tiles, ignored, customerId) {
+  if (!customerId || !Array.isArray(ignored) || ignored.length === 0) return null
+  const hit = (tiles ?? []).filter((tile) => ignored.includes(tile.key))
+  if (hit.length === 0) return null
+  if (hit.length === tiles.length) return 'האריחים מחושבים על כל הלקוחות, לא רק על הלקוח שנבחר.'
+  const names = hit.map((tile) => `"${tile.label}"`).join(', ')
+  return hit.length === 1
+    ? `האריח ${names} מחושב על כל הלקוחות, לא רק על הלקוח שנבחר.`
+    : `האריחים ${names} מחושבים על כל הלקוחות, לא רק על הלקוח שנבחר.`
+}

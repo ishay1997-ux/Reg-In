@@ -30,13 +30,15 @@ function useOnboardingModeSafe() {
   }
 }
 
-export default function Hint({ id, level = ONBOARDING_LEVEL.GUIDED, className }) {
+// ✏️ 25/09/2026 — `text`: הסבר שמגיע מהשרת ולא מקובץ-הקופי (למשל `meta.extra_tables[].note` בדוחות). הוא עובר
+// באותו שער-רמה בדיוק — הכלל של ישי (25/09 02:2X): *"רק במצב הטמעה שיהיו הסברים"*. ‏`id` עדיין חובה — ממנו ה-testid.
+export default function Hint({ id, text: givenText, level = ONBOARDING_LEVEL.GUIDED, className }) {
   const onboardingMode = useOnboardingModeSafe()
   const mode = Number.isInteger(onboardingMode) ? onboardingMode : ONBOARDING_LEVEL.CLEAN
 
   if (mode < level) return null
 
-  const entry = getOnboardingCopy(id)
+  const entry = givenText ? { guided: givenText } : getOnboardingCopy(id)
   if (!entry) {
     if (import.meta.env.DEV) {
       console.warn(`Hint: אין קופי למפתח "${id}" ב-src/lib/onboardingCopy.js`)

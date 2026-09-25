@@ -136,7 +136,7 @@ describe('SmartMatchPane', () => {
     const note = screen.getByTestId('settings-smartmatch-attendance-note')
     // 🔤 שורה בודדת אינה "1 שורות-נוכחות" — היא המקרה שגם אומר *למה* זה משנה (03/09/2026).
     expect(note.textContent).toBe(
-      'שורת-נוכחות אחת בלבד מתוך 27 שיבוצים — עדיין אין מספיק נתונים כדי שהמרכיב הזה ישנה משהו',
+      'נוכחות סומנה בשיבוץ אחד מתוך 27 — עדיין מעט מדי כדי שהמרכיב ישנה משהו',
     )
   })
 
@@ -144,7 +144,7 @@ describe('SmartMatchPane', () => {
     countAttendanceRows.mockResolvedValue({ total: 40, withAttendance: 12 })
     await renderPane()
     expect(screen.getByTestId('settings-smartmatch-attendance-note').textContent).toBe(
-      '12 שורות-נוכחות מתוך 40 שיבוצים',
+      'נוכחות סומנה ב-12 מתוך 40 שיבוצים',
     )
   })
 

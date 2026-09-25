@@ -56,8 +56,7 @@ blocked user sending a bad body gets 400 and learns she *would* have passed.
 | quote is neither `in_progress` nor `rejected` with `rejection_reason = 'פג תוקף'` | **409** | `{error: 'אפשר לנסח מייל מעקב רק להצעה פתוחה, או להצעה שפג תוקפה.'}` |
 | `in_progress` quote with no successful send in `email_log` | **409** | `{error: 'ההצעה עוד לא נשלחה ללקוח.'}` — the same sentence the dialog shows beside the disabled button |
 | provider **429** (quota) | **429** | `{status: 'quota', error: 'הגעת למכסת ה-AI — נסי שוב מאוחר יותר.', provider_error}` — **not** retried |
-| provider 5xx (fast) | retried **once** (1.5 s wait, with only what is left of the 27 s budget), then **502** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
-| provider timeout (25 s) / network | **not** retried — the budget is spent; **502** | same `failed` body |
+| provider 5xx, including timeout (60 s) / network (504) | retried like `classify-feedback`: waits 2 s then 5 s, each retry only if the wait ends before the 90 s budget, and **each attempt's ceiling is cut to what is left of the budget** (`providerRetry.ts`); then **502**. The whole run ends by the 90 s budget (+ the DB reads), well under the platform's 150 s — the dialog waits 160 s | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.', provider_error}` |
 | provider 400/401/403, non-JSON, empty text, model JSON invalid | **502** | same `failed` body |
 | model draft fails the guard (below) | **502** | same `failed` body, `provider_error` names the rule |
 | database read error | **500** | `{status: 'failed', error: 'הניסוח נכשל — נסי שוב.'}` |
@@ -116,9 +115,15 @@ After the model answers and **before** filling, both subject and body must:
    raw braces;
 3. contain no money or discount marker (`₪` · `%` · `ש"ח` · `שקל` · `הנחה` · `הנחות`) — the prompt forbids
    inventing a price or a discount, and a draft that does is a commitment nobody approved;
-4. be at most 2,000 characters.
+4. contain no Arabic-script character (U+0600–06FF · 0750–077F · FB50–FDFF · FE70–FEFF) — measured live
+   24/09/2026 22:07 UTC: one draft in three wrote "מועד" with an Arabic `ע` and `ד` inside a Hebrew word;
+5. be at most 2,000 characters.
 
-A failure is a 502 `failed` ("נסי שוב"), not a silently trimmed draft.
+A failure is a 502 `failed` ("נסי שוב"), not a silently trimmed draft. **One exception:** an Arabic-script
+rejection asks the model **once more**, inside the same budget (deputy's ruling 25/09/2026) — it is a
+random slip of the model, not of the request; only if the second draft fails too does the 502 go out.
+The guard lives in `draftGuard.ts` (pure, no Deno), so `draftGuard.test.js` runs it in Vitest; the retry loop
+lives in `providerRetry.ts`, and `providerRetry.test.js` proves the time ceiling with a fake clock.
 
 ## Wording (the prompt)
 
@@ -126,8 +131,8 @@ Hebrew · business-polite, warm, not fawning · **gender-neutral** (the email go
 guide §6: *"במסמך ובמייל ללקוח היא ניטרלית"*; the feminine imperative belongs to the screens) · 4–6
 short lines · opens with `שלום {{איש_קשר}},` · ends with `בברכה,` and no name · pending ⇒ "are there
 questions" + valid-until · expired ⇒ "is it still relevant, shall we renew" · event passed ⇒ "an upcoming
-event we can help with". `temperature` 0.4 (an email should sound human; there is no agreement metric
-to protect, unlike classification).
+event we can help with". `temperature` 0 — the same as `classify-feedback` (it was 0.4 until 25/09/2026; changed with the timeout
+and the retry, deputy's ruling, see the last section).
 
 ## Secrets
 
@@ -146,13 +151,17 @@ to protect, unlike classification).
 deno check --node-modules-dir=none supabase/functions/draft-followup/index.ts
 ```
 
+(`index.ts` imports `./draftGuard.ts` and `./providerRetry.ts`, so this checks all three.)
+
 Runs in CI as the third step of the `edge-function-check` job (`.github/workflows/ci.yml`). Prettier
 formats `index.ts` (`.prettierignore` does not exclude `supabase/functions`); ESLint and knip do not
 reach it, so `deno check` plus Prettier are the whole gate for this file.
 
 ## Deploy
 
-Supabase MCP `deploy_edge_function` (name `draft-followup`, `verify_jwt: true`). **A deploy is live for
+Supabase MCP `deploy_edge_function` (name `draft-followup`, `verify_jwt: true`), **with all three
+files — `index.ts`, `draftGuard.ts` and `providerRetry.ts`**; without them the import fails at boot (the
+`*.test.js` files are not deployed). **A deploy is live for
 every user at once** and nothing in CI deploys — an edit to this file is not live until it is deployed
 again. Repo⇄deployment identity: `get_edge_function` diffed against this file.
 
@@ -256,3 +265,17 @@ now 500 `תקלה זמנית — נסי שוב.` (it used to read as "no row" �
 המייל ידנית.`, a final state in the dialog (no retry) — this message is **no longer** byte-identical to
 `classify-feedback`, by ruling · 401 says `החיבור פג — התחברי מחדש.` · the draft guard also rejects
 `אחוז` and a number followed by `אלף/אלפים/מיליון`.
+
+**Version 6 — 25/09/2026, deputy's ruling (branch `ishay/d2-followup-fix`):** the three remaining
+differences from `classify-feedback` that could explain "no answer" are removed together, so the next
+measured calls tell *slow* from *not answering*: provider wait 25 s ⇒ **60 s** (`PROVIDER_TIMEOUT_MS`) ·
+budget 27 s ⇒ **90 s** (`BUDGET_MS`) · retry on **every** 5xx including the 504 timeout, waits 2 s / 5 s,
+copied from `callProvider` in `classify-feedback` · `temperature` 0.4 ⇒ **0**. The dialog's timeout
+(`FOLLOWUP_DRAFT_TIMEOUT_MS`) is 160 s, and a unit test reads both server numbers from `index.ts` and
+fails if the dialog would give up first. The button stays hidden; the ≤10 s target is unchanged.
+
+**Version 6 measured live — 24/09/2026 22:07 UTC, quote 2068, CEO, three calls:** 200 in 3.7 / 1.9 / 2.7 s
+(Gemini itself 1.7 / 1.4 / 1.4 s, `completed`, first attempt each — no retry, no timeout). All three returned
+a draft. ⚠️ **What this does not tell us:** the 60 s wait and the retry were never exercised, so it cannot
+separate "the fix helped" from "the provider was slow on 24/09 morning and is not now". One draft in three
+contained Arabic letters (`ע`, `ד`) inside a Hebrew word ⇒ the guard rule above (version 7).

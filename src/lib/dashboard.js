@@ -268,11 +268,12 @@ function staffingShortageRows(projects, todayIso, warningDaysRaw) {
     }))
 }
 
+// ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #5): היה "9 בחודש" — היום-בחודש בלבד. חלון-האזהרה (14 יום)
+// חוצה חודשים, ו"9 בחודש" מתחת ללוח של ספטמבר נקרא כ-09/09 כשהאירוע ב-09/10. ⇒ יום/חודש מלא.
 function staffingWhy(project) {
   const required = Number(project.required_hostess_count) || 0
   const confirmed = Number(project.hostesses_confirmed) || 0
-  const dayOfMonth = dayOfMonthOf(project.final_event_date)
-  return `${confirmed}/${required} דיילות, ${dayOfMonth} בחודש`
+  return `${confirmed}/${required} דיילות, ${dayMonthOf(project.final_event_date)}`
 }
 
 function logisticsShortageRows(projects, todayIso, warningDaysRaw) {
@@ -300,8 +301,7 @@ function logisticsShortageRows(projects, todayIso, warningDaysRaw) {
 function logisticsWhy(project) {
   const total = project.logistics_total ?? 0
   const ready = project.logistics_ready ?? 0
-  const dayOfMonth = dayOfMonthOf(project.final_event_date)
-  return `לוגיסטיקה ${ready}/${total}, ${dayOfMonth} בחודש`
+  return `לוגיסטיקה ${ready}/${total}, ${dayMonthOf(project.final_event_date)}`
 }
 
 // (ג) הצעה פגה בקרוב: pending_quotes===null (מי שאינו רואה 'הצעות מחיר') ⇒ מדלגים
@@ -362,6 +362,7 @@ const ATTENTION_CATEGORY_DEFS = [
     href: '/finance',
     tone: 'red',
     noun: 'אירועים שהסתיימו ולא חויבו',
+    nounOne: 'אירוע שהסתיים ולא חויב',
   },
   {
     kind: 'staffing',
@@ -370,6 +371,7 @@ const ATTENTION_CATEGORY_DEFS = [
     href: '/hostesses',
     tone: 'red',
     noun: 'אירועים חסרי דיילות',
+    nounOne: 'אירוע חסר דיילות',
     windowed: true,
   },
   {
@@ -379,6 +381,7 @@ const ATTENTION_CATEGORY_DEFS = [
     href: '/logistics',
     tone: 'red',
     noun: 'אירועים חסרי ציוד',
+    nounOne: 'אירוע חסר ציוד',
     windowed: true,
   },
   {
@@ -388,6 +391,7 @@ const ATTENTION_CATEGORY_DEFS = [
     href: '/quotes',
     tone: 'yellow',
     noun: 'הצעות שפגות בקרוב',
+    nounOne: 'הצעה שפגה בקרוב',
   },
 ]
 
@@ -410,10 +414,13 @@ function categoryCard(def, rows) {
 
 // שם-העצם כפי שהוא נאמר על המסך, עם מסנן-האוכלוסייה בתוכו. סף לא-נטען ⇒ בלי הסייג
 // (ואז גם הרשימה ריקה ממילא — `staffingShortageRows` מחזירה [] בלי סף).
-function categoryNoun(def, warningDays) {
+// ✏️ 25/09/2026 (הכרעת הסגן, סריקת-תחנות): **אחד ⇒ יחיד.** המסך הציג "1 אירועים חסרי דיילות",
+// וביום הכנס זה בדיוק מה שתחנה 1 הייתה מראה (1615 לבדו בחלון). המספר נשאר לידו, כמו תמיד.
+function categoryNoun(def, warningDays, count) {
+  const noun = count === 1 ? def.nounOne : def.noun
   const warning = paramNumber(warningDays)
-  if (!def.windowed || warning === null) return def.noun
-  return `${def.noun} ב-${warning} הימים הקרובים`
+  if (!def.windowed || warning === null) return noun
+  return `${noun} ב-${warning} הימים הקרובים`
 }
 
 export function attentionCategories(summary, todayIso) {
@@ -433,19 +440,17 @@ export function attentionCategories(summary, todayIso) {
       : null,
   }
 
-  return ATTENTION_CATEGORY_DEFS.map((def) => ({
-    ...def,
-    noun: categoryNoun(def, warning),
-    ...categoryCard(def, rowsByKind[def.kind]),
-  }))
+  return ATTENTION_CATEGORY_DEFS.map((def) => {
+    const card = categoryCard(def, rowsByKind[def.kind])
+    return { ...def, noun: categoryNoun(def, warning, card.count), ...card }
+  })
 }
 
-// יום-בחודש (timezone-safe) — אותו תרגיל Date.UTC כמו weekdayOf ב-dates.js: פענוח
-// מקומי (`new Date(iso)`) מזיז תאריכים סביב חצות בחלק מאזורי-הזמן בלבד.
-function dayOfMonthOf(isoDate) {
-  const [year, month, day] = String(isoDate).split('-').map(Number)
-  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null
-  return new Date(Date.UTC(year, month - 1, day)).getUTCDate()
+// "DD/MM" מתוך ISO — חיתוך-מחרוזת ולא Date, ולכן בלי תלות באזור-זמן (פענוח מקומי מזיז תאריכים סביב חצות).
+function dayMonthOf(isoDate) {
+  const [, month, day] = String(isoDate).split('-')
+  if (!/^\d{2}$/.test(month ?? '') || !/^\d{2}/.test(day ?? '')) return ''
+  return `${day.slice(0, 2)}/${month}`
 }
 
 // ── לוח-החודש (שבוע מתחיל ביום ראשון — כותרת המוקאפ: א ב ג ד ה ו ש) ──────────

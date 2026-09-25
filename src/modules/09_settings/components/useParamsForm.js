@@ -28,6 +28,7 @@ import {
   distanceOrderOk,
   cancellationOrderOk,
   expiryWarningOrderOk,
+  reliabilityCoefficientOrderOk,
 } from '@/lib/paramsRegistry'
 import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
 import { updateParams } from '@/modules/09_settings/api'
@@ -47,6 +48,8 @@ const FULL_COMP_NAME = 'שעות_פיצוי_ביטול_מלא'
 const PARTIAL_COMP_NAME = 'שעות_פיצוי_ביטול_חלקי'
 const EXPIRY_WARNING_NAME = 'ימי_אזהרה_הצעה_פגה'
 const QUOTE_VALIDITY_NAME = 'ימי_תוקף_הצעה'
+const RED_COEFFICIENT_NAME = 'מקדם_אמינות_אדום'
+const AMBER_COEFFICIENT_NAME = 'מקדם_אמינות_ענבר'
 
 // נוסחי כללי-הרוחב — נגזרו מהטקסט הנעול/הרשום ולא הומצאו: משפט-הסכום נגזר משורת-הסיכום
 // הנעולה `שלוש המשקולות חייבות להסתכם ל-1.00` (§3.7, עודכנה 03/09/2026 — ממצא UX-4),
@@ -59,6 +62,9 @@ export const DISTANCE_ORDER_ERROR =
 // עלול להחליף בין השדות שוב. המשפט אומר את הסיבה העסקית באותה שורה.
 export const CANCELLATION_ORDER_ERROR =
   'שעות הפיצוי המלא חייבות להיות קטנות משעות הפיצוי החלקי — ככל שקרוב יותר לאירוע, הפיצוי גדול יותר'
+// ✏️ 25/09/2026 — נגזר מההערה שעל שורת הענבר, והכיוון נקוב כמו בשני הנוסחים שמעליו.
+export const RELIABILITY_ORDER_ERROR =
+  'מקדם הענבר חייב להיות גבוה מהמקדם האדום — אחרת הדוח מפסיק לצבוע את האמינות'
 export const EXPIRY_WARNING_ORDER_ERROR =
   'ימי האזהרה חייבים להיות קטנים מימי התוקף — אחרת כל הצעה פתוחה מסומנת "פגה בקרוב" מרגע יצירתה'
 
@@ -183,6 +189,17 @@ export default function useParamsForm({ rows, roleId, canEditAll } = {}) {
       found.push({
         message: EXPIRY_WARNING_ORDER_ERROR,
         names: [EXPIRY_WARNING_NAME, QUOTE_VALIDITY_NAME],
+      })
+    }
+    const haveCoefficients = RED_COEFFICIENT_NAME in values && AMBER_COEFFICIENT_NAME in values
+    if (
+      haveCoefficients &&
+      (dirty.has(RED_COEFFICIENT_NAME) || dirty.has(AMBER_COEFFICIENT_NAME)) &&
+      !reliabilityCoefficientOrderOk(values[RED_COEFFICIENT_NAME], values[AMBER_COEFFICIENT_NAME])
+    ) {
+      found.push({
+        message: RELIABILITY_ORDER_ERROR,
+        names: [RED_COEFFICIENT_NAME, AMBER_COEFFICIENT_NAME],
       })
     }
     return found

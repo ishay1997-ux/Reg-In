@@ -39,13 +39,18 @@ import {
 // מול `onboardingCopy.m11.hostesses.js`, מפתח-מפתח.
 const HINTS = {
   // ✏️ 23/09/2026 — 3–4 רמזים לדף, כל אחד צמוד לרכיב שעליו השאלה (התוכנית §4ה, 2.1 · 2.3 · 2.10).
-  // ‏`extras` מחזיק רק את מה שיושב מתחת לטבלה-הנוספת (זמני-התגובה של מ17) — לא מילון-מונחים.
+  // ‏`extras` = תחתית הדף, אחרי הטבלה — מה שיושב מתחת לטבלה-הנוספת (זמני-התגובה של מ17), ורמז שאין לו מקום
+  // מעל בלי לשבור את 2.3 (≤4 רמזים בגובה-מסך). לא מילון-מונחים.
   'hostess-overview': {
     afterSoWhat: ['reports.hostessOverview.purpose'],
     beforeChart: ['reports.hostessOverview.redCount', 'reports.hostessOverview.topQuarter'],
     chartFooter: [],
     beforeTable: ['reports.hostessOverview.redTableSort'],
-    extras: [],
+    // ✏️ 25/09/2026: ‏`gapEvents` — "למה באריח ארבעה ובמסך הדיילות יותר" (הכלל של ישי 02:2X: הסבר = רמז).
+    //    ‏✏️ (הכרעת הסגן, ~04:3X): עבר מ-beforeChart לתחתית. 📏 נמדד ב-1536×900, מצב 2: חמשת הרמזים ישבו
+    //    ב-431 · 606 · 630 · 1045 · 1069 פיקסלים — כולם בחלון אחד של 900 ⇒ 2.3 נפל. גם "לפני הטבלה" (1045)
+    //    נשאר בחלון; רק אחרי הטבלה (שנגמרת ב-1357) הוא יוצא ממנו. התוכן לא השתנה.
+    extras: ['reports.hostessOverview.gapEvents'],
   },
   reliability: {
     afterSoWhat: ['reports.reliability.purpose'],

@@ -41,6 +41,7 @@
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import Ltr from '@/components/Ltr'
+import Hint from '@/components/Hint'
 import { cn } from '@/lib/utils'
 import { getParamEntry, parseForDisplay } from '@/lib/paramsRegistry'
 
@@ -168,6 +169,8 @@ export default function ParamRow({ row, value, onChange, canEdit, error }) {
 
       <td className="py-3 text-xs text-slate-500">
         <p>{entry.hint}</p>
+        {/* ✏️ 25/09/2026 — ה"למה" של השורה, רק במצב-ההטמעה (`Hint` מחזיר null במצב הנקי). */}
+        {entry.layerHint && <Hint id={entry.layerHint} className="mt-1" />}
         {entry.affects && <p className="mt-1 text-amber-800">↳ משפיע: {entry.affects}</p>}
         {error && (
           <p id={errorId} role="alert" className="mt-1 font-medium text-red-600">

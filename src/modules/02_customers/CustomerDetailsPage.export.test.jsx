@@ -275,6 +275,8 @@ describe('CustomerDetailsPage — חיבור לחלון-הייצוא', () => {
     await openDialog()
     await waitFor(() => expect(screen.getByTestId('export-count')).toHaveTextContent('55 שורות'))
     fireEvent.keyDown(document.activeElement, { key: 'Escape' })
+    // ✏️ 25/09/2026 (מעבר-העיניים #7): השבב של `rejected` סופר גם הצעות שפגו — והוא אומר את זה.
+    expect(screen.getByTestId('customer-quotes-chip-rejected')).toHaveTextContent('נדחו או פגו')
     // מסנן-סטטוס של המסך (מעל 8 הצעות) — הקובץ עוקב אחריו.
     fireEvent.click(screen.getByTestId('customer-quotes-chip-in_progress'))
     await openDialog()

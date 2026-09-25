@@ -12,6 +12,7 @@
 // "שלח לעוד דיילות".
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ToastProvider'
 import LoadingOrError from '@/components/LoadingOrError'
@@ -53,6 +54,16 @@ const filterLabels = (urgentHours) => ({
   urgent: `דחוף (עד ${urgentHours} שעות)`,
 })
 
+// ✏️ 25/09/2026 (הכרעת הסגן #1): המסנן חי בכתובת (`?filter=missing`), כמו כל מסנן-רשימה (`CLAUDE.md` §4.2) —
+// ואריח "אירועים עם חוסר" בדוח מבט-העל של הדיילות (מ14) פותח את המסך הזה ישר על "חסרים בלבד".
+// ערך שאינו מוכר (או חסר) ⇒ "הכול"; "הכול" אינו נכתב לכתובת.
+const FILTER_PARAM = 'filter'
+const FILTER_VALUES = ['all', 'missing', 'urgent']
+const readFilter = (searchParams) => {
+  const value = searchParams.get(FILTER_PARAM)
+  return FILTER_VALUES.includes(value) ? value : 'all'
+}
+
 // ⚠️ מחושב פעם אחת בטעינה ומוחזק ב-state — `react-hooks/purity` אוסר קריאת-שעון בתוך
 // render, וגם לוגית: "עכשיו" שזז באמצע רינדור מייצר שורות שמסכימות זו עם זו רק לפעמים.
 function nowIso() {
@@ -71,7 +82,21 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [now, setNow] = useState(nowIso)
-  const [filter, setFilter] = useState('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filter = readFilter(searchParams)
+  const setFilter = useCallback(
+    (next) =>
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev)
+          if (next === 'all') params.delete(FILTER_PARAM)
+          else params.set(FILTER_PARAM, next)
+          return params
+        },
+        { replace: true },
+      ),
+    [setSearchParams],
+  )
   const [sending, setSending] = useState(false)
 
   const [reloadTick, setReloadTick] = useState(0)
@@ -248,7 +273,9 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
             className="h-auto rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             data-testid="overview-resend-all"
           >
-            {`שלחי שוב למי שפג תוקפן (${resendableCount})`}
+            {/* ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #9): האריח אומר "מתוכם 37 פג תוקפם" והכפתור "(7)".
+                שניהם נכונים — הכפתור סופר רק אירועים שעוד חסרות בהם דיילות (`canResend`) — אבל רק אחד אמר מה. */}
+            {`שלחי שוב למי שפג תוקפן, באירועים שעוד חסרים (${resendableCount})`}
           </Button>
         )}
       </div>
@@ -425,7 +452,9 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
               className="h-auto whitespace-nowrap rounded-lg border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
               data-testid={`overview-resend-${project.project_id}`}
             >
-              {`שלחי שוב (${counts.expired})`}
+              {/* ✏️ 25/09/2026 (מעבר-העיניים #9): כפתור נעול עם מונה ("שלחי שוב (5)") נקרא כאילו יש 5 לשלוח.
+                  נעול ⇒ בלי מונה; המונה נשאר בעמודת "ממתינות" ("5 פג תוקפן"). */}
+              {canResend(row) ? `שלחי שוב (${counts.expired})` : 'שלחי שוב'}
             </Button>
           )}
         </Td>
