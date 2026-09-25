@@ -29,8 +29,10 @@ vi.mock('./api', () => ({
   releaseAssignment: vi.fn(),
   setShiftLead: vi.fn(),
 }))
+const authState = { permissions: { דיילות: 'edit' }, onboardingMode: 0 }
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ permissions: { דיילות: 'edit' } }),
+  // ‏`onboardingMode` משתנה בבדיקת מצב-ההטמעה בלבד; ברירת-המחדל — המסך הנקי (0).
+  useAuth: () => authState,
 }))
 vi.mock('@/components/ToastProvider', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
@@ -150,6 +152,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
   vi.clearAllMocks()
+  authState.onboardingMode = 0
 })
 
 describe('🎯 שיבוץ חכם — הסדר שהמנהלת רואה על המסך', () => {
@@ -248,5 +251,27 @@ describe('⏱️ אירוע מתחת ל-72 שעות — ברירת-המחדל ת
     expect(await candidateNamesOnScreen()).toEqual(['נועה', 'מיכל', 'דנה'])
     expect(screen.getByTestId('sm-angle-recommended').className).toContain('bg-teal-50')
     expect(screen.getByTestId('sm-angle-fastest').disabled).toBe(true)
+  })
+})
+
+// 💬 **רמז "המלצת המערכת" — רק במצב-ההטמעה** (ישי 25/09: "המערכת נקיה ובוגרת... ורק במצב הטמעה
+// הסברים מובנים"). במסך הנקי אין משפט-הסבר; במצב 2 הוא מופיע ליד שורת-הזוויות.
+describe('💬 הרמז שמסביר את "המלצת המערכת"', () => {
+  const HINT_START = 'התחילי מראש הרשימה'
+
+  it('במסך הנקי (0) — אינו מופיע', async () => {
+    getSmartMatchData.mockResolvedValue(anchorData())
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    await candidateNamesOnScreen()
+    expect(screen.queryByText((text) => text.startsWith(HINT_START))).toBeNull()
+  })
+
+  it('במצב-ההטמעה (2) — מופיע, בלי אחוזים', async () => {
+    authState.onboardingMode = 2
+    getSmartMatchData.mockResolvedValue(anchorData())
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    await candidateNamesOnScreen()
+    const hint = screen.getByText((text) => text.startsWith(HINT_START))
+    expect(hint.textContent).not.toMatch(/%|\d/)
   })
 })

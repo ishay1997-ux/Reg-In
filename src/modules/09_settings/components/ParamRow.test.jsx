@@ -9,6 +9,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import ParamRow from './ParamRow'
 
+// ✏️ 25/09/2026: `ParamRow` מציג עכשיו `<Hint>` (ה"למה" של השורה, `layerHint`), ו-`Hint` → `AuthContext` →
+// `supabaseClient`, שקורס בלי `.env.local` (ב-CI) — מלכודת מתועדת ב-`CLAUDE.md` §3.
+vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
+
 function renderRow(props) {
   return render(
     <table>
@@ -61,9 +65,10 @@ describe('ParamRow', () => {
     expect(wrapper).toHaveTextContent('₪')
   })
 
+  // ✏️ 25/09/2026: ה-↳ של המע"מ ירד (בודק-ניסוח #30) — הדוגמה עברה לשורת-התוקף, שה-↳ שלה הוא תוצאה.
   it('מציג את הערת "משפיע" כשהמרשם נושא אחת', () => {
-    renderRow({ row: row('אחוז_מעמ', '18'), value: '18' })
-    expect(screen.getByText(/משנה את סכום המע"מ בהצעות מחיר חדשות/)).toBeInTheDocument()
+    renderRow({ row: row('ימי_תוקף_הצעה', '30'), value: '30' })
+    expect(screen.getByText(/נדחית אוטומטית בלילה/)).toBeInTheDocument()
   })
 
   it('מדווח שינוי עם שם-הפרמטר', () => {
