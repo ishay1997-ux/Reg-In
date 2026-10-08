@@ -16,7 +16,12 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import CustomerFormDialog from './CustomerFormDialog'
-import { updateCustomer, listCustomerContacts, replaceCustomerContacts } from './api'
+import {
+  createCustomer,
+  updateCustomer,
+  listCustomerContacts,
+  replaceCustomerContacts,
+} from './api'
 
 // 🧨 מוקש-סביבה (jsdom): הדיאלוג הזה הוא הראשון בריפו שמרנדר יחד Select+Switch בתוך Dialog
 // עם עץ-JSX גדול מספיק שה-scanner של Vite מגיש את @radix-ui/react-use-size מ-src/*.tsx במקום
@@ -235,5 +240,102 @@ describe('CustomerFormDialog — N2, שמירה רגילה (לקוח עם איש
     expect(await screen.findByTestId('customer-save-success')).toHaveTextContent(
       'הנתונים נשמרו בהצלחה',
     )
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔴 09/10/2026 — "הלקוח נשמר חלקית" (הבדיקה העיוורת לפני הכנס): "לקוח חדש" בלי איש-קשר
+// הציג "לא ניתן לשמור לקוח בלי איש קשר אחד לפחות." — **אחרי** שהלקוח כבר נכתב (492/493
+// במסד, 0 אנשי-קשר). הבדיקות כאן נכשלו לפני התיקון: פונקציית-הכתיבה של הלקוח נקראה.
+// ═══════════════════════════════════════════════════════════════════════════
+const NO_CONTACT_MSG = 'יש להזין לפחות איש קשר אחד — שם, וטלפון או אימייל.'
+
+function fillAddForm() {
+  fireEvent.change(screen.getByTestId('customer-form-company-name'), {
+    target: { value: 'חברת בדיקה בע"מ' },
+  })
+  fireEvent.change(screen.getByTestId('customer-form-company-number'), {
+    target: { value: '515555555' },
+  })
+  // ה-Select של Radix מרנדר בתוך <form> גם <select> מקורי נסתר — שינוי בו מפעיל את onValueChange.
+  fireEvent.change(document.querySelector('select'), { target: { value: 'government' } })
+}
+
+describe('CustomerFormDialog — אין שמירה חלקית: כללי אנשי-הקשר נבדקים לפני כל כתיבה', () => {
+  it('לקוח חדש בלי איש-קשר (השורה הריקה ההתחלתית) ⇒ חסום, ושום דבר לא נכתב', async () => {
+    renderDialog({ editingCustomer: null })
+    fillAddForm()
+    fireEvent.click(screen.getByTestId('customer-form-submit'))
+
+    expect(await screen.findByTestId('customer-contacts-primary-error')).toHaveTextContent(
+      NO_CONTACT_MSG,
+    )
+    expect(createCustomer).not.toHaveBeenCalled()
+    expect(replaceCustomerContacts).not.toHaveBeenCalled()
+  })
+
+  it('דלת אחות — עריכה: ריקון איש-הקשר היחיד ⇒ חסום לפני עדכון הלקוח', async () => {
+    listCustomerContacts.mockResolvedValue([contactRow()])
+    renderDialog()
+    await waitForContactsLoaded()
+    for (const field of ['contact_name', 'phone', 'email']) {
+      fireEvent.change(screen.getByTestId(`contact-field-${field}`), { target: { value: '' } })
+    }
+    fireEvent.click(screen.getByTestId('customer-form-submit'))
+
+    expect(await screen.findByTestId('customer-contacts-primary-error')).toHaveTextContent(
+      NO_CONTACT_MSG,
+    )
+    expect(updateCustomer).not.toHaveBeenCalled()
+    expect(replaceCustomerContacts).not.toHaveBeenCalled()
+  })
+
+  it('דלת אחות — עריכה: ריקון הראשי כשיש איש-קשר נוסף ⇒ "אין ראשי", לפני עדכון הלקוח', async () => {
+    listCustomerContacts.mockResolvedValue([
+      contactRow({ contact_id: 21, is_primary: true }),
+      contactRow({ contact_id: 22, contact_name: 'דנה פרץ', is_primary: false }),
+    ])
+    renderDialog()
+    const rows = await waitForContactsLoaded()
+    const primaryRow = rows.find((r) => r.getAttribute('data-primary') === 'true')
+    for (const field of ['contact_name', 'phone', 'email']) {
+      fireEvent.change(within(primaryRow).getByTestId(`contact-field-${field}`), {
+        target: { value: '' },
+      })
+    }
+    fireEvent.click(screen.getByTestId('customer-form-submit'))
+
+    expect(await screen.findByTestId('customer-contacts-primary-error')).toHaveTextContent(
+      NO_PRIMARY_MSG,
+    )
+    expect(updateCustomer).not.toHaveBeenCalled()
+  })
+
+  it('הדלת שהולידציה אינה סוגרת (תקלת-רשת אחרי יצירת הלקוח) ⇒ נאמר, והלחיצה החוזרת משלימה את אותו לקוח', async () => {
+    createCustomer.mockResolvedValue(customerFixture({ customer_id: 900 }))
+    updateCustomer.mockResolvedValue(customerFixture({ customer_id: 900 }))
+    replaceCustomerContacts.mockRejectedValueOnce(new Error('Failed to fetch'))
+    renderDialog({ editingCustomer: null })
+    fillAddForm()
+    fireEvent.change(screen.getByTestId('contact-field-contact_name'), {
+      target: { value: 'שרית מזרחי' },
+    })
+    fireEvent.change(screen.getByTestId('contact-field-phone'), {
+      target: { value: '054-8123390' },
+    })
+    fireEvent.click(screen.getByTestId('customer-form-submit'))
+
+    expect(await screen.findByTestId('customer-form-error')).toHaveTextContent(
+      'הלקוח נשמר, אבל אנשי הקשר לא נשמרו',
+    )
+    expect(createCustomer).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByTestId('customer-form-submit'))
+    await waitFor(() => expect(replaceCustomerContacts).toHaveBeenCalledTimes(2))
+    // לא נוצר לקוח שני (היה נופל על כפילות-ח"פ) — אותו 900 מושלם.
+    expect(createCustomer).toHaveBeenCalledTimes(1)
+    expect(updateCustomer).toHaveBeenCalledWith(900, expect.any(Object))
+    expect(replaceCustomerContacts.mock.calls[1][0]).toBe(900)
+    expect(await screen.findByTestId('customer-save-success')).toBeInTheDocument()
   })
 })

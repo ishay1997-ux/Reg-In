@@ -13,7 +13,7 @@
 // אוכף בשרת. מחיקת הראשי חסומה תמיד (לא רק כשהיא השורה היחידה) — זו הכרעת-מוצר מפורשת, לא
 // תוצאה של "אין למי להעביר את הדגל": "הפוך לראשי" על שורה אחרת מזיז את הדגל, ורק אז מחיקת
 // השורה הישנה (שכבר אינה ראשית) מותרת.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +35,9 @@ import {
 } from '@/components/ui/select'
 import {
   CUSTOMER_TYPE_LABELS,
+  NO_PRIMARY_MSG,
   primaryContact,
+  validateContactSet,
   validateCustomerField,
   validateCustomerForm,
   validateExtraContacts,
@@ -71,13 +73,6 @@ function FieldError({ name, message }) {
     </p>
   )
 }
-
-// המשפט המדויק שה-RPC (replace_customer_contacts, N2ב) זורק כשאין ראשי בכלל — נשמר מילה-במילה
-// גם בצד-הלקוח כדי שהודעת-החסימה תהיה עקבית בין "ניסית למחוק אותו" לבין "המצב הגיע לשם בכל דרך".
-const NO_PRIMARY_MSG = 'אי אפשר למחוק את איש הקשר הראשי. סמני קודם אחר כראשי.'
-// ואותו דבר לשני-ראשיים בבת-אחת — מצב שה-UI אמור למנוע מלכתחילה ("הפוך לראשי" מזיז ולא מכפיל),
-// אך נבדק כאן הגנתית ובאותו נוסח כמו השרת.
-const TWO_PRIMARY_MSG = 'ניתן לסמן איש קשר ראשי אחד בלבד.'
 
 // ⚠️ הקומפוננטה מאותחלת מ-editingCustomer ב-useState בלבד (בלי effect-סנכרון) — עמוד-האב חייב
 // לרנדר אותה עם key שמשתנה בכל פתיחה/החלפת-לקוח (remount = איפוס-טופס). זה הדפוס הקנוני של
@@ -129,6 +124,10 @@ export default function CustomerFormDialog({
   // add-mode: אין מה לטעון ⇒ מותר לשמור מיד (true).
   const [contactsLoaded, setContactsLoaded] = useState(!editingCustomer)
   const [contactsLoadError, setContactsLoadError] = useState(false)
+  // 🔴 הלקוח שנוצר בניסיון-שמירה קודם **בחלון הזה**, כשאנשי-הקשר נכשלו אחריו (למשל ניתוק-רשת
+  // בין שתי הבקשות — הדלת היחידה שהולידציה בשמירה אינה יכולה לסגור). בלי זה, לחיצה חוזרת
+  // הייתה מנסה ליצור אותו שוב ונופלת על כפילות-ח"פ (23505); איתו — היא משלימה את אותו לקוח.
+  const createdRef = useRef(null)
 
   // טעינת אנשי-הקשר הקיימים בעריכה (fetch, לא sync-מ-props). remount-דרך-key באב מריץ פעם אחת.
   useEffect(() => {
@@ -223,19 +222,17 @@ export default function CustomerFormDialog({
     const cErrors = contactsLoadError ? {} : validateExtraContacts(contacts)
     setContactErrors(cErrors)
 
-    let primaryMsg = ''
-    if (!contactsLoadError) {
-      const primaryCount = contacts.filter((c) => c.is_primary).length
-      if (primaryCount === 0) primaryMsg = NO_PRIMARY_MSG
-      else if (primaryCount > 1) primaryMsg = TWO_PRIMARY_MSG
-    }
+    // 🔴 כללי-הקבוצה (לפחות איש-קשר אחד · בדיוק ראשי אחד) נבדקים **בהגדרה של השרת** —
+    // רק על שורות שיש להן שם — ולפני כל כתיבה. עד 09/10/2026 נספר "ראשי" גם על שורה ריקה,
+    // הלקוח נכתב, וה-RPC דחה את אנשי-הקשר אחריו ⇒ לקוח בלי אנשי-קשר (`validateContactSet`).
+    const primaryMsg = contactsLoadError ? '' : validateContactSet(contacts)
     setPrimaryError(primaryMsg)
 
     if (Object.values(errors).some(Boolean) || Object.keys(cErrors).length > 0 || primaryMsg) {
       return
     }
 
-    if (!isEdit) {
+    if (!isEdit && !createdRef.current) {
       const existing = findDuplicate(form.company_number)
       if (existing) {
         setDuplicate({ customer: existing, isActive: existing.status === 'active' })
@@ -266,8 +263,12 @@ export default function CustomerFormDialog({
       if (isEdit) {
         // ח"פ לא נשלח בעריכה (קיבוע §7.11/§7.64; api.js גם מסיר הגנתית).
         saved = await updateCustomer(editingCustomer.customer_id, payload)
+      } else if (createdRef.current) {
+        // ניסיון חוזר אחרי שהלקוח כבר נוצר ואנשי-הקשר נכשלו — משלימים אותו, לא יוצרים שני.
+        saved = await updateCustomer(createdRef.current.customer_id, payload)
       } else {
         saved = await createCustomer({ ...payload, company_number: form.company_number.trim() })
+        createdRef.current = saved
       }
       // אנשי-הקשר (§7.81, N2) נשמרים כיחידה אחרי שהלקוח נשמר (replace צריך את ה-customer_id).
       // נשמרים רק אם נטענו בהצלחה (או מצב-הוספה) — אחרת דילוג, לא מחיקה (תיקון אובדן-הנתונים 11/07).
@@ -284,6 +285,11 @@ export default function CustomerFormDialog({
       if (err.code === '23505') {
         // מרוץ: הח"פ נוסף ע"י משתמש אחר אחרי שהרשימה נטענה — אותה זרימת-§7.11, בלי פירוט-כרטיס.
         setFormError('חברה זו כבר רשומה במערכת — רענני את הרשימה כדי לראות את הכרטיס הקיים.')
+      } else if (!isEdit && createdRef.current) {
+        // אומרים את האמת: הלקוח קיים, אנשי-הקשר לא — ומה לעשות כדי להשלים.
+        setFormError(
+          `הלקוח נשמר, אבל אנשי הקשר לא נשמרו: ${err.message || 'השמירה נכשלה.'} לחצי שוב על "הוסיפי לקוח" כדי להשלים.`,
+        )
       } else {
         setFormError(err.message || 'שמירה נכשלה. נסי שוב.')
       }
