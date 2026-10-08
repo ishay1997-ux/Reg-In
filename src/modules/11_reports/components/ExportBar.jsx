@@ -16,19 +16,22 @@
 // 🚫 **`rows` שמגיע מהמסך אינו בשימוש** — החלון שולף בעצמו (`exportFetch.js`). הפרופ נשאר
 // בחתימה כי `ReportSurface.jsx` שולח אותו, והוא **שטח של הסשן המקביל** שאין לגעת בו.
 
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import ExportDialog from '@/components/ExportDialog'
 import { listCustomers } from '@/modules/02_customers/api'
 import { fetchExportData, reportsOfTab } from '@/modules/11_reports/exportFetch'
+import { ReportsShellContext } from '@/modules/11_reports/components/reportsShellContext'
 import {
   buildExportFileName,
   buildExportSheet,
   EXPORT_LOCKED_MESSAGES,
   exportReportRows,
 } from '@/lib/reportsExport'
+
+const NO_REPORT_TO_EXPORT = 'לא נמצא דוח לייצוא בלשונית הזו — רענני את הדף ונסי שוב.'
 
 export default function ExportBar({ reportName, windowLabel, columns = [], blockedReason }) {
   // 🔴 **קריאה ישירה מה-URL ולא `useSearchParams` — וזה לא סגנון אלא מדידה.** ההוק דורש
@@ -49,9 +52,15 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
     permissions = null
   }
 
+  // 🔴 **הלשונית והדוח — מהמעטפת קודם, ומהכתובת רק בלעדיה** (תיקון 09/10/2026).
+  // הכתובת אינה אומרת מה פתוח: בלי `?tab=` המעטפת פותחת את הלשונית הראשונה המותרת, ועם
+  // `?tab=` חסום היא נופלת לאחרת. קריאת הכתובת הגולמית נתנה כאן `null` ⇒ אפס דוחות ⇒ חלון
+  // שאמר *"הסינון לא הותיר שורות"* על דוח של 102 שורות. ‏`useContext` בלי Provider מחזיר
+  // `null` ואינו זורק — ולכן בדיקות שמרנדרות את הרכיב לבדו ממשיכות לעבוד דרך הכתובת.
+  const shell = useContext(ReportsShellContext)
   const params = new URLSearchParams(window.location.search)
-  const tabKey = params.get('tab')
-  const openReport = params.get('report')
+  const tabKey = shell?.activeTabKey ?? params.get('tab')
+  const openReport = shell?.activeReportSlug ?? params.get('report')
 
   const [open, setOpen] = useState(false)
   const [reportId, setReportId] = useState(openReport)
@@ -194,7 +203,11 @@ export default function ExportBar({ reportName, windowLabel, columns = [], block
           loading={loading}
           error={error}
           onRetry={() => setTick((value) => value + 1)}
-          blockedReason={data ? data.blockedReason : blockedReason}
+          // 🔴 בלי דוח נבחר אין מה לשלוף — נאמר במפורש, ולא כ"הסינון לא הותיר שורות"
+          // (המשפט שהטעה ב-09/10: הוא מאשים מסנן שהמשתמשת מעולם לא הפעילה).
+          blockedReason={
+            selected ? (data ? data.blockedReason : blockedReason) : NO_REPORT_TO_EXPORT
+          }
           buildSheet={buildExportSheet}
           knownMessages={EXPORT_LOCKED_MESSAGES}
           permissions={permissions}
