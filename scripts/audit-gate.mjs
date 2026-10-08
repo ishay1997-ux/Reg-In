@@ -33,7 +33,26 @@ const BLOCKING = new Set(['high', 'critical'])
 // `smol-toml: ^1.7.0`; `npm audit fix` העלה אותה ל-1.8.0 בלי לגעת בגרסת knip עצמה,
 // ו-`npm audit` מדווח כעת אפס חולשות. **המערך נשאר ריק בכוונה, לא נמחק** — התבנית
 // (`ghsa`/`packages`/`date`/`reason`/`reviewTrigger`) ממתינה לפטור-האמת הבא.
-const WAIVERS = []
+const WAIVERS = [
+  {
+    // ✏️ 08/10/2026 (הסגן, שבוע לפני הכנס): `npm audit fix` סגר 5 מתוך 6 החולשות החדשות; זו נשארה.
+    ghsa: 'GHSA-vfj7-8cjw-p6xm',
+    packages: [
+      'braces',
+      'micromatch',
+      'fast-glob',
+      '@shadcn/registry',
+      'shadcn',
+      'ts-morph',
+      '@ts-morph/common',
+    ],
+    date: '2026-10-08',
+    reason:
+      'כל השרשרת יושבת תחת ה-CLI של shadcn — כלי-פיתוח שמעתיק רכיבים, לא נטען באפליקציה (0 ייבואים ב-src/scripts/e2e) ולא נכנס לבאנדל. החולשה: DoS בתבנית glob מקוננת שתוקף מספק — לא קלט שיש לו דרך להגיע לכלי הזה. ה"תיקון" שמוצע הוא shadcn@1.0.0, נסיגה של שלוש גרסאות-על.',
+    reviewTrigger:
+      'אחרי הכנס (16/10): לעדכן את shadcn כשתצא גרסה מתוקנת, או להעביר אותו ל-devDependencies',
+  },
+]
 
 // npm audit יוצא בקוד שאינו 0 כשנמצאו חולשות — ולכן קוראים את stdout בלי קשר לקוד היציאה.
 // הפקודה מועברת כמחרוזת אחת ולא כ-(קובץ, מערך-ארגומנטים) — שילוב של מערך עם shell:true
