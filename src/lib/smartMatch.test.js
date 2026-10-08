@@ -17,6 +17,8 @@ import {
   distanceLabel,
   tieBreakKey,
   rankCandidates,
+  assertSmartMatchParams,
+  componentAvailability,
 } from './smartMatch'
 
 // ── ה-Seed החי (מיגרציה 20260809125750) ─────────────────────────────────────
@@ -923,5 +925,106 @@ describe('reliabilityScore — רשומה משובשת אינה מקריסה א�
     const corrupt = { ...good, attendance_status: 'late', lateness_level: 'שיבוש' }
     expect(() => reliabilityScore([good, corrupt], 0.8, 3)).not.toThrow()
     expect(reliabilityScore([good, corrupt], 0.8, 3)).toBe(reliabilityScore([good], 0.8, 3))
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔴 09/10/2026 — שני החשדות שהבדיקה העיוורת מצאה לפני הכנס.
+// א׳: `companyAverage ?? 0` — חברה בלי היסטוריה קיבלה היענות/אמינות 0 לכל המועמדות, בשקט.
+// ב׳: ערך לא-תקין במתג-האמינות ("1"/"yes") נקרא `null` ⇒ "כבוי", בלי באנר.
+// כל הבדיקות כאן נכשלו על הקוד שלפני התיקון.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('חשד א׳ — מרכיב בלי ממוצע-חברה יוצא מהציון, לא נעשה 0', () => {
+  const base = { status: 'active', has_car: true, weeksSinceWorked: 0 }
+  const params = parseSmartMatchParams(SEED_PARAMS)
+
+  it('activeWeights — היענות לא-זמינה ⇒ הקרבה מקבלת את כל המשקל (המתג כבוי)', () => {
+    const w = activeWeights(params, { responsiveness: false })
+    expect(w.responsiveness).toBe(0)
+    expect(w.reliability).toBe(0)
+    expect(w.proximity).toBeCloseTo(1, 10)
+  })
+
+  it('activeWeights — בלי `availability` ההתנהגות זהה לקודם (0.40/0.25 ⇒ 0.615/0.385)', () => {
+    const w = activeWeights(params)
+    expect(w.responsiveness).toBeCloseTo(0.4 / 0.65, 10)
+    expect(w.proximity).toBeCloseTo(0.25 / 0.65, 10)
+  })
+
+  it('rankCandidates — אין לחברה אף תשובה ⇒ הציון הוא קרבה × מנוף, והמרכיב מסומן null', () => {
+    const pool = [
+      { ...base, hostess_id: 1, full_name: 'א', answered: 0, confirmed: 0, distanceKm: 10 },
+      { ...base, hostess_id: 2, full_name: 'ב', answered: 0, confirmed: 0, distanceKm: 20 },
+    ]
+    const ranked = rankCandidates(pool, { params, eventDate: '2026-11-02', projectId: 1 })
+    const a = ranked.find((r) => r.full_name === 'א')
+    // לפני התיקון: 0 × 0.615 + 0.75 × 0.385 = 0.29. אחרי: 0.75 × 1.
+    expect(a.score).toBe(0.75)
+    expect(a.components.responsiveness).toBeNull()
+  })
+
+  it('🎯 עוגן-האמינות-הדלוקה בלי אף סימון-נוכחות ⇒ זהה לעוגן הכבוי (0.67 · 0.66 · 0.64)', () => {
+    // לפני התיקון זה החזיר 0.43 · 0.43 · 0.42: האמינות נכנסה במשקל 0.35 עם ממוצע-חברה 0.
+    const shira = { start_date: '2026-08-20', end_date: '2026-08-25' }
+    const POOL = [
+      { ...base, hostess_id: 1, full_name: 'נועה', answered: 7, confirmed: 6, distanceKm: 30 },
+      { ...base, hostess_id: 2, full_name: 'דנה', answered: 12, confirmed: 6, distanceKm: 8 },
+      { ...base, hostess_id: 3, full_name: 'מיכל', answered: 1, confirmed: 1, distanceKm: 20 },
+      { ...base, hostess_id: 4, full_name: 'יעל', answered: 5, confirmed: 2, distanceKm: 55 },
+      { ...base, hostess_id: 5, full_name: 'שירה', answered: 5, confirmed: 3, distanceKm: 18 },
+    ]
+    POOL[0].weeksSinceWorked = 8
+    POOL[1].weeksSinceWorked = 1
+    POOL[2].weeksSinceWorked = 3
+    POOL[3].weeksSinceWorked = null
+    POOL[3].has_car = false
+    POOL[4].weeksSinceWorked = null
+    POOL[4].unavailability = [shira]
+    const on = parseSmartMatchParams({ ...SEED_PARAMS, מרכיב_אמינות_פעיל: 'true' })
+    const ranked = rankCandidates(POOL, { params: on, eventDate: '2026-08-22', projectId: 8 })
+    expect(ranked.map((r) => [r.full_name, r.score])).toEqual([
+      ['נועה', 0.67],
+      ['מיכל', 0.66],
+      ['דנה', 0.64],
+    ])
+    expect(componentAvailability(POOL)).toEqual({ responsiveness: true, reliability: false })
+  })
+})
+
+describe('חשד ב׳ — ערך לא-תקין בפרמטר הוא שגיאת-טעינה, לא "כבוי"', () => {
+  it('ה-Seed התקין עובר (גם עם רווחים ואותיות גדולות)', () => {
+    expect(() => assertSmartMatchParams(SEED_PARAMS)).not.toThrow()
+    expect(() =>
+      assertSmartMatchParams({ ...SEED_PARAMS, מרכיב_אמינות_פעיל: ' TRUE ' }),
+    ).not.toThrow()
+  })
+
+  it.each(['1', 'yes', 'on', 'כן'])('מתג-אמינות "%s" ⇒ שגיאה שאומרת "ערך לא תקין"', (value) => {
+    expect(() => assertSmartMatchParams({ ...SEED_PARAMS, מרכיב_אמינות_פעיל: value })).toThrow(
+      /ערך לא תקין/,
+    )
+  })
+
+  it('דלת אחות — משקולת לא-מספרית ⇒ "ערך לא תקין"; ערך ריק או שורה חסרה ⇒ "חסרים"', () => {
+    expect(() => assertSmartMatchParams({ ...SEED_PARAMS, משקולת_קרבה: 'abc' })).toThrow(
+      /ערך לא תקין/,
+    )
+    expect(() => assertSmartMatchParams({ ...SEED_PARAMS, מרכיב_אמינות_פעיל: '' })).toThrow(/חסרים/)
+    const withoutFlag = { ...SEED_PARAMS }
+    delete withoutFlag.מרכיב_אמינות_פעיל
+    expect(() => assertSmartMatchParams(withoutFlag)).toThrow(/חסרים/)
+  })
+
+  it('רשת-ביטחון: rankCandidates/activeWeights אינן מתייחסות למתג `null` כ"כבוי"', () => {
+    const broken = parseSmartMatchParams({ ...SEED_PARAMS, מרכיב_אמינות_פעיל: 'yes' })
+    expect(broken.reliabilityEnabled).toBeNull()
+    expect(() => activeWeights(broken)).toThrow()
+    expect(() =>
+      rankCandidates([{ hostess_id: 1, status: 'active' }], {
+        params: broken,
+        eventDate: '2026-11-02',
+        projectId: 1,
+      }),
+    ).toThrow()
   })
 })
