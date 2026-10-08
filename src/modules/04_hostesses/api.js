@@ -39,7 +39,7 @@ import {
   confirmUrlFor,
 } from '@/lib/shiftEmails'
 import { nextAssignmentNumber, autoReleaseTargets } from '@/lib/assignmentActions'
-import { SMART_MATCH_PARAM_NAMES } from '@/lib/smartMatch'
+import { SMART_MATCH_PARAM_NAMES, assertSmartMatchParams } from '@/lib/smartMatch'
 import { buildHostessAddress } from '@/lib/geocode'
 import { geocodeAddress } from '@/api/geocode'
 
@@ -327,6 +327,9 @@ export async function getSmartMatchData(projectId) {
   if (assignmentsRes.error) throw toError(assignmentsRes.error, 'שגיאה בטעינת היסטוריית השיבוצים.')
   if (sameDayRes.error) throw toError(sameDayRes.error, 'שגיאה בבדיקת שיבוצים באותו תאריך.')
   if (preferencesRes.error) throw toError(preferencesRes.error, 'שגיאה בטעינת העדפות הלקוח.')
+  // 🔴 ערך ריק/לא-תקין בפרמטר של השיבוץ = שגיאת-טעינה, כמו שורה חסרה (09/10/2026) — ולא
+  // מתג-אמינות שנקרא "כבוי" בשקט, או זריקה בזמן רינדור שמפילה את המסך כולו.
+  assertSmartMatchParams(params)
 
   return {
     // הקואורדינטות שזה-עתה נשמרו מוזגות לתוך האירוע שחוזר, כדי שהמסך הראשון

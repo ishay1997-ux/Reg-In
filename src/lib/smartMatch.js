@@ -108,6 +108,33 @@ export function parseSmartMatchParams(paramsByName) {
   }
 }
 
+// 🔴 **ערך קיים-אך-לא-תקין הוא שגיאת-טעינה, בדיוק כמו פרמטר חסר** (תיקון 09/10/2026, לפני
+// הכנס). עד אז `"1"`/`"yes"` במתג-האמינות נקרא `null` ⇒ "כבוי" ⇒ המרכיב יצא מהציון **בשקט**,
+// בלי באנר (הבאנר מותנה ב-`=== false`). אותו דבר למשקולת `"abc"`: `null` ⇒ זריקה **בזמן רינדור**.
+// ⇒ הבדיקה כאן רצה **בשכבת-הטעינה** (`getSmartMatchData`), על הערכים הגולמיים, ומבחינה בין
+// "חסר" ל"לא תקין" — כדי שההודעה תאמר מה לתקן ואיפה.
+export function assertSmartMatchParams(paramsByName) {
+  const missing = []
+  const invalid = []
+  for (const [key, name] of Object.entries(SMART_MATCH_PARAM_NAMES)) {
+    const raw = paramsByName?.[name]
+    if (raw === null || raw === undefined || String(raw).trim() === '') {
+      missing.push(paramLabel(name))
+      continue
+    }
+    const parsed = key === 'reliabilityEnabled' ? paramBoolean(raw) : paramNumber(raw)
+    if (parsed === null) invalid.push(paramLabel(name))
+  }
+  const parts = []
+  if (missing.length > 0) parts.push(`חסרים: ${missing.join(', ')}`)
+  if (invalid.length > 0) parts.push(`ערך לא תקין: ${invalid.join(', ')}`)
+  if (parts.length > 0) {
+    throw new Error(
+      `לא ניתן לדרג — בעיה בפרמטרים של השיבוץ החכם (${parts.join(' · ')}). יש לתקן בהגדרות המערכת.`,
+    )
+  }
+}
+
 // 🛑 עוצר במקום לחשב. מסך שאומר "לא הצלחנו לטעון" עדיף על סדר שגוי שנראה אמין —
 // והשני הוא בדיוק מה שקורה כשמשלימים פרמטר חסר בברירת-מחדל.
 function requireParams(params, keys) {
@@ -126,17 +153,41 @@ function requireParams(params, keys) {
 // שהייתה מותירה אותו על ערך קבוע הייתה מתנהגת כאילו הוא לא קיים, בלי שאיש הכריע כך.
 // ⚠️ ו-`0.62/0.38` שמופיע ב-§11.4 הוא **המחשה, לא קבוע**: מימוש שיקודד אותו עובר את
 // העוגן המחושב-ביד ונשבר ביום שמ6 ידליק את מרכיב-האמינות.
-export function activeWeights(params) {
-  requireParams(params, ['responsivenessWeight', 'reliabilityWeight', 'proximityWeight'])
+//
+// ✏️ **09/10/2026 — `availability`: מרכיב שאין לו ממוצע-חברה מתנהג כמו מרכיב כבוי.**
+// עד אז `companyAverage ?? 0` הזין לריסון ממוצע 0 כשלחברה אין היסטוריה — כל המועמדות קיבלו
+// היענות/אמינות ≈0 **בשקט**, והמשקל שלהן "בלע" חלק מהציון בלי להשפיע על הסדר. זו בדיוק ההפרה
+// של מחקר §11.4: *"מרכיב בלי דאטה נאמר בקול. אסור שיישאר קבוע-שקט"*. ⇒ יוצא מהסכום, הנותרים
+// מנורמלים, והמסך אומר זאת (`componentAvailability`). ברירת-המחדל (`{}`) = הכול זמין — כך
+// התנהגות כל קורא קיים זהה כשיש נתונים.
+// 🔴 `reliabilityEnabled` נדרש כאן: `null` (ערך לא-תקין שחמק) אינו "כבוי" — הוא שגיאה.
+export function activeWeights(params, availability = {}) {
+  requireParams(params, [
+    'responsivenessWeight',
+    'reliabilityWeight',
+    'proximityWeight',
+    'reliabilityEnabled',
+  ])
 
-  const reliability = params.reliabilityEnabled ? params.reliabilityWeight : 0
-  const total = params.responsivenessWeight + reliability + params.proximityWeight
+  const responsiveness = availability.responsiveness === false ? 0 : params.responsivenessWeight
+  const reliability =
+    params.reliabilityEnabled && availability.reliability !== false ? params.reliabilityWeight : 0
+  const total = responsiveness + reliability + params.proximityWeight
   if (total <= 0) throw new Error('סכום משקולות השיבוץ החכם אינו חיובי — לא ניתן לדרג.')
 
   return {
-    responsiveness: params.responsivenessWeight / total,
+    responsiveness: responsiveness / total,
     reliability: reliability / total,
     proximity: params.proximityWeight / total,
+  }
+}
+
+// לאילו מרכיבים יש בכלל ממוצע-חברה — על **כל** המאגר, בדיוק כמו בתוך `rankCandidates`.
+// המסך קורא את זה כדי לומר בקול מה יצא מהציון ולמה.
+export function componentAvailability(candidates) {
+  return {
+    responsiveness: companyResponsivenessAverage(candidates) !== null,
+    reliability: companyReliabilityAverage(candidates) !== null,
   }
 }
 
@@ -467,39 +518,49 @@ export function rankCandidates(candidates, context) {
     'minAnswersForScore',
     'fairnessRatePerWeek',
     'fairnessWeeksCap',
+    'reliabilityEnabled',
   ])
 
-  const weights = activeWeights(params)
   // 🔴 לפני השער, לא אחריו. זו הנקודה שבודק בהקשר-טרי מדד עליה תיקו-בראש-הרשימה.
   const companyAverage = companyResponsivenessAverage(pool)
   // 🚧 מ9 ← מ4/מ6 — ממוצע-חברה **נפרד** לאמינות, ולא עוד עותק של ממוצע-ההיענות שמעליי.
   const reliabilityAverage = companyReliabilityAverage(pool)
+  // ✏️ 09/10/2026 — בלי ממוצע-חברה המרכיב יוצא מהסכום (ר' `activeWeights`), ולא מקבל ממוצע 0.
+  const weights = activeWeights(params, {
+    responsiveness: companyAverage !== null,
+    reliability: reliabilityAverage !== null,
+  })
 
   const ranked = pool
     .filter((candidate) => passesGate(candidate, { eventDate, params }))
     .map((candidate) => {
       const answered = Number(candidate.answered) || 0
+      // 🔴 מרכיב בלי ממוצע-חברה = `null` ("לא נמדד"), לעולם לא ריסון מול 0. משקלו 0 ממילא.
       const components = {
-        responsiveness: responsivenessScore(
-          { answered, confirmed: Number(candidate.confirmed) || 0 },
-          companyAverage ?? 0,
-          params.dampingConstant,
-        ),
+        responsiveness:
+          companyAverage === null
+            ? null
+            : responsivenessScore(
+                { answered, confirmed: Number(candidate.confirmed) || 0 },
+                companyAverage,
+                params.dampingConstant,
+              ),
         // 🚧 מ9 ← מ4/מ6: כל עוד הדגל כבוי המשקל שלו הוא 0, ולכן הערך אינו משפיע על הציון.
         // הוא מחושב בכל זאת כדי שהדלקת הדגל תהיה שינוי-פרמטר ולא שינוי-קוד — ומ-2.4
         // הוא מתרסן מול ממוצע-**אמינות**, לא מול ממוצע-ההיענות שמשמש את המרכיב שמעליי.
-        reliability: reliabilityScore(
-          candidate.attendance,
-          reliabilityAverage ?? 0,
-          params.dampingConstant,
-        ),
+        reliability:
+          reliabilityAverage === null
+            ? null
+            : reliabilityScore(candidate.attendance, reliabilityAverage, params.dampingConstant),
         proximity: proximityScore(candidate.distanceKm, params.goalpostDistanceKm),
       }
 
+      // מרכיב לא-נמדד תורם 0 במפורש (משקלו 0) — לא דרך `null × 0` של JS.
+      const part = (value, weight) => (value === null ? 0 : value * weight)
       const baseScore =
-        components.responsiveness * weights.responsiveness +
-        components.reliability * weights.reliability +
-        components.proximity * weights.proximity
+        part(components.responsiveness, weights.responsiveness) +
+        part(components.reliability, weights.reliability) +
+        part(components.proximity, weights.proximity)
 
       const leverage = fairnessLeverage(
         candidate.weeksSinceWorked,

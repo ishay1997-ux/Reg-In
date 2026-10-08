@@ -436,9 +436,19 @@ export default function ReportsPage() {
   )
 
   // ⚠️ ממומואיז — אובייקט-ערך חדש בכל רינדור של המעטפת היה מרנדר מחדש **כל** אריח בדף.
+  // 🔴 **הלשונית והדוח הפתוחים — כפי שהמעטפת *פתרה* אותם, לא כפי שהם כתובים בכתובת.**
+  // ‏09/10/2026 (הבדיקה העיוורת לפני הכנס): בכניסה ל-`/reports` בלי `?tab=` המעטפת פותחת את
+  // הלשונית הראשונה המותרת (`openTabs[0]`), אבל `ExportBar` קרא את `?tab=` הגולמי ⇒ קיבל
+  // `null` ⇒ אפס דוחות בבורר ⇒ אפס שורות ⇒ *"הסינון לא הותיר שורות"* וכפתור כבוי, בזמן
+  // שהמסך מציג 355 הצעות. ⇒ מקור-אמת אחד לשאלה "מה פתוח": המעטפת, והייצוא קורא ממנה.
   const shellValue = useMemo(
-    () => ({ canOpenTarget, exportSlot: exportSlotEl }),
-    [canOpenTarget, exportSlotEl],
+    () => ({
+      canOpenTarget,
+      exportSlot: exportSlotEl,
+      activeTabKey: activeTab?.key ?? null,
+      activeReportSlug: activeSurface?.slug ?? null,
+    }),
+    [canOpenTarget, exportSlotEl, activeTab, activeSurface],
   )
 
   // 🚪 שלושת הענפים — ר' `locateDoor`/`DOOR_PATHS` למעלה.

@@ -28,6 +28,7 @@ import {
   rankCandidates,
   distanceLabel,
   activeWeights,
+  componentAvailability,
 } from '@/lib/smartMatch'
 import { buildSmartMatchCandidates } from '@/lib/smartMatchCandidates'
 import { todayIsoInJerusalem } from '@/lib/projectChanges'
@@ -65,6 +66,22 @@ import {
 // 8 גלויות והשאר בגלילה (`§ב2`, הכרעת-ישי). 🚫 **לא עימוד** — הרשימה נשארת אחת, והגלילה
 // היא הדבר היחיד שמפריד; עימוד היה מסתיר מועמדת מאחורי לחיצה נוספת ברגע שהיא הכי נחוצה.
 const VISIBLE_CANDIDATES = 8
+
+// "על מה הציון מבוסס כרגע" — רק המרכיבים שמשקלם בפועל גדול מ-0, כל אחוז צמוד למילה שלו
+// (ר' הערת-ה-bidi בבאנר: צמד `62% / 38%` מתהפך). נגזר מ-`activeWeights`, לא ממספר קשיח.
+const BASIS_LABELS = [
+  ['responsiveness', 'שיעור-היענות'],
+  ['reliability', 'אמינות'],
+  ['proximity', 'קרבה'],
+]
+function ScoreBasis({ weights }) {
+  if (!weights) return null
+  const parts = BASIS_LABELS.filter(([key]) => weights[key] > 0).map(
+    ([key, label]) => `${label} (${Math.round(weights[key] * 100)}%)`,
+  )
+  if (parts.length === 0) return null
+  return <b>הדירוג כרגע מבוסס על {parts.join(' ועל ')} בלבד.</b>
+}
 
 function nowIso() {
   return new Date().toISOString()
@@ -170,14 +187,23 @@ export default function SmartMatchPage({ projectId, onBack }) {
   // (הכרעת-ישי 25/09/2026 — השכבה קוראת אותו מ-`data.project`). ⚠️ **הבדיקות הקיימות של
   // השכבה הטהורה (`smartMatch.test.js`) לא תפסו את פגם-החיווט של 11/08** כי הן מזינות
   // `eventDate` מפורש — ולכן יש עכשיו בדיקה שמרנדרת את המסך (`SmartMatchPage.order.test.jsx`).
-  const ranked = useMemo(() => {
-    if (!data || !params) return []
+  // ✏️ 09/10/2026 — גם `measured`: אילו מרכיבים נמדדו בכלל (יש להם ממוצע-חברה). מרכיב בלי
+  // נתונים יוצא מהציון, והבאנר למטה אומר זאת — מחושב על אותו מאגר בדיוק כמו הדירוג.
+  const { ranked, measured } = useMemo(() => {
+    if (!data || !params) return { ranked: [], measured: null }
     const candidates = buildSmartMatchCandidates(data, today, {
       months: params.windowMonths,
       extendedMonths: params.extendedWindowMonths,
       minAnswers: params.minAnswersForScore,
     })
-    return rankCandidates(candidates, { params, eventDate: project?.final_event_date, projectId })
+    return {
+      ranked: rankCandidates(candidates, {
+        params,
+        eventDate: project?.final_event_date,
+        projectId,
+      }),
+      measured: componentAvailability(candidates),
+    }
   }, [data, params, today, project, projectId])
 
   // 📌 `הנחתי` (§10): **מי שכבר יש לה שורה באירוע הזה אינה מועמדת.** האפיון מונה חמישה
@@ -202,7 +228,11 @@ export default function SmartMatchPage({ projectId, onBack }) {
   // הפרויקט דוחה מזכור ידני שתלוי בו (`preserve-manual-memoization`). הוא ממזכר לבד.
   const candidates = sortByAngle(eligible, activeAngle)
 
-  const weights = params ? activeWeights(params) : null
+  const weights = params ? activeWeights(params, measured ?? {}) : null
+  const missingData = {
+    responsiveness: measured?.responsiveness === false,
+    reliability: params?.reliabilityEnabled === true && measured?.reliability === false,
+  }
 
   // 🔴 **`failureMessage` הוא משפט שלם, לא תווית** — תיקון 09/09/2026: הגרסה הקודמת בנתה
   // `${label} נכשל` מתווית-פעולה גנרית, ומחצית התוויות נקביות ("שליחת הזימונים",
@@ -573,11 +603,33 @@ export default function SmartMatchPage({ projectId, onBack }) {
               שקורא את הסוגריים לבדם מקבל את המשקולות מוחלפות. זו המשפחה שנתפסה כבר שמונה
               פעמים כאן (`src/CLAUDE.md`), **והתיקון היציב הוא להסיר את הרצף ולא לבודד אותו**:
               לצירוף שכל איבר בו יושב ליד התווית שלו אין סדר שאפשר לטעות בו. */}
-          <b>
-            הדירוג כרגע מבוסס על שיעור-היענות
-            {weights ? ` (${Math.round(weights.responsiveness * 100)}%)` : ''} ועל קרבה
-            {weights ? ` (${Math.round(weights.proximity * 100)}%)` : ''} בלבד.
-          </b>
+          {/* כשגם הבאנר של "אין נתונים" מוצג — שורת-הבסיס נאמרת פעם אחת, שם. */}
+          {!missingData.responsiveness && <ScoreBasis weights={weights} />}
+        </div>
+      )}
+
+      {/* 🔴 **09/10/2026 — מרכיב בלי נתונים בחברה נאמר בקול** (מחקר §11.4: *"מרכיב בלי דאטה
+          נאמר בקול. אסור שיישאר קבוע-שקט"*). עד אז ממוצע-חברה חסר הפך בשקט ל-0 לכל המועמדות.
+          עכשיו המרכיב יוצא מהציון (`activeWeights` + `measured`) — והבאנר הזה אומר זאת.
+          ⚠️ נפרד מ-`sm-reliability-off`: שם המרכיב **כובה** בהגדרות; כאן הוא דלוק ואין לו על מה לעמוד. */}
+      {(missingData.responsiveness || missingData.reliability) && (
+        <div
+          className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-relaxed text-slate-600"
+          data-testid="sm-component-no-data"
+        >
+          {missingData.responsiveness && (
+            <>
+              ⓘ <b>אין עדיין בחברה תשובות לזימונים בחלון-החישוב</b> — שיעור-ההיענות אינו נכלל
+              בציון.{' '}
+            </>
+          )}
+          {missingData.reliability && (
+            <>
+              ⓘ <b>מרכיב-האמינות דלוק, אבל עוד אין בחברה אירועים שנסגרו עם סימון-נוכחות</b> — הוא
+              אינו נכלל בציון.{' '}
+            </>
+          )}
+          <ScoreBasis weights={weights} />
         </div>
       )}
 
