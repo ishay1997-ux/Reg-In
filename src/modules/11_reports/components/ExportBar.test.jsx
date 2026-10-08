@@ -11,6 +11,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import ExportBar from '@/modules/11_reports/components/ExportBar'
+import { ReportsShellContext } from '@/modules/11_reports/components/reportsShellContext'
 
 vi.mock('@/supabaseClient', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
 vi.mock('@/modules/02_customers/api', () => ({ listCustomers: vi.fn().mockResolvedValue([]) }))
@@ -194,5 +195,67 @@ describe('ExportBar — "כל השורות" בדוחות עם תקרה (מ04 · 
       expect(screen.getByTestId('export-count')).toHaveTextContent('הקובץ יכלול 12 שורות'),
     )
     expect(screen.queryByTestId('export-show-all')).not.toBeInTheDocument()
+  })
+})
+
+// 🔴 09/10/2026 — הבדיקה העיוורת לפני הכנס: "סגירת הצעות" במסך-ההנהלה הציג 355 הצעות,
+// והחלון אמר *"הסינון לא הותיר שורות"* עם כפתור כבוי. השורש: כניסה ל-`/reports` בלי `?tab=`
+// — המעטפת פתחה את הלשונית הראשונה המותרת, והייצוא קרא את הכתובת הגולמית ⇒ `null` ⇒ אפס דוחות.
+// "גיול חובות" ו"הוגנות השיבוץ" עבדו כי הגיעו אליהן בלחיצה על לשונית, שכותבת `?tab=`.
+describe('ExportBar — הלשונית והדוח מהמעטפת, לא מהכתובת הגולמית', () => {
+  const TRENDS_PAYLOAD = {
+    columns: [
+      { key: 'quote_id', label: 'הצעה', format: 'id' },
+      { key: 'customer_name', label: 'לקוח', format: 'text' },
+      { key: 'value', label: 'ערך ההצעה', format: 'money' },
+    ],
+    // שורה אמיתית מ-`report_m03_trends` (נמדד 09/10/2026 — 102 שורות לתקופת ברירת-המחדל).
+    rows: [
+      { quote_id: 2317, customer_name: 'סולאר אנרג\'י בע"מ', value: 15632.25 },
+      { quote_id: 2318, customer_name: 'לקוח ב', value: 900 },
+    ],
+    window: { label: '⁦01/01/2026–08/10/2026⁩ · כל הלקוחות' },
+    meta: { row_total: 2 },
+  }
+
+  function renderInShell(shell, url = '/reports') {
+    window.history.replaceState({}, '', url)
+    return render(
+      <ReportsShellContext.Provider
+        value={{ canOpenTarget: () => true, exportSlot: null, ...shell }}
+      >
+        <ExportBar reportName="סגירת הצעות" windowLabel="2026" columns={[]} />
+      </ReportsShellContext.Provider>,
+    )
+  }
+
+  it('🔴 `/reports` בלי `?tab=` — הלשונית שהמעטפת פתחה היא שנשלפת, והשורות מגיעות', async () => {
+    callReport.mockResolvedValue(TRENDS_PAYLOAD)
+    renderInShell({ activeTabKey: 'exec', activeReportSlug: 'trends' })
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+
+    await waitFor(() => expect(callReport).toHaveBeenCalled())
+    expect(callReport.mock.calls[0][0]).toBe('report_m03_trends')
+    await waitFor(() =>
+      expect(screen.getByTestId('export-count')).toHaveTextContent('הקובץ יכלול 2 שורות'),
+    )
+    expect(screen.getByTestId('export-dialog-run')).toBeEnabled()
+  })
+
+  it('דלת אחות — `?tab=` שמצביע על לשונית אחרת מזו שנפתחה (למשל חסומה): המעטפת גוברת', async () => {
+    callReport.mockResolvedValue(TRENDS_PAYLOAD)
+    renderInShell({ activeTabKey: 'exec', activeReportSlug: 'trends' }, '/reports?tab=finance')
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    await waitFor(() => expect(callReport).toHaveBeenCalled())
+    expect(callReport.mock.calls[0][0]).toBe('report_m03_trends')
+  })
+
+  it('בלי מעטפת ובלי `?tab=` — נאמר שאין דוח, ולא "הסינון לא הותיר שורות"', async () => {
+    window.history.replaceState({}, '', '/reports')
+    render(<ExportBar reportName="סגירת הצעות" windowLabel="2026" columns={[]} />)
+    fireEvent.click(screen.getByTestId('reports-export-button'))
+    const count = await screen.findByTestId('export-count')
+    expect(count).toHaveTextContent('לא נמצא דוח לייצוא')
+    expect(count).not.toHaveTextContent('הסינון לא הותיר שורות')
   })
 })

@@ -288,3 +288,43 @@ describe('💬 הרמז שמסביר את "המלצת המערכת"', () => {
     expect(screen.queryByText((text) => text.startsWith(HINT_START))).toBeNull()
   })
 })
+
+// 🔴 09/10/2026 — "מרכיב בלי דאטה נאמר בקול" (מחקר §11.4). לפני התיקון: אין באנר, והציון
+// כלל היענות 0 לכולן בשקט.
+describe('שיבוץ חכם — מרכיב בלי נתונים בחברה נאמר על המסך', () => {
+  it('אמינות דלוקה ואין אף סימון-נוכחות בחברה ⇒ באנר, והבסיס הוא היענות+קרבה בלבד', async () => {
+    const data = anchorData()
+    data.params = { ...PARAMS, מרכיב_אמינות_פעיל: 'true' }
+    getSmartMatchData.mockResolvedValue(data)
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+
+    // אותו סדר כמו כשהמרכיב כבוי — הוא יצא מהציון, לא הצמיד 0 לכולן.
+    expect(await candidateNamesOnScreen()).toEqual(['נועה', 'מיכל', 'דנה'])
+    const banner = screen.getByTestId('sm-component-no-data')
+    expect(banner).toHaveTextContent('מרכיב-האמינות דלוק')
+    expect(banner).toHaveTextContent('שיעור-היענות (62%)')
+    expect(banner).toHaveTextContent('קרבה (38%)')
+    expect(banner).not.toHaveTextContent('אמינות (')
+    expect(screen.queryByTestId('sm-reliability-off')).toBeNull()
+  })
+
+  it('אין לחברה אף תשובה לזימון ⇒ באנר, והציון מבוסס על קרבה בלבד', async () => {
+    const data = anchorData()
+    data.assignments = []
+    getSmartMatchData.mockResolvedValue(data)
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+
+    await candidateNamesOnScreen()
+    const banner = screen.getByTestId('sm-component-no-data')
+    expect(banner).toHaveTextContent('אין עדיין בחברה תשובות לזימונים')
+    expect(banner).toHaveTextContent('קרבה (100%)')
+    expect(banner).not.toHaveTextContent('שיעור-היענות (')
+  })
+
+  it('יש נתונים (המצב החי היום) ⇒ אין באנר "אין נתונים"', async () => {
+    getSmartMatchData.mockResolvedValue(anchorData())
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    await candidateNamesOnScreen()
+    expect(screen.queryByTestId('sm-component-no-data')).toBeNull()
+  })
+})

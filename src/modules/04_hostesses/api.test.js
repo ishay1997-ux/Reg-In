@@ -85,7 +85,12 @@ function makeChain(result) {
 // רשימה מוקלדת כאן הייתה מתיישנת בשקט ברגע שמודול מוסיף שם (וזה בדיוק מה שקרה בצעד 2.3).
 function allParamRows() {
   return [...Object.values(SMART_MATCH_PARAM_NAMES), ...Object.values(HOSTESS_PARAM_NAMES)].map(
-    (param_name) => ({ param_name, param_value: '1' }),
+    // ✏️ 09/10/2026: המתג הבוליאני מקבל 'false' — '1' אינו ערך תקין לו, ומאז התיקון
+    // `getSmartMatchData` זורקת עליו (ערך לא-תקין = שגיאת-טעינה, לא "כבוי" בשקט).
+    (param_name) => ({
+      param_name,
+      param_value: param_name === SMART_MATCH_PARAM_NAMES.reliabilityEnabled ? 'false' : '1',
+    }),
   )
 }
 
@@ -357,6 +362,29 @@ describe('ensureProjectCoordinates (פנימית, נבדקת דרך getSmartMatc
       p_lat: 32.08,
       p_lng: 34.78,
     })
+  })
+
+  // 🔴 09/10/2026 — החיווט: ערך לא-תקין במתג-האמינות מגיע למסך כשגיאת-טעינה, ולא כ"כבוי".
+  it('מתג-אמינות "yes" ⇒ getSmartMatchData זורקת (שגיאת-טעינה), לא מחזירה נתונים', async () => {
+    const queues = {}
+    queueTable(queues, 'projects', {
+      data: { project_id: 704, customer_id: null, final_event_date: '2026-09-18', lat: 1, lng: 2 },
+      error: null,
+    })
+    queueTable(queues, 'hostesses', { data: [], error: null })
+    queueTable(queues, 'assignments', { data: [], error: null })
+    queueTable(queues, 'assignments', { data: [], error: null })
+    queueTable(queues, 'params', {
+      data: allParamRows().map((row) =>
+        row.param_name === SMART_MATCH_PARAM_NAMES.reliabilityEnabled
+          ? { ...row, param_value: 'yes' }
+          : row,
+      ),
+      error: null,
+    })
+    setupFrom(queues)
+
+    await expect(getSmartMatchData(704)).rejects.toThrow(/ערך לא תקין/)
   })
 
   it('לפרויקט כבר יש קואורדינטות ⇒ אין קריאת-גאוקוד ואין RPC בכלל', async () => {

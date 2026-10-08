@@ -13,7 +13,47 @@ import {
   validateCustomerField,
   validateCustomerForm,
   validateExtraContacts,
+  validateContactSet,
+  NO_CONTACT_MSG,
+  NO_PRIMARY_MSG,
+  TWO_PRIMARY_MSG,
 } from './customers'
+
+// 🔴 09/10/2026 — מראָה של `replace_customer_contacts`: שורה נספרת רק אם יש לה שם, ורק אז
+// "לפחות אחת" ו"בדיוק ראשי אחד". הבאג: שורה ריקה מסומנת-ראשי נספרה כראשי בצד-הלקוח, הלקוח
+// נכתב, וה-RPC דחה את אנשי-הקשר אחריו (לקוחות 492/493 במסד, 0 אנשי-קשר).
+describe('validateContactSet — אותה הגדרה כמו ה-RPC, לפני כל כתיבה', () => {
+  const row = (over) => ({ contact_name: '', phone: '', email: '', is_primary: false, ...over })
+
+  it('שורה ריקה אחת מסומנת-ראשי (מצב-ההתחלה של "לקוח חדש") ⇒ חסום', () => {
+    expect(validateContactSet([row({ is_primary: true })])).toBe(NO_CONTACT_MSG)
+  })
+  it('שם מרווחים בלבד אינו שם', () => {
+    expect(validateContactSet([row({ contact_name: '   ', is_primary: true })])).toBe(
+      NO_CONTACT_MSG,
+    )
+  })
+  it('רשימה ריקה / null ⇒ חסום', () => {
+    expect(validateContactSet([])).toBe(NO_CONTACT_MSG)
+    expect(validateContactSet(null)).toBe(NO_CONTACT_MSG)
+  })
+  it('הראשי ריק אבל יש איש-קשר אחר עם שם ⇒ "אין ראשי" (כמו השרת אחרי הסינון)', () => {
+    expect(validateContactSet([row({ is_primary: true }), row({ contact_name: 'דנה פרץ' })])).toBe(
+      NO_PRIMARY_MSG,
+    )
+  })
+  it('שני ראשיים עם שם ⇒ חסום', () => {
+    expect(
+      validateContactSet([
+        row({ contact_name: 'א', is_primary: true }),
+        row({ contact_name: 'ב', is_primary: true }),
+      ]),
+    ).toBe(TWO_PRIMARY_MSG)
+  })
+  it('ראשי אחד עם שם + שורה ריקה נוספת ⇒ תקין (השורה הריקה מסוננת)', () => {
+    expect(validateContactSet([row({ contact_name: 'שרית', is_primary: true }), row({})])).toBe('')
+  })
+})
 
 // עוזר-בנייה ללקוח-בדיקה (override נקודתי לכל תרחיש)
 const c = (over = {}) => ({
