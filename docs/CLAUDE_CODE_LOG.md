@@ -46,6 +46,12 @@
 
 ## Session Log (newest first)
 
+### 08–09/10/2026 — pre-conference fixes from the blind check (builder, `ishay/conference-fixes-2026-10-09`, plan B step 4)
+- **Customers — partial save.** New customer with no contact: the client counted the empty starting row as "the primary", wrote the customer, then `replace_customer_contacts` (which drops nameless rows first) refused ⇒ customer with 0 contacts (492/493 live). Fix: `validateContactSet` in `src/lib/customers.js` mirrors the RPC rule before any write; add-mode retry after a mid-flight failure updates the created customer instead of re-creating it (no 23505). Siblings tested: edit + clear the only contact · edit + clear the primary while another exists. Customers 492/493 left as-is (data, not code).
+- **Reports export — "הסינון לא הותיר שורות".** `ExportBar` read raw `?tab=`; entering `/reports` without it, the shell opens the first allowed tab but the export saw `null` ⇒ no reports ⇒ no rows. Fix: `ReportsShellContext` now carries `activeTabKey`/`activeReportSlug`; no selected report ⇒ an explicit blocked reason. Affected every report of the default tab, not only "סגירת הצעות".
+- **Smart Match.** (a) no company average ⇒ the component leaves the weights (renormalised) and the screen says so (`sm-component-no-data`) instead of `?? 0`. (b) blank/invalid param values (`"yes"` on the reliability flag, `"abc"` on a weight) throw at load (`assertSmartMatchParams` in `getSmartMatchData`). Proof of no regression: 1620 ranked by the code before/after on a live read-only snapshot (checksummed) — top 8, order and raw scores identical.
+- **Demo script** station 6 numbers re-measured via the RPCs; station 4 says the 0.67/0.66/0.64 example is the spec's hand example (reliability off), not 1620.
+
 ### 25/09/2026 afternoon — four small PR fixes (builder m12, deputy task after Ishay's "מאשר הכל לפי המלצתך")
 - Unavailability tag on approved assignments (`approvedButUnavailable`, the gate's rule) · AI follow-up button on · PDF validity days from the param · m17 "Smart Match" ⇒ Hebrew (migration 140000, not applied). Records: module-3/4/6 §10, db_roadmap §10ב.
 - Items 5–6 (round 2): the locked pricing sentence moved verbatim to the VAT row (registry `note`); `projects.js` comment on "הלוגיסטיקה טרם מוכנה" corrected — it was already nodded 18/08 (module-6 §10). Items 1–4 committed aa570677 · ae81b024 · 0122b06c · 4ab4d41f.
