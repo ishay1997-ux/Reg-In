@@ -2,7 +2,7 @@
 // ותפריט משתמש (שם+תפקיד מתוך AuthContext, וכפתור התנתקות אמיתי).
 
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, User, UserCog, Settings } from 'lucide-react'
+import { LogOut, User, UserCog, Settings } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 import {
@@ -31,20 +31,10 @@ export default function Topbar({ collapsed }) {
     <header
       dir="rtl"
       className={cn(
-        'fixed top-0 left-0 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 transition-all duration-200',
+        'fixed top-0 left-0 h-16 bg-white border-b border-slate-200 flex items-center justify-end px-6 z-20 transition-all duration-200',
         collapsed ? 'right-16' : 'right-60',
       )}
     >
-      <div className="relative w-72 max-w-full">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-        <input
-          type="text"
-          placeholder="חיפוש…"
-          disabled
-          className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 pr-9 pl-3 text-sm text-slate-500 placeholder:text-slate-400 cursor-not-allowed"
-        />
-      </div>
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -82,7 +72,7 @@ export default function Topbar({ collapsed }) {
               במקום "צא מהמערכת" (ציווי-זכר) שנשא נוסח שונה לאותה פעולה בדיוק. */}
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut className="size-4" />
-            התנתקי מהמערכת
+            התנתק מהמערכת
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -38,6 +38,8 @@ import {
 } from '@/lib/listWindow'
 import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/dates'
 import {
@@ -271,17 +273,34 @@ export default function ProjectsPage() {
     writeParams({ page: next === 1 ? undefined : next })
   }
 
+  const searchText = searchParams.get('q') ?? ''
+  const setSearchText = (value) => {
+    const next = resolveNext(value, searchText)
+    writeParams({ q: next?.trim() ? next : undefined, page: undefined })
+  }
+
   const sorted = useMemo(() => sortOverviewProjects(projects, today), [projects, today])
+
+  const filteredBySearch = useMemo(() => {
+    const q = searchText.trim().toLowerCase()
+    if (!q) return sorted
+    return sorted.filter((p) => {
+      const eventName = p.event_name?.toLowerCase() || ''
+      const customerName = p.customer_name?.toLowerCase() || ''
+      const projectId = String(p.project_id || '')
+      return eventName.includes(q) || customerName.includes(q) || projectId.includes(q)
+    })
+  }, [sorted, searchText])
 
   // דליים גולמיים (לפני חלון) — נשמרים כדי ש-hiddenCount ומסנן-הסטטוס יוכלו להשוות "מה היה
   // כאן בלי החלון" מול "מה יש עם החלון", בדיוק כמו שכרטיס-החוזה מבקש.
   const rawTabRows = useMemo(
     () => ({
-      work: sorted.filter((p) => ACTIVE_PROJECT_STATUSES.includes(p.project_status)),
-      closing: sorted.filter((p) => p.project_status === 'event_finished'),
-      all: sorted,
+      work: filteredBySearch.filter((p) => ACTIVE_PROJECT_STATUSES.includes(p.project_status)),
+      closing: filteredBySearch.filter((p) => p.project_status === 'event_finished'),
+      all: filteredBySearch,
     }),
-    [sorted],
+    [filteredBySearch],
   )
 
   // 🔑 החלון חל על תאריך-האירוע (final_event_date) ומוחל **פר-לשונית** — כדי שמונה-הלשונית
@@ -397,6 +416,19 @@ export default function ProjectsPage() {
           />
         ) : (
           <>
+            <div className="pt-3.5 pb-2">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                <Input
+                  type="text"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="חיפוש לפי שם אירוע, לקוח או מספר פרויקט…"
+                  className="h-9 pr-9 pl-3 text-sm text-right rounded-lg border-slate-300"
+                  data-testid="projects-search-input"
+                />
+              </div>
+            </div>
             <TabsBar
               active={tab}
               counts={{
@@ -440,9 +472,11 @@ export default function ProjectsPage() {
             {visible.length === 0 ? (
               <EmptyRows
                 filtered={tab === 'all' && statusFilter !== 'all'}
+                searched={Boolean(searchText.trim())}
                 tab={tab}
                 total={projects.length}
                 onClear={() => setStatusFilter('all')}
+                onClearSearch={() => setSearchText('')}
               />
             ) : (
               <ProjectsTable
@@ -603,7 +637,28 @@ function StatusPills({ selected, total, counts, onSelect }) {
   )
 }
 
-function EmptyRows({ filtered, tab, total, onClear }) {
+function EmptyRows({ filtered, searched, tab, total, onClear, onClearSearch }) {
+  if (searched) {
+    return (
+      <PermissionAwareEmpty
+        state="empty"
+        title="לא נמצאו פרויקטים התואמים לחיפוש."
+        detail={filteredOutSentence(total)}
+        action={
+          <Button
+            type="button"
+            variant="link"
+            onClick={onClearSearch}
+            className="h-auto p-0 text-xs font-semibold text-teal-700"
+            data-testid="projects-clear-search"
+          >
+            נקה חיפוש
+          </Button>
+        }
+        testId="projects-empty-search"
+      />
+    )
+  }
   if (filtered) {
     // מצב ③ — ריק אחרי סינון: הפעולה הנכונה הפוכה ממצב ② (ניקוי-סינון, לא ניווט להצעות)
     // ואסור לאחד אותם (④). המונה בשורה השנייה חי, לא מועתק.

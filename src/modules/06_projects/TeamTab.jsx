@@ -276,7 +276,7 @@ export default function TeamTab({
               className="text-xs font-semibold text-teal-700"
               data-testid="team-empty-smart-match-link"
             >
-              פתחי שיבוץ חכם →
+              פתח שיבוץ חכם →
             </Link>
           }
           testId="team-state-no-invites"
@@ -345,7 +345,7 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             className="text-xs font-semibold text-teal-700"
             data-testid="team-smart-match-link"
           >
-            פתחי שיבוץ חכם →
+            פתח שיבוץ חכם →
           </Link>
         )}
         {showSortLine && <span className="mr-auto text-xs text-slate-400">{SORT_LINE}</span>}

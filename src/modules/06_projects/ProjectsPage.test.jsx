@@ -391,3 +391,28 @@ describe('ProjectsPage — מצב ④: לשונית ריקה', () => {
     expect(screen.queryByText('לא ניתן לטעון את הנתונים.')).not.toBeInTheDocument()
   })
 })
+
+describe('ProjectsPage — חיפוש פרויקטים (?q=)', () => {
+  it('סינון לפי שם אירוע מציג רק את הפרויקט התואם ומאפשר לנקות חיפוש', async () => {
+    listProjectsOverview.mockResolvedValue(mockBoard())
+    renderPage('/projects?tab=all&window=all')
+    await screen.findByTestId('projects-table')
+    expect(rowOrder()).toHaveLength(8)
+
+    const searchInput = screen.getByTestId('projects-search-input')
+    fireEvent.change(searchInput, { target: { value: 'רפואה' } })
+
+    // הטבלה מציגה רק את הפרויקט שהאירוע שלו מכיל "רפואה" (מזהה 3)
+    expect(rowOrder()).toEqual([3])
+
+    // חיפוש שאינו קיים מציג מסך ריק עם כפתור ניקוי
+    fireEvent.change(searchInput, { target: { value: 'אירוע-שלא-קיים-xyz' } })
+    expect(await screen.findByTestId('projects-empty-search')).toBeInTheDocument()
+    expect(screen.getByText('לא נמצאו פרויקטים התואמים לחיפוש.')).toBeInTheDocument()
+
+    // לחיצה על נקה חיפוש מחזירה את כל השורות
+    fireEvent.click(screen.getByTestId('projects-clear-search'))
+    expect(await screen.findByTestId('projects-table')).toBeInTheDocument()
+    expect(rowOrder()).toHaveLength(8)
+  })
+})

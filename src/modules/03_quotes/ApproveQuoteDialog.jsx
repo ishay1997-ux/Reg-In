@@ -37,8 +37,8 @@ export default function ApproveQuoteDialog({ open, onOpenChange, quote, amount, 
       tone="approve"
       title={`אישור הצעה ${quote?.quote_id ?? ''}`}
       description="עם האישור ייפתח פרויקט חדש, וההצעה תינעל לעריכה."
-      confirmLabel="אשרי ופתחי פרויקט"
-      savingLabel="מאשרת..."
+      confirmLabel="אשר ופתח פרויקט"
+      savingLabel="מאשר..."
       fallbackError="אישור ההצעה נכשל."
       onConfirm={onConfirm}
       titleTestId="approve-dialog-title"

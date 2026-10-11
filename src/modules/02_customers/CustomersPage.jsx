@@ -744,7 +744,7 @@ export default function CustomersPage() {
               className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
               data-testid="customers-revenue-retry"
             >
-              נסי שוב
+              נסה שוב
             </Button>
           </div>
         )}
@@ -770,7 +770,7 @@ export default function CustomersPage() {
               className="h-auto py-1.5 px-3 rounded-lg border-amber-300 text-amber-800 shrink-0"
               data-testid="customers-screen-params-retry"
             >
-              נסי שוב
+              נסה שוב
             </Button>
           </div>
         )}
@@ -781,7 +781,7 @@ export default function CustomersPage() {
             <p className="text-slate-500 font-medium">אין לקוחות במערכת עדיין.</p>
             {canEdit && (
               <p className="text-slate-400 text-sm mt-1">
-                לחצי על "+ לקוח חדש" כדי להוסיף את הלקוח הראשון.
+                לחץ על "+ לקוח חדש" כדי להוסיף את הלקוח הראשון.
               </p>
             )}
           </div>
@@ -940,7 +940,7 @@ export default function CustomersPage() {
                   <>
                     <p className="text-slate-500 font-medium">אין לקוחות התואמים את החיפוש.</p>
                     <p className="text-slate-500 text-sm mt-1">
-                      נסי לשנות את מונחי החיפוש או לנקות את הסינון.
+                      נסה לשנות את מונחי החיפוש או לנקות את הסינון.
                     </p>
                   </>
                 ) : statusView === 'inactive' ? (

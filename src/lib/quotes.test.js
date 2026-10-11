@@ -1131,6 +1131,12 @@ describe('buildQuoteEmailPayload — החוזה מול תרחיש ה-Make', () =
     expect(buildQuoteEmailPayload(ARGS).to).toBe('ron@meditech-demo.co.il')
   })
 
+  it('נמען מותאם אישית (toEmail) דורס את איש הקשר הראשי כשמועבר', () => {
+    expect(buildQuoteEmailPayload({ ...ARGS, toEmail: 'ishay1997@gmail.com' }).to).toBe(
+      'ishay1997@gmail.com',
+    )
+  })
+
   it('הגוף מולא, והנושא נבנה', () => {
     const payload = buildQuoteEmailPayload(ARGS)
     expect(payload.body).toContain('שלום רון גל,')
