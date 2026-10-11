@@ -84,7 +84,7 @@ export default function SaveRow({
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
           data-testid="settings-save-button"
         >
-          {saving ? 'שומרת…' : failedMessage ? 'נסי שוב' : 'שמרי שינויים'}
+          {saving ? 'שומרת…' : failedMessage ? 'נסי שוב' : 'שמור שינויים'}
         </Button>
       </span>
     </div>

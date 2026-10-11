@@ -75,8 +75,8 @@ const EMPTY_FORM = {
 }
 
 // 🚪 **הצעה שאי-אפשר לערוך — הודעה ודרך-קדימה, לעולם לא טופס** (ליטושי-הכנס, חבילה 0, 24/09/2026).
-// ‏`closed`: הדרך קדימה היא **מסמך ההצעה** — אותו חלון שרשימת-ההצעות פותחת (`/quotes?view=`),
-// ולא "נסי שוב" שלא ישנה דבר. ‏`missing`: חזרה לרשימה, בנוסח של `customer-missing`
+// `closed`: הדרך קדימה היא **מסמך ההצעה** — אותו חלון שרשימת-ההצעות פותחת (`/quotes?view=`),
+// ולא "נסה שוב" שלא ישנה דבר. `missing`: חזרה לרשימה, בנוסח של `customer-missing`
 // (`CustomerDetailsPage.jsx`) — R30, אותו רכיב = אותו נוסח. הנוסח "לא נמצאה, או שאין לך הרשאה
 // אליה" הוא זה של ארבעת אתרי-"לא נמצא/ה" במודול 4.
 const CLOSED_VERB = { approved: 'אושרה', rejected: 'נדחתה' }
@@ -102,10 +102,70 @@ function QuoteUnavailable({ kind, status, quoteId }) {
         className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
         data-testid={closed ? 'quote-unavailable-view' : 'quote-unavailable-back'}
       >
-        {closed ? 'פתחי את מסמך ההצעה' : 'חזרה לרשימת ההצעות'}
+        {closed ? 'פתח את מסמך ההצעה' : 'חזרה לרשימת ההצעות'}
       </Button>
     </div>
   )
+}
+
+function readNewQuoteDraft() {
+  try {
+    const rawDraft = sessionStorage.getItem('regin_quote_draft_new')
+    if (rawDraft) {
+      const parsed = JSON.parse(rawDraft)
+      if (parsed?.form) return parsed
+    }
+  } catch {
+    // sessionStorage blocked or JSON parse error
+  }
+  return null
+}
+
+function resolveInitialQuoteState({
+  isEditMode,
+  quote,
+  catalogData,
+  defaultRatio,
+  customerRows,
+  preselectCustomerId,
+}) {
+  if (isEditMode) {
+    if (!quote) {
+      return { unavailable: { kind: 'missing' } }
+    }
+    if (quote.quote_status !== 'in_progress') {
+      return { unavailable: { kind: 'closed', status: quote.quote_status } }
+    }
+    const productsBySku = Object.fromEntries(catalogData.products.map((p) => [p.sku, p]))
+    const state = quoteToFormState(quote, productsBySku, defaultRatio)
+    return {
+      form: state.form,
+      lines: state.lines,
+      snapshot: { form: state.form, lines: state.lines },
+    }
+  }
+
+  const draftData = readNewQuoteDraft()
+  if (draftData) {
+    return {
+      form: draftData.form,
+      lines: Array.isArray(draftData.lines) ? draftData.lines : [],
+    }
+  }
+
+  const preselected = preselectCustomerId
+    ? customerRows.find((c) => c.customer_id === Number(preselectCustomerId))
+    : null
+
+  return {
+    form: {
+      ...EMPTY_FORM,
+      ratio: defaultRatio ?? '',
+      customerId: preselected?.customer_id ?? null,
+      appliedDiscount: Number(preselected?.discount_percent ?? 0),
+    },
+    lines: [],
+  }
 }
 
 // שדה-טופס רגיל (תווית מעל, הודעת-שגיאה מתחת) — קומפוננטה עליונה (react-hooks/static-components).
@@ -223,38 +283,22 @@ export default function QuoteBuilderPage() {
         setCustomers(customerRows)
         setCatalog(catalogData)
 
-        if (isEditMode) {
-          // ⚠️ "לא נמצאה" / "כבר נסגרה" **אינן** `loadError`: כפתור "נסי שוב" לא ישנה דבר באף אחת
-          // מהן. לכל אחת דרך-קדימה משלה (`QuoteUnavailable` למטה) — והטופס **אינו** מרונדר.
-          if (!quote) {
-            setUnavailable({ kind: 'missing' })
-          } else if (quote.quote_status !== 'in_progress') {
-            // טריגר-הנעילה (§7.50) יסרב לעדכון ממילא — עדיף לומר זאת לפני שממלאים טופס שלם.
-            setUnavailable({ kind: 'closed', status: quote.quote_status })
-          } else {
-            const productsBySku = Object.fromEntries(catalogData.products.map((p) => [p.sku, p]))
-            const state = quoteToFormState(quote, productsBySku, defaultRatio)
-            setForm(state.form)
-            setLines(state.lines)
-            // צילום-המצב שנגדו נמדד "האם המשתמש שינה משהו". נשמר **מאותו מקור** של הטופס
-            // (`quoteToFormState`) ולא משורת-ה-DB, כדי שלא תהיה אסימטריית-המרה בהשוואה.
-            setInitialSnapshot({ form: state.form, lines: state.lines })
-          }
+        const resolved = resolveInitialQuoteState({
+          isEditMode,
+          quote,
+          catalogData,
+          defaultRatio,
+          customerRows,
+          preselectCustomerId,
+        })
+
+        if (resolved.unavailable) {
+          setUnavailable(resolved.unavailable)
         } else {
-          // ↳ 30/07/2026: הגעה מ"+ הצעה חדשה" בעמוד-הלקוח מביאה `?customerId=` בכתובת,
-          // והלקוח נבחר מראש. ⚠️ **חייב לעבור דרך אותו צילום-הנחה של handleSelectCustomer**
-          // (F12): לקוח שנבחר בלי `appliedDiscount` היה מייצר הצעה עם 0% הנחה בשקט, למרות
-          // שבכרטיסו רשומה הנחה — בדיוק סוג הכשל שהמסך הזה בנוי למנוע.
-          // ⚠️ מזהה שאינו ברשימה (נמחק / אין הרשאה) נופל בשקט חזרה לטופס ריק, ולא מפיל את המסך.
-          const preselected = preselectCustomerId
-            ? customerRows.find((c) => c.customer_id === Number(preselectCustomerId))
-            : null
-          setForm({
-            ...EMPTY_FORM,
-            ratio: defaultRatio ?? '',
-            customerId: preselected?.customer_id ?? null,
-            appliedDiscount: Number(preselected?.discount_percent ?? 0),
-          })
+          setLoadError('')
+          setForm(resolved.form)
+          setLines(resolved.lines)
+          if (resolved.snapshot) setInitialSnapshot(resolved.snapshot)
         }
       } catch {
         if (!cancelled) setLoadError('שגיאה בטעינת נתוני ההצעה.')
@@ -266,6 +310,24 @@ export default function QuoteBuilderPage() {
       cancelled = true
     }
   }, [quoteId, isEditMode, reloadTick, preselectCustomerId])
+
+  // 🛡️ שמירת טיוטה רציפה ב-sessionStorage במצב יצירת הצעה חדשה למניעת איבוד נתונים
+  useEffect(() => {
+    if (isEditMode || loading) return
+    const isTouched =
+      Boolean(form.eventName) ||
+      Boolean(form.customerId) ||
+      Boolean(form.location) ||
+      Boolean(form.notes) ||
+      lines.length > 0
+    if (isTouched) {
+      try {
+        sessionStorage.setItem('regin_quote_draft_new', JSON.stringify({ form, lines }))
+      } catch {
+        // storage quota exceeded or disabled
+      }
+    }
+  }, [form, lines, isEditMode, loading])
 
   const selectedCustomer = customers.find((c) => c.customer_id === form.customerId) ?? null
   // N2: הראשי הוא שורת customer_contacts עם is_primary, לא selectedCustomer.contact_name.
@@ -376,7 +438,7 @@ export default function QuoteBuilderPage() {
       const proceed = await confirm({
         title: 'שליחה בלי שינוי',
         message: NO_CHANGES_SEND_CONFIRM,
-        confirmLabel: 'המשיכי לשליחה',
+        confirmLabel: 'המשך לשליחה',
       })
       if (!proceed) return
       // בלי `saveQuoteEdit` — וזו כל הנקודה: אין כתיבה, ולכן `updated_at` והתפוגה נשמרים.
@@ -404,6 +466,11 @@ export default function QuoteBuilderPage() {
         // ⚠️ ערך-ההחזרה של createQuote הוא ה-quote_id החדש (api.js) — עד היום הוא נזרק,
         // ובלעדיו אין דרך לשלוף את השורה שזה עתה נוצרה.
         savedId = await createQuote(header, payload)
+        try {
+          sessionStorage.removeItem('regin_quote_draft_new')
+        } catch {
+          // ignore
+        }
         toast.success('ההצעה נשמרה.')
       }
     } catch (err) {

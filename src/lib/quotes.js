@@ -912,13 +912,14 @@ export function buildQuoteEmailPayload({
   filename,
   pdfBase64,
   sender,
+  toEmail,
 } = {}) {
   // N2 (02/09/2026): איש-הקשר הראשי (§6 מ3) הוא כעת שורת customer_contacts עם is_primary —
   // עד היום ההערה כאן אמרה "customer_contacts ריקה בפועל" כי הטבלה טרם אוכלסה; אחרי המיגרציה
   // היא כן מאוכלסת, ו-quote.customers.email/contact_name הישנים אינם נקודת-הקריאה יותר.
   const contact = primaryContact(quote?.customers)
   return buildEmailPayload({
-    to: contact?.email,
+    to: toEmail || contact?.email,
     subject: quoteEmailSubject(quote),
     body: fillQuoteEmailTemplate(template, {
       contactName: contact?.contact_name,

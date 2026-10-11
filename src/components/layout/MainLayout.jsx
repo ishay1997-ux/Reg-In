@@ -48,7 +48,7 @@ export default function MainLayout() {
             onClick={signOut}
             className="mx-auto h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
           >
-            התנתקי מהמערכת
+            התנתק מהמערכת
           </button>
         </div>
       </div>

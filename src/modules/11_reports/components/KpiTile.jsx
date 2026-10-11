@@ -245,8 +245,8 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
         <button
           type="button"
           onClick={() => onOpenTarget(tile.target)}
-          // 🔑 התווית נאמרת במלואה לקורא-המסך: "פתחי" לבדו אינו אומר לאן.
-          aria-label={`${tile.label} — פתחי את הדוח`}
+          // 🔑 התווית נאמרת במלואה לקורא-המסך: "פתח" לבדו אינו אומר לאן.
+          aria-label={`${tile.label} — פתח את הדוח`}
           // 🖱️ `cursor-pointer` מפורש — Tailwind v4 משאיר `<button>` בברירת-המחדל של הדפדפן
           // (`cursor:default`), בעוד שורה-נלחצת ב-`ReportTable` כן מציגה אצבע. הדלת נראתה כטקסט.
           className="w-full cursor-pointer rounded-xl text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 [&>*]:h-full"
