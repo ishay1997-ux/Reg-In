@@ -691,11 +691,11 @@ describe('ה3 · איכות אירועים', () => {
 // ── מצבי-מעטפת ושכבת-ההטמעה ──────────────────────────────────────────────────
 
 describe('מצבים ושכבת-הטמעה', () => {
-  it('תקלת-רשת מציגה מעטפת-שגיאה עם "נסי שוב", והלחיצה טוענת מחדש', async () => {
+  it('תקלת-רשת מציגה מעטפת-שגיאה עם "נסה שוב", והלחיצה טוענת מחדש', async () => {
     callReport.mockRejectedValueOnce(new Error('boom'))
     renderTab('מ2')
 
-    const retry = await screen.findByRole('button', { name: 'נסי שוב' })
+    const retry = await screen.findByRole('button', { name: 'נסה שוב' })
     expect(screen.queryByTestId('report-population')).toBeNull()
     callReport.mockResolvedValueOnce(m2Payload())
     fireEvent.click(retry)

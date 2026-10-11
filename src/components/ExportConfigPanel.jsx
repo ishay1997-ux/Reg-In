@@ -382,7 +382,7 @@ export default function ExportConfigPanel({
                 onClick={onSelectAll}
                 data-testid="export-select-all"
               >
-                סמני הכול
+                סמן הכל
               </Button>
             )}
             <Button

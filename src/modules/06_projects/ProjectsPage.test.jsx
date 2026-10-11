@@ -168,7 +168,7 @@ describe('ProjectsPage — מצב ⑤: כשל-טעינה', () => {
 
     // "נסי שוב" באמת מנסה שוב — הקריאה השנייה מצליחה והמסך קם.
     listProjectsOverview.mockResolvedValueOnce([])
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     expect(await screen.findByTestId('projects-empty-true')).toBeInTheDocument()
   })
 })
@@ -182,7 +182,7 @@ describe('ProjectsPage — מצב ②: ריק אמיתי', () => {
       screen.getByText('פרויקט נוצר מעצמו ברגע שהצעת מחיר מאושרת — אין כאן יצירה ידנית.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'למסך הצעות מחיר →' })).toBeInTheDocument()
-    expect(screen.queryByText('נקי סינון')).not.toBeInTheDocument()
+    expect(screen.queryByText('נקה סינון')).not.toBeInTheDocument()
   })
 })
 

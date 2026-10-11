@@ -1096,7 +1096,7 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     fireEvent.click(await screen.findByTestId('m25-run-button'))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'הניתוח נכשל. נסי שוב, ואם זה חוזר — פני למנכ"ל.',
+      'הניתוח נכשל. נסה שוב, ואם זה חוזר — פנה למנכ"ל.',
     )
     expect(consoleError).toHaveBeenCalled()
     expect(String(consoleError.mock.calls[0][0])).toContain('classify-feedback')
@@ -1105,10 +1105,10 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
 })
 
 describe('מצבי-מעטפת ושכבת-ההטמעה', () => {
-  it('תקלת-רשת מציגה מצב-שגיאה עם "נסי שוב", והלחיצה קוראת שוב ל-RPC — ולעולם לא "אין נתונים"', async () => {
+  it('תקלת-רשת מציגה מצב-שגיאה עם "נסה שוב", והלחיצה קוראת שוב ל-RPC — ולעולם לא "אין נתונים"', async () => {
     callReport.mockRejectedValueOnce(new Error('boom'))
     renderTab(SURFACES.מ19)
-    const retry = await screen.findByRole('button', { name: 'נסי שוב' })
+    const retry = await screen.findByRole('button', { name: 'נסה שוב' })
     expect(screen.queryByText('אין נתונים עדיין')).toBeNull()
 
     callReport.mockResolvedValueOnce(overviewPayload())

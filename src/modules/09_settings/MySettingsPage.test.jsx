@@ -59,7 +59,7 @@ describe('MySettingsPage — טעינה מסוננת-שרת', () => {
     expect(listMyParams).toHaveBeenCalledTimes(1)
   })
 
-  it('כשל-טעינה מציג את הנוסח הנעול וכפתור "נסי שוב" שטוען מחדש', async () => {
+  it('כשל-טעינה מציג את הנוסח הנעול וכפתור "נסה שוב" שטוען מחדש', async () => {
     listMyParams.mockRejectedValueOnce(new Error('boom'))
     renderPage()
     expect(await screen.findByText('לא ניתן לטעון את ההגדרות.')).toBeInTheDocument()

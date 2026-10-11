@@ -268,7 +268,7 @@ export default function SmartMatchPane({
                     className="h-auto p-0 text-xs"
                     onClick={() => setAttendanceRetry((tick) => tick + 1)}
                   >
-                    נסי שוב
+                    נסה שוב
                   </Button>
                 </>
               ) : attendance ? (

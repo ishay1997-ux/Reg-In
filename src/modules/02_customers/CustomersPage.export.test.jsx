@@ -176,7 +176,7 @@ describe('CustomersPage — חיבור לחלון-הייצוא', () => {
       expect(heads).toContain(label)
     }
     expect(heads.join(' ')).not.toContain('פעולות')
-    expect(heads.join(' ')).not.toContain('ערכי')
+    expect(heads.join(' ')).not.toContain('ערוך')
   })
 
   it('🔴 בעוד ההכנסות בדרך — החלון בטעינה והייצוא מנוטרל, כדי שלא יירד קובץ עם עמודת-כסף ריקה', async () => {
@@ -201,7 +201,7 @@ describe('CustomersPage — חיבור לחלון-הייצוא', () => {
     // ההודעה מבטיחה "נסי שוב" — והבאנר עם הכפתור נשאר מאחורי החלון המודאלי ⇒ הכפתור בחלון.
     listQuotes.mockResolvedValue([])
     fireEvent.click(
-      within(screen.getByTestId('export-preview')).getByRole('button', { name: 'נסי שוב' }),
+      within(screen.getByTestId('export-preview')).getByRole('button', { name: 'נסה שוב' }),
     )
     await waitFor(() => expect(screen.getByTestId('export-dialog-run')).toBeEnabled())
   })
@@ -246,7 +246,7 @@ describe('🔴 ברירת-מחדל = מה שבמסך, ואפשר להוסיף ע
     expect(screen.getByTestId('export-column-is_dormant')).toBeInTheDocument()
   })
 
-  it('🔴 "סמני הכול" מכניס את השאר לקובץ', async () => {
+  it('🔴 "סמן הכל" מכניס את השאר לקובץ', async () => {
     mockPage(makeCustomers(1))
     renderPage()
     const preview = await openDialog()

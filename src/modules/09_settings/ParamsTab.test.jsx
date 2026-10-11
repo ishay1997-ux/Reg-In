@@ -124,7 +124,7 @@ describe('ParamsTab — ולידציה ושמירה', () => {
     fireEvent.change(screen.getByTestId('settings-value-אחוז_מעמ'), { target: { value: '150' } })
 
     expect(
-      await screen.findByText('הזיני מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה'),
+      await screen.findByText('הזן מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה'),
     ).toBeInTheDocument()
     expect(screen.getByTestId('settings-save-button')).toBeDisabled()
 
@@ -202,7 +202,7 @@ describe('ParamsTab — הרשאות', () => {
 })
 
 describe('ParamsTab — מצבי-טעינה ורשימת שכר-המינימום', () => {
-  it('כשל-טעינה מציג את הנוסח הנעול וכפתור "נסי שוב" שטוען מחדש', async () => {
+  it('כשל-טעינה מציג את הנוסח הנעול וכפתור "נסה שוב" שטוען מחדש', async () => {
     listParams.mockRejectedValueOnce(new Error('boom'))
     renderTab()
     expect(await screen.findByText('לא ניתן לטעון את ההגדרות.')).toBeInTheDocument()

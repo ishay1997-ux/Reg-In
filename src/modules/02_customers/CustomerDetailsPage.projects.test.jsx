@@ -200,7 +200,7 @@ describe('לשונית-פרויקטים — כשל-טעינה ו"נסי שוב"'
       'שגיאה בטעינת היסטוריית הפרויקטים.',
     )
     const retry = screen.getByTestId('customer-projects-retry')
-    expect(retry).toHaveTextContent('נסי שוב')
+    expect(retry).toHaveTextContent('נסה שוב')
 
     getCustomerProjects.mockResolvedValueOnce([])
     fireEvent.click(retry)
@@ -209,7 +209,7 @@ describe('לשונית-פרויקטים — כשל-טעינה ו"נסי שוב"'
 })
 
 describe('לשונית-פרויקטים — ריק-אחרי-חיפוש (מעל 8 פרויקטים)', () => {
-  it('"אין פרויקט התואם לחיפוש." + "נקי חיפוש" שבאמת מנקה את התיבה ומחזיר את השורות', async () => {
+  it('"אין פרויקט התואם לחיפוש." + "נקה חיפוש" שבאמת מנקה את התיבה ומחזיר את השורות', async () => {
     const projects = Array.from({ length: 9 }, (_, i) =>
       projectRow({
         project_id: 200 + i,

@@ -49,8 +49,8 @@ const EXPORT_NO_APPROVED_RUN = 'אין שורות לייצא — טרם אושר
 // נעולה זהות-בייט ב-`src/lib/reportsExport.test.js`**, ולכן אינה מאבדת שמירה.
 const NO_ROWS_AFTER_FILTER = 'הסינון לא הותיר שורות'
 const LOAD_ERROR_TITLE = 'לא ניתן לטעון את הנתונים.'
-const RETRY_LABEL = 'נסי שוב'
-const CLEAR_SELECTION_LABEL = '× נקי בחירה'
+const RETRY_LABEL = 'נסה שוב'
+const CLEAR_SELECTION_LABEL = '× נקה בחירה'
 
 // אין עוזר-login משותף ב-`e2e/` (‏`e2e/CLAUDE.md`): כל spec מגדיר אותו זהה. מועתק
 // מ-`permissions.spec.js` מילה-במילה, כולל ה-timeout המורחב ונימוקו.

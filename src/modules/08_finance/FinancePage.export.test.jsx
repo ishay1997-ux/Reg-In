@@ -218,7 +218,7 @@ describe('FinancePage — חיבור לחלון-הייצוא, ליבה פר-לש
     expect(screen.getByTestId('export-dialog-run')).toBeDisabled()
     // ההודעה מבטיחה "נסי שוב" — והכפתור קיים בחלון, ולחיצה עליו טוענת מחדש ומשחררת.
     getParamValue.mockResolvedValue('18')
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     await waitFor(() => expect(screen.getByTestId('export-dialog-run')).toBeEnabled())
   })
 })

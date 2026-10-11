@@ -312,8 +312,8 @@ function CardBody({
             type="button"
             variant="outline"
             onClick={onEdit}
-            title="ערכי דיילת"
-            aria-label={`ערכי דיילת: ${hostess.full_name}`}
+            title="ערוך דיילת"
+            aria-label={`ערוך דיילת: ${hostess.full_name}`}
             className="absolute left-12 top-4 h-7 w-7 rounded-md border-slate-200 p-0 text-slate-600"
             data-testid="hostess-card-edit"
           >
@@ -633,7 +633,7 @@ function ClientPreferences({ preferences, error, onRetry }) {
           onClick={onRetry}
           data-testid="hostess-preferences-retry"
         >
-          נסי שוב
+          נסה שוב
         </Button>
       </div>
     )

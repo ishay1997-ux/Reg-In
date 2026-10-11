@@ -335,7 +335,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
       const parts = []
       if (failures.length > 0) parts.push(`${failures.join(' ו')} לא יצא`)
       if (unknowns.length > 0)
-        parts.push(`לא ידוע אם ${unknowns.join(' ו')} יצא — בדקי בתיבת "נשלחו" לפני שליחה חוזרת`)
+        parts.push(`לא ידוע אם ${unknowns.join(' ו')} יצא — בדוק בתיבת "נשלחו" לפני שליחה חוזרת`)
       return {
         ok: false,
         surveyMarked,
@@ -628,7 +628,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                         setTimeout(() => URL.revokeObjectURL(url), 60_000)
                       }}
                     >
-                      הורידי
+                      הורד
                     </button>
                     {canAct && (
                       <button
@@ -637,7 +637,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                         onClick={() => fileInputRef.current?.click()}
                         data-testid="closing-file-replace"
                       >
-                        החליפי קובץ
+                        החלף קובץ
                       </button>
                     )}
                   </span>
@@ -652,7 +652,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                       onClick={() => fileInputRef.current?.click()}
                       data-testid="closing-file-pick"
                     >
-                      בחרי קובץ
+                      בחר קובץ
                     </button>
                   )}
                 </>
@@ -857,7 +857,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
               )}
               data-testid="closing-save"
             >
-              {sending ? 'שומרת ושולחת…' : 'שמרי ושלחי'}
+              {sending ? 'שומר ושולח…' : 'שמור ושלח'}
             </button>
             {validationSummary ? (
               <span className="text-xs font-semibold text-amber-700" data-testid="closing-summary">
@@ -950,7 +950,7 @@ function DraftRow({ row, eventHours, canAct, onAttendance, onQuality, onReason, 
             onChange={(e) => onAttendance(e.target.value || null)}
             data-testid={`closing-attendance-${row.hostessId}`}
           >
-            <option value="">בחרי נוכחות…</option>
+            <option value="">בחר נוכחות…</option>
             {ATTENDANCE_OPTIONS.map((option) => (
               <option key={option.label} value={option.label}>
                 {option.label}
@@ -1322,7 +1322,7 @@ function ClosedView({
             className="rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="closing-resend"
           >
-            {sending ? 'שולחת…' : 'שליחה חוזרת'}
+            {sending ? 'שולח…' : 'שליחה חוזרת'}
           </button>
         </div>
       )}

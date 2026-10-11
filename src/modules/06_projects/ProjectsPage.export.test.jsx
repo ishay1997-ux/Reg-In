@@ -129,7 +129,7 @@ describe('🔴 ברירת-מחדל = מה שבמסך, ואפשר להוסיף ע
     expect(screen.getByTestId('export-column-planned_revenue')).toBeInTheDocument()
   })
 
-  it('🔴 "סמני הכול" מכניס את השאר לקובץ', async () => {
+  it('🔴 "סמן הכול" מכניס את השאר לקובץ', async () => {
     setup([project()])
     fireEvent.click(await screen.findByTestId('projects-export-button'))
     fireEvent.click(await screen.findByTestId('export-select-all'))
@@ -140,7 +140,7 @@ describe('🔴 ברירת-מחדל = מה שבמסך, ואפשר להוסיף ע
     expect(heads).toContain('הכנסה מתוכננת')
   })
 
-  it('אחרי "סמני הכול" הכפתור נעלם — כפתור שאינו עושה דבר הוא רעש', async () => {
+  it('אחרי "סמן הכול" הכפתור נעלם — כפתור שאינו עושה דבר הוא רעש', async () => {
     setup([project()])
     fireEvent.click(await screen.findByTestId('projects-export-button'))
     fireEvent.click(await screen.findByTestId('export-select-all'))

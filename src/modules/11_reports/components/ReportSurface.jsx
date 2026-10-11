@@ -790,7 +790,7 @@ export default function ReportSurface({
             onClick={() => setSelectionState({ key: requestKey, selection: null })}
             testId="report-clear-crossfilter"
           >
-            × נקי בחירה
+            × נקה בחירה
           </FilterPill>
           <span className="text-xs text-slate-500" data-testid="report-crossfilter-label">
             {selection.label}

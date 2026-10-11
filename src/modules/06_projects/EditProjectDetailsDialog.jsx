@@ -371,7 +371,7 @@ export default function EditProjectDetailsDialog({
             className="h-auto bg-teal-700 px-4 py-2 text-white hover:bg-teal-800"
             data-testid="edit-project-save"
           >
-            שמרי ושלחי זימון מחדש
+            שמור ושלח זימון מחדש
           </Button>
           <Button
             type="button"

@@ -32,7 +32,7 @@ export function deniedValue(canRead, value) {
 
 // 🔒 המחרוזת הנעולה — אחת לכל המשטחים; ההבדל ביניהם חי בשורה השנייה (`detail`).
 const ERROR_TITLE = 'לא ניתן לטעון את הנתונים.'
-const RETRY_LABEL = 'נסי שוב'
+const RETRY_LABEL = 'נסה שוב'
 
 // state: `'empty'` (ריק כדין — נוסח פר-משטח) · `'noPermission'` (המשטח מעביר את המשפט
 //        המלא שהושלם מהבסיס הנעול "אין לך הרשאה לצפות ב…") · `'error'` (כשל-טעינה).

@@ -136,7 +136,7 @@ export default function ExportPreviewPanel({
           <p className="text-red-600">{error}</p>
           {onRetry && (
             <button type="button" className="mt-1 text-slate-600 underline" onClick={onRetry}>
-              נסי שוב
+              נסה שוב
             </button>
           )}
         </div>

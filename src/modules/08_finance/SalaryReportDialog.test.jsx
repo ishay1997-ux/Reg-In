@@ -429,7 +429,7 @@ describe('SalaryReportDialog — חלונית-הווידוא של "ייצא וש
     await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument())
     expect(generateAndSendSalaryReport).not.toHaveBeenCalled()
     // הכפתור חוזר לנוסחו הרגיל (לא "מפיקה ושולחת…") ואין טבלת-תוצאה.
-    expect(screen.getByTestId('salary-report-generate')).toHaveTextContent('ייצאי ושלחי')
+    expect(screen.getByTestId('salary-report-generate')).toHaveTextContent('ייצא ושלח')
     expect(screen.queryByTestId('salary-report-result')).not.toBeInTheDocument()
   })
 
@@ -506,7 +506,7 @@ describe('SalaryReportDialog — חסימת-כפילות מצד-לקוח (תצו
 
     const generate = await screen.findByTestId('salary-report-generate')
     expect(generate).toBeDisabled()
-    expect(generate).toHaveAttribute('title', 'בודקת אם כבר הופק דוח לחודש זה')
+    expect(generate).toHaveAttribute('title', 'בודק אם כבר הופק דוח לחודש זה')
     expect(screen.queryByTestId('salary-report-preflight')).not.toBeInTheDocument()
     expect(screen.queryByTestId('salary-report-blocked-banner')).not.toBeInTheDocument()
 

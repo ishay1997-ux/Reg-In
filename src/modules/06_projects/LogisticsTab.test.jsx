@@ -159,7 +159,7 @@ describe('שלושת מצבי-הריק נקראים שונה — S-26', () => {
     })
     await renderTab()
     expect(screen.getByText(BROKEN_EMPTY_DETAIL)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
     expect(screen.queryByText(LEGAL_EMPTY_TITLE)).not.toBeInTheDocument()
     // המדד חסום גם כאן: '—' ולא '0 מתוך 0' עם '✓' מעל פאנל-השגיאה — השקר של S-26.
     const tile = screen.getByTestId('logistics-tile-ready')
@@ -176,7 +176,7 @@ describe('שלושת מצבי-הריק נקראים שונה — S-26', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     await renderTab()
     expect(screen.getByText('נתוני הלוגיסטיקה של הפרויקט לא נטענו.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
     expect(screen.queryByText(LEGAL_EMPTY_TITLE)).not.toBeInTheDocument()
     errorSpy.mockRestore()
   })

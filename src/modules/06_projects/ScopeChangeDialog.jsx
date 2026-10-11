@@ -427,7 +427,7 @@ function RemovalButton({
   submitting,
   onQtyChange,
 }) {
-  const label = marked ? 'בטלי הסרה' : 'הסירי פריט'
+  const label = marked ? 'בטל הסרה' : 'הסר פריט'
   return (
     <button
       type="button"
@@ -559,7 +559,7 @@ function NewItemRow({ state, index, addableProducts, submitting, onChange, onRem
           data-testid={`scope-new-row-select-${index}`}
           onChange={(e) => onChange(row.key, { sku: e.target.value })}
         >
-          <option value="">בחרי מוצר מהקטלוג</option>
+          <option value="">בחר מוצר מהקטלוג</option>
           {addableProducts.map((p) => (
             <option key={p.sku} value={p.sku}>
               {p.item_name}
@@ -579,7 +579,7 @@ function NewItemRow({ state, index, addableProducts, submitting, onChange, onRem
             onClick={() => onRemove(row.key)}
             aria-label="ביטול הוספת השורה החדשה"
           >
-            בטלי הוספה
+            בטל הוספה
           </button>
         </div>
       </td>
@@ -1056,7 +1056,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
 
       {/* בלוק-ההשלכה — מדווח ולא מבצע ⇒ לבן+מסגרת, לא ענבר (כרטיס §⑧ח) */}
       <div>
-        <div className="text-xs font-bold text-slate-700">מה יקרה כשתשמרי</div>
+        <div className="text-xs font-bold text-slate-700">מה יקרה כשתשמור</div>
         <div className="mt-1.5 overflow-hidden rounded-lg border border-slate-200 bg-white">
           <ConsequenceRow label="צוות">
             <StaffingConsequence
@@ -1142,7 +1142,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           data-testid="scope-save"
           onClick={handleSave}
         >
-          {submitting ? 'שומרת…' : 'שמרי שינוי תכולה'}
+          {submitting ? 'שומר…' : 'שמור שינוי תכולה'}
         </Button>
         <Button
           type="button"

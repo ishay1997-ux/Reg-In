@@ -32,7 +32,7 @@ export const EMPTY_AFTER_FILTER = 'אין נתונים בתקופה שנבחרה
 export const EMPTY_AFTER_CUSTOMER_FILTER = 'אין נתונים ללקוח שנבחר'
 
 /** ‏`נקי מסננים` — תקדים-קוד חי **בנקבה** (4/4 אתרי-קריאה, `spec.md §1.5`), לא מנוסח מחדש. */
-export const CLEAR_FILTERS_LABEL = 'נקי מסננים'
+export const CLEAR_FILTERS_LABEL = 'נקה מסננים'
 
 /** §⑥ מצב 3 — ריק לגמרי. ‏`StatTile` נושא את אותה מחרוזת כברירת-מחדל. */
 export const EMPTY_ENTIRELY = 'אין נתונים עדיין'

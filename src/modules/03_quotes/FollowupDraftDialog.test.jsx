@@ -73,7 +73,7 @@ describe('הכפתור בחלון-המסמך', () => {
     renderDialog({ disabledReason: 'ההצעה עוד לא נשלחה ללקוח' })
     const button = screen.getByTestId('quote-followup-open')
     expect(button).toBeDisabled()
-    expect(button).toHaveTextContent('נסחי מייל מעקב')
+    expect(button).toHaveTextContent('נסח מייל מעקב')
     const reason = screen.getByTestId('quote-followup-reason')
     expect(reason).toBeVisible()
     expect(reason).toHaveTextContent('ההצעה עוד לא נשלחה ללקוח')
@@ -129,7 +129,7 @@ describe('הכפתור בחלון-המסמך', () => {
 })
 
 describe('חלון-הטיוטה — המצב המוצלח', () => {
-  it('שלד + "מנסחת טיוטה — זה יכול לקחת עד חצי דקה." בזמן ההמתנה, ובאזור-חי', async () => {
+  it('שלד + "מנסח טיוטה — זה יכול לקחת עד חצי דקה." בזמן ההמתנה, ובאזור-חי', async () => {
     let resolve
     invoke.mockReturnValue(new Promise((r) => (resolve = r)))
     renderDialog()
@@ -137,7 +137,7 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     expect(await screen.findByTestId('followup-skeleton')).toBeInTheDocument()
     const status = screen.getByTestId('followup-status')
     expect(status).toHaveAttribute('aria-live', 'polite')
-    expect(status).toHaveTextContent('מנסחת טיוטה — זה יכול לקחת עד חצי דקה.')
+    expect(status).toHaveTextContent('מנסח טיוטה — זה יכול לקחת עד חצי דקה.')
     // "נוסחה בעזרת AI" מתאר טיוטה שקיימת — בזמן הניסוח עוד אין כזו (נמצא ע"י סוכן D2, 24/09).
     expect(screen.queryByText(/נוסחה בעזרת AI/)).not.toBeInTheDocument()
     expect(screen.getByTestId('followup-quote-id')).toHaveTextContent('31')
@@ -158,7 +158,7 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     )
     expect(body.value).toContain('דנה לוי | מנהלת פרויקטים, REG-IN')
     expect(screen.getByTestId('followup-notice')).toHaveTextContent(FOLLOWUP_NOTICE)
-    expect(FOLLOWUP_NOTICE).toBe('טיוטה — בדקי לפני שליחה.')
+    expect(FOLLOWUP_NOTICE).toBe('טיוטה — בדוק לפני שליחה.')
     expect(screen.getByText(/נוסחה בעזרת AI/)).toBeInTheDocument()
   })
 
@@ -175,7 +175,7 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     )
   })
 
-  it('"העתיקי" מעתיק את הגוף (כולל עריכה) ומכריז "הועתק."', async () => {
+  it('"העתק" מעתיק את הגוף (כולל עריכה) ומכריז "הועתק."', async () => {
     invoke.mockResolvedValue({ data: DRAFT, error: null })
     renderDialog()
     await openAndWaitForDraft()
@@ -197,15 +197,13 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     expect(link.getAttribute('href')).not.toContain('body=')
     fireEvent.click(link)
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
-    expect(
-      await screen.findByText('גוף הטיוטה הועתק — הדביקי אותו במייל שנפתח.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('גוף הטיוטה הועתק — הדבק אותו במייל שנפתח.')).toBeInTheDocument()
     // ✏️ 24/09 (ממצא-הבודק): ההודעה הזו נקראת **אחרי** שתוכנת-המייל נפתחה מעל החלון — היא נשארת,
     // ולא נעלמת אחרי 2.5 שניות כמו "הועתק.".
     await act(async () => {
       await new Promise((r) => setTimeout(r, 2700))
     })
-    expect(screen.getByText('גוף הטיוטה הועתק — הדביקי אותו במייל שנפתח.')).toBeInTheDocument()
+    expect(screen.getByText('גוף הטיוטה הועתק — הדבק אותו במייל שנפתח.')).toBeInTheDocument()
   })
 
   it('אין מייל לאיש-הקשר הראשי ⇒ "פתחי במייל" מושבת, והנימוק גלוי ומקושר', async () => {
@@ -225,7 +223,7 @@ describe('חלון-הטיוטה — המצב המוצלח', () => {
     invoke.mockResolvedValue({ data: DRAFT, error: null })
     renderDialog()
     await openAndWaitForDraft()
-    expect(screen.queryByRole('button', { name: /שלחי/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /שלח/ })).not.toBeInTheDocument()
     expect(invoke).toHaveBeenCalledTimes(1)
     expect(invoke.mock.calls.every(([name]) => name === 'draft-followup')).toBe(true)
   })
@@ -322,14 +320,12 @@ describe('מקלדת', () => {
 
 // ✏️ 24/09/2026 (הסגן): הנוסח בציווי-נקבה (מדריך-הסגנון §1), זהה לאזור-השיווק (R30).
 describe('העתקה שנכשלה', () => {
-  it('הלוח חסום ⇒ "העתקה נכשלה — סמני את הטקסט והעתיקי ידנית."', async () => {
+  it('הלוח חסום ⇒ "העתקה נכשלה — סמן את הטקסט והעתק ידנית."', async () => {
     invoke.mockResolvedValue({ data: DRAFT, error: null })
     writeText.mockRejectedValue(new Error('denied'))
     renderDialog()
     await openAndWaitForDraft()
     fireEvent.click(screen.getByTestId('followup-copy'))
-    expect(
-      await screen.findByText('העתקה נכשלה — סמני את הטקסט והעתיקי ידנית.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('העתקה נכשלה — סמן את הטקסט והעתק ידנית.')).toBeInTheDocument()
   })
 })

@@ -264,7 +264,7 @@ export function validateQuoteForm(form, lines, todayIso) {
   if (!form.eventDate) {
     errors.eventDate = 'יש להזין תאריך אירוע.'
   } else if (todayIso && form.eventDate < todayIso) {
-    errors.eventDate = 'תאריך האירוע כבר עבר — בחרי תאריך עתידי.'
+    errors.eventDate = 'תאריך האירוע כבר עבר — בחר תאריך עתידי.'
   }
 
   const guests = Number(form.guests)
@@ -385,7 +385,7 @@ export function quoteServerErrorMessage(error) {
     return 'אין לך הרשאת עריכה על "הצעות מחיר" — יש לפנות למנכ"ל להרחבת ההרשאה.'
   }
   if (code === 'P0002') {
-    return 'ההצעה לא נמצאה, או שאין לך הרשאה אליה — רענני את רשימת ההצעות.'
+    return 'ההצעה לא נמצאה, או שאין לך הרשאה אליה — רענן את רשימת ההצעות.'
   }
 
   const raw = typeof error?.message === 'string' ? error.message.trim() : ''
@@ -829,7 +829,7 @@ export function sortQuotes(quotes, sortKey, ctx = {}) {
 // הספציפי הוא ידיעה של המודול השולח, ולכן הוא כאן — בדיוק כמו ה-placeholders והנושא.
 export const QUOTE_SEND_NO_PERMISSION_REASON = 'אין לך הרשאה לשלוח הצעות'
 export const QUOTE_SEND_FAILED_MESSAGE =
-  'ההצעה לא נשלחה — לחצי "שלחי במייל" שוב, או הורידי את הקובץ ושלחי ידנית.'
+  'ההצעה לא נשלחה — לחץ "שלח במייל" שוב, או הורד את הקובץ ושלח ידנית.'
 
 // ארבעת השדות שתבנית `תבנית_מייל_הצעת_מחיר` מכירה. **רשימה אחת** שממנה נגזרים גם המילוי
 // וגם בדיקת-השדות-הלא-מוכרים — שתי רשימות היו מתפצלות בשקט בדיוק ברגע שמוסיפים שדה.
