@@ -22,6 +22,7 @@ import { Download, Mail } from 'lucide-react'
 // מקומי של אותה בחירה היה יוצר שני מקורות שיכולים להיפרד.
 import { primaryContact } from '@/lib/customers'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -106,6 +107,17 @@ export default function QuoteDocumentDialog({
   // חיווי-הכשל הוא **מחרוזת ולא דגל**: יש לו שני נוסחים שונים לגמרי (שאילתת-היומן נכשלה
   // מול "המייל יצא אבל היומן לא נכתב"), ודגל בוליאני היה מציג את ההודעה הלא-נכונה באחד מהם.
   const [sendCheckNotice, setSendCheckNotice] = useState('')
+  const defaultRecipient = primaryContact(quote?.customers)?.email || ''
+  const [userEmail, setUserEmail] = useState(null)
+  const [lastOpenQuoteKey, setLastOpenQuoteKey] = useState(null)
+
+  const currentOpenQuoteKey = open ? quote?.quote_id : null
+  if (currentOpenQuoteKey !== lastOpenQuoteKey) {
+    setLastOpenQuoteKey(currentOpenQuoteKey)
+    setUserEmail(null)
+  }
+
+  const recipientEmail = userEmail ?? defaultRecipient
 
   // ⚠️ blob-URL הוא משאב שדולף אם לא משחררים אותו — כל פתיחה מייצרת אחד חדש, וללא
   // revokeObjectURL הדפדפן מחזיק את כל המסמכים שנפתחו בסשן בזיכרון. הניקוי בפונקציית
@@ -178,7 +190,7 @@ export default function QuoteDocumentDialog({
   // במערכת (מ4/מ8/מ11), ומע"מ הוא עניין של הצעות-מחיר בלבד. ר' `src/CLAUDE.md`.
   // נגזר פעם אחת ונקרא בשני מקומות (חסימת-השליחה למטה, ואישור "נשלח ל-" בגוף החלון) —
   // שתי קריאות נפרדות ל-primaryContact היו יכולות להיפרד בעריכה עתידית.
-  const customerEmail = primaryContact(quote?.customers)?.email
+  const customerEmail = recipientEmail.trim() || primaryContact(quote?.customers)?.email || ''
 
   const vatBlocked = error === MISSING_VAT_MESSAGE
   const disabledReason = vatBlocked
@@ -232,7 +244,7 @@ export default function QuoteDocumentDialog({
       const proceed = await confirm({
         title: 'שליחה חוזרת',
         message: 'ההצעה כבר נשלחה ללקוח — לשלוח שוב?',
-        confirmLabel: 'שלחי שוב',
+        confirmLabel: 'שלח שוב',
       })
       if (!proceed) return
     }
@@ -243,7 +255,7 @@ export default function QuoteDocumentDialog({
       const proceed = await confirm({
         title: 'סטטוס-שליחה לא ידוע',
         message: SEND_HISTORY_UNKNOWN_CONFIRM,
-        confirmLabel: 'המשיכי לשליחה',
+        confirmLabel: 'המשך לשליחה',
       })
       if (!proceed) return
     }
@@ -281,6 +293,7 @@ export default function QuoteDocumentDialog({
         // החתימה = המשתמש המחובר (הכרעת-ישי 30/07). מגיע מ-AuthContext ולא משאילתה:
         // אותו אדם שה-Edge Function מאמתת ממילא, ובלי סבב-רשת נוסף.
         sender: user,
+        toEmail: customerEmail,
       })
       // תנאי-הסף כבר נבדקו למעלה (disabledReason + שדות-התבנית) — null כאן הוא תקלה
       // אמיתית, לא מצב-משתמש צפוי, ולכן הודעה כללית ולא ניסיון-ניחוש מה בדיוק חסר.
@@ -351,7 +364,21 @@ export default function QuoteDocumentDialog({
             data-testid="quote-document-frame"
           />
         ) : (
-          <p className="text-slate-500 py-8 text-center">מפיקה את המסמך…</p>
+          <p className="text-slate-500 py-8 text-center">מפיק את המסמך…</p>
+        )}
+
+        {canSend && (
+          <div className="flex items-center gap-2 pt-2">
+            <span className="text-xs font-semibold text-slate-700 shrink-0">נמען למשלוח:</span>
+            <Input
+              type="email"
+              value={recipientEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              placeholder="כתובת מייל של הנמען"
+              className="h-8 text-xs max-w-sm rounded-lg border-slate-300"
+              data-testid="quote-recipient-email-input"
+            />
+          </div>
         )}
 
         {/* חיווי "נשלח כבר" מהמסד — מוצג **גם בפתיחה ראשונה אחרי רענון-דף**, כלומר הוא
@@ -416,7 +443,7 @@ export default function QuoteDocumentDialog({
               data-testid="quote-document-send"
             >
               <Mail className="size-4" />
-              {sending ? 'שולחת…' : alreadySent && !sendError ? 'שלחי שוב' : 'שלחי במייל'}
+              {sending ? 'שולח…' : alreadySent && !sendError ? 'שלח שוב' : 'שלח במייל'}
             </Button>
           )}
           <Button

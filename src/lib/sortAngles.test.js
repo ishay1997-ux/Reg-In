@@ -73,7 +73,7 @@ describe('ארבע הזוויות — מסדרות בלבד', () => {
     expect(names(sortByAngle(RANKED, 'customer'))).toEqual(['בית', 'גימל', 'אלף'])
   })
 
-  it('הזולה ביותר — התעריף הנמוך ראשון', () => {
+  it('לפי שכר — התעריף הנמוך ראשון', () => {
     expect(names(sortByAngle(RANKED, 'cheapest'))).toEqual(['גימל', 'אלף', 'בית'])
   })
 

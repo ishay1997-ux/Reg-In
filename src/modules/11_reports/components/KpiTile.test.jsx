@@ -187,7 +187,7 @@ describe('KpiTile — הכרעה 33 · אריח עם target הוא דלת', () =
     const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
     render(<KpiTile tile={{ ...TILE, target }} onOpenTarget={onOpenTarget} />)
     const button = screen.getByTestId('report-tile-link-open_debt')
-    expect(button).toHaveAttribute('aria-label', 'יתרת-חוב פתוחה — פתחי את הדוח')
+    expect(button).toHaveAttribute('aria-label', 'יתרת-חוב פתוחה — פתח את הדוח')
     button.click()
     expect(onOpenTarget).toHaveBeenCalledWith(target)
   })

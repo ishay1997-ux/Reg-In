@@ -72,8 +72,10 @@ export function AuthProvider({ children }) {
   //   2) הוא נכנס כתלות ל-useEffect למטה. reference יציב => האפקט רץ פעם אחת בלבד,
   //      וזה מספק את כלל react-hooks/exhaustive-deps בלי ליצור לולאה אינסופית
   //      (שהייתה נוצרת אילו loadUser היה נוצר מחדש בכל רינדור ומופיע במערך התלויות).
-  const loadUser = useCallback(async () => {
-    setLoading(true)
+  const loadUser = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true)
+    }
 
     // 1) מיהו המשתמש המחובר לפי Supabase Auth?
     const { data: sessionData } = await supabase.auth.getSession()
@@ -108,7 +110,7 @@ export function AuthProvider({ children }) {
       // ראשונה (user עדיין null), MainLayout ינווט ל-/login — ולכן authError, שאחרת
       // המשתמש היה מגיע למסך-כניסה בלי מילת-הסבר אחת.
       setPermissionsError(true)
-      setAuthError('תקלה זמנית בטעינת פרטי החשבון. נסי שוב בעוד רגע.')
+      setAuthError('תקלה זמנית בטעינת פרטי החשבון. נסה שוב בעוד רגע.')
       setLoading(false)
       return
     }
@@ -198,8 +200,10 @@ export function AuthProvider({ children }) {
     loadUser() // טעינה ראשונית בעליית האפליקציה
 
     // מאזינים לשינויי אימות (התחברות/התנתקות/רענון token) ומרעננים את "מי אני".
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      loadUser()
+    // 🛡️ רענון רקע מתבצע שקט (silent: true) כדי ש-ProtectedRoute לא יפרק את ה-DOM
+    // ולא יאפס טפסים פתוחים במערכת (הכרעת תוכנית 11/10/2026).
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadUser({ silent: Boolean(session) })
     })
 
     // ניקוי בפירוק: מבטלים את המנוי ומסמנים unmount — מונע גם דליפת מנוי וגם

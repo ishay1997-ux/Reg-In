@@ -37,7 +37,7 @@ export default function RejectQuoteDialog({ open, onOpenChange, quote, onConfirm
       tone="reject"
       title={`דחיית הצעה ${quote?.quote_id ?? ''}`}
       description={`${quote?.event_name ?? ''} · ${quote?.customers?.company_name ?? ''}. ההצעה תיסגר ולא ניתן יהיה לערוך אותה שוב.`}
-      confirmLabel="דחי את ההצעה"
+      confirmLabel="דחה את ההצעה"
       savingLabel="דוחה..."
       fallbackError="דחיית ההצעה נכשלה."
       onConfirm={handleConfirm}
