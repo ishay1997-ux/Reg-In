@@ -199,7 +199,7 @@ describe('CancelProjectDialog — כשל-טעינה (הצורה הנעולה ש�
     // השורה הראשונה נעולה; השורה השנייה נוקבת במה שחסר (ההודעה העברית של העוטף).
     expect(within(box).getByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
     expect(within(box).getByText('שגיאה בטעינת הגדרות הפיצוי.')).toBeInTheDocument()
-    expect(within(box).getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(within(box).getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
     expect(screen.getByTestId('cancel-confirm')).toBeDisabled()
   })
 
@@ -250,11 +250,11 @@ describe('CancelProjectDialog — שלושת הסוגים והוולידציה',
     )
   })
 
-  it('הפוטר: "בטלי את הפרויקט" (מסגרת אדומה, לא מילוי) ואז "חזרה" — לעולם לא "ביטול"', async () => {
+  it('הפוטר: "בטל את הפרויקט" (מסגרת אדומה, לא מילוי) ואז "חזרה" — לעולם לא "ביטול"', async () => {
     await renderDialog()
     const confirm = screen.getByTestId('cancel-confirm')
     const back = screen.getByTestId('cancel-back')
-    expect(confirm.textContent).toBe('בטלי את הפרויקט')
+    expect(confirm.textContent).toBe('בטל את הפרויקט')
     expect(back.textContent).toBe('חזרה')
     // הדפוס השלילי היחיד ב-src/ (RowAction): מסגרת אדומה על רקע בהיר, בלי מילוי מלא.
     expect(confirm.className).toContain('border-red-200')

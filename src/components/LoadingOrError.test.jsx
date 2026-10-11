@@ -7,24 +7,24 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import LoadingOrError from './LoadingOrError'
 
 describe('LoadingOrError — retryLabel', () => {
-  it('🔴 בלי prop — הכפתור הוא "נסי שוב" בייט-בייט (ברירת-המחדל החדשה, לשון-נקבה)', () => {
+  it('🔴 בלי prop — הכפתור הוא "נסה שוב" בייט-בייט (ברירת-המחדל, לשון זכר/נייטרלי)', () => {
     render(<LoadingOrError error="שגיאה" onRetry={() => {}} retryTestId="r" />)
-    expect(screen.getByTestId('r').textContent).toBe('נסי שוב')
+    expect(screen.getByTestId('r').textContent).toBe('נסה שוב')
   })
 
   it('retryLabel מפורש נותן את אותה תוצאה כמו ברירת-המחדל — ועדיין מפעיל את onRetry', () => {
     const onRetry = vi.fn()
-    render(<LoadingOrError error="שגיאה" onRetry={onRetry} retryTestId="r" retryLabel="נסי שוב" />)
+    render(<LoadingOrError error="שגיאה" onRetry={onRetry} retryTestId="r" retryLabel="נסה שוב" />)
     const button = screen.getByTestId('r')
-    expect(button.textContent).toBe('נסי שוב')
+    expect(button.textContent).toBe('נסה שוב')
     fireEvent.click(button)
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
   it('retryLabel שונה עדיין גובר על ברירת-המחדל', () => {
     render(
-      <LoadingOrError error="שגיאה" onRetry={() => {}} retryTestId="r" retryLabel="נסי מחדש" />,
+      <LoadingOrError error="שגיאה" onRetry={() => {}} retryTestId="r" retryLabel="נסה מחדש" />,
     )
-    expect(screen.getByTestId('r').textContent).toBe('נסי מחדש')
+    expect(screen.getByTestId('r').textContent).toBe('נסה מחדש')
   })
 })

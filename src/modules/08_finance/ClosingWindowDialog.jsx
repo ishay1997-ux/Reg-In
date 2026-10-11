@@ -157,7 +157,7 @@ const feedbackReasonGate = (threshold) =>
 // מה שהיא נכתבה נגדו. ⚠️ **הנוסח של "אין ציון" מראה את מה שהמסד יענה בלאו הכי**
 // (‏`record_feedback`: "יש לבחור ציון בין 1 ל-5") — המסך והשרת אומרים אותו דבר.
 const FEEDBACK_SCORE_GATE = 'חסום: יש לבחור ציון בין 1 ל-5, או לסמן "לא ענה לסקר".'
-const FEEDBACK_UNCHANGED_GATE = 'אין שינוי לשמור — עדכני ציון, סיבה או הערות.'
+const FEEDBACK_UNCHANGED_GATE = 'אין שינוי לשמור — עדכן ציון, סיבה או הערות.'
 // שני שערי-ענף-הביטול, שעד 28/08/2026 היו בוליאנים בלבד: "שמור דמי-ביטול" ו"ויתור על החוב"
 // נכבו **בלי מילה על המסך**, בדיוק כמו שני המצבים שהשורות שמעל תיקנו. ‏A-1 היא דפוס-הבית.
 // ⚠️ ובוויתור זה חמור יותר מכפתור-מת רגיל: תווית-השדה ומציין-המקום שלו נלקחו מילולית
@@ -786,7 +786,7 @@ function FeeActions({ busy, actions }) {
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={actions.onSaveFee}
         >
-          {busy === 'fee' ? 'שומרת…' : 'שמרי דמי-ביטול'}
+          {busy === 'fee' ? 'שומר…' : 'שמור דמי-ביטול'}
         </Button>
         <Button
           type="button"
@@ -808,7 +808,7 @@ function FeeActions({ busy, actions }) {
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={actions.onOpenWriteOff}
         >
-          סגרי ללא תשלום
+          סגור ללא תשלום
         </Button>
       </div>
       {/* עמודה ולא שורה: ‏`GateNote` הוא `span`, ושני משפטי-שער זה לצד זה בתוך אב-בלוק
@@ -988,7 +988,7 @@ function InvoiceUploadBlock({
           className="cursor-pointer rounded-lg border border-slate-300 px-3 py-1 text-sm text-slate-700"
           htmlFor="closing-file-input"
         >
-          בחרי קובץ
+          בחר קובץ
         </label>
         <input
           id="closing-file-input"
@@ -1021,7 +1021,7 @@ function InvoiceUploadBlock({
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={onSend}
         >
-          {busy === 'invoice' ? 'שולחת…' : 'שמרי ושלחי'}
+          {busy === 'invoice' ? 'שולח…' : 'שמור ושלח'}
         </Button>
         <InvoiceGateNote
           billingUnknown={billingUnknown}
@@ -1068,7 +1068,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={onSave}
         >
-          {busy === 'payment' ? 'שומרת…' : alreadyPaid ? 'עדכני תאריך תשלום' : 'שמרי תשלום'}
+          {busy === 'payment' ? 'שומר…' : alreadyPaid ? 'עדכן תאריך תשלום' : 'שמור תשלום'}
         </Button>
         <Button
           type="button"
@@ -1078,7 +1078,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={onOpenWriteOff}
         >
-          סגרי ללא תשלום
+          סגור ללא תשלום
         </Button>
       </div>
     </div>
@@ -1113,7 +1113,7 @@ function WriteOffForm({ reason, onReason, onConfirm, onCancel, busy }) {
           className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
           onClick={onConfirm}
         >
-          {busy === 'writeOff' ? 'סוגרת…' : 'סגרי ללא תשלום'}
+          {busy === 'writeOff' ? 'סוגר…' : 'סגור ללא תשלום'}
         </Button>
         <Button
           type="button"
@@ -1199,7 +1199,7 @@ function FeedbackReasonField({
         tabIndex={-1}
         aria-hidden="true"
       >
-        <option value="">בחרי סיבה</option>
+        <option value="">בחר סיבה</option>
         {FEEDBACK_REASONS.map((reason) => (
           <option key={reason} value={reason}>
             {reason}
@@ -1497,7 +1497,7 @@ function ClosingFooter({
             className="h-auto rounded-lg border-slate-300 px-4 py-2 text-slate-700"
             onClick={onSaveFeedback}
           >
-            {busy === 'feedback' ? 'שומרת…' : 'שמרי סטטוס'}
+            {busy === 'feedback' ? 'שומר…' : 'שמור סטטוס'}
           </Button>
           {feedbackGate ? (
             <GateNote testId="closing-feedback-gate" id={FEEDBACK_GATE_ID} fullWidth>
@@ -1519,7 +1519,7 @@ function ClosingFooter({
             className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
             onClick={onArchive}
           >
-            {busy === 'archive' ? 'מארכבת...' : 'העבירי לארכיון'}
+            {busy === 'archive' ? 'מארכב...' : 'העבר לארכיון'}
           </Button>
           {gateNote ? (
             <GateNote testId="closing-archive-gate" id={ARCHIVE_GATE_ID} fullWidth>
@@ -1857,7 +1857,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
       dialog: {
         title: 'העברה לארכיון',
         message: ARCHIVE_CONFIRM_MESSAGE,
-        confirmLabel: 'העבירי לארכיון',
+        confirmLabel: 'העבר לארכיון',
       },
       key: 'archive',
       fn: () => archiveProject(projectId),
@@ -1880,7 +1880,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
       dialog: {
         title: 'סגירה ללא תשלום',
         message: WRITE_OFF_CONFIRM_MESSAGE,
-        confirmLabel: 'סגרי ללא תשלום',
+        confirmLabel: 'סגור ללא תשלום',
       },
       key: 'writeOff',
       fn: writeOffCall,

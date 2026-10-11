@@ -168,7 +168,7 @@ const EXPORT_COLUMNS = [
 
 // 🔤 נוסח נעול (`ui-copy-styleguide.md` §5) — משתנה רק יחד עם הבדיקה שטוענת עליו.
 // מחוץ לרכיב כי הרכיב כבר על רף-המורכבות של SonarJS (20), לא מטעמי סגנון.
-const EXPORT_BLOCKED_PARTIAL_DATA = 'חלק מנתוני הרשימה לא נטענו — לחצי "נסי שוב" ואז ייצאי'
+const EXPORT_BLOCKED_PARTIAL_DATA = 'חלק מנתוני הרשימה לא נטענו — לחץ "נסה שוב" ואז ייצא'
 const EXPORT_PARTIAL_DATA_SHORT = 'חלק מנתוני הרשימה לא נטענו'
 // `reason` חוסם את הייצוא (שורת-הכמות) · `error` מרנדר את "נסי שוב" בתצוגה-המקדימה. שניהם `null` כשהכול נטען.
 function exportBlockFor(revenueFailed, paramsFailed) {
@@ -651,7 +651,7 @@ export default function CustomersPage() {
           title:
             revenueByCustomer === null ? 'טרם ידוע אם יש הצעות פתוחות' : 'ללקוח יש הצעות פתוחות',
           message,
-          confirmLabel: 'העבירי לארכיון',
+          confirmLabel: 'העבר לארכיון',
         })
         if (!ok) return
       }
@@ -1137,8 +1137,8 @@ export default function CustomersPage() {
                                   <Button
                                     type="button"
                                     variant="link"
-                                    title="ערכי לקוח"
-                                    aria-label={`ערכי לקוח: ${customer.company_name}`}
+                                    title="ערוך לקוח"
+                                    aria-label={`ערוך לקוח: ${customer.company_name}`}
                                     onClick={() => openEditDialog(customer)}
                                     className="h-auto p-0 text-teal-600 hover:text-teal-700"
                                     data-testid={`customer-edit-${customer.customer_id}`}
@@ -1152,8 +1152,8 @@ export default function CustomersPage() {
                                     <Button
                                       type="button"
                                       variant="link"
-                                      title="העבירי לארכיון"
-                                      aria-label={`העבירי לארכיון: ${customer.company_name}`}
+                                      title="העבר לארכיון"
+                                      aria-label={`העבר לארכיון: ${customer.company_name}`}
                                       onClick={() => handleToggleStatus(customer)}
                                       className="h-auto p-0"
                                       data-testid={`customer-archive-${customer.customer_id}`}
@@ -1166,8 +1166,8 @@ export default function CustomersPage() {
                                     <Button
                                       type="button"
                                       variant="link"
-                                      title="שחזרי מהארכיון"
-                                      aria-label={`שחזרי מהארכיון: ${customer.company_name}`}
+                                      title="שחזר מהארכיון"
+                                      aria-label={`שחזר מהארכיון: ${customer.company_name}`}
                                       onClick={() => handleToggleStatus(customer)}
                                       className="h-auto p-0"
                                       data-testid={`customer-restore-${customer.customer_id}`}
@@ -1244,7 +1244,7 @@ export default function CustomersPage() {
           <DialogContent dir="rtl" className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>שליחת חומר שיווקי</DialogTitle>
-              <DialogDescription>העלי חומר ושלחי אותו ללקוחות שאישרו קבלת דיוור.</DialogDescription>
+              <DialogDescription>העלה חומר ושלח אותו ללקוחות שאישרו קבלת דיוור.</DialogDescription>
             </DialogHeader>
             <MarketingPanel refreshKey={consentedSignature} embedded />
           </DialogContent>

@@ -227,7 +227,7 @@ export function buildPayloadRows(rows, eventHours) {
 // מ-REPORT_MAX_BYTES שמועבר כפרמטר — לעולם לא מוקלד.
 
 export const EVENT_HOURS_ERROR = 'חובה להזין שעות ביצוע — מספר בין 0.5 ל-24.'
-export const EVENT_GUESTS_ERROR = 'חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזיני 0.'
+export const EVENT_GUESTS_ERROR = 'חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזן 0.'
 
 export function reportFileErrorText(maxBytes) {
   const mb = maxBytes / 1024 / 1024

@@ -334,7 +334,7 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             )}
             data-testid="team-scope-button"
           >
-            שני כמות דיילות
+            שנה כמות דיילות
           </button>
         )}
         {/* 🔗 נושא את הפרויקט איתו — ר' ההערה על הקישור התאום למעלה. */}
@@ -513,7 +513,7 @@ function RoundsHistory({ rows, finalCount, open, onToggle }) {
           className="text-xs font-semibold text-teal-700"
           data-testid="team-history-toggle"
         >
-          {open ? `הסתירי (${rows.length} שורות)` : `הציגי (${rows.length} שורות)`}
+          {open ? `הסתר (${rows.length} שורות)` : `הצג (${rows.length} שורות)`}
         </button>
       </div>
 
@@ -631,7 +631,7 @@ function CancelledVariant({ project, finalRows, canEdit, canReadHostesses }) {
             className="cursor-not-allowed rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 opacity-50"
             data-testid="team-scope-button"
           >
-            שני כמות דיילות
+            שנה כמות דיילות
           </button>
           <span className="text-xs text-slate-400" data-testid="team-cancelled-reason">
             {CANCELLED_SCOPE_REASON}

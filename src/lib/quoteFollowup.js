@@ -35,13 +35,13 @@ const FOLLOWUP_EXPIRED_REASON = 'פג תוקף'
 
 // הנוסחים — כלשון התוכנית §6 D2. ⚠️ `FOLLOWUP_NOT_SENT_REASON` **זהה** לתשובת-ה-409 של השרת
 // (בלי הנקודה, כי כאן הוא טקסט-עזר ליד כפתור — R3/R14): אותה עובדה, אותן מילים, בשני הצדדים.
-export const FOLLOWUP_LABEL = 'נסחי מייל מעקב'
+export const FOLLOWUP_LABEL = 'נסח מייל מעקב'
 export const FOLLOWUP_NOT_SENT_REASON = 'ההצעה עוד לא נשלחה ללקוח'
-export const FOLLOWUP_CHECKING_REASON = 'בודקת אם ההצעה נשלחה…'
+export const FOLLOWUP_CHECKING_REASON = 'בודק אם ההצעה נשלחה…'
 export const FOLLOWUP_NO_EMAIL_REASON = 'אין מייל לאיש הקשר הראשי'
-export const FOLLOWUP_NOTICE = 'טיוטה — בדקי לפני שליחה.'
-export const FOLLOWUP_FAILED_MESSAGE = 'הניסוח נכשל — נסי שוב.'
-export const FOLLOWUP_QUOTA_MESSAGE = 'הגעת למכסת ה-AI — נסי שוב מאוחר יותר.'
+export const FOLLOWUP_NOTICE = 'טיוטה — בדוק לפני שליחה.'
+export const FOLLOWUP_FAILED_MESSAGE = 'הניסוח נכשל — נסה שוב.'
+export const FOLLOWUP_QUOTA_MESSAGE = 'הגעת למכסת ה-AI — נסה שוב מאוחר יותר.'
 
 /**
  * האם הכפתור מוצג, ואם הוא מושבת — למה (הנימוק מוצג **כטקסט גלוי**, לא רק `title`: §6ה-ד).

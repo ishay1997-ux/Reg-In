@@ -733,7 +733,7 @@ describe('חמשת המצבים והייצוא', () => {
     expect(await screen.findByTestId('report-finance-overview-blank')).toBeInTheDocument()
   })
 
-  it('ריק-אחרי-סינון ⇒ מעטפת "empty" עם "נקי מסננים" שקוראת לניקוי', async () => {
+  it('ריק-אחרי-סינון ⇒ מעטפת "empty" עם "נקה מסננים" שקוראת לניקוי', async () => {
     // ⚠️ **מה הבדיקה הזו מוכיחה ומה לא:** היא מוכיחה שהלשונית מעבירה `isFiltered`
     // ו-`clearFilters` נכון, ושהמעטפת בוחרת את הענף הנכון. 🚫 **היא אינה מוכיחה שהמצב
     // נגיש בייצור בלשונית הזו** — המעטפת גוזרת ריקות מ-`tiles/chart/rows`, וארבעת
@@ -756,13 +756,13 @@ describe('חמשת המצבים והייצוא', () => {
     expect(clearFilters).toHaveBeenCalledTimes(1)
   })
 
-  it('כשל-רשת ⇒ מצב-תקלה עם "נסי שוב", והלחיצה קוראת שוב לשרת', async () => {
+  it('כשל-רשת ⇒ מצב-תקלה עם "נסה שוב", והלחיצה קוראת שוב לשרת', async () => {
     callReport.mockRejectedValueOnce(new Error('boom')).mockResolvedValue(overviewPayload())
     renderTab({ slug: 'finance-overview' })
 
     expect(await screen.findByTestId('report-finance-overview-error')).toBeInTheDocument()
     expect(screen.queryByText('אין נתונים עדיין')).not.toBeInTheDocument()
-    await click(screen.getByRole('button', { name: 'נסי שוב' }))
+    await click(screen.getByRole('button', { name: 'נסה שוב' }))
     expect(await screen.findByTestId('report-tile-open_debt')).toBeInTheDocument()
     expect(callReport).toHaveBeenCalledTimes(2)
   })
@@ -773,7 +773,7 @@ describe('חמשת המצבים והייצוא', () => {
     renderTab({ slug: 'aging' })
     const envelope = await screen.findByTestId('report-aging-no-permission')
     expect(plain(envelope)).toContain('אין לך הרשאה לצפות בגיול חובות')
-    expect(screen.queryByRole('button', { name: 'נסי שוב' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'נסה שוב' })).not.toBeInTheDocument()
   })
 
   it('פרמטר-מערכת חסר ⇒ הודעה עברית בשם הפרמטר', async () => {

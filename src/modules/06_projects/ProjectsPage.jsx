@@ -675,7 +675,7 @@ function EmptyRows({ filtered, searched, tab, total, onClear, onClearSearch }) {
             className="h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="projects-clear-filter"
           >
-            נקי סינון
+            נקה סינון
           </Button>
         }
         testId="projects-empty-filtered"

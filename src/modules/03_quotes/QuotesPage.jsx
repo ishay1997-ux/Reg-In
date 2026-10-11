@@ -498,7 +498,7 @@ export default function QuotesPage() {
           role="alert"
           data-testid="quotes-sent-history-error"
         >
-          לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקי בחלון המסמך לפני שליחה.
+          לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדוק בחלון המסמך לפני שליחה.
         </p>
       )}
 
@@ -719,7 +719,7 @@ export default function QuotesPage() {
                 className="text-xs text-slate-500 underline"
                 data-testid="quotes-date-clear"
               >
-                נקי תאריכים
+                נקה תאריכים
               </button>
             )}
           </div>
@@ -743,7 +743,7 @@ export default function QuotesPage() {
                 <p className="text-slate-500 font-medium">אין הצעות מחיר במערכת עדיין.</p>
                 {canEdit && (
                   <p className="text-slate-400 text-sm mt-1">
-                    לחצי על "+ הצעה חדשה" כדי ליצור את ההצעה הראשונה.
+                    לחץ על "+ הצעה חדשה" כדי ליצור את ההצעה הראשונה.
                   </p>
                 )}
               </>
@@ -751,7 +751,7 @@ export default function QuotesPage() {
               <>
                 <p className="text-slate-500 font-medium">אין הצעות התואמות את החיפוש.</p>
                 <p className="text-slate-500 text-sm mt-1">
-                  נסי לשנות את מונחי החיפוש או לנקות את הסינון.
+                  נסה לשנות את מונחי החיפוש או לנקות את הסינון.
                 </p>
               </>
             ) : (

@@ -99,7 +99,7 @@ function PersonalDetailsSection({ user, reload }) {
     setSaving(false)
 
     if (updateError || !updated || updated.length === 0) {
-      setError('שמירה נכשלה. נסי שוב.')
+      setError('שמירה נכשלה. נסה שוב.')
       return
     }
 
@@ -160,7 +160,7 @@ function PersonalDetailsSection({ user, reload }) {
           disabled={saving}
           className="w-fit h-auto py-2 px-4 mt-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
         >
-          {saving ? 'שומרת…' : 'שמרי שינויים'}
+          {saving ? 'שומר…' : 'שמור שינויים'}
         </Button>
       </form>
     </div>
@@ -208,7 +208,7 @@ function SecuritySection({ user }) {
     setSaving(false)
 
     if (updateError) {
-      setError('עדכון הסיסמה נכשל. נסי שוב.')
+      setError('עדכון הסיסמה נכשל. נסה שוב.')
       return
     }
 
@@ -258,7 +258,7 @@ function SecuritySection({ user }) {
         disabled={saving}
         className="w-fit h-auto py-2 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
       >
-        {saving ? 'מעדכנת…' : 'עדכני סיסמה'}
+        {saving ? 'מעדכן…' : 'עדכן סיסמה'}
       </Button>
     </form>
   )

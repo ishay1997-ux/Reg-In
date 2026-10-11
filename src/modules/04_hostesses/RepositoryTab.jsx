@@ -236,7 +236,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
         const failed = results.filter((r) => r.status === 'rejected')
         if (failed.length > 0) {
           toast.error(
-            `שחרור מ-${failed.length} מתוך ${futureActive.length} אירועים נכשל — ${hostess.full_name} עדיין משובצת אליהם. נסי לשחרר ידנית מתפריט-הפעולות במסך שיבוץ חכם.`,
+            `שחרור מ-${failed.length} מתוך ${futureActive.length} אירועים נכשל — ${hostess.full_name} עדיין משובצת אליהם. נסה לשחרר ידנית מתפריט-הפעולות במסך שיבוץ חכם.`,
           )
         }
 
@@ -537,11 +537,11 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     </span>
                   ))}
                   <span className="mt-2 block">
-                    <b>שחררי מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה", הדיילת תקבל
-                    מייל-ביטול על כל אירוע, והאירוע חוזר לחסר-איוש.
+                    <b>שחרר מהאירועים (מומלץ)</b> — כל שיבוץ יסומן כ"שוחררה", הדיילת תקבל מייל-ביטול
+                    על כל אירוע, והאירוע חוזר לחסר-איוש.
                   </span>
                   <span className="mt-2 block">
-                    <b>השביתי — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
+                    <b>השבת — תשלים את מה שהתחייבה</b> — השיבוצים העתידיים נשארים על כנם; היא רק
                     מפסיקה לקבל הזמנות חדשות.
                   </span>
                 </DialogDescription>
@@ -560,7 +560,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   className="h-auto w-full py-2.5 px-4 rounded-lg bg-teal-700 text-white font-semibold hover:bg-teal-800"
                   data-testid="deactivate-release"
                 >
-                  {releasing ? 'משחררת...' : 'שחררי מהאירועים'}
+                  {releasing ? 'משחרר...' : 'שחרר מהאירועים'}
                 </Button>
                 <Button
                   type="button"
@@ -570,7 +570,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                   className="h-auto w-full py-2.5 px-4 rounded-lg border-slate-300 text-slate-700"
                   data-testid="deactivate-keep"
                 >
-                  השביתי — תשלים את מה שהתחייבה
+                  השבת — תשלים את מה שהתחייבה
                 </Button>
                 <Button
                   type="button"
@@ -624,7 +624,7 @@ function EmptyState({ filtered, canEdit, onAdd, onClear }) {
             className="mt-2 h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="repository-clear-filters"
           >
-            נקי סינון
+            נקה סינון
           </Button>
         </div>
       </div>

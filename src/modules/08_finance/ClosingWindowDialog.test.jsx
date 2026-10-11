@@ -420,7 +420,7 @@ describe('feedbackGateNote', () => {
         touched: false,
         satisfactionThreshold: THRESHOLD,
       }),
-    ).toBe('אין שינוי לשמור — עדכני ציון, סיבה או הערות.')
+    ).toBe('אין שינוי לשמור — עדכן ציון, סיבה או הערות.')
   })
 
   it('נגע ותקין ⇒ השער פתוח', () => {
@@ -1037,12 +1037,12 @@ describe('שער-הצורה (assertFinanceShape)', () => {
     expect(screen.queryByTestId('closing-balance')).not.toBeInTheDocument()
   })
 
-  it('כשל-טעינה מציג "נסי שוב" וטעינה חוזרת מצליחה', async () => {
+  it('כשל-טעינה מציג "נסה שוב" וטעינה חוזרת מצליחה', async () => {
     getFinanceDetail
       .mockRejectedValueOnce(new Error('שגיאה בטעינת נתוני הכספים של הפרויקט.'))
       .mockResolvedValue(detailRow())
     renderDialog()
-    fireEvent.click(await screen.findByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'נסה שוב' }))
     await screen.findByTestId('closing-meta')
     expect(screen.getByTestId('closing-invoice-banner')).toBeInTheDocument()
   })
@@ -1265,7 +1265,7 @@ describe('תיקון תאריך-תשלום שהוקלד שגוי', () => {
     await renderLoaded()
     expect(screen.getByTestId('closing-payment-block')).toBeInTheDocument()
     expect(screen.getByTestId('closing-payment-date')).toHaveValue('2026-08-04')
-    expect(screen.getByTestId('closing-save-payment')).toHaveTextContent('עדכני תאריך תשלום')
+    expect(screen.getByTestId('closing-save-payment')).toHaveTextContent('עדכן תאריך תשלום')
   })
 
   it('אותו תאריך אינו מופיע פעמיים — תא-הקריאה נסוג מפני השדה העריך', async () => {

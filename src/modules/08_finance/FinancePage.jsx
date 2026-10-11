@@ -82,7 +82,7 @@ const PAGE_SUBTITLE = 'בקרת גבייה, סגירת-תיקים ודו"ח-שכ
 const SALARY_BUTTON_LABEL = 'הפקת דוח שכר דיילות'
 const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני הכספים.'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
-const CLEAR_FILTER_LABEL = 'נקי סינון'
+const CLEAR_FILTER_LABEL = 'נקה סינון'
 const CANCELLATION_FEE_TAG = 'דמי-ביטול'
 const CANCELLATION_FEE_UNRESOLVED = 'דמי-ביטול — טרם נפתרו'
 const OPERATIONALLY_CLOSED_NOTE = 'נסגר תפעולית'
@@ -114,7 +114,7 @@ const SUMMARY_OVERDUE_LABEL = 'מתוכו באיחור-תשלום · כל הזמ
 const SUMMARY_OPEN_UNKNOWN = 'לא ידוע — דמי-ביטול טרם נקבעו'
 // 🔤 נעול (`ui-copy-styleguide.md` §5) — משתנה רק יחד עם הבדיקה. עמודת "כולל מע"מ" ריקה
 // בקובץ שנראה שלם היא הכשל ש-`src/CLAUDE.md §3` אוסר; לכן חסימה עם סיבה, לא תא ריק.
-const EXPORT_BLOCKED_VAT = 'שיעור המע"מ לא נטען — לחצי "נסי שוב" ואז ייצאי'
+const EXPORT_BLOCKED_VAT = 'שיעור המע"מ לא נטען — לחץ "נסה שוב" ואז ייצא'
 const EXPORT_VAT_FAILED_SHORT = 'שיעור המע"מ לא נטען'
 
 // שלוש הלשוניות, בשמן ובסדר שהמוקאפ מצייר. ‏`key` = הערך ש-`get_finance_overview` מחזיר

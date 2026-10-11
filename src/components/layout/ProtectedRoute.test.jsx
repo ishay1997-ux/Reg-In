@@ -62,11 +62,11 @@ describe('ProtectedRoute', () => {
       reload: vi.fn(),
     })
     expect(screen.getByText(/לא הצלחנו לטעון את ההרשאות/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
     expect(screen.queryByText(/אין לך הרשאה/)).not.toBeInTheDocument()
   })
 
-  it('"נסי שוב" קורא ל-reload של הקונטקסט', () => {
+  it('"נסה שוב" קורא ל-reload של הקונטקסט', () => {
     const reload = vi.fn()
     renderWith({
       loading: false,
@@ -75,7 +75,7 @@ describe('ProtectedRoute', () => {
       permissionsError: true,
       reload,
     })
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     expect(reload).toHaveBeenCalledTimes(1)
   })
 

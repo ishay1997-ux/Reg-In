@@ -476,7 +476,7 @@ describe('ProjectCardPage — מצבי טעינה/כשל/לא-נמצא', () => {
     expect(await screen.findByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
     expect(screen.getByText('כרטיס הפרויקט לא נטען.')).toBeInTheDocument()
     expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
   })
 
   it('id שאינו קיים: "הפרויקט לא נמצא" + חזרה למבט-העל (④ — אין "ריק אמיתי" בכרטיס)', async () => {

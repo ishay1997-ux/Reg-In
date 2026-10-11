@@ -159,7 +159,7 @@ function weekdayChips(payload, selectedDow, onDrill) {
   // 🔤 `נקי בחירה` — צורת-הבית בנקבה, 4/4 אתרי-קריאה חיים (`spec.md §1.5`).
   return [
     ...chips,
-    { key: 'clearDow', text: '× נקי בחירה', on: false, onToggle: () => onDrill(null) },
+    { key: 'clearDow', text: '× נקה בחירה', on: false, onToggle: () => onDrill(null) },
   ]
 }
 

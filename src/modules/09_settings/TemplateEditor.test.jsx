@@ -253,9 +253,9 @@ describe('TemplateEditor', () => {
   })
 
   it('errors[name] מוצג כשורת-שגיאה נוספת', () => {
-    renderEditor({ errors: { [SHIFT_INVITE_ROW.param_name]: 'השמירה נכשלה — בדקי חיבור' } })
+    renderEditor({ errors: { [SHIFT_INVITE_ROW.param_name]: 'השמירה נכשלה — בדוק חיבור' } })
     expect(screen.getByTestId('settings-template-form-error').textContent).toBe(
-      'השמירה נכשלה — בדקי חיבור',
+      'השמירה נכשלה — בדוק חיבור',
     )
   })
 })

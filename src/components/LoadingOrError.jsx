@@ -109,7 +109,7 @@ export default function LoadingOrError({
   onRetry,
   retryTestId,
   skeleton,
-  retryLabel = 'נסי שוב',
+  retryLabel = 'נסה שוב',
 }) {
   if (loading) {
     if (skeleton) {

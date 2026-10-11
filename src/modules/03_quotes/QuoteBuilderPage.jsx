@@ -886,7 +886,7 @@ export default function QuoteBuilderPage() {
             onSave={handleSave}
             onCancel={() => navigate('/quotes')}
             saving={saving}
-            saveLabel={isEditMode ? 'עדכני ושלחי' : 'שמרי ושלחי'}
+            saveLabel={isEditMode ? 'עדכן ושלח' : 'שמור ושלח'}
           />
         ) : (
           // הפאנל (וכפתור השמירה שבתוכו) לא ניתן לחישוב כשסכום ההנחות חורג מ-100% —

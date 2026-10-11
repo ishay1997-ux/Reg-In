@@ -133,7 +133,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
       setTimeout(() => setCopied(''), 1500)
     } catch {
       // ✏️ 24/09/2026 (הסגן): סביל ⇐ ציווי-נקבה (מדריך-הסגנון §1); אותו נוסח בחלון טיוטת-המייל (R30).
-      toast.error('העתקה נכשלה — סמני את הטקסט והעתיקי ידנית.')
+      toast.error('העתקה נכשלה — סמן את הטקסט והעתק ידנית.')
     }
   }
 
@@ -147,7 +147,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
         <div>
           <h2 className="text-lg font-bold text-slate-800">אזור שיווק</h2>
           <p className="text-sm text-slate-500 mt-1">
-            העלי חומר שיווקי, בחרי נמענים מבין הלקוחות שאישרו דיוור, ושלחי.
+            העלה חומר שיווקי, בחר נמענים מבין הלקוחות שאישרו דיוור, ושלח.
           </p>
         </div>
       )}
@@ -161,13 +161,13 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
           data-testid="marketing-upload-label"
         >
           <Upload className="size-4" />
-          {uploaded ? 'החליפי קובץ' : 'העלי קובץ'}
+          {uploaded ? 'החלף קובץ' : 'העלה קובץ'}
           <input
             type="file"
             accept={MARKETING_ALLOWED_MIME.join(',')}
             onChange={handleFileChange}
             disabled={busy}
-            aria-label={uploaded ? 'החליפי קובץ שיווקי' : 'העלי קובץ שיווקי'}
+            aria-label={uploaded ? 'החלף קובץ שיווקי' : 'העלה קובץ שיווקי'}
             className="sr-only"
             data-testid="marketing-file-input"
           />
@@ -182,8 +182,8 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             <Button
               type="button"
               variant="link"
-              title="הסירי קובץ"
-              aria-label="הסירי את הקובץ שהועלה"
+              title="הסר קובץ"
+              aria-label="הסר את הקובץ שהועלה"
               onClick={handleRemove}
               className="h-auto p-0 text-red-600 hover:text-red-700"
               data-testid="marketing-remove"
@@ -240,7 +240,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             data-testid="marketing-send"
           >
             <Send className="size-4" />
-            שלחי לנמענים שנבחרו
+            שלח לנמענים שנבחרו
           </a>
         ) : (
           <span
@@ -253,7 +253,7 @@ export default function MarketingPanel({ refreshKey, embedded = false }) {
             data-testid="marketing-send-disabled"
           >
             <Send className="size-4" />
-            שלחי לנמענים שנבחרו
+            שלח לנמענים שנבחרו
           </span>
         )}
 
@@ -357,7 +357,7 @@ function RecipientsSection({
           className="h-auto p-0 text-teal-600 hover:text-teal-700 text-sm"
           data-testid="marketing-recipients-toggle-all"
         >
-          {allSelected ? 'נקי הכל' : 'בחרי הכל'}
+          {allSelected ? 'נקה הכל' : 'בחר הכל'}
         </Button>
       </div>
       <div className="max-h-56 overflow-y-auto rounded-lg border border-slate-200 divide-y divide-slate-100">
@@ -372,7 +372,7 @@ function RecipientsSection({
               checked={!excludedIds.has(r.customer_id)}
               onChange={() => onToggleRecipient(r.customer_id)}
               className="size-4 shrink-0 accent-teal-600"
-              aria-label={`שלחי ל${r.company_name}`}
+              aria-label={`שלח ל${r.company_name}`}
               data-testid="marketing-recipient-checkbox"
             />
             <div className="flex-1 min-w-0">

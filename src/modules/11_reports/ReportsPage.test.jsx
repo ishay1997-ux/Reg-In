@@ -329,18 +329,18 @@ describe('מ1 — ברירת-מחדל של תקופה פר-לשונית', () => 
 })
 
 describe('מ1 — מצבי-המעטפת (📐10)', () => {
-  it('תקלה מציגה את מצב-השגיאה עם "נסי שוב", ולא "אין נתונים"', async () => {
+  it('תקלה מציגה את מצב-השגיאה עם "נסה שוב", ולא "אין נתונים"', async () => {
     callReport.mockRejectedValue(Object.assign(new Error('boom'), { code: 'XX000' }))
     renderPage()
-    expect(await screen.findByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
     expect(screen.getByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
     expect(screen.queryByText('אין נתונים עדיין')).toBeNull()
   })
 
-  it('"נסי שוב" קורא שוב ל-API', async () => {
+  it('"נסה שוב" קורא שוב ל-API', async () => {
     callReport.mockRejectedValue(Object.assign(new Error('boom'), { code: 'XX000' }))
     renderPage()
-    const retry = await screen.findByRole('button', { name: 'נסי שוב' })
+    const retry = await screen.findByRole('button', { name: 'נסה שוב' })
     const before = callReport.mock.calls.length
     await click(retry)
     expect(callReport.mock.calls.length).toBeGreaterThan(before)
@@ -351,7 +351,7 @@ describe('מ1 — מצבי-המעטפת (📐10)', () => {
     callReport.mockRejectedValue(Object.assign(new Error('permission denied'), { code: '42501' }))
     renderPage()
     expect(await screen.findByText(/אין לך הרשאה לצפות ב/)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'נסי שוב' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'נסה שוב' })).toBeNull()
     expect(screen.queryByText(/permission denied/)).toBeNull()
   })
 

@@ -102,12 +102,12 @@ const KIND_RULES = {
   int: { test: isValidPositiveInt, base: 'מספר שלם', min: 1, decimals: 0, integer: true },
   decimal: { test: isValidNonNegativePrice, base: 'מספר', min: 0, decimals: 2 },
   weight: { test: isValidWeight, base: 'מספר', min: 0, max: 1, decimals: 2 },
-  boolean: { test: isValidBooleanText, message: 'הזיני כן או לא בלבד' },
+  boolean: { test: isValidBooleanText, message: 'הזן כן או לא בלבד' },
   email: {
     test: (value) => !isBlank(value) && EMAIL_REGEX.test(String(value).trim()),
-    message: 'הזיני כתובת מייל תקינה',
+    message: 'הזן כתובת מייל תקינה',
   },
-  url: { test: isValidHttpsUrl, message: 'הזיני קישור המתחיל ב-https://' },
+  url: { test: isValidHttpsUrl, message: 'הזן קישור המתחיל ב-https://' },
   // 'templates' אינו מאומת כאן בכלל — §2.8: "Blank ⇒ invalid for every non-template kind".
   // גוף-התבנית מאומת ב-emailTemplates.js (templateSaveVerdict, צעד 2.2) — לא כפילות-חוזה.
 }
@@ -142,7 +142,7 @@ function numericMessage(bounds) {
   const range = rangePhrase(bounds)
   const head = range ? `${bounds.base} ${range}` : bounds.base
   // `decimals: 0` (קינד שלם) אינו נאמר — "מספר שלם" כבר אומר זאת, ומשפט כפול מבלבל.
-  return bounds.decimals ? `הזיני ${head}, ${decimalsPhrase(bounds.decimals)}` : `הזיני ${head}`
+  return bounds.decimals ? `הזן ${head}, ${decimalsPhrase(bounds.decimals)}` : `הזן ${head}`
 }
 
 // ספירת ספרות-אחרי-הנקודה מהטקסט ולא מהמספר: `Number('17.550')` הוא 17.55, ומי שהקליד

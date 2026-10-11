@@ -41,7 +41,7 @@ import ExportPreviewPanel from '@/components/ExportPreviewPanel'
 const PREVIEW_ROWS = 5
 
 // 🔤 נוסחים נעולים — משתנים רק יחד עם הבדיקות שטוענות עליהם (`ui-copy-styleguide.md` §5).
-export const PICK_ONE_COLUMN = 'בחרי עמודה אחת לפחות'
+export const PICK_ONE_COLUMN = 'בחר עמודה אחת לפחות'
 export const NO_ROWS_AFTER_FILTER = 'הסינון לא הותיר שורות'
 
 export default function ExportDialog({

@@ -384,12 +384,12 @@ describe('ScopeChangeDialog — כשל-טעינה (הצורה הנעולה של 
     // השורה הראשונה נעולה; השורה השנייה נוקבת במה שחסר (ההודעה העברית של העוטף).
     expect(within(box).getByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
     expect(within(box).getByText('שגיאה בטעינת קטלוג המחירים.')).toBeInTheDocument()
-    expect(within(box).getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(within(box).getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
   })
 })
 
 // 🔄ה · ㊳ · ㊱ · ㉚ — הסרת פריט אינה מסך חדש: היא נעשית כאן, ורצפת-הספינר דינמית לפי שני
-// התנאים. **שני מסלולים לאותו יעד:** פקד "הסירי פריט" מפורש (המסלול שהמשתמשת מוצאת), והקלדת
+// התנאים. **שני מסלולים לאותו יעד:** פקד "הסר פריט" מפורש (המסלול שהמשתמשת מוצאת), והקלדת
 // `0` ביד (המסלול הישן, שלא נגרע — הבדיקות שלו נשארו כלשונן). המערך מצטט את `#107` החי
 // (`docs/specs/module_05_logistics/data-set.md`): שלושת מצבי-הפריט על מסך אחד, ושני צדי
 // כלל-ההסרה.
@@ -603,7 +603,7 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
     )
   })
 
-  it('בלוק "מה יקרה כשתשמרי" מקבל את שורת-ההסרה בנוסח שהוכרע (26/08/2026)', async () => {
+  it('בלוק "מה יקרה כשתשמור" מקבל את שורת-ההסרה בנוסח שהוכרע (26/08/2026)', async () => {
     removalScene()
     await renderDialog()
     fireEvent.change(screen.getByLabelText(SAT_INPUT), { target: { value: '0' } })
@@ -614,12 +614,12 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
     ).toBeInTheDocument()
   })
 
-  // ── הפקד המפורש: "הסירי פריט" ────────────────────────────────────────────────────────
+  // ── הפקד המפורש: "הסר פריט" ────────────────────────────────────────────────────────
   // עד כה הדרך היחידה להסיר פריט הייתה להקליד `0` — ואין במערכת אף פעולה הרסנית אחרת
   // בלי פקד ששמו נקוב ("העבר לארכיון", "השבת", "ביטול פרויקט"). ההכרעה (㊳) לא השתנתה
   // בגרם: ההסרה עדיין שינוי-תכולה, עדיין של מנהלת הפרויקטים, ועדיין בדיאלוג הזה. מה
   // שהשתנה הוא **איך היא מבצעת אותה**.
-  describe('פקד "הסירי פריט" — המסלול המפורש', () => {
+  describe('פקד "הסר פריט" — המסלול המפורש', () => {
     const SAT_NAME = 'שרוך סאטן - ממותג'
     const TAGS_NAME = 'תג שם רגיל - ממותג'
     const ECO_NAME = 'תג שם אקולוגי - ממותג'
@@ -628,12 +628,12 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
     // מה שמתהפך בסימון — כך שהשאילתה עצמה מאמתת את היפוך-התווית.
     const removeBtn = (name) => screen.getByRole('button', { name })
 
-    it('שורה שעומדת בשני תנאי ㊱ מקבלת "הסירי פריט" פעיל, ו"הוזמן"/"מוכן" מקבלות אותו מושבת ומנומק (㉚)', async () => {
+    it('שורה שעומדת בשני תנאי ㊱ מקבלת "הסר פריט" פעיל, ו"הוזמן"/"מוכן" מקבלות אותו מושבת ומנומק (㉚)', async () => {
       removalScene()
       await renderDialog()
-      expect(removeBtn(`הסירי פריט — ${SAT_NAME}`)).not.toBeDisabled()
+      expect(removeBtn(`הסר פריט — ${SAT_NAME}`)).not.toBeDisabled()
 
-      const tagsBtn = removeBtn(`הסירי פריט — ${TAGS_NAME}`)
+      const tagsBtn = removeBtn(`הסר פריט — ${TAGS_NAME}`)
       expect(tagsBtn).toBeDisabled()
       // 🔒 עותק מילולי של raise-השרת — והסיבה **גלויה** על המסך ליד הפקד.
       // 🔴 ולא `title`: לכפתור מושבת אין hit-test, ולכן tooltip עליו לעולם אינו נפתח.
@@ -642,7 +642,7 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
       ).toBeInTheDocument()
       expect(tagsBtn).not.toHaveAttribute('title')
 
-      const ecoBtn = removeBtn(`הסירי פריט — ${ECO_NAME}`)
+      const ecoBtn = removeBtn(`הסר פריט — ${ECO_NAME}`)
       expect(ecoBtn).toBeDisabled()
       expect(
         within(rowOf(ECO_INPUT)).getByText('הפריט כבר הוזמן — לא ניתן להסירו'),
@@ -652,7 +652,7 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
     it('"טרם החל" עם סחורה שהגיעה ⇒ הכפתור מושבת בנוסח השני של ㊱, לא בראשון', async () => {
       removalScene({ satActualQty: 8 })
       await renderDialog()
-      expect(removeBtn(`הסירי פריט — ${SAT_NAME}`)).toBeDisabled()
+      expect(removeBtn(`הסר פריט — ${SAT_NAME}`)).toBeDisabled()
       expect(
         within(rowOf(SAT_INPUT)).getByText('הגיעו כבר פריטים — לא ניתן להסיר'),
       ).toBeInTheDocument()
@@ -662,45 +662,45 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
       removalScene()
       await renderDialog()
       // AR-10 — אין "הסרה" של כמות-דיילות (מקטינים אותה), ואין "הסרה" של מה שטרם קיים.
-      expect(screen.queryByRole('button', { name: `הסירי פריט — ${HOSTESS_NAME}` })).toBeNull()
+      expect(screen.queryByRole('button', { name: `הסר פריט — ${HOSTESS_NAME}` })).toBeNull()
       expect(within(rowOf(HOSTESS_INPUT)).queryByRole('button')).toBeNull()
 
       fireEvent.click(screen.getByTestId('scope-add-item'))
       const newRow = screen.getByTestId('scope-new-row-select-0').closest('tr')
-      // ✏️ שלב 4 — הקישור בשורה החדשה שונה מ"הסרה" (שם-עצם, R12) ל**"בטלי הוספה"**
+      // ✏️ שלב 4 — הקישור בשורה החדשה שונה מ"הסרה" (שם-עצם, R12) ל**"בטל הוספה"**
       // (פועל בנקבה) כדי לעמוד ב-R12 מבלי לאבד את ההבחנה המכוונת מהפקד השני: הוא מוחק
-      // שורת-טופס שלא נשמרה, לא פריט מהאירוע. הפקד השני הוא **"הסירי פריט"**, ומסיר פריט
+      // שורת-טופס שלא נשמרה, לא פריט מהאירוע. הפקד השני הוא **"הסר פריט"**, ומסיר פריט
       // אמיתי. שני נוסחים שונים בכוונה — טעות ביניהם היא בדיוק ההבחנה פח-מול-ארכיון של
       // `src/CLAUDE.md`.
-      expect(within(newRow).getByText('בטלי הוספה')).toBeInTheDocument()
-      expect(within(newRow).queryByRole('button', { name: /^הסירי פריט/ })).toBeNull()
+      expect(within(newRow).getByText('בטל הוספה')).toBeInTheDocument()
+      expect(within(newRow).queryByRole('button', { name: /^הסר פריט/ })).toBeNull()
     })
 
     it('לחיצה **מסמנת בלבד** — "יוסר" מחליף את שדה-הכמות, הכפתור מתהפך, ושום דבר לא נשלח', async () => {
       removalScene()
       await renderDialog()
       const satRow = rowOf(SAT_INPUT)
-      fireEvent.click(removeBtn(`הסירי פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
 
       expect(within(satRow).getByText('יוסר')).toBeInTheDocument()
       // הוחלף, לא רק הושבת — שדה-מספר שנשאר היה מזמין אותה לערוך כמות של פריט שלא יהיה.
       expect(within(satRow).queryByRole('spinbutton')).toBeNull()
       // הפקד **מתהפך** ואינו מתווסף: הישן נעלם קודם, ורק אז נבדק החדש.
-      expect(screen.queryByRole('button', { name: `הסירי פריט — ${SAT_NAME}` })).toBeNull()
-      expect(removeBtn(`בטלי הסרה — ${SAT_NAME}`)).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: `הסר פריט — ${SAT_NAME}` })).toBeNull()
+      expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).toBeInTheDocument()
       // 🔴 סימון אינו שמירה ואינו מחיקה: אין קריאת-שרת עד "שמור שינוי תכולה".
       expect(applyScopeChange).not.toHaveBeenCalled()
     })
 
-    it('"בטלי הסרה" מחזיר את השורה — שדה-הכמות חוזר עם הכמות שבתוקף, והשורה שוב "ללא שינוי"', async () => {
+    it('"בטל הסרה" מחזיר את השורה — שדה-הכמות חוזר עם הכמות שבתוקף, והשורה שוב "ללא שינוי"', async () => {
       removalScene()
       await renderDialog()
       const satRow = rowOf(SAT_INPUT)
       // הסיבה ממולאת מראש בכוונה: אחרת השמירה מושבתת ממילא בגלל ㉖, והבדיקה האחרונה כאן
       // הייתה עוברת גם אילו הביטול לא היה מחזיר את השורה למצב "ללא שינוי".
       fireEvent.change(screen.getByTestId('scope-reason'), { target: { value: 'הלקוח ויתר' } })
-      fireEvent.click(removeBtn(`הסירי פריט — ${SAT_NAME}`))
-      fireEvent.click(removeBtn(`בטלי הסרה — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`בטל הסרה — ${SAT_NAME}`))
 
       expect(screen.getByLabelText(SAT_INPUT)).toHaveValue(150)
       expect(within(satRow).queryByText('יוסר')).toBeNull()
@@ -711,7 +711,7 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
     it('שמירה של שורה מסומנת שולחת target_qty 0 — לאותה שורה בלבד, ובאותו חוזה-פיילוד', async () => {
       removalScene()
       await renderDialog()
-      fireEvent.click(removeBtn(`הסירי פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
       fireEvent.change(screen.getByTestId('scope-reason'), {
         target: { value: 'הלקוח ויתר על השרוכים' },
       })
@@ -725,10 +725,10 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
       ])
     })
 
-    it('בלוק "מה יקרה כשתשמרי" אומר את משפט-ההסרה עוד לפני השמירה', async () => {
+    it('בלוק "מה יקרה כשתשמור" אומר את משפט-ההסרה עוד לפני השמירה', async () => {
       removalScene()
       await renderDialog()
-      fireEvent.click(removeBtn(`הסירי פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
       expect(
         screen.getByText(
           '"שרוך סאטן - ממותג" — השורה תוסר ממסך הלוגיסטיקה, וההסרה תירשם בהיסטוריית שינויי-התכולה.',
@@ -744,14 +744,14 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
       removalScene()
       await renderDialog()
       expect(screen.getByTestId('scope-no-change')).toBeInTheDocument()
-      fireEvent.click(removeBtn(`הסירי פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
       expect(screen.queryByTestId('scope-no-change')).toBeNull()
     })
 
     it('סימון-הסרה לבדו פותח את השמירה — אחרי סיבה, ולא לפניה (㉖)', async () => {
       removalScene()
       await renderDialog()
-      fireEvent.click(removeBtn(`הסירי פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
       // הסיבה נשארת חובה — ההסרה אינה פותחת עוקף.
       expect(screen.getByTestId('scope-save')).toBeDisabled()
 
@@ -762,7 +762,7 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
     it('㉚ — סיבת-החסימה של הכפתור מקושרת ב-aria-describedby, המזהה בלי רווחים, וזה **אותו** אלמנט של השדה', async () => {
       removalScene()
       await renderDialog()
-      const tagsBtn = removeBtn(`הסירי פריט — ${TAGS_NAME}`)
+      const tagsBtn = removeBtn(`הסר פריט — ${TAGS_NAME}`)
       const describedBy = tagsBtn.getAttribute('aria-describedby')
       expect(describedBy).toBeTruthy()
       // מזהה חוקי — אין רווחים. `aria-describedby` היא רשימת-טוקנים מופרדת-ברווח, ולכן
@@ -786,7 +786,7 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
       const satRow = rowOf(SAT_INPUT)
       fireEvent.change(screen.getByLabelText(SAT_INPUT), { target: { value: '0' } })
       expect(within(satRow).getByText('יוסר')).toBeInTheDocument()
-      expect(removeBtn(`בטלי הסרה — ${SAT_NAME}`)).toBeInTheDocument()
+      expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).toBeInTheDocument()
     })
 
     it('בזמן שמירה הפקד מושבת יחד עם שאר הפקדים', async () => {
@@ -794,13 +794,13 @@ describe('ScopeChangeDialog — הסרה = הקלדת 0 (M5-7 · ㊱ · ㉚)', (
       let release
       applyScopeChange.mockImplementation(() => new Promise((resolve) => (release = resolve)))
       await renderDialog()
-      fireEvent.click(removeBtn(`הסירי פריט — ${SAT_NAME}`))
+      fireEvent.click(removeBtn(`הסר פריט — ${SAT_NAME}`))
       fireEvent.change(screen.getByTestId('scope-reason'), { target: { value: 'הלקוח ויתר' } })
       fireEvent.click(screen.getByTestId('scope-save'))
 
-      await waitFor(() => expect(removeBtn(`בטלי הסרה — ${SAT_NAME}`)).toBeDisabled())
+      await waitFor(() => expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).toBeDisabled())
       release({ change_group_id: 1, lines: [] })
-      await waitFor(() => expect(removeBtn(`בטלי הסרה — ${SAT_NAME}`)).not.toBeDisabled())
+      await waitFor(() => expect(removeBtn(`בטל הסרה — ${SAT_NAME}`)).not.toBeDisabled())
     })
   })
 })

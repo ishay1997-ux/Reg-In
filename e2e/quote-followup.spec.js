@@ -159,18 +159,18 @@ test.describe('D2 · טיוטת מייל-מעקב בעזרת AI', () => {
     expect(sends, '🔒 המערכת לעולם לא שולחת').toEqual([])
   })
 
-  test('מכסה (429) ⇒ "הגעת למכסת ה-AI — נסי שוב מאוחר יותר.", בלי טיוטה ובלי "נסי שוב"', async ({
+  test('מכסה (429) ⇒ "הגעת למכסת ה-AI — נסה שוב מאוחר יותר.", בלי טיוטה ובלי "נסה שוב"', async ({
     page,
   }) => {
     const { expiredId } = await pickQuotes(page)
     const { sends } = await routeDraft(page, {
       status: 429,
-      body: { status: 'quota', error: 'הגעת למכסת ה-AI — נסי שוב מאוחר יותר.' },
+      body: { status: 'quota', error: 'הגעת למכסת ה-AI — נסה שוב מאוחר יותר.' },
     })
     await page.goto(`/quotes?view=${expiredId}`)
     await page.getByTestId('quote-followup-open').click()
     await expect(page.getByTestId('followup-status')).toHaveText(
-      'הגעת למכסת ה-AI — נסי שוב מאוחר יותר.',
+      'הגעת למכסת ה-AI — נסה שוב מאוחר יותר.',
     )
     await expect(page.getByTestId('followup-draft')).toHaveCount(0)
     await expect(page.getByTestId('followup-retry')).toHaveCount(0)

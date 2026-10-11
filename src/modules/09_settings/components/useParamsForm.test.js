@@ -117,9 +117,7 @@ describe('useParamsForm — ולידציה', () => {
   it('ערך מחוץ-לטווח מקבל את הודעת-הטווח של השורה עצמה', () => {
     const { result } = setup(PRICING_ROWS, { canEditAll: true })
     act(() => result.current.setValue('אחוז_מעמ', '150'))
-    expect(result.current.errors['אחוז_מעמ']).toBe(
-      'הזיני מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה',
-    )
+    expect(result.current.errors['אחוז_מעמ']).toBe('הזן מספר בין 0 ל-100, עד שתי ספרות אחרי הנקודה')
   })
 
   it('שורה שלא נגעו בה אינה מקבלת שגיאה גם אם ערכה ההיסטורי פסול', () => {
