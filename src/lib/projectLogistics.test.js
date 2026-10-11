@@ -776,7 +776,7 @@ describe('המחרוזות הנעולות של משטח 1 — מועתקות, ל
       'אין לך הרשאה לצפות בפריטי הלוגיסטיקה, ולכן לא ניתן לקבוע אם התור ריק כדין.',
     )
     expect(EMPTY_OUTBOUND_SENTENCE).toBe('אין אירוע שיוצא עד יום העסקים הבא.')
-    expect(WRITE_FAILURE_SENTENCE).toBe('העדכון לא נשמר — הערך הוחזר לקודם. נסי שוב.')
+    expect(WRITE_FAILURE_SENTENCE).toBe('העדכון לא נשמר — הערך הוחזר לקודם. נסה שוב.')
     expect(NEGATIVE_QTY_SENTENCE).toBe('כמות בפועל אינה יכולה להיות שלילית.')
     expect(QUEUE_SORT_LINE).toBe('ממוין: לפי קרבת האירוע')
     expect(OUTBOUND_READY_REASON).toBe('הכול מוכן — לוודא שהסחורה יוצאת')

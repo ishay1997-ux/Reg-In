@@ -28,7 +28,7 @@ describe('FOLLOWUP_AI_AVAILABLE — המתג שמסתיר את הכפתור', ()
   })
 })
 
-describe('followupAvailability — מתי "נסחי מייל מעקב" מוצג, ומתי הוא מושבת ולמה', () => {
+describe('followupAvailability — מתי "נסח מייל מעקב" מוצג, ומתי הוא מושבת ולמה', () => {
   it('הצעה פתוחה שנשלחה ⇒ פעיל', () => {
     expect(followupAvailability({ quote: open, canEdit: true, lastSend: sentRow })).toEqual({
       show: true,
@@ -51,7 +51,7 @@ describe('followupAvailability — מתי "נסחי מייל מעקב" מוצג,
     ).toBe('')
   })
 
-  it('היומן עדיין נטען ⇒ מושבת עם "בודקת…", לא עם טענה שאיננו יודעים', () => {
+  it('היומן עדיין נטען ⇒ מושבת עם "בודק…", לא עם טענה שאיננו יודעים', () => {
     expect(
       followupAvailability({ quote: open, canEdit: true, lastSend: undefined }).disabledReason,
     ).toBe(FOLLOWUP_CHECKING_REASON)
@@ -89,7 +89,7 @@ describe('followupAvailability — מתי "נסחי מייל מעקב" מוצג,
 })
 
 describe('classifyFollowupFailure — מה החלון אומר ומה הוא מציע', () => {
-  it('מפתח-AI חסר (500 + `unavailable`) ⇒ מצב סופי עם נוסח השרת, בלי "נסי שוב" — ניסיון-חוזר לא יתקין מפתח', () => {
+  it('מפתח-AI חסר (500 + `unavailable`) ⇒ מצב סופי עם נוסח השרת, בלי "נסה שוב" — ניסיון-חוזר לא יתקין מפתח', () => {
     expect(
       classifyFollowupFailure(
         {
@@ -104,13 +104,13 @@ describe('classifyFollowupFailure — מה החלון אומר ומה הוא מ�
     })
   })
 
-  it('429 ⇒ מכסה, בלי "נסי שוב" (גם כשהגוף לא נקרא)', () => {
+  it('429 ⇒ מכסה, בלי "נסה שוב" (גם כשהגוף לא נקרא)', () => {
     expect(classifyFollowupFailure({ status: 'quota' }, 429)).toEqual({
       kind: 'quota',
       message: FOLLOWUP_QUOTA_MESSAGE,
     })
     expect(classifyFollowupFailure(null, 429).kind).toBe('quota')
-    expect(FOLLOWUP_QUOTA_MESSAGE).toBe('הגעת למכסת ה-AI — נסי שוב מאוחר יותר.')
+    expect(FOLLOWUP_QUOTA_MESSAGE).toBe('הגעת למכסת ה-AI — נסה שוב מאוחר יותר.')
   })
 
   it('4xx אחר ⇒ ההודעה של השרת כלשונה, סופי', () => {
@@ -120,7 +120,7 @@ describe('classifyFollowupFailure — מה החלון אומר ומה הוא מ�
     })
   })
 
-  it('5xx · רשת · פסק-זמן ⇒ "הניסוח נכשל — נסי שוב." עם ניסיון-חוזר', () => {
+  it('5xx · רשת · פסק-זמן ⇒ "הניסוח נכשל — נסה שוב." עם ניסיון-חוזר', () => {
     expect(classifyFollowupFailure({ status: 'failed' }, 502)).toEqual({
       kind: 'retry',
       message: FOLLOWUP_FAILED_MESSAGE,
@@ -129,7 +129,7 @@ describe('classifyFollowupFailure — מה החלון אומר ומה הוא מ�
       kind: 'retry',
       message: FOLLOWUP_FAILED_MESSAGE,
     })
-    expect(FOLLOWUP_FAILED_MESSAGE).toBe('הניסוח נכשל — נסי שוב.')
+    expect(FOLLOWUP_FAILED_MESSAGE).toBe('הניסוח נכשל — נסה שוב.')
   })
 })
 

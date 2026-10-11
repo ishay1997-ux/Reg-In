@@ -926,7 +926,7 @@ describe('ChecklistDialog — מצבי ריק, חסימה וכשל-טעינה', 
     expect(screen.getByText('צ׳קליסט הפרויקט')).toBeInTheDocument()
   })
 
-  it('כשל-טעינה — הכותרת הנעולה + פירוט + "נסי שוב" (נקבה), וניסיון חוזר קורא שוב', async () => {
+  it('כשל-טעינה — הכותרת הנעולה + פירוט + "נסה שוב", וניסיון חוזר קורא שוב', async () => {
     getChecklist.mockRejectedValueOnce(new Error('boom'))
     listProducts.mockResolvedValue(PRODUCTS)
     authState.permissions = { לוגיסטיקה: 'edit' }
@@ -939,7 +939,7 @@ describe('ChecklistDialog — מצבי ריק, חסימה וכשל-טעינה', 
     expect(state).toHaveTextContent('לא ניתן לטעון את הנתונים.')
     expect(state).toHaveTextContent(LOAD_FAILURE_DETAIL)
     getChecklist.mockResolvedValue(checklist())
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     await screen.findByTestId('checklist-row-01WEB-1')
   })
 })

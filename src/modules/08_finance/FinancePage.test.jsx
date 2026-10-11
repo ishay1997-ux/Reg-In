@@ -481,8 +481,8 @@ describe('S1 — סרגל-הסינון', () => {
 
   it('מצב-הריק שאחרי-סינון נבדל ממצב-ריק-אמיתי: פעולה הפוכה, לא "נסי שוב"', () => {
     fireEvent.change(screen.getByTestId('finance-filter-company'), { target: { value: 'זזזז' } })
-    expect(screen.getByTestId('finance-empty-clear-filter')).toHaveTextContent('נקי סינון')
-    expect(screen.queryByText('נסי שוב')).not.toBeInTheDocument()
+    expect(screen.getByTestId('finance-empty-clear-filter')).toHaveTextContent('נקה סינון')
+    expect(screen.queryByText('נסה שוב')).not.toBeInTheDocument()
   })
 })
 
@@ -499,14 +499,14 @@ describe('S1 — מצבי-הריק והשגיאה, בסדר-הענפים של ה
     expect(screen.queryByTestId('finance-error')).not.toBeInTheDocument()
   })
 
-  it('② תקלת-טעינה: מסך-שגיאה עם "נסי שוב", ו"נסי שוב" באמת טוען מחדש', async () => {
+  it('② תקלת-טעינה: מסך-שגיאה עם "נסה שוב", ו"נסה שוב" באמת טוען מחדש', async () => {
     listFinanceOverview.mockRejectedValueOnce(new Error('Failed to fetch'))
     render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-error')
     expect(screen.getByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
 
     listFinanceOverview.mockResolvedValue(BOARD)
-    fireEvent.click(screen.getByText('נסי שוב'))
+    fireEvent.click(screen.getByText('נסה שוב'))
     expect(await screen.findByTestId('finance-table')).toBeInTheDocument()
   })
 

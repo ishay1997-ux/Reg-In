@@ -63,12 +63,12 @@ describe('BelowMinWageList', () => {
   })
 
   // ✏️ 25/09/2026 (בודק-ניסוח #34): כשל-טעינה מציע "נסי שוב", והלחיצה טוענת מחדש.
-  it('תקלה — "נסי שוב" טוען מחדש, והרשימה מופיעה', async () => {
+  it('תקלה — "נסה שוב" טוען מחדש, והרשימה מופיעה', async () => {
     listBelowMinWage
       .mockRejectedValueOnce(new Error('שגיאה בטעינת רשימת הדיילות.'))
       .mockResolvedValueOnce([])
     render(<BelowMinWageList threshold="35" />)
-    fireEvent.click(await screen.findByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'נסה שוב' }))
     expect(await screen.findByTestId('settings-below-min-wage-empty')).toBeInTheDocument()
     expect(listBelowMinWage).toHaveBeenCalledTimes(2)
   })

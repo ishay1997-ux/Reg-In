@@ -495,7 +495,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
                         onClick={() => setRanges((prev) => prev.filter((_, i) => i !== index))}
                         className="h-auto p-0 text-xs text-slate-600"
                       >
-                        הסירי
+                        הסר
                       </Button>
                     </div>
                   ))}
@@ -561,7 +561,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               className="h-auto rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white"
               data-testid="hostess-save"
             >
-              {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'שמרי דיילת'}
+              {saving ? 'שומר…' : isEdit ? 'שמור שינויים' : 'שמור דיילת'}
             </Button>
           </DialogFooter>
         </form>

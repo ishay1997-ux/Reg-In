@@ -301,13 +301,13 @@ describe('אירוע ללא דיילות אינו קורה (הכרעת-מציא�
   })
 })
 
-describe('כשל-טעינה — הודעה מפורשת + נסי שוב, לעולם לא רשימה ריקה', () => {
+describe('כשל-טעינה — הודעה מפורשת + נסה שוב, לעולם לא רשימה ריקה', () => {
   it('הקריאה נכשלת ⇒ שגיאה+retry; לחיצה טוענת מחדש ומציגה את השורות', async () => {
     getProjectAssignments.mockRejectedValueOnce(new Error('network down'))
     renderTab()
     expect(await screen.findByTestId('closing-load-error')).toBeInTheDocument()
     expect(screen.queryByTestId('closing-legal-empty')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     expect(await screen.findByTestId('closing-row-11')).toBeInTheDocument()
   })
 })
@@ -446,7 +446,7 @@ describe('השבתת-שלב-השליחה — שומר ה-double-log של email_l
 
     // ה-RPC כבר עבר, המייל תלוי-ועומד — הבקרה חייבת להיות מושבתת בדיוק עכשיו.
     await waitFor(() => expect(screen.getByTestId('closing-save')).toBeDisabled())
-    expect(screen.getByTestId('closing-save')).toHaveTextContent('שומרת ושולחת…')
+    expect(screen.getByTestId('closing-save')).toHaveTextContent('שומר ושולח…')
     releaseSend()
   })
 })

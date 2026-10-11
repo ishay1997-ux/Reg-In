@@ -255,7 +255,7 @@ describe('ReportSurface — extension slots', () => {
         transformPayload={transformPayload}
       />,
     )
-    expect(await screen.findByText('נסי שוב')).toBeInTheDocument()
+    expect(await screen.findByText('נסה שוב')).toBeInTheDocument()
     expect(transformPayload).not.toHaveBeenCalled()
   })
 })
@@ -1052,12 +1052,12 @@ describe('ReportSurface — תקרת-השורות נמדדת מול השורות
 
 describe('ReportSurface — נוסח הצ׳יפ', () => {
   // ‏`spec.md §1.5` + S-28 נועלים ציווי בנקבה, והמוקאפ המאושר כותב זאת בשורה 897.
-  it('הצ׳יפ אומר "× נקי בחירה"', async () => {
+  it('הצ׳יפ אומר "× נקה בחירה"', async () => {
     callReport.mockResolvedValueOnce(crossPayload())
     renderCross()
     await screen.findAllByTestId('report-row')
     fireEvent.click(screen.getByTestId('chart-select-0'))
-    expect(screen.getByTestId('report-clear-crossfilter')).toHaveTextContent('× נקי בחירה')
+    expect(screen.getByTestId('report-clear-crossfilter')).toHaveTextContent('× נקה בחירה')
   })
 })
 

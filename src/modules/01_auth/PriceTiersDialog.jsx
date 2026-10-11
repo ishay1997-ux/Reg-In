@@ -111,7 +111,7 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
         onSaved?.()
       }, 900)
     } catch (err) {
-      setFormError(err.message || 'שמירת מדרגות המחיר נכשלה — נסי שוב.')
+      setFormError(err.message || 'שמירת מדרגות המחיר נכשלה — נסה שוב.')
     } finally {
       setSaving(false)
     }
@@ -261,7 +261,7 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
             className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
             data-testid="tiers-save"
           >
-            {saving ? 'שומרת…' : 'שמירת המדרגות'}
+            {saving ? 'שומר…' : 'שמירת המדרגות'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -139,7 +139,7 @@ describe('DashboardPage — טעינה ושגיאה', () => {
     expect(screen.getByTestId('skeleton-page')).toBeInTheDocument()
   })
 
-  it('🔴 נפילת-רשת: המשפט הנעול בעברית, בלי הודעה טכנית, + "נסי שוב" שבאמת מנסה שוב', async () => {
+  it('🔴 נפילת-רשת: המשפט הנעול בעברית, בלי הודעה טכנית, + "נסה שוב" שבאמת מנסה שוב', async () => {
     getDashboardSummary.mockRejectedValueOnce(new TypeError('Failed to fetch'))
     renderPage()
     expect(await screen.findByText('לא ניתן לטעון את הנתונים.')).toBeInTheDocument()
@@ -147,7 +147,7 @@ describe('DashboardPage — טעינה ושגיאה', () => {
     expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument()
 
     getDashboardSummary.mockResolvedValueOnce(summaryFixture())
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     expect(await screen.findByTestId('kpi-active')).toBeInTheDocument()
     expect(getDashboardSummary).toHaveBeenCalledTimes(2)
   })
@@ -160,7 +160,7 @@ describe('DashboardPage — טעינה ושגיאה', () => {
     renderPage()
     expect(await screen.findByText('אין לך הרשאה לצפות במסך הבית.')).toBeInTheDocument()
     expect(screen.getByTestId('dashboard-no-permission')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'נסי שוב' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'נסה שוב' })).not.toBeInTheDocument()
   })
 
   // 🔴 השומר נצפה **נכשל**, לא רק עובר (src/CLAUDE.md — "שומר שלא נצפה נכשל אינו שומר"):

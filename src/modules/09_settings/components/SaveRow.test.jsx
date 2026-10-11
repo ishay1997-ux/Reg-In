@@ -63,13 +63,13 @@ describe('SaveRow', () => {
     // 🔴 **המונה נשאר** (תוקן 03/09/2026). קודם נבדק כאן ש-`settings-dirty-count` **נעלם** —
     // כלומר הבדיקה נעלה את הפגם: דווקא אחרי כשל, כשהשאלה היא "כמה עוד ממתין", המספר נמחק.
     expect(screen.getByTestId('settings-dirty-count')).toHaveTextContent('שינית 2 מתוך 7')
-    expect(screen.getByTestId('settings-save-button')).toHaveTextContent('נסי שוב')
+    expect(screen.getByTestId('settings-save-button')).toHaveTextContent('נסה שוב')
   })
 
-  it('בזמן שמירה הכפתור נעול ואומר "שומרת…"', () => {
+  it('בזמן שמירה הכפתור נעול ואומר "שומר…"', () => {
     render(<SaveRow dirtyCount={1} total={7} saving onCancel={() => {}} onSave={() => {}} />)
     expect(screen.getByTestId('settings-save-button')).toBeDisabled()
-    expect(screen.getByTestId('settings-save-button')).toHaveTextContent('שומרת…')
+    expect(screen.getByTestId('settings-save-button')).toHaveTextContent('שומר…')
   })
   // 🔴 **סיבת-ההשבתה יושבת ליד הכפתור** (אודיט-סגירת מ9, 554px). בלי זה הכפתור מושבת
   // והמשפט המסביר נמצא מחוץ למסך — הפגם שהבדיקות האלה נועלות.

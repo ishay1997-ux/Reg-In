@@ -54,7 +54,7 @@ describe('PermissionAwareEmpty', () => {
     expect(
       screen.getByText('להצעה שאושרה יש פריטי מוצר, ולכן רשימה ריקה כאן היא תקלה ולא מצב תקין.'),
     ).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 

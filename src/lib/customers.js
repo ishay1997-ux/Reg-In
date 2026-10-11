@@ -299,7 +299,7 @@ export function validateCustomerForm(form = {}) {
 // שהשרת היה מחזיר על הקבוצה נתפסת לפני שהלקוח נכתב.
 export const NO_CONTACT_MSG = 'יש להזין לפחות איש קשר אחד — שם, וטלפון או אימייל.'
 // המשפטים המדויקים שה-RPC זורק — נשמרים מילה-במילה גם כאן (מקור-אמת אחד לשני המצבים).
-export const NO_PRIMARY_MSG = 'אי אפשר למחוק את איש הקשר הראשי. סמני קודם אחר כראשי.'
+export const NO_PRIMARY_MSG = 'אי אפשר למחוק את איש הקשר הראשי. סמן קודם אחר כראשי.'
 export const TWO_PRIMARY_MSG = 'ניתן לסמן איש קשר ראשי אחד בלבד.'
 
 export function validateContactSet(contacts = []) {

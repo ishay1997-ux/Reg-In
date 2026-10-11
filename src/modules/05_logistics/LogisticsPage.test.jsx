@@ -224,7 +224,7 @@ describe('LogisticsPage — 🔴 מצב ①: חוסר-הרשאה נבדק ראש
 })
 
 describe('LogisticsPage — מצב ②: תקלת-טעינה', () => {
-  it('הכותרת הנעולה לבדה + "נסי שוב"; 🚫 בלי שורת-הפירוט שמדברת על "הפרויקט"', async () => {
+  it('הכותרת הנעולה לבדה + "נסה שוב"; 🚫 בלי שורת-הפירוט שמדברת על "הפרויקט"', async () => {
     listActiveProjects.mockRejectedValueOnce(new TypeError('Failed to fetch'))
     render(<LogisticsPage />)
 
@@ -235,7 +235,7 @@ describe('LogisticsPage — מצב ②: תקלת-טעינה', () => {
     expect(screen.queryByTestId('logistics-no-permission')).not.toBeInTheDocument()
     expect(screen.queryByTestId('logistics-outbound')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'נסי שוב' }))
+    fireEvent.click(screen.getByRole('button', { name: 'נסה שוב' }))
     expect(await screen.findByTestId('logistics-queue-table')).toBeInTheDocument()
   })
 
@@ -601,7 +601,7 @@ describe('LogisticsPage — מקרא-הענבר, הבסיס הקצר (לילה-�
 })
 
 describe('LogisticsPage — מצב ③: ריק אחרי גלולה', () => {
-  it('המשפטים הנעולים + מונה חי + "נקי סינון" שבאמת מוציא ממצב-הריק', async () => {
+  it('המשפטים הנעולים + מונה חי + "נקה סינון" שבאמת מוציא ממצב-הריק', async () => {
     const data = board()
     const kept = new Set([105, 106])
     loadBoard({
@@ -613,9 +613,9 @@ describe('LogisticsPage — מצב ③: ריק אחרי גלולה', () => {
     expect(await screen.findByText('אין פרויקט התואם למסנן שבחרת.')).toBeInTheDocument()
     expect(screen.getByText('2 פרויקטים קיימים ואינם מוצגים כרגע.')).toBeInTheDocument()
     // 🚫 הפעולה הפוכה ממצב ② — ניקוי-סינון, לא ניסיון-חוזר.
-    expect(screen.queryByRole('button', { name: 'נסי שוב' })).not.toBeInTheDocument()
-    // ㉜ — לשון-נקבה בדריסת אתר-הקריאה.
-    expect(screen.getByTestId('logistics-clear-filter').textContent).toBe('נקי סינון')
+    expect(screen.queryByRole('button', { name: 'נסה שוב' })).not.toBeInTheDocument()
+    // ㉜ — לשון זכר/נייטרלי.
+    expect(screen.getByTestId('logistics-clear-filter').textContent).toBe('נקה סינון')
 
     fireEvent.click(screen.getByTestId('logistics-clear-filter'))
     expect(await screen.findByTestId('logistics-queue-table')).toBeInTheDocument()
@@ -661,13 +661,13 @@ describe('LogisticsPage — להזמין לחודש הקרוב', () => {
     )
   })
 
-  it('כשל — "נסי שוב", לא "אין מה להזמין", והתור עדיין על המסך', async () => {
+  it('כשל — "נסה שוב", לא "אין מה להזמין", והתור עדיין על המסך', async () => {
     getUpcomingOrders.mockRejectedValue(new Error('שגיאה בטעינת רשימת ההזמנה.'))
     vi.spyOn(console, 'error').mockImplementation(() => {})
     render(<LogisticsPage />)
     const section = await screen.findByTestId('logistics-upcoming-orders')
     expect(await within(section).findByText('שגיאה בטעינת רשימת ההזמנה.')).toBeInTheDocument()
-    expect(within(section).getByRole('button', { name: 'נסי שוב' })).toBeInTheDocument()
+    expect(within(section).getByRole('button', { name: 'נסה שוב' })).toBeInTheDocument()
     expect(within(section).queryByTestId('logistics-upcoming-orders-empty')).toBeNull()
     expect(screen.getByTestId('logistics-queue-table')).toBeInTheDocument()
   })

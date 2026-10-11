@@ -120,7 +120,7 @@ export default function UsersManagementPage() {
       toast.success(nextChecked ? 'מצב הטמעה הודלק' : 'מצב הטמעה כובה')
     } catch (err) {
       setOnboardingModes((modes) => ({ ...(modes ?? {}), [targetUser.email]: previous }))
-      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה — נסי שוב.')
+      toast.error(err.message || 'שמירת מצב ההטמעה נכשלה — נסה שוב.')
     } finally {
       setOnboardingSaving('')
     }
@@ -187,7 +187,7 @@ export default function UsersManagementPage() {
       setSaving(false)
 
       if (error || !updated || updated.length === 0) {
-        setFormError('שמירת השינויים נכשלה — נסי שוב.')
+        setFormError('שמירת השינויים נכשלה — נסה שוב.')
         return
       }
     } else {
@@ -210,9 +210,9 @@ export default function UsersManagementPage() {
 
       if (error) {
         if (error.code === '23505') {
-          setFormError('כבר קיימת משתמשת עם כתובת האימייל הזו.')
+          setFormError('כבר קיים משתמש עם כתובת האימייל הזו.')
         } else {
-          setFormError('שמירה נכשלה — נסי שוב.')
+          setFormError('שמירה נכשלה — נסה שוב.')
         }
         return
       }
@@ -231,8 +231,8 @@ export default function UsersManagementPage() {
     if (nextStatus === 'inactive') {
       const confirmed = await confirm({
         title: 'השבתת משתמש',
-        message: `להשבית את המשתמשת "${targetUser.full_name}"? היא לא תוכל להתחבר למערכת עד שתוחזר לפעיל.`,
-        confirmLabel: 'השביתי משתמש',
+        message: `להשבית את המשתמש "${targetUser.full_name}"? לא ניתן יהיה להתחבר לחשבון זה עד שיוחזר לפעיל.`,
+        confirmLabel: 'השבת משתמש',
       })
       if (!confirmed) return
     }
@@ -247,8 +247,8 @@ export default function UsersManagementPage() {
     if (error || !updated || updated.length === 0) {
       toast.error(
         nextStatus === 'inactive'
-          ? 'השבתת המשתמש נכשלה — נסי שוב.'
-          : 'הפעלת המשתמש נכשלה — נסי שוב.',
+          ? 'השבתת המשתמש נכשלה — נסה שוב.'
+          : 'הפעלת המשתמש נכשלה — נסה שוב.',
       )
       return
     }
@@ -343,7 +343,7 @@ export default function UsersManagementPage() {
                   disabled={editingUser?.email === currentUser?.email}
                 >
                   <SelectTrigger className="w-full h-auto p-3 rounded-lg border-slate-300">
-                    <SelectValue placeholder="בחרי תפקיד" />
+                    <SelectValue placeholder="בחר תפקיד" />
                   </SelectTrigger>
                   <SelectContent dir="rtl">
                     {roles.map((role) => (
@@ -368,7 +368,7 @@ export default function UsersManagementPage() {
                   disabled={saving}
                   className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
                 >
-                  {saving ? 'שומרת…' : editingUser ? 'שמרי שינויים' : 'הוסיפי משתמש'}
+                  {saving ? 'שומר…' : editingUser ? 'שמור שינויים' : 'הוסף משתמש'}
                 </Button>
               </DialogFooter>
             </form>
@@ -410,7 +410,7 @@ export default function UsersManagementPage() {
                       isActive ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600',
                     )}
                   >
-                    {isActive ? 'פעילה' : 'לא פעילה'}
+                    {isActive ? 'פעיל' : 'לא פעיל'}
                   </span>
                 </td>
                 {isCeo && (
@@ -437,7 +437,7 @@ export default function UsersManagementPage() {
                     <Button
                       type="button"
                       variant="link"
-                      title="ערכי משתמש"
+                      title="ערוך משתמש"
                       onClick={() => openEditDialog(targetUser)}
                       className="h-auto p-0 text-teal-600 hover:text-teal-700"
                     >
@@ -448,7 +448,7 @@ export default function UsersManagementPage() {
                         type="button"
                         variant="link"
                         disabled={isSelf}
-                        title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השביתי משתמש'}
+                        title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השבת משתמש'}
                         onClick={() => handleToggleStatus(targetUser)}
                         className="h-auto p-0 text-red-600 hover:text-red-700"
                       >
@@ -458,7 +458,7 @@ export default function UsersManagementPage() {
                       <Button
                         type="button"
                         variant="link"
-                        title="הפעילי משתמש מחדש"
+                        title="הפעל משתמש מחדש"
                         onClick={() => handleToggleStatus(targetUser)}
                         className="h-auto p-0 text-teal-600 hover:text-teal-700"
                       >

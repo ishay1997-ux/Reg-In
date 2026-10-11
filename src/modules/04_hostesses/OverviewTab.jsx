@@ -275,7 +275,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
           >
             {/* ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #9): האריח אומר "מתוכם 37 פג תוקפם" והכפתור "(7)".
                 שניהם נכונים — הכפתור סופר רק אירועים שעוד חסרות בהם דיילות (`canResend`) — אבל רק אחד אמר מה. */}
-            {`שלחי שוב למי שפג תוקפן, באירועים שעוד חסרים (${resendableCount})`}
+            {`שלח שוב למי שפג תוקפן, באירועים שעוד חסרים (${resendableCount})`}
           </Button>
         )}
       </div>
@@ -454,7 +454,7 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
             >
               {/* ✏️ 25/09/2026 (מעבר-העיניים #9): כפתור נעול עם מונה ("שלחי שוב (5)") נקרא כאילו יש 5 לשלוח.
                   נעול ⇒ בלי מונה; המונה נשאר בעמודת "ממתינות" ("5 פג תוקפן"). */}
-              {canResend(row) ? `שלחי שוב (${counts.expired})` : 'שלחי שוב'}
+              {canResend(row) ? `שלח שוב (${counts.expired})` : 'שלח שוב'}
             </Button>
           )}
         </Td>
@@ -528,7 +528,7 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
             className="mt-2 h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="overview-clear-filters"
           >
-            נקי סינון
+            נקה סינון
           </Button>
         </div>
       </div>

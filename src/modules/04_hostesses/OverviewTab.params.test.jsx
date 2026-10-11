@@ -224,7 +224,7 @@ describe('המסנן בכתובת — ?filter=missing', () => {
 // ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים #9): באתר האריח אמר "מתוכם 37 פג תוקפם" והכפתור המרוכז "(7)", ועל
 // שורות של אירועים מאוישים ישב כפתור נעול עם מונה ("שלחי שוב (5)"). שני המספרים נכונים — הכפתור סופר רק
 // אירועים שעוד חסרים — אבל רק אחד אמר מה הוא סופר.
-describe('"שלחי שוב" — כל מספר אומר מה הוא סופר', () => {
+describe('"שלח שוב" — כל מספר אומר מה הוא סופר', () => {
   function expiredInvite(projectId, hostessId) {
     return {
       project_id: projectId,
@@ -256,11 +256,11 @@ describe('"שלחי שוב" — כל מספר אומר מה הוא סופר', ()
 
     const fullButton = screen.getByTestId('overview-resend-801')
     expect(fullButton).toBeDisabled()
-    expect(fullButton).toHaveTextContent(/^שלחי שוב$/)
+    expect(fullButton).toHaveTextContent(/^שלח שוב$/)
 
     const missingButton = screen.getByTestId('overview-resend-802')
     expect(missingButton).toBeEnabled()
-    expect(missingButton).toHaveTextContent('שלחי שוב (1)')
+    expect(missingButton).toHaveTextContent('שלח שוב (1)')
   })
 })
 

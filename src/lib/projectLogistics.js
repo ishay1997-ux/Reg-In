@@ -283,7 +283,7 @@ export function countProductLines(quote, products) {
 export const QUEUE_NO_PERMISSION_SENTENCE =
   'אין לך הרשאה לצפות בפריטי הלוגיסטיקה, ולכן לא ניתן לקבוע אם התור ריק כדין.'
 export const EMPTY_OUTBOUND_SENTENCE = 'אין אירוע שיוצא עד יום העסקים הבא.'
-export const WRITE_FAILURE_SENTENCE = 'העדכון לא נשמר — הערך הוחזר לקודם. נסי שוב.'
+export const WRITE_FAILURE_SENTENCE = 'העדכון לא נשמר — הערך הוחזר לקודם. נסה שוב.'
 // 🔴 **העתק-בייט של ה-`raise` בשרת** — `supabase/migrations/20260826002447_module5_checklist_rpc.sql`
 // (עוגן-גריפ: `אינה יכולה להיות שלילית`). כלל-הבית AR-9: שני הצדדים משתנים יחד, אחרת
 // המשתמשת רואה נוסח אחד לפני השליחה ונוסח אחר אחריה. כאן זהו **שומר טרום-שליחה**;

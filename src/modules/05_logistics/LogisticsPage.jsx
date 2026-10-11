@@ -98,7 +98,7 @@ const REASON_TONES = {
 const amberGlyphTitle = (days) => `פריט פיזי טרם הוזמן, והאירוע בתוך ${days} ימי עסקים`
 const DISABLED_PILL_TITLE = 'אין כרגע פרויקט במצב הזה'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
-const CLEAR_FILTER_LABEL = 'נקי סינון'
+const CLEAR_FILTER_LABEL = 'נקה סינון'
 // בנוי על `לכרטיס →` של המבט-על המאושר במ6 (אותה צורה: מילת-יעד + חץ), ו"צ'קליסט" הוא
 // שמו המאושר של משטח 2. כמחרוזת ולא כטקסט-JSX — הגרש שבתוכה אינו עובר ישות-HTML בשקט.
 const CHECKLIST_LINK_LABEL = "לצ'קליסט →"

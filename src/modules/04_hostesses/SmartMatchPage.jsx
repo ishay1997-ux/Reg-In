@@ -283,7 +283,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
   function reportReleaseFailures(names) {
     if (!names?.length) return
     toast.error(
-      `${names.join(' · ')} לא שוחררו — הן עדיין משובצות לאירוע. נסי לשחרר ידנית מתפריט-השורה.`,
+      `${names.join(' · ')} לא שוחררו — הן עדיין משובצות לאירוע. נסה לשחרר ידנית מתפריט-השורה.`,
     )
   }
 
@@ -429,7 +429,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
           title: `${name} ביטלה אחרי האישור הסופי?`,
           message:
             'האירוע יחזור להיות חסר, והביטול ייספר במרכיב-האמינות שלה. זה שונה משחרור: בשחרור המערכת מסיימת את השיבוץ, וכאן היא זו שחזרה בה.',
-          confirmLabel: 'סמני שביטלה',
+          confirmLabel: 'סמן שביטלה',
         }))
       ) {
         return
@@ -647,7 +647,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
               className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-500"
               data-testid="sm-event-empty"
             >
-              עדיין לא נשלח אף זימון לאירוע הזה — בחרי מועמדות מהטור השני ושלחי.
+              עדיין לא נשלח אף זימון לאירוע הזה — בחר מועמדות מהטור השני ושלח.
             </p>
           ) : (
             <ul className="flex flex-col gap-1.5">
@@ -682,7 +682,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
               className="mt-3 h-auto w-full rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white"
               data-testid="sm-approve-all"
             >
-              {`שלחי אישור סופי לכל מי שאישרה זמינות (${waitingCount})`}
+              {`שלח אישור סופי לכל מי שאישרה זמינות (${waitingCount})`}
             </Button>
           )}
         </section>
@@ -760,7 +760,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
                     ("חמישה חוקים בנשימה אחת") — והמרחק ביניהם היה קבוע (`40 ק"מ`) בעוד שהוא
                     פרמטר. הבסיס נשאר עם המצב ועם הדרך קדימה בלבד; חמשת החוקים ⇒ מועמד לשכבה
                     (`onboardingCopy.js smartMatch.emptyGateRules`, לא נכתב כאן). */}
-                בדקי במאגר הדיילות אם יש דיילת שהסינון האוטומטי לא כלל — אף אחת לא עברה אותו לאירוע
+                בדוק במאגר הדיילות אם יש דיילת שהסינון האוטומטי לא כלל — אף אחת לא עברה אותו לאירוע
                 הזה כרגע.
               </p>
               <Hint id="smartMatch.emptyGateRules" />
@@ -797,7 +797,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
                 className="mt-3 h-auto w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
                 data-testid="sm-send-invites"
               >
-                {`שלחי מייל תיאום (${selected.length} נבחרו)`}
+                {`שלח מייל תיאום (${selected.length} נבחרו)`}
               </Button>
               {/* 🔴 **איפוס 09/09/2026 — דוגמה 3 של `ui-copy-styleguide.md` §4, פסוקה זו היא
                   ה-SSOT להכרעה.** הבסיס נושא רק את ⑥ (מה יקרה כשהיא תלחץ — יוצא-החוצה לדיילת
@@ -939,7 +939,7 @@ function CandidateCard({
           checked={checked}
           onChange={onToggle}
           className="mt-1 size-4 accent-teal-600"
-          aria-label={`בחרי את ${candidate.full_name}`}
+          aria-label={`בחר את ${candidate.full_name}`}
           data-testid={`sm-pick-${candidate.hostess_id}`}
         />
       )}

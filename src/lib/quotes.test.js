@@ -1162,7 +1162,7 @@ describe('נוסחי-השליחה של הצעת-מחיר — ספציפיים ל
     expect(QUOTE_SEND_NO_PERMISSION_REASON).toContain('הצעות')
     expect(QUOTE_SEND_FAILED_MESSAGE).toContain('ההצעה')
     // "הורידי את הקובץ" הוא בדיוק מה שאי-אפשר לומר לזימון-משמרת — ולכן הוא כאן ולא במנוע.
-    expect(QUOTE_SEND_FAILED_MESSAGE).toContain('הורידי את הקובץ')
+    expect(QUOTE_SEND_FAILED_MESSAGE).toContain('הורד את הקובץ')
   })
 
   it('המנוע מקבל אותם ומחזיר אותם — ולא את ברירת-המחדל הגנרית', () => {

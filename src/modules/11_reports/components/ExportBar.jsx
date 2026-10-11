@@ -31,7 +31,7 @@ import {
   exportReportRows,
 } from '@/lib/reportsExport'
 
-const NO_REPORT_TO_EXPORT = 'לא נמצא דוח לייצוא בלשונית הזו — רענני את הדף ונסי שוב.'
+const NO_REPORT_TO_EXPORT = 'לא נמצא דוח לייצוא בלשונית הזו — רענן את הדף ונסה שוב.'
 
 export default function ExportBar({ reportName, windowLabel, columns = [], blockedReason }) {
   // 🔴 **קריאה ישירה מה-URL ולא `useSearchParams` — וזה לא סגנון אלא מדידה.** ההוק דורש

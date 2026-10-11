@@ -425,7 +425,7 @@ function projectExportColumns(vatRate) {
 
 // 🔤 נעולים (`ui-copy-styleguide.md` §5). הראשון הוא הנוסח הקיים של לשונית-הפרויקטים.
 const EXPORT_NO_PROJECTS_PERMISSION = 'אין לך הרשאה לצפות בפרויקטים.'
-const EXPORT_BLOCKED_PROJECTS = 'היסטוריית הפרויקטים לא נטענה — לחצי "נסי שוב" ואז ייצאי'
+const EXPORT_BLOCKED_PROJECTS = 'היסטוריית הפרויקטים לא נטענה — לחץ "נסה שוב" ואז ייצא'
 const EXPORT_PROJECTS_FAILED_SHORT = 'היסטוריית הפרויקטים לא נטענה'
 const EXPORT_TAB_LABELS = { quotes: 'הצעות מחיר', projects: 'פרויקטים' }
 
@@ -1044,7 +1044,7 @@ export default function CustomerDetailsPage() {
                   role="alert"
                   data-testid="customer-sent-history-error"
                 >
-                  לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדקי בחלון המסמך לפני שליחה.
+                  לא ניתן היה לבדוק אילו הצעות כבר נשלחו ללקוח — בדוק בחלון המסמך לפני שליחה.
                 </p>
               )}
               {showControls && (
@@ -1386,7 +1386,7 @@ function ProjectsTabContent({
           className="h-auto py-2 px-4 rounded-lg border-slate-300 text-slate-700"
           data-testid="customer-projects-retry"
         >
-          נסי שוב
+          נסה שוב
         </Button>
       </div>
     )
@@ -1441,7 +1441,7 @@ function ProjectsTabContent({
             className="text-teal-700 hover:text-teal-800 font-semibold"
             data-testid="customer-projects-clear-search"
           >
-            נקי חיפוש
+            נקה חיפוש
           </button>
         </p>
       ) : (

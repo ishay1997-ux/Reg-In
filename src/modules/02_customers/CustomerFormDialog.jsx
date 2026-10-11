@@ -284,14 +284,14 @@ export default function CustomerFormDialog({
     } catch (err) {
       if (err.code === '23505') {
         // מרוץ: הח"פ נוסף ע"י משתמש אחר אחרי שהרשימה נטענה — אותה זרימת-§7.11, בלי פירוט-כרטיס.
-        setFormError('חברה זו כבר רשומה במערכת — רענני את הרשימה כדי לראות את הכרטיס הקיים.')
+        setFormError('חברה זו כבר רשומה במערכת — רענן את הרשימה כדי לראות את הכרטיס הקיים.')
       } else if (!isEdit && createdRef.current) {
         // אומרים את האמת: הלקוח קיים, אנשי-הקשר לא — ומה לעשות כדי להשלים.
         setFormError(
-          `הלקוח נשמר, אבל אנשי הקשר לא נשמרו: ${err.message || 'השמירה נכשלה.'} לחצי שוב על "הוסיפי לקוח" כדי להשלים.`,
+          `הלקוח נשמר, אבל אנשי הקשר לא נשמרו: ${err.message || 'השמירה נכשלה.'} לחץ שוב על "הוסף לקוח" כדי להשלים.`,
         )
       } else {
-        setFormError(err.message || 'שמירה נכשלה. נסי שוב.')
+        setFormError(err.message || 'שמירה נכשלה. נסה שוב.')
       }
     } finally {
       setSaving(false)
@@ -402,7 +402,7 @@ export default function CustomerFormDialog({
                     className="h-auto p-0 self-start text-teal-700 hover:text-teal-800 font-semibold"
                     data-testid="customer-duplicate-edit-existing"
                   >
-                    ערכי את הכרטיס הקיים
+                    ערוך את הכרטיס הקיים
                   </Button>
                 </>
               ) : (
@@ -419,7 +419,7 @@ export default function CustomerFormDialog({
                     className="h-auto p-0 self-start text-teal-700 hover:text-teal-800 font-semibold"
                     data-testid="customer-duplicate-restore"
                   >
-                    שחזרי מהארכיון ופתחי לעריכה
+                    שחזר מהארכיון ופתח לעריכה
                   </Button>
                 </>
               )}
@@ -436,7 +436,7 @@ export default function CustomerFormDialog({
                 )}
                 data-testid="customer-form-type"
               >
-                <SelectValue placeholder="בחרי סוג לקוח" />
+                <SelectValue placeholder="בחר סוג לקוח" />
               </SelectTrigger>
               <SelectContent dir="rtl">
                 {/* §7.3: התוויות מהאפיון הקפוא בלבד — מיובאות מ-SSOT, לא כתובות כאן ידנית */}
@@ -525,7 +525,7 @@ export default function CustomerFormDialog({
                         className="h-auto p-0 text-xs font-semibold text-slate-600 hover:text-slate-800"
                         data-testid="contact-make-primary"
                       >
-                        הפכי לראשי
+                        הפוך לראשי
                       </Button>
                     )}
                     <span className="flex-1" />
@@ -533,8 +533,8 @@ export default function CustomerFormDialog({
                       type="button"
                       variant="link"
                       // מוסכמת-הבית (MarketingPanel/marketing.js): פקד חסום נושא title שמסביר למה.
-                      title={c.is_primary ? NO_PRIMARY_MSG : 'הסירי איש קשר'}
-                      aria-label={c.is_primary ? 'מחיקה חסומה' : `הסירי איש קשר ${idx + 1}`}
+                      title={c.is_primary ? NO_PRIMARY_MSG : 'הסר איש קשר'}
+                      aria-label={c.is_primary ? 'מחיקה חסומה' : `הסר איש קשר ${idx + 1}`}
                       disabled={c.is_primary}
                       onClick={() => removeContactRow(c._rk)}
                       className="h-auto p-0 text-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:text-slate-300"
@@ -628,7 +628,7 @@ export default function CustomerFormDialog({
                 data-testid="contact-add-row"
               >
                 <Plus className="size-4" />
-                הוסיפי איש קשר
+                הוסף איש קשר
               </Button>
             </div>
           )}
@@ -668,7 +668,7 @@ export default function CustomerFormDialog({
               className="w-full h-auto p-3 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold disabled:opacity-50"
               data-testid="customer-form-submit"
             >
-              {saving ? 'שומרת…' : isEdit ? 'שמרי שינויים' : 'הוסיפי לקוח'}
+              {saving ? 'שומר…' : isEdit ? 'שמור שינויים' : 'הוסף לקוח'}
             </Button>
           </DialogFooter>
         </form>

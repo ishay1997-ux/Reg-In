@@ -95,11 +95,11 @@ describe('ParamRow', () => {
   })
 
   it('שגיאה מוצגת, מסומנת ומקושרת לשדה', () => {
-    renderRow({ row: row('אחוז_מעמ', ''), value: '', error: 'הזיני מספר בין 0 ל-100' })
+    renderRow({ row: row('אחוז_מעמ', ''), value: '', error: 'הזן מספר בין 0 ל-100' })
     const input = screen.getByTestId('settings-value-אחוז_מעמ')
     expect(input).toHaveAttribute('aria-invalid', 'true')
     expect(input.getAttribute('aria-describedby')).toBe('settings-error-אחוז_מעמ')
-    expect(screen.getByRole('alert')).toHaveTextContent('הזיני מספר בין 0 ל-100')
+    expect(screen.getByRole('alert')).toHaveTextContent('הזן מספר בין 0 ל-100')
   })
 
   it('פרמטר בוליאני מרונדר כמתג, ומדווח "true"/"false"', () => {

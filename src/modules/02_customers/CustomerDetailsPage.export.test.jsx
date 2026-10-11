@@ -256,7 +256,7 @@ describe('CustomerDetailsPage — חיבור לחלון-הייצוא', () => {
     expect(screen.getByTestId('export-dialog-run')).toBeDisabled()
     getCustomerProjects.mockResolvedValue([project()])
     fireEvent.click(
-      within(screen.getByTestId('export-preview')).getByRole('button', { name: 'נסי שוב' }),
+      within(screen.getByTestId('export-preview')).getByRole('button', { name: 'נסה שוב' }),
     )
     await waitFor(() => expect(screen.getByTestId('export-dialog-run')).toBeEnabled())
   })

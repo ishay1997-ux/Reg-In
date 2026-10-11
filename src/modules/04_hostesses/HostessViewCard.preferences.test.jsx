@@ -74,7 +74,7 @@ describe('כרטיס-דיילת — העדפות של לקוחות', () => {
     expect(await screen.findByText('טרם נרשמו העדפות')).toBeInTheDocument()
   })
 
-  it('כשל-טעינה ⇒ "לא נטענו" + "נסי שוב", לעולם לא "טרם נרשמו"; ושאר הכרטיס מוצג', async () => {
+  it('כשל-טעינה ⇒ "לא נטענו" + "נסה שוב", לעולם לא "טרם נרשמו"; ושאר הכרטיס מוצג', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     getHostessClientPreferences
       .mockRejectedValueOnce(new Error('network'))

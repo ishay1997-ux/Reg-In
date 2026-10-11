@@ -46,11 +46,11 @@ const RECRUIT_PASSWORD = process.env.E2E_RECRUIT_PASSWORD
 // ‏`src/lib/projectLogistics.js`:
 const QUEUE_NO_PERMISSION_SENTENCE =
   'אין לך הרשאה לצפות בפריטי הלוגיסטיקה, ולכן לא ניתן לקבוע אם התור ריק כדין.'
-const WRITE_FAILURE_SENTENCE = 'העדכון לא נשמר — הערך הוחזר לקודם. נסי שוב.'
+const WRITE_FAILURE_SENTENCE = 'העדכון לא נשמר — הערך הוחזר לקודם. נסה שוב.'
 const QUEUE_SORT_LINE = 'ממוין: לפי קרבת האירוע'
 // ‏`src/components/PermissionAwareEmpty.jsx` (נעולות בתוך הרכיב, בלשון-נקבה — ㉜/S-28):
 const ERROR_TITLE = 'לא ניתן לטעון את הנתונים.'
-const RETRY_LABEL = 'נסי שוב'
+const RETRY_LABEL = 'נסה שוב'
 const DENIED_MARK = '—'
 // ‏`src/modules/05_logistics/LogisticsPage.jsx`:
 const DISABLED_PILL_TITLE = 'אין כרגע פרויקט במצב הזה'
@@ -489,7 +489,7 @@ test.describe('מודול 5 · משטח 1 — מצבים מיוצרים בייר
     expect(blockedWrites, 'מסך קריאה-בלבד ניסה לכתוב למסד').toEqual([])
   })
 
-  test('㉚ — גלולה שמונה 0 נשארת מושבתת ומנומקת, ו"נקי סינון" מוציא ממצב-הריק', async ({
+  test('㉚ — גלולה שמונה 0 נשארת מושבתת ומנומקת, ו"נקה סינון" מוציא ממצב-הריק', async ({
     page,
   }) => {
     const blockedWrites = await installWriteGuard(page)

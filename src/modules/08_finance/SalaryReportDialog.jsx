@@ -366,7 +366,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
     const approved = await confirm({
       title: 'הפקת דוח שכר דיילות',
       message: generateConfirmMessage(periodLabel),
-      confirmLabel: 'ייצאי ושלחי',
+      confirmLabel: 'ייצא ושלח',
     })
     if (!approved) return
     setPhase('submitting')
@@ -508,7 +508,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                   className="h-auto rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-800"
                   data-testid="salary-report-month-apply"
                 >
-                  בחרי
+                  בחר
                 </Button>
                 <Button
                   type="button"
@@ -573,7 +573,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
         {phase === 'select' && historyError && (
           <p className="text-xs text-amber-700" role="status">
             לא ניתן היה לבדוק אם החודש כבר הופק ({historyError}) — הבדיקה הסופית תמיד תתבצע במסד
-            בלחיצה על "ייצאי ושלחי".
+            בלחיצה על "ייצא ושלח".
           </p>
         )}
 
@@ -598,7 +598,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
               className="mt-2 h-auto rounded-lg px-2.5 py-1 text-xs font-semibold"
               data-testid="salary-report-view-existing"
             >
-              צפי בדוח הקיים ↓
+              צפה בדוח הקיים ↓
             </Button>
           </div>
         )}
@@ -642,12 +642,12 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
                 // בקול. אותה תבנית של כפתור-מושבת-עם-נימוק שכבר קיימת בטבלת-ההיסטוריה כאן.
                 disabled={existingForSelected !== null || phase === 'submitting'}
                 title={
-                  existingForSelected === undefined ? 'בודקת אם כבר הופק דוח לחודש זה' : undefined
+                  existingForSelected === undefined ? 'בודק אם כבר הופק דוח לחודש זה' : undefined
                 }
                 className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
                 data-testid="salary-report-generate"
               >
-                {phase === 'submitting' ? 'מפיקה ושולחת…' : 'ייצאי ושלחי'}
+                {phase === 'submitting' ? 'מפיק ושולח…' : 'ייצא ושלח'}
               </Button>
               <Button
                 type="button"
@@ -805,7 +805,7 @@ function PreflightPanel({
         <b className="block">שורות הדוח עצמן אינן מוצגות כאן.</b>
         הן נאספות ונחתמות רק ברגע ההפקה. מיד אחרי הלחיצה תוצג כאן הטבלה המלאה, והקובץ יישמר
         בהיסטוריה שלמטה — להורדה ולשליחה חוזרת.
-        <b className="mt-1 block">הלחיצה על "ייצאי ושלחי" אינה הפיכה:</b> אי-אפשר להפיק את אותו חודש
+        <b className="mt-1 block">הלחיצה על "ייצא ושלח" אינה הפיכה:</b> אי-אפשר להפיק את אותו חודש
         פעמיים, והשורות שייאספו לא ייאספו שוב לדוח הבא.
       </p>
     </div>
@@ -1233,7 +1233,7 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                           className="h-auto rounded-lg px-2 py-1 text-xs font-semibold"
                           data-testid={`salary-history-resend-${row.report_id}`}
                         >
-                          {resendingId === row.report_id ? 'שולחת…' : 'שלחי שוב'}
+                          {resendingId === row.report_id ? 'שולח…' : 'שלח שוב'}
                         </Button>
                       )}
                     </div>

@@ -4,7 +4,7 @@
 // יושב בתוך חלון-המסמך (`QuoteDocumentDialog.jsx`). הכללים הטהורים — מתי הכפתור פעיל, איך כשל
 // מסווג, איך נבנה ה-`mailto:` — ב-`src/lib/quoteFollowup.js`; הקריאה לשרת ב-`api.js`.
 //
-// 🔒 **אין כאן כפתור "שלחי".** שתי הפעולות מעבירות את הטקסט לאדם: `העתיקי` (ללוח) ו-`פתחי במייל`
+// 🔒 **אין כאן כפתור "שלחי".** שתי הפעולות מעבירות את הטקסט לאדם: `העתיקי` (ללוח) ו-`פתח במייל`
 //    (תוכנת-המייל שלה, עם הנמען, הנושא והגוף). ולכן `טיוטה — בדקי לפני שליחה.` קבוע, בבסיס — אזהרה
 //    לפני פעולה יוצאת-החוצה לעולם לא עוברת לשכבת-ההסבר (מדריך-הסגנון H2).
 //
@@ -67,10 +67,10 @@ function DraftSkeleton() {
 // מה האזור-החי אומר עכשיו — פונקציה ולא טרנארי-מקונן (SonarJS).
 function statusText(phase, failure, notice) {
   // ✏️ 24/09/2026 (הסגן): כנות במצב-המערכת — שתי המדידות החיות לא הגיעו לתשובה תוך 18–25 שניות.
-  if (phase === 'loading') return 'מנסחת טיוטה — זה יכול לקחת עד חצי דקה.'
+  if (phase === 'loading') return 'מנסח טיוטה — זה יכול לקחת עד חצי דקה.'
   if (phase === 'error') return failure?.message
   if (notice === 'copied') return 'הועתק.'
-  if (notice === 'bodyCopied') return 'גוף הטיוטה הועתק — הדביקי אותו במייל שנפתח.'
+  if (notice === 'bodyCopied') return 'גוף הטיוטה הועתק — הדבק אותו במייל שנפתח.'
   return 'הטיוטה מוכנה.'
 }
 
@@ -166,7 +166,7 @@ function FollowupDraftPanel({ quoteId }) {
     } catch {
       // אותו נוסח של אזור-השיווק (`MarketingPanel.jsx`) — אותה תקלה, אותן מילים (R30). ✏️ 24/09 (הסגן):
       // סביל ⇐ ציווי-נקבה, מדריך-הסגנון §1 — ובשני המקומות יחד.
-      toast.error('העתקה נכשלה — סמני את הטקסט והעתיקי ידנית.')
+      toast.error('העתקה נכשלה — סמן את הטקסט והעתק ידנית.')
     }
   }
 
@@ -212,7 +212,7 @@ function FollowupDraftPanel({ quoteId }) {
             data-testid="followup-retry"
           >
             <RotateCcw aria-hidden="true" className="size-4" />
-            נסי שוב
+            נסה שוב
           </Button>
         </div>
       )}
@@ -268,7 +268,7 @@ function FollowupDraftPanel({ quoteId }) {
             <Button asChild className={`${BUTTON} ${PRIMARY}`}>
               <a href={mailto.href} onClick={onOpenMail} data-testid="followup-open-mail">
                 <Mail aria-hidden="true" className="size-4" />
-                פתחי במייל
+                פתח במייל
               </a>
             </Button>
           ) : (
@@ -281,7 +281,7 @@ function FollowupDraftPanel({ quoteId }) {
                 data-testid="followup-open-mail"
               >
                 <Mail aria-hidden="true" className="size-4" />
-                פתחי במייל
+                פתח במייל
               </Button>
               <p
                 id="followup-no-email"
@@ -301,7 +301,7 @@ function FollowupDraftPanel({ quoteId }) {
             data-testid="followup-copy"
           >
             <Copy aria-hidden="true" className="size-4" />
-            העתיקי
+            העתק
           </Button>
         </DialogFooter>
       )}

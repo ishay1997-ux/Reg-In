@@ -773,14 +773,14 @@ describe('רצפת-המשטח — כל ארבעת המשטחים', () => {
   })
 
   it.each(SURFACE_CASES)(
-    '%s · כשל-רשת ⇒ מעטפת-תקלה ו"נסי שוב", לעולם לא "אין נתונים"',
+    '%s · כשל-רשת ⇒ מעטפת-תקלה ו"נסה שוב", לעולם לא "אין נתונים"',
     async (_name, surface, make) => {
       callReport.mockRejectedValueOnce(new Error('network down'))
       renderTab(surface)
-      expect(await screen.findByText('נסי שוב')).toBeInTheDocument()
+      expect(await screen.findByText('נסה שוב')).toBeInTheDocument()
       expect(screen.queryByTestId('report-tiles')).toBeNull()
       callReport.mockResolvedValueOnce(make())
-      fireEvent.click(screen.getByText('נסי שוב'))
+      fireEvent.click(screen.getByText('נסה שוב'))
       expect(await screen.findByTestId('report-tiles')).toBeInTheDocument()
       expect(callReport).toHaveBeenCalledTimes(2)
     },

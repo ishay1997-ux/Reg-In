@@ -250,7 +250,7 @@ describe('draftForValidation — הגשר אל closingValidationSummary של צ�
 describe('שבע מחרוזות-הכרטיס — מילה-במילה, עם דריסת-ה-2MB המרונדרת מהקבוע', () => {
   it('שני שדות-האירוע', () => {
     expect(EVENT_HOURS_ERROR).toBe('חובה להזין שעות ביצוע — מספר בין 0.5 ל-24.')
-    expect(EVENT_GUESTS_ERROR).toBe('חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזיני 0.')
+    expect(EVENT_GUESTS_ERROR).toBe('חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזן 0.')
   })
 
   it('מחרוזת-הקובץ נגזרת מהקבוע — 2MB, לא ה-10MB שבכרטיס (superseded, הכרעת-ישי 14/08)', () => {
