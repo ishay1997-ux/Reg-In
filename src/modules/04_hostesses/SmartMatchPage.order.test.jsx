@@ -156,6 +156,51 @@ afterEach(() => {
 })
 
 describe('🎯 שיבוץ חכם — הסדר שהמנהלת רואה על המסך', () => {
+  it('חיפוש משמר את סדר ההמלצה ואת הבחירה גם כשהכרטיס מוסתר', async () => {
+    getSmartMatchData.mockResolvedValue(anchorData())
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    expect(await candidateNamesOnScreen()).toEqual(['נועה', 'מיכל', 'דנה'])
+    fireEvent.click(screen.getByTestId('sm-pick-1'))
+    fireEvent.change(screen.getByTestId('sm-search'), { target: { value: ' דנה ' } })
+    expect(await candidateNamesOnScreen()).toEqual(['דנה'])
+    expect(screen.getByTestId('sm-selected-names')).toHaveTextContent('נועה')
+    expect(screen.getByTestId('sm-send-invites')).toHaveTextContent('(1 נבחרו)')
+    fireEvent.click(screen.getByRole('button', { name: 'נקה חיפוש דיילות בשיבוץ' }))
+    expect(await candidateNamesOnScreen()).toEqual(['נועה', 'מיכל', 'דנה'])
+    expect(screen.getByTestId('sm-pick-1')).toBeChecked()
+  })
+
+  it('חיפוש טלפון מוצא גם דיילת שכבר משויכת לאירוע ומבדיל בין אין תוצאות לאין מועמדות', async () => {
+    const data = anchorData()
+    data.hostesses[0].phone = '050-1234567'
+    data.assignments.push({
+      project_id: PROJECT_ID,
+      hostess_id: 1,
+      assignment_number: 1,
+      assignment_status: 'confirmed_available',
+    })
+    getSmartMatchData.mockResolvedValue(data)
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    await screen.findByTestId('sm-event-row-1')
+    fireEvent.change(screen.getByTestId('sm-search'), { target: { value: '1234567' } })
+    expect(screen.getByTestId('sm-event-row-1')).toBeInTheDocument()
+    expect(screen.getByTestId('sm-candidates-search-empty')).toBeInTheDocument()
+    expect(screen.queryByTestId('sm-candidates-empty')).not.toBeInTheDocument()
+    expect(screen.getByTestId('sm-approve-all')).toHaveTextContent('(1)')
+    fireEvent.change(screen.getByTestId('sm-search'), { target: { value: 'לא קיימת' } })
+    expect(screen.getByTestId('sm-event-search-empty')).toBeInTheDocument()
+    expect(screen.queryByTestId('sm-event-empty')).not.toBeInTheDocument()
+  })
+
+  it('חיפוש אינו מאפשר לדיילת שנפסלה בשער להופיע במועמדות', async () => {
+    getSmartMatchData.mockResolvedValue(anchorData())
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    await candidateNamesOnScreen()
+    fireEvent.change(screen.getByTestId('sm-search'), { target: { value: 'שירה' } })
+    expect(screen.getByTestId('sm-candidates-search-empty')).toBeInTheDocument()
+    expect(screen.queryByTestId('sm-candidate-5')).not.toBeInTheDocument()
+  })
+
   it('🎯 ברירת-המחדל היא "המלצת המערכת", והמסך מציג נועה ← מיכל ← דנה (spec.md §3.2)', async () => {
     getSmartMatchData.mockResolvedValue(anchorData())
     render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
