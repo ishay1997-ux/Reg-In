@@ -251,7 +251,7 @@ const h1Payload = (extra = {}) =>
       },
       {
         key: 'lost_value',
-        label: 'כסף שאבד',
+        label: 'הצעות מחיר שנדחו',
         value: 724690,
         format: 'money',
         sub: `${isolateLtr('102')} הצעות שנדחו`,
@@ -261,7 +261,7 @@ const h1Payload = (extra = {}) =>
       },
       {
         key: 'expired_value',
-        label: 'פגו בלי מענה',
+        label: 'סך הצעות שפג תוקפן',
         value: 53024,
         format: 'money',
         sub: `${isolateLtr('10')} הצעות`,
@@ -588,7 +588,12 @@ describe('ה1 · סגירת הצעות', () => {
     renderTab('מ3')
 
     expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לעקוב אחרי הצעות פתוחות')
-    for (const label of ['שיעור סגירה', 'כסף שאבד', 'פגו בלי מענה', 'סגירה, לקוח חדש']) {
+    for (const label of [
+      'שיעור סגירה',
+      'הצעות מחיר שנדחו',
+      'סך הצעות שפג תוקפן',
+      'סגירה, לקוח חדש',
+    ]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0)
     }
     // 🔑 "פגות בקרוב" אינה נבנית שוב — הקישור שולח לרשימה הקיימת (כלל-ברזל 14).
