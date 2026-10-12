@@ -227,6 +227,7 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
       }
       emptyText={NO_VALUE}
       testId={`report-tile-${tile.key}`}
+      className={hasDetails ? 'pl-10' : undefined}
     />
   )
 
@@ -238,7 +239,7 @@ export default function KpiTile({ tile, masked = false, onOpenTarget }) {
   return (
     // ⓘ יושב בפינה השמאלית-עליונה (סוף-השורה ב-RTL), מעל הכרטיס ולא בתוכו — ר' `TileDetails`.
     <div
-      className={`relative h-full w-full [&>*:first-child]:h-full ${hasDetails ? '[&>*:first-child]:pl-10' : ''}`}
+      className="relative h-full w-full [&>*:first-child]:h-full"
       data-testid={`report-tile-box-${tile.key}`}
     >
       {isDoor ? (

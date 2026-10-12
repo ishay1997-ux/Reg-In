@@ -75,6 +75,29 @@ describe('KpiTile — 📑ב · שורת-המכנה-הגלוי (tiles[].sub)', (
     expect(door.contains(screen.getByTestId('kpi-details'))).toBe(false)
   })
 
+  // 🔴 ⓘ **בתוך מסגרת הכרטיס, בדלת ובלא-דלת כאחד.** באג שנמדד בדפדפן (12/10/2026): ה-`pl-10`
+  // שמפנה מקום ל-ⓘ הוצמד ל"הילד הראשון" של העוטף — וברכיב-דלת זה ה-`<button>` שמחוץ למסגרת,
+  // ולכן הכרטיס הצטמצם ל-200px בתוך תיבה של 240 וה-ⓘ ישב 32px **מחוץ** לגבול. ב-jsdom אין
+  // פריסה, לכן הבדיקה היא על מי נושא את הריפוד: הכרטיס עצמו, לעולם לא כפתור-הדלת.
+  it('הריפוד שמפנה מקום ל-ⓘ יושב על הכרטיס עצמו ולא על כפתור-הדלת', () => {
+    const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
+    render(<KpiTile tile={{ ...TILE, target }} onOpenTarget={vi.fn()} />)
+    const door = screen.getByTestId('report-tile-link-open_debt')
+    const card = screen.getByTestId('report-tile-open_debt')
+    expect(card).toHaveClass('pl-10')
+    expect(door).not.toHaveClass('pl-10')
+    expect(screen.getByTestId('report-tile-box-open_debt')).not.toHaveClass(
+      '[&>*:first-child]:pl-10',
+    )
+  })
+
+  it('אריח בלי דלת — הריפוד על הכרטיס, ואריח בלי ⓘ אינו מקבל ריפוד', () => {
+    render(<KpiTile tile={TILE} />)
+    expect(screen.getByTestId('report-tile-open_debt')).toHaveClass('pl-10')
+    render(<KpiTile tile={{ ...TILE, key: 'plain', sub: null, compare: null, window: null }} />)
+    expect(screen.getByTestId('report-tile-plain')).not.toHaveClass('pl-10')
+  })
+
   it('אריח בלי sub אינו מייצר את השורה', () => {
     render(<KpiTile tile={{ ...TILE, sub: null }} />)
     expect(screen.queryByTestId('kpi-sub')).toBeNull()

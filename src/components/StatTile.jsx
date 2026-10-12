@@ -22,6 +22,7 @@
 // עם הכפתור הראשי, וזה בדיוק מה שהכלל נועד למנוע.
 
 import Money from '@/components/Money'
+import { cn } from '@/lib/utils'
 
 // value: מספר ⇒ מוצג דרך `Money` (₪ בצד הנכון, בלי לחשוב) · צומת-React ⇒ מוצג כמות שהוא
 //        (אחוזים, טקסט) · null/undefined ⇒ `emptyText`.
@@ -30,10 +31,20 @@ import Money from '@/components/Money'
 // ‏`.cell, .tile{align-items:flex-start}`): בעמודת-flex בלי זה הילדים עוברים blockification,
 // אלמנט `ltr` נמתח לרוחב מלא ומיישר את ערכו שמאלה — הרחק מהתווית שמעליו, שמיושרת ימינה.
 // פיצול-RTL שנמדד בדפדפן על המוקאפ (13/08/2026); היישור כאן מצמיד את הרכיב לצורה המאושרת.
-export default function StatTile({ label, value, sub, emptyText = 'אין נתונים עדיין', testId }) {
+export default function StatTile({
+  label,
+  value,
+  sub,
+  emptyText = 'אין נתונים עדיין',
+  testId,
+  className,
+}) {
   return (
     <div
-      className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col items-start gap-0.5"
+      className={cn(
+        'rounded-xl border border-slate-200 bg-white p-4 flex flex-col items-start gap-0.5',
+        className,
+      )}
       data-testid={testId}
     >
       {/* 🔤 תווית 14px וערך 24px — התוכנית §2 ("StatTile — הלב"), ולא ברירת-המחדל שהייתה כאן.
