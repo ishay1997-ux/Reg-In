@@ -56,4 +56,4 @@ Final `npm run gate` completed with exit 0: **3,444 tests in 141 files**, format
 
 The independent reviewer accepted the updated heading visually at 1440px and 1024px, found no blocking source defect, and independently ran the two input/navigation regression tests together with the eight tab-search tests. The reviewer inspected the 52-check browser run; the final additional nine overview typing checks were run by the primary agent, not independently rerun. Both runs completed without failures.
 
-The implementation is on `ishay/hostesses-search`, based on `dev` at `6275b95c`. Source and browser verification are complete. Merge authorization under rule 10 remains the next user decision; production state must be verified separately after an authorized merge and deployment.
+The implementation is on `ishay/hostesses-search`, based on `dev` at `6275b95c`, in [PR #181](https://github.com/ishay1997-ux/Reg-In/pull/181). Source and browser verification are complete. Remote CI is tracked on the PR. Merge authorization under rule 10 remains the next user decision; production state must be verified separately after an authorized merge and deployment.
