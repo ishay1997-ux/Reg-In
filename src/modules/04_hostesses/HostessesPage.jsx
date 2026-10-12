@@ -28,7 +28,6 @@ export default function HostessesPage() {
   // ⚠️ **ברירת-המחדל חזרה למבט-העל** (09/08/2026, צעד 3.3): עד שהמשטח נבנה היא הוסטה
   // זמנית ל"מאגר דיילות" כדי לא לפתוח על לשונית ריקה. עכשיו הסדר הוא כמצויר במוקאפ —
   // וזה גם הסדר הנכון מוצרית: המנהלת נכנסת כדי לראות **איפה חסר**, לא כדי לדפדף במאגר.
-  const [tab, setTab] = useState('overview')
 
   // מפתח-רענון: כל שמירה מגדילה אותו, והטבלה טוענת מחדש. 🚫 לא state שמועבר פנימה —
   // הנתונים חיים בשכבת-ה-API, ומצב-מסך שמשכפל אותם מתיישן בשקט.
@@ -61,6 +60,12 @@ export default function HostessesPage() {
   // (בדיוק המוקש שהוביל למלכודת ה-`resolveNext` שם), ובנוסף חוסם את שער-ה-lint
   // ‏`react-hooks/set-state-in-effect` (סנכרון-מצב שיכול להיגזר ברינדור אינו effect).
   const [searchParams, setSearchParams] = useSearchParams()
+  // שומר את הלשונית ברענון; שני החיפושים נשארים בכתובת גם כשהלשונית השנייה פתוחה.
+  const tab = searchParams.get('tab') === 'repository' ? 'repository' : 'overview'
+  function setTab(valueOrFn) {
+    const next = typeof valueOrFn === 'function' ? valueOrFn(tab) : valueOrFn
+    writeParams({ tab: next === 'repository' ? next : undefined })
+  }
   const returnTo = useReturnTo()
 
   function writeParams(patch) {

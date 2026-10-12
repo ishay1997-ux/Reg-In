@@ -1,11 +1,11 @@
 // בדיקת הדפדוף (`Pager`) במאגר-הדיילות (`RepositoryTab`) — מעבר-האחידות (הכרעת-ישי 04/09/2026,
-// `src/lib/listWindow.js`). ללשונית הזו אין כתובת משלה (`HostessesPage` מחזיק את בחירת-הלשונית
-// ב-`useState`), ולכן העמוד חי כאן ב-`useState` מקומי ולא ב-URL — ר' ההערה מעל `const [page, ...]`.
+// `src/lib/listWindow.js`). החיפוש והלשונית נשמרים בכתובת; הדפדוף עדיין מקומי.
 //
 // 🔴 אין תאריך-אירוע על הדיילת עצמה ⇒ דפדוף בלבד, בלי `WindowChips` (כמו ב-`CustomersPage`).
 // ה-API ממוקק כולו — אין Supabase כאן, בדיוק כמו `OverviewTab.params.test.jsx`.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import RepositoryTab from './RepositoryTab'
 import { listHostesses, listRepositoryAssignments, getHostessScreenParams } from './api'
 
@@ -48,7 +48,9 @@ function mockPage(hostesses) {
 
 function renderTab() {
   return render(
-    <RepositoryTab reloadKey={0} onAdd={vi.fn()} onEdit={vi.fn()} onOpenCard={vi.fn()} />,
+    <MemoryRouter>
+      <RepositoryTab reloadKey={0} onAdd={vi.fn()} onEdit={vi.fn()} onOpenCard={vi.fn()} />
+    </MemoryRouter>,
   )
 }
 

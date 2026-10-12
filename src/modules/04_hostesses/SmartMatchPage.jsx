@@ -1,4 +1,4 @@
-// מסך 2 · שיבוץ חכם (Smart Match) — **לב המודול ותערוכת-הכנס.**
+// מסך 2 · שיבוץ לאירוע (Smart Match) — **לב המודול ותערוכת-הכנס.**
 // נבנה לפי המוקאפ המאושר `docs/mockups/hostesses-screen/approved/02_smartmatch_approved.html`.
 //
 // 🔑 **ההחלטה שהמסך משרת** (`screens-approved.md` מסך 2 §②):
@@ -21,6 +21,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import Hint from '@/components/Hint'
 import StatTile from '@/components/StatTile'
 import StatusTag from '@/components/StatusTag'
+import ListSearch from '@/components/ListSearch'
 import { Button } from '@/components/ui/button'
 import { formatDate, formatTimestamp } from '@/lib/dates'
 import {
@@ -99,6 +100,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
   const [now, setNow] = useState(nowIso)
   const [angle, setAngle] = useState(null)
   const [selected, setSelected] = useState([])
+  const [search, setSearch] = useState('')
   const [busy, setBusy] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
 
@@ -227,6 +229,13 @@ export default function SmartMatchPage({ projectId, onBack }) {
   // ⚠️ בלי `useMemo` במכוון: `activeAngle` נגזר מ-state ומ-`now`, וקומפיילר-React של
   // הפרויקט דוחה מזכור ידני שתלוי בו (`preserve-manual-memoization`). הוא ממזכר לבד.
   const candidates = sortByAngle(eligible, activeAngle)
+  // החיפוש מסנן תצוגה בלבד, אחרי הדירוג. בסיס הציון ודרג ההמלצה הנשמר אינם משתנים.
+  const needle = search.trim().toLowerCase()
+  const visibleCandidates = candidates.filter((candidate) => matchesHostess(candidate, needle))
+  const visibleEventRows = eventRows.filter((row) => matchesHostess(row.hostesses, needle))
+  const selectedNames = candidates
+    .filter((candidate) => selected.includes(candidate.hostess_id))
+    .map((candidate) => candidate.full_name)
 
   const weights = params ? activeWeights(params, measured ?? {}) : null
   const missingData = {
@@ -526,7 +535,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
       </Button>
 
       <div className="mb-3">
-        <h1 className="text-lg font-bold text-slate-800">שיבוץ חכם — {project?.event_name}</h1>
+        <h1 className="text-lg font-bold text-slate-800">שיבוץ לאירוע — {project?.event_name}</h1>
         <p className="mt-0.5 text-xs text-slate-500">
           {[
             project?.customer_name,
@@ -633,6 +642,21 @@ export default function SmartMatchPage({ projectId, onBack }) {
         </div>
       )}
 
+      <div className="mb-3">
+        <ListSearch
+          value={search}
+          onChange={setSearch}
+          label="חיפוש דיילות בשיבוץ"
+          placeholder="חיפוש לפי שם או טלפון — באירוע ובמועמדות"
+          testId="sm-search"
+        />
+        {needle && (
+          <p className="mt-1 text-xs text-slate-500">
+            הסיכום ואישור כל מי שאישרה זמינות מתייחסים לכל הדיילות באירוע.
+          </p>
+        )}
+      </div>
+
       <div className="flex flex-col gap-4 lg:flex-row-reverse">
         {/* ── טור ימני: מי כבר בפנים ─────────────────────────────────────── */}
         <section className="flex-1" data-testid="sm-event-column">
@@ -649,9 +673,16 @@ export default function SmartMatchPage({ projectId, onBack }) {
             >
               עדיין לא נשלח אף זימון לאירוע הזה — בחר מועמדות מהטור השני ושלח.
             </p>
+          ) : visibleEventRows.length === 0 ? (
+            <p
+              className="py-6 text-center text-sm text-slate-500"
+              data-testid="sm-event-search-empty"
+            >
+              אין דיילות באירוע התואמות לחיפוש. נקה את החיפוש להצגת הרשימה המלאה.
+            </p>
           ) : (
             <ul className="flex flex-col gap-1.5">
-              {eventRows.map((row) => (
+              {visibleEventRows.map((row) => (
                 <EventRow
                   key={row.hostess_id}
                   row={row}
@@ -694,7 +725,9 @@ export default function SmartMatchPage({ projectId, onBack }) {
               (`sm-candidates-empty` למטה) מכסה את זה לבד; שורה זו מוצגת רק כשיש מה לספור. */}
           {candidates.length > 0 && (
             <p className="mb-2 text-xs text-slate-500">
-              {`${Math.min(VISIBLE_CANDIDATES, candidates.length)} ראשונות מתוך ${candidates.length} שעברו את הסינון · השאר בגלילה`}
+              {needle
+                ? `${visibleCandidates.length} תוצאות חיפוש מתוך ${candidates.length} מועמדות מתאימות`
+                : `${Math.min(VISIBLE_CANDIDATES, candidates.length)} ראשונות מתוך ${candidates.length} שעברו את הסינון · השאר בגלילה`}
             </p>
           )}
 
@@ -765,9 +798,16 @@ export default function SmartMatchPage({ projectId, onBack }) {
               </p>
               <Hint id="smartMatch.emptyGateRules" />
             </>
+          ) : visibleCandidates.length === 0 ? (
+            <p
+              className="py-6 text-center text-sm text-slate-500"
+              data-testid="sm-candidates-search-empty"
+            >
+              אין מועמדות מתאימות התואמות לחיפוש. נקה את החיפוש להצגת הרשימה המלאה.
+            </p>
           ) : (
             <ul className="flex max-h-[520px] flex-col gap-1.5 overflow-y-auto pl-1">
-              {candidates.map((candidate) => (
+              {visibleCandidates.map((candidate) => (
                 <CandidateCard
                   key={candidate.hostess_id}
                   candidate={candidate}
@@ -790,6 +830,20 @@ export default function SmartMatchPage({ projectId, onBack }) {
 
           {canEdit && (
             <>
+              {selectedNames.length > 0 && (
+                <div className="mt-3 text-sm text-slate-700" data-testid="sm-selected-names">
+                  נבחרו לשליחה: {selectedNames.join(' · ')}
+                  <Button
+                    type="button"
+                    variant="link"
+                    disabled={busy}
+                    onClick={() => setSelected([])}
+                    className="mr-2 h-auto p-0 text-teal-700"
+                  >
+                    נקה בחירה
+                  </Button>
+                </div>
+              )}
               <Button
                 type="button"
                 disabled={selected.length === 0 || busy}
@@ -813,6 +867,14 @@ export default function SmartMatchPage({ projectId, onBack }) {
         </section>
       </div>
     </div>
+  )
+}
+
+function matchesHostess(hostess, needle) {
+  return [hostess?.full_name, hostess?.phone].some((value) =>
+    String(value ?? '')
+      .toLowerCase()
+      .includes(needle),
   )
 }
 

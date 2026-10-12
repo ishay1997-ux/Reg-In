@@ -276,7 +276,7 @@ export default function TeamTab({
               className="text-xs font-semibold text-teal-700"
               data-testid="team-empty-smart-match-link"
             >
-              פתח שיבוץ חכם →
+              פתח שיבוץ לאירוע →
             </Link>
           }
           testId="team-state-no-invites"
@@ -345,14 +345,14 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             className="text-xs font-semibold text-teal-700"
             data-testid="team-smart-match-link"
           >
-            פתח שיבוץ חכם →
+            פתח שיבוץ לאירוע →
           </Link>
         )}
         {showSortLine && <span className="mr-auto text-xs text-slate-400">{SORT_LINE}</span>}
       </div>
       {/* 🧹 SCOPE_NOTE ("שינוי הכמות נרשם כשינוי-תכולה…") הוסר — ScopeChangeDialog כבר אומר
           את זה בפועל ברגע שהיא לוחצת (R27). מה שנשאר כאן אמיתי-לכל מי שרואה 'דיילות':
-          שהיעד של "פתחי שיבוץ חכם" הוא מסך-צפייה בשבילה. גם מי שאין לה 'עריכה' (מנהלת
+          שהיעד של "פתח שיבוץ לאירוע" הוא מסך-צפייה בשבילה. גם מי שאין לה 'עריכה' (מנהלת
           הגיוס) צריכה את זה — לכן התנאי הוא canReadHostesses בלבד, לא canEdit||canReadHostesses
           (הזוג היחיד עם canEdit במטריצה — מנכ"ל ומנהלת פרויקטים — גם קורא 'דיילות' תמיד,
           screens-approved.md §⑤). */}

@@ -4,7 +4,7 @@
 // 🔑 **ההחלטה האחת שהמסך משרת** (`screens-approved.md` מסך 1 §②, מצוטט מישי):
 // *"על איזה אירוע אני נכנסת לטפל **עכשיו** — ומה בדיוק חסר בו."*
 // ⇒ 🔴 **זה מסך טריאז', לא דוח, ולכן הסדר הוא התשובה** — לא הרשימה. כל רכיב שאינו עוזר
-// לדרג בין אירוע לאירוע יוצא מכאן, וזו הסיבה שאין בו חיפוש, אין מיון-עמודות ואין עימוד.
+// לדרג בין אירוע לאירוע יוצא מכאן. החיפוש מאפשר איתור אירוע מסוים ומשמר את סדר הטיפול.
 //
 // 🚫 **והפעולה היחידה שכותבת למסד מהמסך הזה היא "שלח שוב"** — כל השאר מנתב פנימה.
 // זו אינה קוסמטיקה: `מחכות לאישורך` הוא **טקסט ולא כפתור**, כי אישור דורש לבחור *מי*,
@@ -19,6 +19,8 @@ import LoadingOrError from '@/components/LoadingOrError'
 import FilterPill from '@/components/FilterPill'
 import StatTile from '@/components/StatTile'
 import Hint from '@/components/Hint'
+import ListSearch from '@/components/ListSearch'
+import useHostessSearch from './useHostessSearch'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/dates'
 import {
@@ -84,6 +86,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
   const [now, setNow] = useState(nowIso)
   const [searchParams, setSearchParams] = useSearchParams()
   const filter = readFilter(searchParams)
+  const [search, setSearch] = useHostessSearch('q')
   const setFilter = useCallback(
     (next) =>
       setSearchParams(
@@ -156,10 +159,18 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
   const kpis = useMemo(() => overviewKpis(rows), [rows])
 
   const visible = useMemo(() => {
-    if (filter === 'missing') return rows.filter((row) => row.isMissing)
-    if (filter === 'urgent') return rows.filter((row) => row.isUrgent)
-    return rows
-  }, [rows, filter])
+    const needle = search.trim().toLowerCase()
+    return rows.filter((row) => {
+      if (filter === 'missing' && !row.isMissing) return false
+      if (filter === 'urgent' && !row.isUrgent) return false
+      const { event_name, customer_name, project_id } = row.project
+      return [event_name, customer_name, project_id].some((value) =>
+        String(value ?? '')
+          .toLowerCase()
+          .includes(needle),
+      )
+    })
+  }, [rows, filter, search])
 
   // 🔴 **הכפתור המרוכז אינו סופר כל זימון מת — רק את אלה שרענון שלהם יגיע חי.**
   // שורה באירוע שבתוך T-24 או באירוע שכבר אויש נושאת קישור שהמסד ידחה ממילא
@@ -247,6 +258,13 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
       </div>
 
       <div className="flex flex-wrap items-center gap-2 pb-3">
+        <ListSearch
+          value={search}
+          onChange={setSearch}
+          label="חיפוש אירועים"
+          placeholder="חיפוש לפי שם אירוע, לקוח או מספר פרויקט…"
+          testId="overview-search"
+        />
         {Object.entries(filterLabels(urgentHours)).map(([key, label]) => (
           <FilterPill
             key={key}
@@ -280,13 +298,30 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
         )}
       </div>
 
+      {search.trim() !== '' && (
+        <p className="pb-3 text-xs text-slate-500">
+          הסיכום העליון והשליחה המרוכזת מתייחסים לכל האירועים, גם בזמן חיפוש.
+        </p>
+      )}
+
       {/* ✏️ 12:2X (שלב 10): היה projects.sort המשותף — שני מעריכים מדדו ש"חסר" כאן = איוש בלבד (44 מול 48), H6 ⇒ מפתח נפרד. */}
       {visible.length > 0 && <Hint id="hostesses.overviewSort" />}
 
       {visible.length === 0 ? (
         <EmptyState
-          filtered={filter !== 'all'}
-          onClear={() => setFilter('all')}
+          filtered={filter !== 'all' || search.trim() !== ''}
+          searched={search.trim() !== ''}
+          onClear={() => {
+            setSearchParams(
+              (prev) => {
+                const next = new URLSearchParams(prev)
+                next.delete('q')
+                next.delete(FILTER_PARAM)
+                return next
+              },
+              { replace: true },
+            )
+          }}
           canReadProjects={canReadProjects}
         />
       ) : (
@@ -356,7 +391,7 @@ function OverviewRow({ row, today, cutoffHours, canEdit, sending, onOpen, onRese
           onOpen()
         }
       }}
-      aria-label={`${project.event_name} — לשיבוץ חכם`}
+      aria-label={`${project.event_name} — לשיבוץ לאירוע`}
       // ‏`bg-white` במצב-ברירת-המחדל *(היה `''`)* — נדרש כדי שהעמודה הדביקה תירש רקע אטום
       // ולא תיראה שקופה כשהטבלה נגללת מתחתיה. ויזואלית זהה: הכרטיס שמתחת לבן.
       className={`cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${showsFinalDayAlert ? 'bg-red-50' : isMissing ? 'bg-white' : 'bg-slate-50 text-slate-500'}`}
@@ -482,7 +517,7 @@ function Counter({ n, label, tone, children }) {
 // 🔴 שתי הודעות שונות, וזו לא קוסמטיקה (כרטיס §⑥): **"אין אירועים" הוא בשורה טובה**
 // ולכן מנוסח בחיוב, בעוד "ריק אחרי סינון" חייב להציע ניקוי. הודעה אחת לשניהם הייתה
 // גורמת למנהלת לחשוב שהמסך נשבר דווקא ברגע שהכול מאויש.
-function EmptyState({ filtered, onClear, canReadProjects }) {
+function EmptyState({ filtered, searched, onClear, canReadProjects }) {
   // 🔴 **תוקן באודיט-הסגירה 12/08/2026 — הכשל החמור ביותר שהאפיון מגדיר, וכאן הוא היה אפשרי.**
   // ‏`spec.md § מה ייחשב עובד` **#4**: *"מסך שלא הצליח לטעון אומר זאת. לעולם לא רשימה ריקה
   // בשקט"* — ובדיוק זה: ‏`listStaffingOverview` קוראת מ-`projects`, שהמדיניות עליה היא של
@@ -519,7 +554,7 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
         data-testid="overview-empty-filtered"
       >
         <span className="mb-1 block text-2xl">🔍</span>
-        אין אירועים התואמים לסינון
+        {searched ? 'אין אירועים התואמים לחיפוש ולסינון' : 'אין אירועים התואמים לסינון'}
         <div>
           <Button
             type="button"
@@ -528,7 +563,7 @@ function EmptyState({ filtered, onClear, canReadProjects }) {
             className="mt-2 h-auto p-0 text-xs font-semibold text-teal-700"
             data-testid="overview-clear-filters"
           >
-            נקה סינון
+            {searched ? 'נקה חיפוש וסינון' : 'נקה סינון'}
           </Button>
         </div>
       </div>

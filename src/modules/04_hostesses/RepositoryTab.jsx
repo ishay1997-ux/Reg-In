@@ -21,7 +21,8 @@ import StatusTag from '@/components/StatusTag'
 import RatingStars from '@/components/RatingStars'
 import Money from '@/components/Money'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import ListSearch from '@/components/ListSearch'
+import useHostessSearch from './useHostessSearch'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -84,12 +85,11 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
   const [error, setError] = useState(null)
   const [today, setToday] = useState(todayIso)
 
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useHostessSearch('hostessQ')
   const [city, setCity] = useState(ALL_CITIES)
   const [activeOnly, setActiveOnly] = useState(true) // דלוק כברירת-מחדל, כמצויר
   const [unansweredOnly, setUnansweredOnly] = useState(false)
-  // 🆕 דפדוף (186 שורות כולל לא-פעילות, מעבר-האחידות `src/lib/listWindow.js`) — הלשונית אינה
-  // עמוד עצמאי (`HostessesPage` מחזיק אותה ב-state), ולכן העמוד חי כאן ולא בכתובת.
+  // דפדוף מקומי על התוצאות; שינוי חיפוש מחזיר לעמוד הראשון.
   const [page, setPage] = useState(1)
 
   // ⚠️ הטעינה חיה **בתוך** ה-effect ומעדכנת state רק אחרי `await` — זו התבנית של
@@ -236,7 +236,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
         const failed = results.filter((r) => r.status === 'rejected')
         if (failed.length > 0) {
           toast.error(
-            `שחרור מ-${failed.length} מתוך ${futureActive.length} אירועים נכשל — ${hostess.full_name} עדיין משובצת אליהם. נסה לשחרר ידנית מתפריט-הפעולות במסך שיבוץ חכם.`,
+            `שחרור מ-${failed.length} מתוך ${futureActive.length} אירועים נכשל — ${hostess.full_name} עדיין משובצת אליהם. נסה לשחרר ידנית מתפריט-הפעולות במסך השיבוץ לאירוע.`,
           )
         }
 
@@ -303,15 +303,15 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2 pb-3">
-        <Input
+        <ListSearch
           value={search}
-          onChange={(e) => {
+          onChange={(value) => {
             setPage(1) // כל שינוי-חיפוש מאפס עמוד — מעבר-האחידות
-            setSearch(e.target.value)
+            setSearch(value)
           }}
+          label="חיפוש דיילות"
           placeholder="חיפוש לפי שם או טלפון"
-          className="min-w-[200px] max-w-[240px] h-auto py-1.5 text-sm"
-          data-testid="repository-search"
+          testId="repository-search"
         />
 
         <Select
