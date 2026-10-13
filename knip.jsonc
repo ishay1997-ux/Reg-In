@@ -5,7 +5,9 @@
   // גנרטור נתוני-ההדגמה), ו-knip סורק את `src/` בלבד ⇒ הוא היה מדווח עליה כלא-בשימוש.
   // אינה תלות של האפליקציה (devDependency), ולא נכנסת לבנייה.
   // 05/09/2026 — `recharts` הותקנה עבור מודול 09 (דוחות), תוסר מ-ignoreDependencies עם סיום בניית הקומפוננטות.
-  "ignoreDependencies": ["@hebcal/core", "recharts"],
+  // 14/10/2026 — `@electric-sql/pglite` נצרכת רק ב-`scripts/payroll-replica/run.mjs` (העתק מקומי של
+  // מסד השכר להרצת בדיקות SQL בלי Docker, חוזה השכר §9.1). אותו מקרה בדיוק כמו `@hebcal/core`.
+  "ignoreDependencies": ["@hebcal/core", "recharts", "@electric-sql/pglite"],
   "ignore": [
     "src/components/ui/**",
     // ✅ 09/08/2026 — **הפטור ל-`src/modules/04_hostesses/api.js` הוסר בצעד 3.4, בתאריך
