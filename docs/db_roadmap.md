@@ -28,6 +28,8 @@
 
 **2026-10-13 — accepted payroll scope extension:** §7.105 requires month-specific regular reports plus linked supplements; §7.106 requires completed-month final issuance. W0 must plan compatible regular-period uniqueness, supplement identity/original link, all-kind claim guarding and month-end validation. No DDL is written/applied by this scope note; details remain in the payroll plan.
 
+**2026-10-13 — personal review extension, not applied:** §7.107/108 adds durable draft/personal digests, responses/cases/decisions, scoped token verification, personal send attempts, audited pre-claim closed-event source correction and template/registry/send-entity compatibility. W0 must verify source role/financial snapshot dependencies, final response locking and exact additive ACL/RLS/DDL before implementation. No migration or data change is performed by this entry; see the single payroll plan.
+
 ### 0.0 🔴 The migrations folder is DOCUMENTATION, not a restore script — RULED §7.86 (31/07/2026)
 
 **Measured live 31/07/2026 (Supabase MCP, `list_migrations` vs the folder):** **21** SQL files on disk
