@@ -40,9 +40,33 @@ declare
     'product_costs', 'products', 'price_tiers', 'params',
     'seed_registry', 'notification_preferences'
   ];
+  live_reports integer;
+  snap_reports integer;
 begin
+  -- 🔴 PAYROLL GUARD (contract fix F10, 13.10.2026). TRUNCATE does not fire the row trigger
+  -- that protects claimed shifts, and `cascade` also empties every payroll table that points at
+  -- salary_reports. Restoring an older snapshot after a payroll report was issued would return
+  -- the paid shifts to "unpaid" — the next report would pay them twice. This is the likely
+  -- cause of August 2026 losing its 83 claims (snapshot of 15.09 has 0 claimed rows).
+  if to_regclass('public.payroll_operations') is not null
+     and exists (select 1 from public.payroll_operations) then
+    raise exception 'שחזור נעצר: כבר הופקו דוחות שכר בתהליך החדש. שחזור תמונת-המצב היה מוחק את שיוכי המשמרות לדוחות, והדוח הבא היה משלם אותן פעמיים.';
+  end if;
+
   if stamp = 'YYYYMMDD' then
     raise exception 'stamp was never set -- refusing to run';
+  end if;
+
+  -- second half of the payroll guard: needs the stamp, so it runs right after the stamp is
+  -- set, and before any other check or write.
+  select count(*) into live_reports from public.salary_reports;
+  if to_regclass('seed_snapshot.salary_reports_' || stamp) is null then
+    raise exception 'snapshot seed_snapshot.salary_reports_% does not exist -- aborting before any write', stamp;
+  end if;
+  execute format('select count(*) from seed_snapshot.%I', 'salary_reports_' || stamp) into snap_reports;
+  if live_reports > snap_reports then
+    raise exception 'שחזור נעצר: במסד יש % דוחות שכר ובתמונת-המצב רק %. שחזור היה מוחק דוחות שכר ומבטל את שיוכי המשמרות שלהם, והדוח הבא היה משלם אותן פעמיים.',
+      live_reports, snap_reports;
   end if;
 
   foreach src in array tables loop
