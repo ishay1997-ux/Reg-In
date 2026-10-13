@@ -26,6 +26,10 @@ create table public.payroll_review_recipients (
   recipient_id bigint generated always as identity primary key,
   review_id    bigint not null references public.payroll_reviews (review_id),
   hostess_id   bigint not null,
+  revision     integer not null default 1,
+  digest       text not null default '',
+  rows         jsonb not null default '[]',
+  total        numeric(12,2) not null default 0,
   hostess_name text not null,
   is_current   boolean not null default true,
   state        text not null default 'awaiting'

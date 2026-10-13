@@ -124,3 +124,16 @@ begin
   returning review_id into v_id;
   return v_id;
 end $$;
+
+-- A current recipient row (works with B's real table or the stub).
+create function test.recipient(p_review bigint, p_hostess bigint, p_name text,
+                               p_state text default 'awaiting')
+returns bigint language plpgsql as $$
+declare v_id bigint;
+begin
+  insert into public.payroll_review_recipients (review_id, hostess_id, revision, digest, rows, total,
+                                                hostess_name, state)
+  values (p_review, p_hostess, 1, 'd1:test', '[]'::jsonb, 0, p_name, p_state)
+  returning recipient_id into v_id;
+  return v_id;
+end $$;

@@ -163,8 +163,7 @@ declare v_review bigint; v_rec bigint; v bigint; c jsonb;
 begin
   v_review := test.review('2026-07-01', 'supplement', 900001);
   update public.payroll_reviews set response_deadline = '2026-10-20 18:00+03' where review_id = v_review;
-  insert into public.payroll_review_recipients (review_id, hostess_id, hostess_name)
-  values (v_review, 900001, 'דנה בדיקה') returning recipient_id into v_rec;
+  v_rec := test.recipient(v_review, 900001, 'דנה בדיקה');
   v := public._payroll_attempt_reserve('personal_review', null, v_rec, null, 'h900001@test.local',
                                        'תבנית_מייל_סיכום_שעות_דיילת', 'initial', null, 'fin@test.local');
   update public.payroll_config set review_mail_enabled = false;

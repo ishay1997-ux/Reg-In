@@ -1,6 +1,7 @@
 // REG-IN · payroll replica runner (contract §6 + §9.1: PGlite, PostgreSQL 17.5, no Docker).
 //
 //   node scripts/payroll-replica/run.mjs <tests-dir> [<tests-dir> …] [--only <substring>]
+//                                         [--extra-migration <path> …]
 //
 // Builds one fresh in-memory database, in this order:
 //   1. bootstrap.sql        — roles, default privileges, extensions, auth/storage stubs
@@ -15,8 +16,9 @@
 // share state. Inside a file, each `-- test: <name>` block is its own transaction (see
 // splitChecks). A check fails by raising (e.g. `assert`). Exit code 0 only if all pass.
 //
-// A test file may contain `-- @include-migration <file-name>`; the runner splices that
-// migration's text in at that point (used to re-run a data-fix migration on a fixture).
+// A test file may contain `-- @include-migration <file-name>` or `-- @include-file <repo path>`;
+// the runner splices that file's text in at that point (used to re-run a data-fix migration,
+// or a maintenance script, on a fixture).
 
 import { PGlite } from '@electric-sql/pglite'
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto'
@@ -30,10 +32,11 @@ const migrationsDir = join(repo, 'supabase', 'migrations')
 
 const read = (p) => readFileSync(p, 'utf8')
 
-function payrollMigrations() {
+function payrollMigrations(extra = []) {
   const files = readdirSync(migrationsDir)
     .filter((f) => /_module8_payroll_.*\.sql$/.test(f))
     .map((f) => join(migrationsDir, f))
+    .concat(extra)
   const hasReviewTables = files.some((f) => f.endsWith('_module8_payroll_review_tables.sql'))
   if (!hasReviewTables) files.push(join(here, 'stubs', '20261014000700_stub_review_tables.sql'))
   return files.sort((a, b) => basename(a).localeCompare(basename(b)))
@@ -55,13 +58,13 @@ async function execStep(db, label, sql) {
   }
 }
 
-export async function buildReplica({ log = () => {} } = {}) {
+async function buildReplica({ log = () => {}, extra = [] } = {}) {
   const db = new PGlite({ extensions: { pgcrypto } })
   await execStep(db, 'bootstrap.sql', read(join(here, 'bootstrap.sql')))
   await execStep(db, 'live-schema.sql', read(join(here, 'live-schema.sql')))
   await execStep(db, 'live-functions.sql', read(join(here, 'live-functions.sql')))
   await execStep(db, 'reference-data.sql', read(join(here, 'reference-data.sql')))
-  for (const file of payrollMigrations()) {
+  for (const file of payrollMigrations(extra)) {
     log(`  migration ${basename(file)}`)
     await execStep(db, basename(file), read(file))
   }
@@ -81,9 +84,9 @@ export async function buildReplica({ log = () => {} } = {}) {
 }
 
 function expandIncludes(sql) {
-  return sql.replace(/^--\s*@include-migration\s+(\S+)\s*$/gm, (_, name) => {
-    const path = join(migrationsDir, name)
-    if (!existsSync(path)) throw new Error(`@include-migration: ${name} not found`)
+  return sql.replace(/^--\s*@include-(migration|file)\s+(\S+)\s*$/gm, (_, kind, name) => {
+    const path = kind === 'migration' ? join(migrationsDir, name) : join(repo, name)
+    if (!existsSync(path)) throw new Error(`@include-${kind}: ${name} not found`)
     return read(path)
   })
 }
@@ -108,9 +111,15 @@ function splitChecks(sql) {
     .filter((c) => c.sql.replace(/--.*$/gm, '').trim() !== '')
 }
 
+// `--extra-migration <path>` (repeatable) adds a migration that is not in this branch yet —
+// e.g. another builder's uncommitted file — in its file-name place, to test the integration.
+function optionValues(args, name) {
+  return args.flatMap((a, i) => (args[i - 1] === name ? [resolve(process.cwd(), a)] : []))
+}
+
 function collectTests(args) {
   const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null
-  const dirs = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--only')
+  const dirs = args.filter((a, i) => !a.startsWith('--') && !String(args[i - 1]).startsWith('--'))
   const files = []
   for (const d of dirs) {
     const abs = resolve(process.cwd(), d)
@@ -129,7 +138,10 @@ async function main() {
   }
   const started = Date.now()
   console.log('building replica…')
-  const base = await buildReplica({ log: (m) => console.log(m) })
+  const base = await buildReplica({
+    log: (m) => console.log(m),
+    extra: optionValues(args, '--extra-migration'),
+  })
   const image = await base.dumpDataDir('none')
   await base.close()
   console.log(`replica ready in ${((Date.now() - started) / 1000).toFixed(1)}s`)

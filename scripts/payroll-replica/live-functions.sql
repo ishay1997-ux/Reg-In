@@ -442,3 +442,5 @@ begin
   execute replace(pg_get_functiondef('public.finalize_salary_report(integer,text,text)'::regprocedure),
                   'FUNCTION public.finalize_salary_report(', 'FUNCTION live_copy.finalize_salary_report(');
 end $$;
+grant usage on schema live_copy to authenticated;
+grant execute on all functions in schema live_copy to authenticated;
