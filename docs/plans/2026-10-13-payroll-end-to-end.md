@@ -4,6 +4,8 @@ Date: 2026-10-13. Owner: Codex. Scope: module 08 Finance, process P4.
 
 **Document status: implementation plan, not implemented. Readiness: LIMITED for implementation, with the specific inspection tasks in the last section.** Product direction is accepted; new internal contracts below are a proposed engineering design. No database migration, payroll generation, email or production deployment was performed for this plan.
 
+**Accepted scope update 2026-10-13:** [§7.105](../PROJECT_MASTER_sec7.md) selects calendar-month regular reports and separate late-work supplements. [§7.106](../PROJECT_MASTER_sec7.md) records final issuance/send after the work month ends; current-month use is preview/draft only. These replace cumulative collection and current-month final issuance in the new design. Existing issued reports remain frozen. Exact supplement DDL and accountant handoff/payment dates still need W0/field confirmation; this is a plan, not a deployed change.
+
 <div dir="rtl">
 
 **לישי:** בוחרים חודש, רואים את השעות והסכומים ומורידים טיוטה לפי הצורך. אישור אחד מפיק את הדוח הסופי ושולח אותו. בהיסטוריה אפשר לצפות בנתונים שנחתמו ולהוריד את הקובץ המקורי. דוח ישן ללא קובץ יוצג מהנתונים הקפואים, עם הסבר מפורש על המידע שלא נשמר. שחזור והפקה בדיעבד בעדיפות משנית. האישור לכיוון מתועד ב־[§7.104](../PROJECT_MASTER_sec7.md).
@@ -18,7 +20,7 @@ Let an authorized finance user verify the exact report before payroll rows are c
 
 The canonical product decision is [§7.104](../PROJECT_MASTER_sec7.md). Do not re-ask the selected preview/draft → one final approval flow. Approval of this direction does not itself authorize live payroll writes or email tests by an agent.
 
-Core delivery includes actual preview, draft download, final confirmation, safe collection, durable file, delivery outcome, history detail and original download. Secondary delivery includes recovery of old missing files and generation for previously unissued past periods. No new management reports, PDF/CSV, mobile redesign, payroll scheduler, salary-payment execution or full module 10 automation engine is included.
+Core delivery includes actual preview, draft, one final confirmation, calendar-month collection, separate late-work supplements, safe claiming, durable file, delivery outcome, history and original download. Original-file recovery and previously unissued past periods remain secondary. No new management reports, PDF/CSV, mobile redesign, scheduler, salary-payment execution or full module 10 is included.
 
 ### Evidence and existing rules
 
@@ -32,14 +34,15 @@ Core delivery includes actual preview, draft download, final confirmation, safe 
 | Observed: database, 2026-10-13 | `finance` bucket metadata | Private, 10 MiB limit, XLSX MIME currently allowed. The historical MIME warning in `api.js` is not evidence of the present failure cause. Upload/download permissions have not been exercised for this plan. |
 | Observed: live policy definitions, 2026-10-13 | `pg_policies` for payroll, bank and finance objects | Finance-view may read frozen lines and finance objects; current bank-table finance access requires edit. Current finance object UPDATE/DELETE permits finance-edit broadly, so private storage and `upsert:false` alone do not enforce issued-file immutability. Policy definitions were read; no write/delete attempt was executed. |
 | Reported: independent review | `/root/search_review`, read-only review returned 2026-10-13 | UNIQUE period does not protect simultaneous collection for different months. Missing row locks/rechecks are visible in source; no concurrent live reproduction was attempted. |
-| Observed: schema and approved specification | [schema.sql](../schema.sql), salary tables; [approved P4 and rulings](../specs/module_08_finance/processes-approved.md), H4/H9/H14/H15; [module-8 guide](../micro_guides/module-8.md), B-4 | Preserve cumulative eligibility, frozen money, protected bank data and XLSX format. Bank fields deliberately are not duplicated into salary-report lines. |
+| Observed: schema and earlier approved specification | [schema.sql](../schema.sql), salary tables; [approved P4](../specs/module_08_finance/processes-approved.md), H4/H9/H14/H15; [module-8 guide](../micro_guides/module-8.md), B-4 | The live cumulative writer and UNIQUE period are compatibility baselines, superseded for new reports by §7.105. Preserve frozen money, protected bank data and XLSX. Bank data is not duplicated into report lines. |
 
 Preserved business rules:
 
-- Period is the first day of the chosen month. Collect eligible, unclaimed assignments with event date up to that month's end, including older unclaimed rows. Do not silently change this into a calendar-month activity report.
+- Accepted collection: normalize the selected month to its first day; collect only eligible, unclaimed assignments whose `event_date` is in `[period, next_month_start)`. Use this range for regular reports and supplements. Operational closure date does not move an August shift into September. Compensation uses the original assignment event month and a distinct basis; its server thresholds remain unchanged. Older unclaimed work stays visible for its own month.
+- Current-month preview/draft is allowed and labelled incomplete. Final signing/send is allowed only after that work month ends in `Asia/Jerusalem`; future-month preview/final actions are blocked. Enforce the rule in UI/server, resumed operations and legacy compatibility.
 - Actual work uses operationally closed projects and finally approved assignments. Cancellation compensation uses the existing eligible released-assignment branch. Preserve the current server compensation thresholds and force-majeure rule.
 - Salary and compensation calculations have one server authority. Preview and final generation share that authority. Travel uses the parameter effective at final approval, with a change detected against preview before signing.
-- Freeze identity, salary components and source linkage at final generation. Keep UNIQUE period and a permanent claim per assignment. A later source change must not rewrite an issued report.
+- Freeze identity, salary components and source linkage at final generation. Keep one regular report per period, distinct supplement identity/sequence with an original-report link, and one permanent claim per assignment. A later source change must not rewrite an original or supplement. The old blanket UNIQUE period requires a compatible additive transition before supplements can exist.
 - Zero-value eligible rows are preserved as signed evidence and omitted from the XLSX body under existing N-4. A genuinely empty collection is a distinct state.
 - Missing bank details remain a warning, as in the existing process; missing identity or required numeric values are blockers. Do not invent bank values or make absence look like zero.
 - `sent` means the delivery service reported success; it does not prove inbox receipt or that wages have been paid.
@@ -48,18 +51,20 @@ Preserved business rules:
 
 **New report:** open Finance → monthly payroll dialog → choose a period → load actual preview → inspect rows, totals, warnings and recipient → optionally download draft → select `הפק ושלח` → one confirmation → preparation, signing and delivery → persistent result and refreshed history.
 
-**Issued report:** select its history row → `צפייה בדוח` → read frozen rows, totals, report identifier and delivery history → `הורדת אקסל` downloads the stored original. Selecting an issued period opens this path rather than inviting a second generation.
+**Issued report:** select a history row → view its frozen rows, totals and delivery attempts → download that report's own immutable artifact. An issued period goes to history, without a second regular generation.
+
+**Late work:** finance-edit selects `הפק דוח השלמה` for an issued period → preview only that month's newly eligible, unclaimed rows → draft/one final confirmation/file/sign/send. Show `השלמת אוגוסט 2026 — 1` and the original reference. Further new rows can form a later supplement. An empty collection creates none; a resend sends the same supplement rather than generating another.
 
 **Interrupted or failed operation:** reopen history or the operation → see the persisted step and allowed recovery action → resume the same operation or retry a known failed send with the same original artifact. Never regenerate salary to repair a transport or storage error.
 
-**Past period:** use the same selector and preview. An issued period goes to history. An unissued period collects only rows still eligible and unclaimed; rows already claimed by later reports are not moved back. An empty result explains that the selected period has no eligible unclaimed rows, rather than asserting that no work happened.
+**Past period:** an issued period goes to history/supplement actions. An unissued period collects only that month's eligible unclaimed rows. Do not move claims from legacy mixed-month reports or rewrite those reports into a new format. An empty result means no eligible unclaimed rows remain for this month, not no historical work.
 
 ### Report content and preview
 
 - Retain the existing XLSX order: `ת"ז`, `שם`, `פרטי-בנק`, `תעריף`, `שעות`, `בונוס`, `נסיעות`, `סה"כ`.
 - Header: report month, final report code, final generation timestamp. Footer: bonus, travel and grand total. Do not aggregate actual-work hours with compensation hours.
 - Screen preview may retain the current result-table order and add source project and basis beneath the hostess name. Several assignments for one hostess remain several rows, not an unapproved aggregation.
-- Summary shows eligible-row count, payable-file-row count, total amount, cutoff date, capture time and recipient. Explain retro rows and omitted zero-value rows visibly.
+- Summary shows report kind, month start/end, counts, total, captured time and recipient; supplements also name the original. Show zero-value omissions. Separately show authorized counts/references for potentially relevant shifts/projects awaiting operational approval. Their amounts remain unknown; a failed completeness check is an error, not zero pending work. Do not present the month as fully settled merely because all currently eligible rows were collected.
 - A draft has `טיוטה — לא הופק ולא נשלח`, draft capture time, no final report code, and filename `09_2026_Payroll_Report_DRAFT.xlsx`. Draft creation, refresh, cancellation and closing have no salary claim, report row or email side effect.
 - Amounts/identifiers in preview and draft must correspond to the same server preview version. Do not export the visible page alone when pagination exists.
 - After successful generation, refresh history and display the final identifier and artifact. Download must remain possible when mail failed but the artifact exists.
@@ -72,10 +77,11 @@ Preserved business rules:
 | Preview failed | `נסה שוב`, cancel | Persistent error panel; no false empty result. |
 | Ready preview | `הורד טיוטה`, `רענן`, `הפק ושלח`, cancel | Period, complete totals, recipient, snapshot time, eligibility and warnings. |
 | Blocking validation | Refresh, draft if data can safely be rendered, cancel | Error beside affected input/row, plus a short summary. `הפק ושלח` disabled with a visible reason. |
-| Truly no eligible rows | Refresh, choose another period, close | `אין שורות שכר שטרם נכללו בדוח עד סוף החודש שנבחר.` Do not create a final month marker solely for an empty preview. |
+| Truly no eligible rows | Refresh, choose another period, close | `אין שורות שכר מאושרות שטרם נכללו בדוח לחודש שנבחר.` Show pending operational approval separately. No final report is created solely for an empty preview. |
 | Eligible rows all have zero value | Preview and draft; final action with explicit zero-file explanation | Preserve N-4; distinguish signed zero rows from no collected rows. |
-| Existing period | `צפייה בדוח`, original download if available | Existing identifier/state; no new final approval. |
-| Confirm | `הפק ושלח`, `חזרה לבדיקה` | One confirmation names period, row count, total, actual recipient and irreversible claiming of these rows. Warn if current month is incomplete; future periods are blocked. |
+| Existing regular period | View, original download; finance-edit supplement action | No second regular generation. A supplement has a separate preview and approval. |
+| Current month | Preview, refresh, draft, close | `החודש עדיין לא הסתיים. ניתן להפיק טיוטה; הפקה ושליחה סופיות יתאפשרו לאחר סיום החודש.` Final action disabled with a visible reason. |
+| Confirm | Final approval, back to review | Name kind, work month, original reference for supplements, row count, total, actual recipient and irreversible claiming. Show outstanding operational approval explicitly. Supplements do not postpone wage obligations. |
 | Preparing or signing | No second submit; operation status available | `מכין ושומר את הקובץ…`, then `מפיק את הדוח…`. Navigating away must not cancel or duplicate the durable operation. |
 | Sending | View persisted operation; no parallel retry | `שולח לרואה החשבון…`; no success toast yet. |
 | Sent | View, download, close | Success toast plus persistent `נשלח` state, recipient and send timestamp. |
@@ -91,8 +97,8 @@ Toasts acknowledge actions; durable inline status conveys the lasting outcome. N
 
 | Check | Severity and outcome |
 | --- | --- |
-| Invalid/missing period, invalid year, future month | Block in UI and server. Compute current month in `Asia/Jerusalem`; retain current-month support with an incomplete-month warning. |
-| Period already issued | Route to existing report; server still enforces uniqueness. |
+| Invalid/missing period, invalid year, future month | Block UI/server. Use `Asia/Jerusalem`; current month supports preview/draft, but not final issuance/send before month end. |
+| Regular period already issued | Open history; regular-period uniqueness remains enforced. A separately approved supplement requires an existing original and collects only unclaimed rows within its month. |
 | Preview version changed or expired | No signing/mail; explain what changed where possible and require a refreshed preview followed by new confirmation. |
 | Missing identity, missing/non-finite required numbers, malformed basis, inconsistent count/total | Block before signing; identify offending rows safely. Validate server shape as well as UI formatting. |
 | Bank missing | Warning in preview and confirmation; preserve `—`. Never query current bank details for an old report and call them historical. |
@@ -105,7 +111,7 @@ Preserve existing authority: finance `view` may read frozen history/detail and d
 
 ### Historical viewing, downloads and recovery
 
-History stays inside the existing payroll dialog. Each row shows period, report identifier, total amount, artifact availability and delivery state. Label the amount `סה"כ לתשלום`, not `סה"כ ששולם`: generation/send is not proof of payment. Detail view shows the original and latest delivery attempts/recipients separately; it never replaces the historical recipient with today's configuration.
+History stays inside the payroll dialog. Show work period, regular/supplement kind, original link/sequence, identifier, total, artifact and delivery state. Each supplement has its own file and send history. Label the amount `סה"כ לתשלום`, not `סה"כ ששולם`. Preserve historical recipients per attempt; neither issuance nor send proves wages were paid.
 
 Frozen payroll lines are the authority for historical identity and money. If the original artifact is available, protected parsing may obtain its original bank column; validate report identity and reconciliation, reject malformed files, and never execute spreadsheet formulas. No private file is exposed through a public bucket or third-party document viewer. If historical bank fields cannot be proven from that artifact, show `לא נשמר בנתוני הדוח`.
 
@@ -128,11 +134,33 @@ This secondary work does not promise a byte-identical August original. Backdated
 
 </div>
 
-Recommendation: prepare one usable previous report (August) and leave September unissued for the new flow. Full historical backfill remains secondary. For August, inspect for the original artifact first; if none is found, frozen-data viewing and an explicitly labelled reconstruction are sufficient for illustrating history. Never generate a second August payroll report or replace its frozen money.
+Recommendation: prepare one usable previous report (August) and leave September unissued for the new flow. Full historical backfill remains secondary. For August, inspect for the original artifact first; if none is found, frozen-data viewing and an explicitly labelled reconstruction are sufficient for illustrating history. Never generate a second regular August payroll report or replace its frozen money. A separately approved August supplement is allowed under §7.105 for newly eligible, unclaimed August work.
 
 Observed in a read-only preflight at **2026-10-13 17:54:56 UTC**, project `yfeovxppnfoafmfbdfvh`: August has 83 frozen rows whose sum matches its report total, with no file reference; September has no report. Applying the two eligibility branches of the complete live `generate_salary_report(date)` definition to unclaimed assignments through 2026-09-30 found **4,167 candidate rows** (3,992 actual-work candidates and 175 cancellation-compensation candidates), including **4,068 dated before September**. No actual-work candidate had missing hours. These are candidate counts, not a validated preview, payable-file count or proof that every row can pass final validation; cancellation inputs and zero-value rows still require the shared reader. No individual identities/bank values were retrieved, generation function called, claim changed or email sent.
 
-W0/pre-conference owner must inspect this cumulative backlog and verify suitable demo data before any final September approval. Do not silently restrict collection to September, reassign claims, invent missing months or bulk-generate earlier reports to make the backlog disappear. Rehearse preview/draft and the final operation in an isolated test environment; preserve the intended live demo period for its single final issuance. Exact-original availability for August and final September validity remain unknown.
+The preflight above describes the old live cumulative writer. The accepted monthly target excludes prior-month candidates, but is not deployed. W0/pre-conference owner must verify month-specific demo data and keep older outstanding work traceable, without reassigning claims or inventing months. Rehearse safely in isolation; preserve the intended live period for its single regular issuance. August original availability and final September validity remain unknown.
+
+### Accepted monthly scope and late reporting
+
+Canonical decision: [§7.105](../PROJECT_MASTER_sec7.md). Ishay selected `דוח השלמה נפרד לאוגוסט (מומלץ)`. Individual assignment event dates define the month; actual work and compensation remain distinct. A below is selected; B/C are comparison history, not target behaviour.
+
+| Option | Example: an August shift is closed after August's report was issued | Tradeoff |
+| --- | --- | --- |
+| A — calendar month plus a separate supplement (accepted) | September's regular report contains only September shifts. A separately identified August supplement contains newly eligible August rows; August's original stays unchanged. | Clear meaning per month and visible late work. Requires an additive supplement contract and uniqueness/claim/artifact rules; this feature does not exist today. |
+| B — calendar month plus labelled prior-month adjustments | September's main section contains September shifts; a separate, visibly labelled section carries late August rows. | One handoff to the accountant, but the whole file is not September-only. This differs from the user's preferred strict monthly summary. |
+| C — cumulative outstanding collection (current behaviour) | All eligible unclaimed August and September rows enter September's report. | Avoids leaving earlier rows unclaimed, but mixes work months and produced the observed large candidate backlog. |
+
+Supplements contain only newly eligible, unclaimed rows from the original's work month. Require an issued regular report; give each supplement its own ID, sequence, original-report link, filename, artifact and attempts. Serialize competing supplement operations and guard assignment claims across every report kind. Enforce one regular report per period and unique supplement identity; keeping the old blanket UNIQUE period would prevent this contract. Empty supplements are not finalized. A resend uses the same bytes and adds no salary rows.
+
+A supplement is distinct from missing-file reconstruction and corrections to money already claimed. Signed-money corrections/negative adjustments need a separate accountant-reviewed policy outside this late-unclaimed-work scope. Never recategorize old reports/claims. W0 validates exact schema/ACL, report identity, source linkage, legacy callers and storage filenames; this product approval grants no specific migration or live-send authority.
+
+### Month-end timing and accountant handoff
+
+Per §7.106, final approval/send starts only after the work month ends in `Asia/Jerusalem`. September 2026 becomes eligible for final issuance at 2026-10-01 00:00 local time; October can be previewed/drafted during October. Month end does not prove all hours are approved: expose pending operational approvals before signing. Late supplements do not reset a wage-payment deadline.
+
+Recommendation, not an agreed cutoff: hand off during the first few days of the next month and leave payroll-processing/correction time. **Unknown, owner: business payroll contact/accountant** — actual handoff deadline, processing lead time and payment date under the workers' employment arrangements. Do not hardcode `10` as a universally valid payment date or infer bank receipt from a sent report. REG-IN sends the hours document; payslips and wage transfer are outside scope. No automatic scheduler is added.
+
+Timing was checked on 2026-10-13 against [Wage Protection Law, sections 1/9/10](https://www.btl.gov.il/Laws1/00_0106_000000.pdf) and [payment-date guidance](https://www.kolzchut.org.il/he/מועד_תשלום_השכר). Monthly wages are due at month end; unpaid wages beyond the relevant ninth-day threshold are late. Hourly/partial-month arrangements need their applicable rules/agreements checked. This explains why the 10th is not a safe universal default; it does not establish these workers' actual dates.
 
 ## Technical design
 
@@ -150,10 +178,10 @@ Engineering proposals in this section are scoped to §7.104; exact internal name
 
 | Contract | Request/result | Side effects |
 | --- | --- | --- |
-| `preview_salary_report` | Period → server lines, totals, row/file counts, warnings, cutoff, captured time, opaque preview version, configuration version and recipient | Read-only; no final report, claims, email or artifact upload. |
+| `preview_salary_report` | Period and regular/supplement kind; original report reference for supplements → server lines, totals, row/file counts, pending approvals, month bounds, captured time, opaque version, configuration and recipient | Read-only; no final report, claims, email or artifact upload. Server verifies original kind/period and caller authority. |
 | `get_salary_report_detail` | Report ID → frozen rows and report metadata, artifact availability, durable delivery attempts | Read-only; original bank fields only from a validated original artifact, if requested and authorized. |
-| `approve_salary_report` coordinator | Period, preview version, operation UUID → durable operation ID and progress | After explicit approval: trusted artifact preparation, validation, private storage, atomic final commit, dispatch. Never accepts client-computed money as authoritative. |
-| Internal final commit | Trusted operation, artifact manifest, preview/version → report ID and pending approved send | Atomically claim assignments, freeze lines/travel, bind artifact, mark operation committed and enqueue one send. Restricted internal caller, while validating originating actor and finance authority. |
+| `approve_salary_report` coordinator | Period, kind, original reference for supplements, preview version, operation UUID → durable operation ID and progress | After approval and server month-end/original validation: trusted preparation, private storage, atomic commit, dispatch. Server allocates final report ID/supplement sequence; client money is never authoritative. |
+| Internal final commit | Trusted typed operation, original/sequence and artifact manifest, preview/version → report ID and pending approved send | Recheck completed month, kind/original identity and version; atomically claim assignments, freeze lines/travel, bind artifact and enqueue one send. Restricted internal caller validates originating actor/finance authority. |
 | Operation status/resume | Operation UUID → persisted preparation/report/send result | Status is read-only; resume may continue only the existing approved operation with permissions and state checks. |
 | Retry known failed send | Report ID, prior attempt version and reviewed recipient → new attempt | Same immutable artifact and salary snapshot; no generation. Unknown delivery is ineligible until resolved. |
 
@@ -161,21 +189,23 @@ Error responses include a stable machine code, plain Hebrew message, retryabilit
 
 ### Preview and final-commit integrity
 
+Bind the preview version and operation to the full regular/supplement identity, verified original report, work-month range and eligible membership. Changing kind or original after preview is a stale/invalid approval even when totals match. The server checks that a supplied original is a regular report for the same work month; an arbitrary known report ID is not authority. Final month-end checks use server time, including status/resume and legacy paths.
+
 Extract one internal server collection/calculation authority from the live generation logic. The read-only preview invokes it; final commit revalidates the same semantics. Preserve the existing compensation thresholds, full precision before amount rounding, and row reconciliation. Do not compare a recomputed client `rounded hours × rate` against server line amounts.
 
 Preview version covers canonical assignment keys including assignment number, complete eligible membership, source statuses/times, identity, exact financial inputs and outputs, original bank fields, period/cutoff, travel configuration and actual recipient/template version. Bind it to the authorized actor/context. It is not a hash of the total alone. A same-total replacement of a hostess or bank account must invalidate approval.
 
-The coordinator validates the version, allocates an operation and final report identifier without creating a signed month, generates the final artifact from the trusted approved snapshot, validates/reconciles it and stores it immutably. The snapshot containing bank information must remain protected; bank fields are not added to `salary_report_lines` or public logs. Interrupted preparation must be recoverable from the persisted private candidate artifact and manifest, or restart safely from a new preview if no verified artifact was stored. A candidate whose source/configuration version changed is ineligible for signing. Once a newer version is approved, supersede old candidates so an old resume request cannot revive them; do not delete an active or committed candidate.
+The coordinator validates the version, allocates an operation and a regular/supplement report identity, original link/sequence and final identifier without creating a signed month, generates the final artifact from the trusted approved snapshot, validates/reconciles it and stores it immutably. The snapshot containing bank information must remain protected; bank fields are not added to `salary_report_lines` or public logs. Interrupted preparation must be recoverable from the persisted private candidate artifact and manifest, or restart safely from a new preview if no verified artifact was stored. A candidate whose source/configuration version changed is ineligible for signing. Once a newer version is approved, supersede old candidates so an old resume request cannot revive them; do not delete an active or committed candidate.
 
 Final commit is short and contains **no storage or email network calls**. Serialize collection across months, then protect/recheck every source that influences eligibility, identity, financial fields, bank and configuration while computing the approved version. For this small system, a fixed-order, bounded lock of the relevant source tables during final commit is the initial conservative design; narrower row locks require a demonstrated strategy for new eligible rows and concurrent project/configuration updates. Verify existing writer lock order and deadlock handling in W0.
 
-Use an explicit transaction-wide collection lock shared by all salary writers, retain period uniqueness, and use conditional assignment claims with affected-row count reconciliation. A mismatch rolls back the report, frozen lines, travel updates and send enqueue together. The lock is not only per period. Old direct generation access must not retain a bypass around the new guard; use an additive compatibility wrapper and cutover verified against deployed callers.
+Use an explicit transaction-wide collection lock shared by all regular/supplement salary writers, retain regular-period and supplement-identity uniqueness, and use conditional assignment claims with affected-row count reconciliation. A mismatch rolls back the report, frozen lines, travel updates and send enqueue together. The lock is not only per period. Old direct generation access must not retain a bypass around the new guard; use an additive compatibility wrapper and cutover verified against deployed callers.
 
 PostgreSQL's [explicit-locking documentation](https://www.postgresql.org/docs/17/explicit-locking.html) supports transaction-scoped locks and consistent acquisition order; this is a design inference for REG-IN, not proof that existing SQL is race-safe. The exact source set/isolation must pass real concurrent tests before this design is declared ready for release.
 
 ### Durable artifact, operations and delivery
 
-Proposed operation metadata: UUID/idempotency key, actor, period, version, reserved report ID, preparation/commit state, artifact key/hash/size/MIME, approval timestamp, configuration/recipient snapshot, timestamps and safe failure code. Do not persist the candidate's bank fields in this metadata. UUID deduplicates retries of one request; distinct UUIDs from separate tabs may still compete. Serialize active preparation/commit ownership by period on the server. A competing authorized request gets the existing operation's safe status/reference or an explicit period-busy/existing-report result; it never starts a second initial dispatch. Status access still requires finance authority, even with a known UUID.
+Proposed operation metadata: UUID/idempotency key, actor, period, report kind, original-report link/supplement sequence, version, reserved report ID, preparation/commit state, artifact key/hash/size/MIME, approval timestamp, configuration/recipient snapshot, timestamps and safe failure code. Do not persist the candidate's bank fields in this metadata. UUID deduplicates retries of one request; distinct UUIDs from separate tabs may still compete. Serialize active preparation/commit ownership by work period and report kind on the server; supplements also bind the original and candidate version. A competing authorized request gets the existing operation's safe status/reference or an explicit period-busy/existing-report result; it never starts a second initial dispatch. Status access still requires finance authority, even with a known UUID.
 
 Proposed delivery-attempt metadata: report ID, attempt ID, approved recipient/template version, queued/sending/sent/failed/unknown state, transport correlation ID, started/completed time and safe outcome. Enforce one active attempt per report and idempotent operation transitions. An older attempt's completion cannot overwrite a later attempt's state. History retains each real recipient.
 
@@ -202,7 +232,7 @@ Known failures may be retried manually using the original artifact after reviewi
 
 | Unit | Responsibility | Exit evidence |
 | --- | --- | --- |
-| W0 — confirm integration | Implementer: inspect live RPC/RLS, storage SELECT/INSERT/UPDATE/DELETE policies, all three legacy mutation routes, shared send-email contract/log, XLSX runtime adapter, source writers/lock order, period-operation ownership, ID reservation and migration compatibility | A supported way to generate the same final XLSX on the trusted side; complete claim/version and artifact protection; precise delivery-status limits and deployment plan. Update this plan if evidence changes it. |
+| W0 — confirm integration | Implementer: live RPC/RLS, all legacy writers, storage, send transport, trusted XLSX, lock order, monthly/supplement IDs/uniqueness/source linkage, compatible schema transition and filenames | Exact supported adapter/DDL and effective authority; payment/handoff dates remain owned by business/accountant. |
 | W1 — pure preview and history | Implementer: shared server collection reader, frozen-detail reader, Finance preview/history UI and draft shaping | Preview/draft do not alter salary state; permissions tested independently; history uses frozen data; drafts open correctly. |
 | W2 — approved operation | Implementer: preparation, storage/RPC artifact immutability, guarded atomic commit, legacy generate/finalize cutover and operation recovery | Same-/different-period concurrency, stale-preview rejection and interruption tests pass; no signed month without a durable artifact; old finalize/storage routes cannot replace or delete issued output. |
 | W3 — delivery and feedback | Implementer: shared-transport integration, payroll-specific direct-send guard/cutover, durable attempts, UI result/history/retry states | Known failure vs unknown survives refresh; one active attempt; unchanged original file on download/resend; direct transport calls cannot bypass approval. |
@@ -218,7 +248,7 @@ Planning does not execute these units or authorize a live test send. Match exist
 | A01 | Preview, refresh, draft and cancel | Counts/claims/report rows/email logs unchanged; visible rows and XLSX agree. |
 | A02 | One approved normal report | Frozen lines and total reconcile; every claimed assignment links once; artifact exists and hash matches attached/downloaded bytes; actual authorized test email opened before claiming receipt. |
 | A03 | Same-period double click, two tabs with distinct UUIDs and lost response | One final report and one approved initial attempt; competing callers receive an authorized existing-operation/status reference or an explicit busy/existing-report result; no duplicate signing or silent failure. |
-| A04 | Overlapping collection for two different months | Concurrent requests cannot claim an assignment twice or overwrite its first claim. Check frozen lines and assignments separately. |
+| A04 | Concurrent regular/supplement operations for the same month and different months | No duplicate or overwritten assignment claim; regular uniqueness and supplement sequencing persist separately. |
 | A05 | Change hours, bonus, travel, identity, bank or membership after preview; include same-total swaps | Reject stale approval with no report/claims/mail; refreshed preview exposes the change. |
 | A06 | New eligible row or source/configuration update during preparation/commit | No unseen row/configuration enters approved output; bounded lock/rollback behaviour and no silent omissions. |
 | A07 | Recipient/template/configuration missing, malformed or changed | Preview readable, precise final blocker, no salary writes or send. Confirm displays the actual chosen destination. |
@@ -229,10 +259,14 @@ Planning does not execute these units or authorize a live test send. Match exist
 | A12 | Missing bank vs identity/numeric data; zero rows vs zero-value eligible rows | Correct warning/blocker; no false zero; truly empty collection does not consume a period; N-4 evidence preserved when zero-value rows are deliberately approved. |
 | A13 | Cancellation 24/72-hour boundaries, force majeure, retro operational closure, multiple assignments and fractional hours | Existing server rules unchanged; no client recomputation/rounding rejection; compensation rows and XLSX totals correct. |
 | A14 | History after source/bank/recipient changes; August without file reference | Frozen identity/money unchanged; no current bank/recipient substituted as historical; view remains usable and missing-original limitations visible. |
-| A15 | Past unissued period with some/all rows already claimed elsewhere | Collect only still-eligible rows, no reassignment; distinguish no eligible rows from no historical activity. |
+| A15 | Past unissued month or supplement where some/all rows were already claimed by legacy reports | Only that month's eligible unclaimed rows enter; no claim reassignment or false no-work statement. |
 | A16 | Hebrew workbook and browser on desktop/laptop | Text IDs retain leading zero, numeric cells/totals valid, RTL readable, long tables paginated without partial draft/export, keyboard focus and visible loading/error/disabled reasons. Mobile is outside the user scope. |
 | A17 | Direct old generate/finalize and payroll send-email calls under finance-edit; supplied arbitrary file/recipient/attempt | Old generation cannot bypass the collection guard, finalize cannot replace final artifact/attempt state, and direct send cannot bypass the approved report/attempt. Invoice/invitation regressions checked separately. |
 | A18 | Direct overwrite/delete of issued object; cleanup racing commit; resume superseded candidate | Issued artifact protected by effective storage/RPC policy; active/committed objects never cleaned; stale candidate cannot sign after new approval; salary/history remain intact. |
+| A19 | Month-boundary assignments, compensation and leap-year February | Regular/supplement preview, draft and final include only the selected assignment event month; closure date does not shift membership. |
+| A20 | Current-month draft, early final calls and Jerusalem month-end boundary | Draft has no final side effect; UI/server and legacy/resume paths reject early final/send and admit completed months only. |
+| A21 | Potentially relevant work awaiting operational approval; completeness reader fails | Pending work is visible without fabricated amounts; failure never becomes zero or an assertion the month is fully reported. |
+| A22 | Supplement empty/double click/concurrent operations/resend and original history | Original remains frozen; only new rows are claimed once; unique supplement identity/link/file; empty creates none; resend changes no money. |
 
 Appropriate code gates still apply when implementing. They are necessary but do not replace actual workbook opening, browser inspection, independent acceptance, database persistence checks or proof of receipt. Do not run broad application tests merely to validate this planning-only document.
 
@@ -240,8 +274,8 @@ Appropriate code gates still apply when implementing. They are necessary but do 
 
 **LIMITED:** requirements, core flow, history semantics, failure states and acceptance criteria are coherent. W0 still must prove the trusted XLSX adapter, exact lock/source set, legacy caller cutover, storage role policies and transport reconciliation capabilities. These are inspection tasks for the implementer, not questions for Ishay to answer technically. This verdict does not mean a working or deployed payroll feature.
 
-Product question requiring Ishay now: **none**. Preserve current-month, missing-bank and existing bank-access boundaries as specified; finance-view preview/draft is not included. If W0 finds a consequential contradiction, ask only the affected product question. Optional recovery cannot claim an exact original without original evidence.
+Product question requiring Ishay now: **none on monthly scope/late-work policy** — §7.105 is answered. Field confirmation of accountant handoff/payment dates remains with the business/accountant; do not invent a cutoff or promise timely payment. Preserve bank-access boundaries. Optional reconstruction cannot promise the exact original without evidence.
 
-Planning closure: the file was checked against sources/decisions and reviewed independently by `/root/search_review` on 2026-10-13. Four required corrections (legacy mutation routes, artifact policy enforcement, bank-access boundary and competing operation IDs) were applied and independently rechecked; that reviewer reported no remaining required correction in this scope. Document structure/Bidi checks passed; focused checks confirmed 18 unique acceptance cases, valid local links and canonical pointers. These are document checks, not implementation validation.
+Planning verification: the earlier independent review cleared the initial plan's four required corrections. The monthly/supplement and month-end revision was then independently reviewed by `/root/search_review`; two document findings (regular-report wording and a broken acceptance-table continuation) were fixed and rechecked on disk. No required document correction remained in that review. Focused checks confirm 22 cases in one Markdown table and valid local links; document structure/Bidi checks passed. These are document checks, not implementation or live-send validation.
 
 Next owner: the subsequently assigned implementer, W0. No implementation has been dispatched to Claude or another chat by this document. Implementation/release closure remains W5 evidence.

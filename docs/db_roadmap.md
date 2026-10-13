@@ -26,6 +26,8 @@
 
 **2026-10-13 — planned payroll extension, not applied:** product decision [§7.104](PROJECT_MASTER_sec7.md), detailed design and W0 inspection in [payroll-end-to-end.md](plans/2026-10-13-payroll-end-to-end.md). Proposed shared read-only collection/history contracts, guarded final commit, durable operations/delivery attempts and legacy-writer compatibility. No migration has been written or applied. The implementer must record exact DDL, ACL/RLS checks, compatibility and rollback here when W0 resolves the design; this pointer does not change the schema snapshot or grant deployment authority.
 
+**2026-10-13 — accepted payroll scope extension:** §7.105 requires month-specific regular reports plus linked supplements; §7.106 requires completed-month final issuance. W0 must plan compatible regular-period uniqueness, supplement identity/original link, all-kind claim guarding and month-end validation. No DDL is written/applied by this scope note; details remain in the payroll plan.
+
 ### 0.0 🔴 The migrations folder is DOCUMENTATION, not a restore script — RULED §7.86 (31/07/2026)
 
 **Measured live 31/07/2026 (Supabase MCP, `list_migrations` vs the folder):** **21** SQL files on disk
