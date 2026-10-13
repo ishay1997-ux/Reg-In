@@ -24,6 +24,8 @@
 
 ## 0. Current state pointer (do NOT duplicate DDL here)
 
+**2026-10-13 — planned payroll extension, not applied:** product decision [§7.104](PROJECT_MASTER_sec7.md), detailed design and W0 inspection in [payroll-end-to-end.md](plans/2026-10-13-payroll-end-to-end.md). Proposed shared read-only collection/history contracts, guarded final commit, durable operations/delivery attempts and legacy-writer compatibility. No migration has been written or applied. The implementer must record exact DDL, ACL/RLS checks, compatibility and rollback here when W0 resolves the design; this pointer does not change the schema snapshot or grant deployment authority.
+
 ### 0.0 🔴 The migrations folder is DOCUMENTATION, not a restore script — RULED §7.86 (31/07/2026)
 
 **Measured live 31/07/2026 (Supabase MCP, `list_migrations` vs the folder):** **21** SQL files on disk
