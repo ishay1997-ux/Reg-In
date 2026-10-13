@@ -72,9 +72,9 @@ describe('validateObjection', () => {
     expect(errors.description.startsWith('מה לא נכון:')).toBe(true)
   })
 
-  it('"משמרת חסרה" (סימון או קטגוריה) מחליף סימון שורה', () => {
-    expect(validateObjection({ ...valid, rowKeys: [], missingShift: true })).toEqual({})
+  it('קטגוריה "משמרת חסרה" מחליפה סימון שורה; קטגוריה אחרת בלי שורה ⇒ שגיאה', () => {
     expect(validateObjection({ ...valid, rowKeys: [], category: 'missing_shift' })).toEqual({})
+    expect(validateObjection({ ...valid, rowKeys: [], category: 'hours' }).rows).toBeTruthy()
   })
 
   it('תיאור של רווחים בלבד ⇒ ריק; 2001 תווים ⇒ ארוך מדי; 2000 ⇒ תקין', () => {
@@ -89,14 +89,25 @@ describe('validateObjection', () => {
     ['', true],
     ['0', true],
     ['8.5', true],
-    ['100000', true],
+    ['24', true],
     ['-1', false],
-    ['100001', false],
+    ['24.5', false],
     ['abc', false],
     ['Infinity', false],
-  ])('מספר מוצע %s ⇒ תקין=%s', (value, ok) => {
+  ])('מספר שעות מוצע %s (קטגוריה שעות) ⇒ תקין=%s', (value, ok) => {
     const errors = validateObjection({ ...valid, suggestedValue: value })
     expect(Boolean(errors.suggested_value)).toBe(!ok)
+  })
+
+  it('מספר מוצע בקטגוריה שאינה שעות — לא נבדק ולא נשלח (F11)', () => {
+    const form = { ...valid, category: 'other', suggestedValue: '999' }
+    expect(validateObjection(form)).toEqual({})
+    expect(buildCasePayload(form).suggested_value).toBeNull()
+  })
+
+  it('קטגוריות כספיות ישנות (rate, bonus_travel) ⇒ שגיאה', () => {
+    expect(validateObjection({ ...valid, category: 'rate' }).category).toBeTruthy()
+    expect(validateObjection({ ...valid, category: 'bonus_travel' }).category).toBeTruthy()
   })
 
   it('קטגוריה שאינה ברשימה ⇒ שגיאה', () => {
@@ -106,9 +117,8 @@ describe('validateObjection', () => {
   it('חמש הקטגוריות תואמות את ה-CHECK במסד', () => {
     expect(OBJECTION_CATEGORIES.map((c) => c.value)).toEqual([
       'hours',
-      'rate',
-      'bonus_travel',
       'missing_shift',
+      'not_worked',
       'other',
     ])
   })
@@ -119,7 +129,6 @@ describe('buildCasePayload', () => {
     expect(
       buildCasePayload({
         rowKeys: [],
-        missingShift: false,
         category: 'missing_shift',
         description: '  חסרה משמרת  ',
         suggestedValue: ' 6 ',
@@ -129,13 +138,22 @@ describe('buildCasePayload', () => {
       row_keys: [],
       missing_shift: true,
       description: 'חסרה משמרת',
-      suggested_value: 6,
+      // מספר מוצע רק בפנייה על שעות (F11) — כאן "משמרת חסרה", ולכן null.
+      suggested_value: null,
     })
+    expect(
+      buildCasePayload({
+        rowKeys: ['r1'],
+        category: 'hours',
+        description: 'x',
+        suggestedValue: ' 6 ',
+      }).suggested_value,
+    ).toBe(6)
   })
 
   it('מספר מוצע ריק ⇒ null (לא 0)', () => {
     expect(
-      buildCasePayload({ ...EMPTY_OBJECTION, rowKeys: ['r2'], category: 'rate', description: 'x' })
+      buildCasePayload({ ...EMPTY_OBJECTION, rowKeys: ['r2'], category: 'hours', description: 'x' })
         .suggested_value,
     ).toBeNull()
   })
@@ -144,6 +162,7 @@ describe('buildCasePayload', () => {
 describe('zeroReasonText', () => {
   it('שלוש הסיבות מוסברות, ו-null/לא מוכר ⇒ ריק', () => {
     expect(zeroReasonText('force_majeure')).toContain('כוח עליון')
+    expect(zeroReasonText('force_majeure')).toContain('אין שעות לתשלום')
     expect(zeroReasonText('cancelled_early')).toContain('מספיק זמן מראש')
     expect(zeroReasonText('no_hours')).toContain('לא נרשמו שעות')
     expect(zeroReasonText(null)).toBe('')

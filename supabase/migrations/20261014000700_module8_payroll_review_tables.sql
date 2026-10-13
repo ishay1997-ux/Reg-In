@@ -148,12 +148,15 @@ create table public.payroll_review_cases (
   hostess_id        bigint      not null,
   phase             text        not null check (phase in ('pre_issue', 'post_issue')),
   report_id         integer     null references public.salary_reports (report_id),
+  -- F11 (הכרעת ישי 14.10 00:10, "רק משמרות ושעות"): הדיילת בודקת משמרות ושעות בלבד, ולכן אין
+  -- קטגוריות של תעריף/בונוס/נסיעות. not_worked = "משמרת שלא עבדתי בה".
   category          text        not null
-                                check (category in ('hours', 'rate', 'bonus_travel', 'missing_shift', 'other')),
+                                check (category in ('hours', 'missing_shift', 'not_worked', 'other')),
   affected_rows     jsonb       not null default '[]'::jsonb check (jsonb_typeof(affected_rows) = 'array'),
   missing_shift     boolean     not null default false,
   description       text        not null check (length(description) between 1 and 2000),
-  suggested_value   numeric     null check (suggested_value is null or suggested_value between 0 and 100000),
+  -- מספר מוצע — רק לפנייה על שעות, ובין 0 ל-24 (F11).
+  suggested_value   numeric     null,
   status            text        not null default 'open'
                                 check (status in ('open', 'correction_pending', 'resolved_accepted',
                                                   'resolved_rejected', 'resolved_noted', 'closed_post_issue')),
@@ -163,6 +166,9 @@ create table public.payroll_review_cases (
   resolved_at       timestamptz,
   response_id       bigint      null references public.payroll_review_responses (response_id),
   created_at        timestamptz not null default now(),
+  constraint payroll_review_cases_suggested_check check (
+    suggested_value is null or (category = 'hours' and suggested_value between 0 and 24)
+  ),
   constraint payroll_review_cases_phase_report_check check (
     (phase = 'pre_issue' and report_id is null) or (phase = 'post_issue' and report_id is not null)
   )

@@ -63,13 +63,21 @@ begin
   res := public.payroll_review_public_get(test.tok(900001));
   assert res ->> 'state' = 'ok', res::text;
   assert (select array_agg(k order by k) from jsonb_object_keys(res) k) = array[
-    'can_approve', 'can_object', 'deadline', 'decision', 'digest', 'first_name', 'kind', 'open_case',
-    'period', 'phase', 'rows', 'state', 'supplement_seq', 'total'];
+    'can_approve', 'can_object', 'compensation_hours', 'deadline', 'decision', 'digest', 'first_name', 'kind',
+    'open_case', 'period', 'phase', 'rows', 'state', 'supplement_seq', 'total_hours'];
+  assert (res ->> 'total_hours')::numeric = 11 and (res ->> 'compensation_hours')::numeric = 0, res::text;
   assert res ->> 'first_name' = 'נועה' and res ->> 'phase' = 'pre_issue' and res ->> 'period' = '2026-07-01';
   assert jsonb_array_length(res -> 'rows') = 2;
   row1 := res -> 'rows' -> 0;
   assert (select array_agg(k order by k) from jsonb_object_keys(row1) k) = array[
-    'bonus', 'event_date', 'event_name', 'hours', 'key', 'line_basis', 'line_total', 'rate', 'travel', 'zero_reason'];
+    'event_date', 'event_name', 'hours', 'key', 'line_basis', 'zero_reason'];
+  -- F11 (ישי 14.10, "רק משמרות ושעות"): שום שדה כספי בתשובה — לא מפתח ולא ערך.
+  assert res::text !~ '"(rate|bonus|travel|line_total|total|amount)"', res::text;
+  perform test.act_as_owner();
+  assert res::text not like '%' || (select total::text from public.payroll_review_recipients
+                                     where hostess_id = 900001 and is_current) || '%';
+  assert res::text not like '%' || (select (rows -> 0 ->> 'line_total') from public.payroll_review_recipients
+                                     where hostess_id = 900001 and is_current) || '%';
   assert res::text not like '%012345678%' and res::text not like '%900001%'
      and res::text not like '%bank%' and res::text not like '%h900001@%';
   assert (res ->> 'can_approve')::boolean and (res ->> 'can_object')::boolean;
@@ -161,7 +169,18 @@ begin
   assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'objection',
     '{"category":"hours","row_keys":["r1"],"description":"x","suggested_value":-1}') ->> 'field' = 'suggested_value';
   assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'objection',
-    '{"category":"hours","row_keys":["r1"],"description":"x","suggested_value":100001}') ->> 'field' = 'suggested_value';
+    '{"category":"hours","row_keys":["r1"],"description":"x","suggested_value":25}') ->> 'field' = 'suggested_value';
+  -- מספר מוצע רק בפנייה על שעות (F11)
+  assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'objection',
+    '{"category":"other","row_keys":["r1"],"description":"x","suggested_value":3}') ->> 'field' = 'suggested_value';
+  -- הקטגוריות הכספיות הישנות כבר לא קיימות (F11)
+  assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'objection',
+    '{"category":"rate","row_keys":["r1"],"description":"x"}') ->> 'field' = 'category';
+  assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'objection',
+    '{"category":"bonus_travel","row_keys":["r1"],"description":"x"}') ->> 'field' = 'category';
+  -- "משמרת שלא עבדתי בה" חייבת לסמן משמרת
+  assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'objection',
+    '{"category":"not_worked","row_keys":[],"description":"x"}') ->> 'field' = 'rows';
   assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'objection',
     '{"category":"hours","row_keys":["r1"],"description":"x","suggested_value":"8"}') ->> 'field' = 'suggested_value';
   assert public.payroll_review_public_respond(t, gen_random_uuid(), d, 'delete', null) ->> 'field' = 'action';
@@ -188,7 +207,7 @@ begin
   assert public.payroll_review_public_respond(test.tok(900002), gen_random_uuid(), test.dig(900002), 'approve', null)
          = '{"state":"case_open"}'::jsonb;
   assert public.payroll_review_public_respond(test.tok(900002), gen_random_uuid(), test.dig(900002), 'objection',
-    '{"category":"rate","row_keys":["r1"],"description":"גם התעריף"}') = '{"state":"case_open"}'::jsonb;
+    '{"category":"not_worked","row_keys":["r1"],"description":"לא עבדתי שם"}') = '{"state":"case_open"}'::jsonb;
   res := public.payroll_review_public_get(test.tok(900002));
   assert not (res ->> 'can_approve')::boolean and not (res ->> 'can_object')::boolean;
   assert res -> 'open_case' ->> 'category' = 'hours';

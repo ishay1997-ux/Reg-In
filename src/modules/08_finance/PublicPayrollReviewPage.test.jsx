@@ -29,6 +29,8 @@ const SUMMARY = {
   deadline: '2026-08-05T15:00:00Z',
   phase: 'pre_issue',
   digest: 'd1:abc',
+  total_hours: 6.5,
+  compensation_hours: 0,
   rows: [
     {
       key: 'r1',
@@ -36,10 +38,6 @@ const SUMMARY = {
       event_name: 'כנס חדשנות',
       line_basis: 'actual',
       hours: 6.5,
-      rate: 55,
-      bonus: 0,
-      travel: 20,
-      line_total: 377.5,
       zero_reason: null,
     },
     {
@@ -48,14 +46,9 @@ const SUMMARY = {
       event_name: 'ערב השקה',
       line_basis: 'cancellation_compensation',
       hours: 0,
-      rate: 55,
-      bonus: null,
-      travel: null,
-      line_total: 0,
       zero_reason: 'force_majeure',
     },
   ],
-  total: 377.5,
   decision: { state: 'awaiting', at: null },
   open_case: null,
   can_approve: true,
@@ -109,15 +102,36 @@ describe('טעינה ומצבי קישור', () => {
     )
     const dates = screen.getAllByTestId('review-shift-date').map((el) => el.textContent)
     expect(dates).toEqual(['07/07/2026 · שלישי', '20/07/2026 · שני'])
-    expect(screen.getByTestId('review-total')).toHaveTextContent('377.50')
+    // F11 (ישי 14.10, "רק משמרות ושעות"): שעות לכל משמרת וסה"כ שעות — בלי שום סכום ובלי ₪.
+    expect(screen.getAllByTestId('review-shift-hours')[0]).toHaveTextContent('6.5 שעות')
+    expect(screen.getByTestId('review-total-hours')).toHaveTextContent('סה"כ שעות בחודש6.5')
+    expect(document.body.textContent).not.toContain('₪')
+    for (const money of ['תעריף', 'בונוס', 'נסיעות', 'שכר', 'תשלום:']) {
+      expect(document.body.textContent).not.toContain(money)
+    }
   })
 
-  it('פיצוי ביטול מסומן בתווית, בונוס/נסיעות "—" ולא 0, ואפס מוסבר', async () => {
+  it('ביטול בכוח עליון ⇒ "האירוע בוטל — ללא שעות לתשלום" עם הסבר, בלי סכום', async () => {
     await openReady()
     const card = screen.getAllByTestId('review-shift')[1]
-    expect(card).toHaveTextContent('פיצוי ביטול')
-    expect(within(card).getAllByText('—')).toHaveLength(2)
-    expect(card).toHaveTextContent('האירוע בוטל בכוח עליון, ולכן אין תשלום')
+    expect(within(card).getByTestId('review-shift-hours')).toHaveTextContent(
+      'האירוע בוטל — ללא שעות לתשלום',
+    )
+    expect(card).toHaveTextContent('האירוע בוטל בכוח עליון, ולכן אין שעות לתשלום')
+    expect(card.textContent).not.toContain('₪')
+  })
+
+  it('פיצוי ביטול עם שעות ⇒ "פיצוי ביטול — X שעות" עם הסבר; שעות הפיצוי נספרות בנפרד', async () => {
+    await openReady({
+      ...SUMMARY,
+      compensation_hours: 3,
+      rows: [SUMMARY.rows[0], { ...SUMMARY.rows[1], hours: 3, zero_reason: null }],
+    })
+    const card = screen.getAllByTestId('review-shift')[1]
+    expect(within(card).getByTestId('review-shift-hours')).toHaveTextContent('פיצוי ביטול — 3 שעות')
+    expect(card).toHaveTextContent('נרשמו לך שעות פיצוי')
+    expect(screen.getByTestId('review-total-hours')).toHaveTextContent('סה"כ שעות בחודש6.5')
+    expect(screen.getByTestId('review-total-hours')).toHaveTextContent('שעות פיצוי ביטול3')
   })
 
   it('השלמה ⇒ "השלמה N" בכותרת', async () => {
@@ -157,17 +171,35 @@ describe('טעינה ומצבי קישור', () => {
     await screen.findByTestId('review-ready')
   })
 
-  it('הדף לא מציג בנק, ת"ז או מזהים — גם כשהשרת היה שולח אותם בטעות', async () => {
+  it('הדף לא מציג בנק, ת"ז, מזהים או סכום כולל — גם כשהשרת היה שולח אותם בטעות', async () => {
     await openReady({
       ...SUMMARY,
       bank_account: '123456',
       id_number: '012345678',
       review_id: 991,
       hostess_id: 900001,
-      rows: SUMMARY.rows.map((row) => ({ ...row, project_id: 900111 })),
+      total: 722.5,
+      rows: SUMMARY.rows.map((row) => ({
+        ...row,
+        project_id: 900111,
+        line_total: 377.5,
+        rate: 55,
+        bonus: 40,
+        travel: 20,
+      })),
     })
     const text = document.body.textContent
-    for (const secret of ['123456', '012345678', '991', '900001', '900111', 'd1:abc']) {
+    for (const secret of [
+      '123456',
+      '012345678',
+      '991',
+      '900001',
+      '900111',
+      'd1:abc',
+      '377.5',
+      '722.5',
+      '₪',
+    ]) {
       expect(text).not.toContain(secret)
     }
   })
@@ -285,7 +317,7 @@ describe('"יש טעות"', () => {
     fireEvent.change(screen.getByTestId('review-suggested'), { target: { value: '-3' } })
     fireEvent.click(screen.getByTestId('review-submit-objection'))
     expect(await screen.findByTestId('review-error-suggested_value')).toHaveTextContent(
-      'המספר הנכון: מספר בין 0 ל-100,000',
+      'מספר השעות הנכון: מספר בין 0 ל-24',
     )
     expect(respondToPayrollReview).not.toHaveBeenCalled()
   })
@@ -332,6 +364,10 @@ describe('"יש טעות"', () => {
 
     await screen.findByTestId('review-outcome-objection_failed')
     expect(screen.getByRole('alert')).toHaveTextContent('מה שכתבת נשמר כאן')
+    // וגם ליד כפתור השליחה, שם הדיילת נמצאת אחרי הלחיצה
+    expect(screen.getByTestId('review-objection-failed-inline')).toHaveTextContent(
+      'הפנייה לא נשמרה',
+    )
     expect(screen.getByTestId('review-description')).toHaveValue('טקסט ארוך שהקלדתי בטלפון')
     expect(screen.getByTestId('review-shift-select-r1')).toHaveAttribute('aria-pressed', 'true')
 
@@ -351,10 +387,9 @@ describe('"יש טעות"', () => {
     expect(screen.getByTestId('review-description')).toHaveValue('עבדתי 8 שעות ולא 6.5')
   })
 
-  it('"משמרת חסרה" בלי לסמן משמרת ⇒ תקין', async () => {
+  it('קטגוריה "משמרת חסרה" בלי לסמן משמרת ⇒ תקין', async () => {
     await openReady()
     fireEvent.click(screen.getByTestId('review-object'))
-    fireEvent.click(screen.getByTestId('review-missing-shift'))
     fireEvent.click(screen.getByTestId('review-category-missing_shift'))
     fireEvent.change(screen.getByTestId('review-description'), {
       target: { value: 'עבדתי ב-12/07 ואין את זה' },
@@ -380,6 +415,20 @@ describe('"יש טעות"', () => {
     )
   })
 
+  it('"מספר השעות הנכון" מופיע רק בפנייה על שעות, ולא נשלח בקטגוריה אחרת', async () => {
+    await openReady()
+    await fillObjection()
+    fireEvent.click(screen.getByTestId('review-category-not_worked'))
+    expect(screen.queryByTestId('review-suggested')).toBeNull()
+    respondToPayrollReview.mockResolvedValue({ state: 'saved', case_saved: true })
+    fireEvent.click(screen.getByTestId('review-submit-objection'))
+    await screen.findByTestId('review-outcome-saved')
+    expect(respondToPayrollReview.mock.calls[0][0].caseInput).toMatchObject({
+      category: 'not_worked',
+      suggested_value: null,
+    })
+  })
+
   it('"חזרה לסיכום" סוגר את הטופס בלי לשלוח', async () => {
     await openReady()
     fireEvent.click(screen.getByTestId('review-object'))
@@ -396,6 +445,7 @@ describe('נגישות ולשון', () => {
       expect(screen.getByTestId(id).className).toMatch(/min-h-11/)
     }
     fireEvent.click(screen.getByTestId('review-object'))
+    fireEvent.click(screen.getByTestId('review-category-hours'))
     for (const id of [
       'review-shift-select-r1',
       'review-submit-objection',

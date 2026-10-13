@@ -23,10 +23,13 @@
 -- 0. עזרים פנימיים (none)
 -- -----------------------------------------------------------------------------
 
--- תקצירי הדיילות מתוך מערך איסוף אחד. שורה לכל דיילת: השורות הבטוחות (בלי בנק, בלי ת"ז)
--- בסדר תאריך → פרויקט → שיבוץ → בסיס, עם מפתח 'r1'..'rN', והתקציר d1 שמכסה בדיוק את מה
--- שהדיילת רואה (שם + שורות). שינוי בנק לא משנה תקציר — הוא לא מוצג לה (תוכנית, "hidden bank
--- change ... is not falsely represented as worker approval").
+-- תקצירי הדיילות מתוך מערך איסוף אחד. שורה לכל דיילת: השורות (בלי בנק, בלי ת"ז) בסדר
+-- תאריך → פרויקט → שיבוץ → בסיס, עם מפתח 'r1'..'rN'. השורות השמורות כוללות גם כסף — הן
+-- משמשות את מסכי המנהלת. 🔴 אבל התקציר d1 מכסה **רק מה שהדיילת רואה** (F11, הכרעת ישי 14.10:
+-- "רק משמרות ושעות"): שם, תאריך, אירוע, בסיס, שעות, סיבת אפס, וזהות המשמרת (פרויקט+שיבוץ,
+-- כדי שהחלפת משמרת תיתפס). שינוי תעריף/בונוס/נסיעות/בנק לא מבטל את האישור שלה — היא לא אישרה
+-- אותם. ⚠️ סיבת האפס נגזרת מהשעות, לא מהסכום: הדף לא מציג סכום, ושורה עם שעות ותעריף 0
+-- אינה "בלי שעות".
 create or replace function public._payroll_hostess_digests_from(
   p_rows public.payroll_line[], p_period date, p_kind text, p_original integer)
 returns table (hostess_id bigint, hostess_name text, hostess_email text, digest text,
@@ -58,7 +61,7 @@ as $$
              'travel', case when l.line_basis = 'cancellation_compensation' then null else l.travel end,
              'line_total', l.line_total,
              'zero_reason', case
-               when l.line_total <> 0 then null
+               when coalesce(l.hours, 0) <> 0 then null
                when l.line_basis = 'cancellation_compensation' and l.cancel_type = 'force_majeure' then 'force_majeure'
                when l.line_basis = 'cancellation_compensation' and coalesce(l.comp_pct, 0) = 0 then 'cancelled_early'
                else 'no_hours'
@@ -70,7 +73,14 @@ as $$
            min(s.hostess_name) as hostess_name,
            min(s.hostess_email) as hostess_email,
            jsonb_agg(s.row_json order by s.rn) as rows,
-           jsonb_agg(s.row_json - 'key' order by s.rn) as rows_for_digest,
+           jsonb_agg(jsonb_build_object(
+                       'project_id', s.row_json -> 'project_id',
+                       'assignment_number', s.row_json -> 'assignment_number',
+                       'event_date', s.row_json -> 'event_date',
+                       'event_name', s.row_json -> 'event_name',
+                       'line_basis', s.row_json -> 'line_basis',
+                       'hours', s.row_json -> 'hours',
+                       'zero_reason', s.row_json -> 'zero_reason') order by s.rn) as rows_for_digest,
            sum(s.line_total) as total
       from shaped s
      group by s.hostess_id
@@ -614,6 +624,14 @@ begin
   select v.review_id, f.hostess_id, v_new_rev, f.digest, f.rows, f.total, f.hostess_name, true, 'awaiting'
     from jsonb_to_recordset(v_fresh) as f(hostess_id bigint, hostess_name text, hostess_email text, digest text, rows jsonb, total numeric)
    where f.hostess_id = any (v_changed);
+
+  -- תקציר זהה אבל כסף שהשתנה (תעריף/בונוס/נסיעות — F11): ההחלטה נשארת, והשורות השמורות
+  -- מתעדכנות כדי שמסכי המנהלת יראו את הסכום העדכני.
+  update public.payroll_review_recipients r
+     set rows = f.rows, total = f.total
+    from jsonb_to_recordset(v_fresh) as f(hostess_id bigint, hostess_name text, hostess_email text, digest text, rows jsonb, total numeric)
+   where r.review_id = v.review_id and r.is_current and r.hostess_id = f.hostess_id
+     and r.digest = f.digest and (r.rows is distinct from f.rows or r.total is distinct from f.total);
 
   -- מייל שהשתנה מאז הניסיון האחרון: הקישור הישן הלך לכתובת אחרת ⇒ מבוטל. ההחלטה נשארת.
   select coalesce(array_agg(r.hostess_id), '{}') into v_contact

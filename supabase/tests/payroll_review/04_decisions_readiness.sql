@@ -150,15 +150,15 @@ do $$
 declare res jsonb; v_case bigint;
 begin
   insert into public.payroll_review_cases (review_id, recipient_id, hostess_id, phase, category, description)
-  values (test.rid(), test.rec(900003), 900003, 'pre_issue', 'rate', 'התעריף שלי 55') returning case_id into v_case;
+  values (test.rid(), test.rec(900003), 900003, 'pre_issue', 'other', 'שאלה על המשמרת') returning case_id into v_case;
   update public.payroll_review_recipients set state = 'objection_open' where hostess_id = 900003;
-  update public.assignments set personal_bonus = 50 where hostess_id = 900003; -- התקציר שלה כבר לא עדכני
+  update public.assignments set actual_hours = 9 where hostess_id = 900003; -- התקציר שלה כבר לא עדכני
   perform test.act_as('fin@test.local');
   res := public.payroll_review_resolve_case(v_case, 1, 'accept_noted', 'יטופל אצל רואה החשבון', null);
   perform test.act_as_owner();
   assert res ->> 'status' = 'resolved_noted' and not (res ->> 'recipient_resolved')::boolean, res::text;
   assert (select state from public.payroll_review_recipients where hostess_id = 900003 and is_current) = 'objection_open';
-  update public.assignments set personal_bonus = 0 where hostess_id = 900003;
+  update public.assignments set actual_hours = 6 where hostess_id = 900003;
 end $$;
 
 -- test: approve_no_response guards — before deadline, open case, stale digest, missing reason/evidence/contact note

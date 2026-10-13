@@ -45,31 +45,31 @@ export function newRequestId() {
 
 // ─── לוגיקה טהורה של הדף (בלי רשת) ─────────────────────────────────────────
 
-// הקטגוריות של "יש טעות" — הערכים הם החוזה מול המסד (CHECK בטבלת הפניות), התוויות בנקבה
-// הן שמות עצם, ולכן אין בהן מגדר.
+// הקטגוריות של "יש טעות" — הערכים הם החוזה מול המסד (CHECK בטבלת הפניות).
+// 🔴 F11 (הכרעת ישי 14.10, "רק משמרות ושעות"): הדיילת בודקת משמרות ושעות בלבד — אין קטגוריה
+// של תעריף, בונוס או נסיעות, כי היא לא רואה אותם.
 export const OBJECTION_CATEGORIES = [
   { value: 'hours', label: 'שעות' },
-  { value: 'rate', label: 'תעריף' },
-  { value: 'bonus_travel', label: 'בונוס או נסיעות' },
   { value: 'missing_shift', label: 'משמרת חסרה' },
+  { value: 'not_worked', label: 'משמרת שלא עבדתי בה' },
   { value: 'other', label: 'אחר' },
 ]
 
 export const DESCRIPTION_MAX = 2000
-export const SUGGESTED_MAX = 100000
+export const SUGGESTED_MAX = 24
 
 export const EMPTY_OBJECTION = {
   rowKeys: [],
-  missingShift: false,
   category: '',
   description: '',
   suggestedValue: '',
 }
 
 // הסבר לשורה בסכום אפס — כדי שאפס לא ייראה כמו טעות במערכת.
+// בלי שום סכום (F11): ההסבר מדבר על שעות, לא על כסף.
 const ZERO_REASON_TEXT = {
-  force_majeure: 'האירוע בוטל בכוח עליון, ולכן אין תשלום',
-  cancelled_early: 'האירוע בוטל מספיק זמן מראש, ולכן אין פיצוי',
+  force_majeure: 'האירוע בוטל בכוח עליון, ולכן אין שעות לתשלום',
+  cancelled_early: 'האירוע בוטל מספיק זמן מראש, ולכן אין שעות פיצוי',
   no_hours: 'לא נרשמו שעות למשמרת הזו',
 }
 
@@ -80,11 +80,11 @@ export function zeroReasonText(reason) {
 // הודעה לכל שדה בטופס "יש טעות". מקור אחד — גם לבדיקה בדפדפן וגם לתשובת `validation`
 // מהשרת, כדי ששני המסלולים יגידו אותו דבר.
 export const OBJECTION_FIELD_MESSAGES = {
-  rows: 'משמרת: יש לסמן משמרת אחת לפחות, או "משמרת חסרה"',
+  rows: 'משמרת: יש לסמן משמרת אחת לפחות, או לבחור "משמרת חסרה"',
   category: 'סוג הטעות: יש לבחור אחת מהאפשרויות',
   description: 'מה לא נכון: יש לכתוב כמה מילים על הטעות',
   description_long: `מה לא נכון: עד ${DESCRIPTION_MAX} תווים`,
-  suggested_value: `המספר הנכון: מספר בין 0 ל-${SUGGESTED_MAX.toLocaleString('en-US')}`,
+  suggested_value: `מספר השעות הנכון: מספר בין 0 ל-${SUGGESTED_MAX}`,
 }
 
 function parseSuggested(raw) {
@@ -101,7 +101,8 @@ export function validateObjection(form) {
   const errors = {}
   const category = form?.category ?? ''
   const rowKeys = form?.rowKeys ?? []
-  const missingShift = Boolean(form?.missingShift) || category === 'missing_shift'
+  // "משמרת חסרה" היא קטגוריה — היא לבדה מחליפה סימון שורה.
+  const missingShift = category === 'missing_shift'
 
   if (rowKeys.length === 0 && !missingShift) {
     errors.rows = OBJECTION_FIELD_MESSAGES.rows
@@ -115,8 +116,10 @@ export function validateObjection(form) {
   } else if (description.length > DESCRIPTION_MAX) {
     errors.description = OBJECTION_FIELD_MESSAGES.description_long
   }
+  // מספר מוצע — רק בפנייה על שעות (F11). בקטגוריה אחרת השדה לא מוצג ולא נשלח.
   const suggested = parseSuggested(form?.suggestedValue)
   if (
+    category === 'hours' &&
     suggested.present &&
     (!Number.isFinite(suggested.value) || suggested.value < 0 || suggested.value > SUGGESTED_MAX)
   ) {
@@ -132,8 +135,8 @@ export function buildCasePayload(form) {
   return {
     category: form.category,
     row_keys: [...(form.rowKeys ?? [])],
-    missing_shift: Boolean(form.missingShift) || form.category === 'missing_shift',
+    missing_shift: form.category === 'missing_shift',
     description: String(form.description ?? '').trim(),
-    suggested_value: suggested.present ? suggested.value : null,
+    suggested_value: form.category === 'hours' && suggested.present ? suggested.value : null,
   }
 }

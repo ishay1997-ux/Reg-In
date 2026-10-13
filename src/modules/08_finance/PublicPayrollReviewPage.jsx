@@ -6,12 +6,13 @@
 // אין "תשובה אחת ואין שנייה", ופתיחת הקישור לא משנה דבר. לפני ההפקה דיילת שאישרה עדיין
 // יכולה לדווח טעות; אחרי ההפקה "יש טעות" נרשמת כפנייה אחרי הפקה.
 // 🔴 **בלי בנק, בלי ת"ז, בלי מזהים** — השרת לא שולח אותם, והדף לא מציג שום מזהה טכני.
+// 🔴 **ובלי שום סכום כסף** — F11, הכרעת ישי 14.10: "זו טעות להציג שכר... זה מטעה את הדיילת...
+// תלושי שכר זה הנהלת חשבונות" ואחר-כך "רק משמרות ושעות". הדיילת מאשרת משמרות ושעות בלבד.
 // 🔑 לשון נקבה לאורך כל הדף (הכרעת האפיון: הדף האישי ומייל הדיילת בנקבה).
 // 🔑 תוצאות בתוך הדף, בלי טוסטים (חוזה §4.1). כל תשובה נשמרת רק אחרי POST מפורש.
 
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -69,7 +70,26 @@ const DECISION_TEXT = {
   manager_resolved: 'הפנייה שלך טופלה',
 }
 
-const BASIS_LABEL = { cancellation_compensation: 'פיצוי ביטול' }
+// "6.5" ולא "6.50" — שעות לדיילת, לא שורת דוח. נקודה עשרונית (he-IL), עד שתי ספרות.
+function hoursText(hours) {
+  if (hours == null || !Number.isFinite(Number(hours))) return '—'
+  return Number(hours).toLocaleString('he-IL', { maximumFractionDigits: 2 })
+}
+
+// שורת השעות בכרטיס: עבודה · פיצוי ביטול · ביטול בלי שעות (F11).
+function shiftHoursLine(row) {
+  if (row.zero_reason === 'force_majeure' || row.zero_reason === 'cancelled_early') {
+    return 'האירוע בוטל — ללא שעות לתשלום'
+  }
+  if (row.line_basis === 'cancellation_compensation') {
+    return `פיצוי ביטול — ${hoursText(row.hours)} שעות`
+  }
+  if (row.zero_reason === 'no_hours') return 'לא נרשמו שעות'
+  return `${hoursText(row.hours)} שעות`
+}
+
+// הסבר קצר לפיצוי ביטול עם שעות — כדי שלא ייראה כמו טעות ("לא עבדתי שם").
+const COMPENSATION_TEXT = 'האירוע בוטל זמן קצר לפני מועדו, ולכן נרשמו לך שעות פיצוי'
 
 // "ספטמבר 2026" מ-`2026-09-01`. ‏Intl ולא ייבוא מ-`salaryReport.js`: הוא גורר את בונה ה-XLSX
 // לדף שנטען בטלפון בלי סיבה.
@@ -202,7 +222,7 @@ export default function PublicPayrollReviewPage() {
       <main className="mx-auto flex w-full max-w-sm flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-teal-600" aria-hidden="true" />
-          <span className="text-xs font-semibold text-slate-500">REG-IN · סיכום שעות לבדיקה</span>
+          <span className="text-xs font-semibold text-slate-500">REG-IN</span>
         </div>
 
         {loadState === 'loading' && <Skeleton />}
@@ -328,6 +348,8 @@ function ReviewBody({
 
       {outcome && <OutcomeBanner outcomeKey={outcome} onReload={onReload} />}
 
+      {objecting && <ObjectionIntro errors={formErrors} />}
+
       <ShiftList
         rows={summary.rows ?? []}
         selectable={objecting}
@@ -342,12 +364,21 @@ function ReviewBody({
         }
       />
 
+      {/* סה"כ שעות — עבודה, ושעות פיצוי בנפרד (לא מערבבים, כמו בקובץ). בלי סכום כסף (F11). */}
       <div
-        className="flex items-center justify-between border-t border-slate-200 pt-3 text-base font-bold"
-        data-testid="review-total"
+        className="flex flex-col gap-1 border-t border-slate-200 pt-3 text-base"
+        data-testid="review-total-hours"
       >
-        <span>סה"כ</span>
-        <Money amount={summary.total} cents />
+        <p className="flex items-center justify-between font-bold">
+          <span>סה"כ שעות בחודש</span>
+          <Ltr>{hoursText(summary.total_hours)}</Ltr>
+        </p>
+        {Number(summary.compensation_hours) > 0 && (
+          <p className="flex items-center justify-between text-sm text-slate-600">
+            <span>שעות פיצוי ביטול</span>
+            <Ltr>{hoursText(summary.compensation_hours)}</Ltr>
+          </p>
+        )}
       </div>
 
       {objecting ? (
@@ -355,6 +386,7 @@ function ReviewBody({
           form={form}
           errors={formErrors}
           saving={saving === REVIEW_ACTION.objection}
+          failed={outcome === 'objection_failed'}
           onChange={onFormChange}
           onSubmit={onSubmitObjection}
           onCancel={onCancelObjection}
@@ -423,48 +455,28 @@ function OutcomeBanner({ outcomeKey, onReload }) {
   )
 }
 
-function shiftHeadline(row) {
-  const date = formatDate(row.event_date)
-  const day = weekdayOf(row.event_date)
-  return day ? `${date} · ${day}` : date
-}
-
 // כרטיס משמרת. במצב "יש טעות" כל הכרטיס הוא כפתור בחירה (≥44px) עם `aria-pressed`.
 function ShiftCard({ row, selectable, selected, onToggle }) {
   const zeroText = zeroReasonText(row.zero_reason)
   const content = (
     <>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-bold" data-testid="review-shift-date">
-            <Ltr>{shiftHeadline(row)}</Ltr>
-          </p>
-          <p className="truncate text-sm text-slate-700" dir="auto">
-            {row.event_name}
-          </p>
-        </div>
-        <div className="shrink-0 text-left text-base font-bold">
-          <Money amount={row.line_total} cents />
-        </div>
+      <div className="min-w-0">
+        {/* רק התאריך מבודד כ-LTR; היום בעברית זורם אחריו (קריאה מימין: תאריך · יום). */}
+        <p className="text-sm font-bold" data-testid="review-shift-date">
+          <Ltr>{formatDate(row.event_date)}</Ltr>
+          {weekdayOf(row.event_date) ? ` · ${weekdayOf(row.event_date)}` : ''}
+        </p>
+        <p className="truncate text-sm text-slate-700" dir="auto">
+          {row.event_name}
+        </p>
       </div>
-      {BASIS_LABEL[row.line_basis] && (
-        <span className="mt-1 inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
-          {BASIS_LABEL[row.line_basis]}
-        </span>
+      <p className="mt-2 text-base font-semibold text-slate-800" data-testid="review-shift-hours">
+        {shiftHoursLine(row)}
+      </p>
+      {zeroText && <p className="mt-1 text-sm text-slate-600">{zeroText}</p>}
+      {!zeroText && row.line_basis === 'cancellation_compensation' && (
+        <p className="mt-1 text-sm text-slate-600">{COMPENSATION_TEXT}</p>
       )}
-      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-600">
-        <Detail label="שעות" value={<Ltr>{Number(row.hours ?? 0).toFixed(2)}</Ltr>} />
-        <Detail label="תעריף" value={<Money amount={row.rate} exact />} />
-        <Detail
-          label="בונוס"
-          value={row.bonus == null ? '—' : <Money amount={row.bonus} cents />}
-        />
-        <Detail
-          label="נסיעות"
-          value={row.travel == null ? '—' : <Money amount={row.travel} cents />}
-        />
-      </dl>
-      {zeroText && <p className="mt-2 text-xs text-slate-600">{zeroText}</p>}
     </>
   )
 
@@ -493,15 +505,6 @@ function ShiftCard({ row, selectable, selected, onToggle }) {
         </span>
       </button>
     </li>
-  )
-}
-
-function Detail({ label, value }) {
-  return (
-    <div className="flex justify-between gap-2">
-      <dt>{label}</dt>
-      <dd className="font-semibold text-slate-700">{value}</dd>
-    </div>
   )
 }
 
@@ -557,14 +560,15 @@ function Actions({ canApprove, canObject, saving, onApprove, onObject }) {
 
 const FIELD_ORDER = ['rows', 'category', 'description', 'suggested_value']
 const FIELD_ANCHOR = {
-  rows: 'review-missing-shift',
+  rows: 'review-shifts',
   category: 'review-category-hours',
   description: 'review-description',
   suggested_value: 'review-suggested',
 }
 
-// טופס "יש טעות" — באותו עמוד, לא דיאלוג. סיכום שגיאות בראש שמקבל פוקוס, ושגיאה ליד כל שדה.
-function ObjectionForm({ form, errors, saving, onChange, onSubmit, onCancel }) {
+// הפתיחה של "יש טעות" — **מעל** כרטיסי המשמרות, כי שם הדיילת מסמנת: סיכום השגיאות (מקבל
+// פוקוס), ההוראה, והשגיאה של סימון המשמרת — ליד הסיבה שלה (UC19), לא בתחתית הטופס.
+function ObjectionIntro({ errors }) {
   const summaryRef = useRef(null)
   const errorFields = FIELD_ORDER.filter((field) => errors[field])
 
@@ -572,23 +576,8 @@ function ObjectionForm({ form, errors, saving, onChange, onSubmit, onCancel }) {
     if (errorFields.length > 0) summaryRef.current?.focus()
   }, [errors, errorFields.length])
 
-  function set(field, value) {
-    onChange((current) => ({ ...current, [field]: value }))
-  }
-
   return (
-    <form
-      className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-4"
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault()
-        onSubmit()
-      }}
-      data-testid="review-objection-form"
-    >
-      <p className="text-sm font-bold">מה לא נכון בסיכום?</p>
-      <p className="text-xs text-slate-600">סמני את המשמרת שיש בה טעות, או "משמרת חסרה"</p>
-
+    <div className="flex flex-col gap-2" data-testid="review-objection-intro">
       {errorFields.length > 0 && (
         <div
           ref={summaryRef}
@@ -609,20 +598,31 @@ function ObjectionForm({ form, errors, saving, onChange, onSubmit, onCancel }) {
           </ul>
         </div>
       )}
-
-      <label className="flex min-h-11 items-center gap-2 text-sm">
-        <input
-          id="review-missing-shift"
-          type="checkbox"
-          checked={form.missingShift}
-          onChange={(event) => set('missingShift', event.target.checked)}
-          className="h-5 w-5 accent-teal-700"
-          data-testid="review-missing-shift"
-        />
-        משמרת חסרה בסיכום
-      </label>
+      <p id="review-shifts" className="text-sm font-semibold text-slate-700">
+        סמני את המשמרת שיש בה טעות. משמרת שחסרה כאן? בחרי למטה "משמרת חסרה"
+      </p>
       <FieldError message={errors.rows} testId="review-error-rows" />
+    </div>
+  )
+}
 
+// טופס "יש טעות" — באותו עמוד, לא דיאלוג. שגיאה ליד כל שדה; הסיכום בראש (ObjectionIntro).
+// 🔑 "משמרת חסרה" היא קטגוריה אחת ולא גם תיבת סימון נפרדת — שתי דרכים לאותו דבר מבלבלות.
+function ObjectionForm({ form, errors, saving, failed, onChange, onSubmit, onCancel }) {
+  function set(field, value) {
+    onChange((current) => ({ ...current, [field]: value }))
+  }
+
+  return (
+    <form
+      className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-4"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSubmit()
+      }}
+      data-testid="review-objection-form"
+    >
       <fieldset className="flex flex-col gap-1">
         <legend className="mb-1 text-sm font-semibold">סוג הטעות</legend>
         <div className="flex flex-wrap gap-2">
@@ -670,24 +670,35 @@ function ObjectionForm({ form, errors, saving, onChange, onSubmit, onCancel }) {
         <FieldError message={errors.description} testId="review-error-description" />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="review-suggested" className="text-sm font-semibold">
-          המספר הנכון (רשות)
-        </label>
-        <input
-          id="review-suggested"
-          type="text"
-          inputMode="decimal"
-          dir="ltr"
-          value={form.suggestedValue}
-          onChange={(event) => set('suggestedValue', event.target.value)}
-          aria-invalid={Boolean(errors.suggested_value)}
-          className="min-h-11 rounded-xl border border-slate-300 px-3 text-right text-sm"
-          data-testid="review-suggested"
-        />
-        <FieldError message={errors.suggested_value} testId="review-error-suggested_value" />
-      </div>
+      {form.category === 'hours' && (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="review-suggested" className="text-sm font-semibold">
+            מספר השעות הנכון (רשות)
+          </label>
+          <input
+            id="review-suggested"
+            type="text"
+            inputMode="decimal"
+            dir="ltr"
+            value={form.suggestedValue}
+            onChange={(event) => set('suggestedValue', event.target.value)}
+            aria-invalid={Boolean(errors.suggested_value)}
+            className="min-h-11 rounded-xl border border-slate-300 px-3 text-right text-sm"
+            data-testid="review-suggested"
+          />
+          <FieldError message={errors.suggested_value} testId="review-error-suggested_value" />
+        </div>
+      )}
 
+      {/* כשל שמירה — גם כאן, ליד הכפתור שנלחץ (ההודעה המלאה, עם role=alert, בראש הדף). */}
+      {failed && (
+        <p
+          className="text-sm font-semibold text-red-700"
+          data-testid="review-objection-failed-inline"
+        >
+          {OUTCOME.objection_failed.text}
+        </p>
+      )}
       <div className="flex flex-col gap-2.5">
         <Button
           type="submit"

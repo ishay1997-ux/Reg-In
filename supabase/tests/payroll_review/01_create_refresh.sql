@@ -96,6 +96,20 @@ begin
   assert before = (select digest from public._payroll_hostess_digests('2026-07-01','regular',null) where hostess_id = 900002);
 end $$;
 
+-- test: F11 — rate, bonus and travel do not change a digest (she never saw them); hours do
+do $$
+declare before text;
+begin
+  select digest into before from public._payroll_hostess_digests('2026-07-01','regular',null) where hostess_id = 900001;
+  update public.assignments set hourly_rate_snapshot = 70, personal_bonus = 40 where hostess_id = 900001;
+  update public.params set param_value = '35' where param_name = 'סכום_נסיעות_למשמרת';
+  assert before = (select digest from public._payroll_hostess_digests('2026-07-01','regular',null) where hostess_id = 900001);
+  update public.assignments set actual_hours = 6.25 where project_id = 900101 and hostess_id = 900001;
+  assert before <> (select digest from public._payroll_hostess_digests('2026-07-01','regular',null) where hostess_id = 900001);
+  raise exception 'undo' using errcode = 'UNDO1';
+exception when sqlstate 'UNDO1' then null;
+end $$;
+
 -- test: find and get — §4.3 shape, distinct-hostess counts
 do $$
 declare res jsonb; rec jsonb;
@@ -149,6 +163,24 @@ begin
   assert (select revoked_at is null from public.payroll_review_tokens where recipient_id = v_rec);
 end $$;
 
+-- test: refresh after a rate-only change — no hostess changes, decisions kept, stored money updated in place
+do $$
+declare v_id bigint := (select review_id from public.payroll_reviews); res jsonb; v_rec bigint; v_total numeric;
+begin
+  select recipient_id, total into v_rec, v_total from public.payroll_review_recipients where hostess_id = 900003 and is_current;
+  update public.assignments set hourly_rate_snapshot = 80 where hostess_id = 900003;
+  perform test.act_as('fin@test.local');
+  res := public.payroll_review_refresh(v_id, 2);
+  perform test.act_as_owner();
+  assert res -> 'changed_hostess_ids' = '[]'::jsonb, res::text;
+  assert (select is_current and state = 'hostess_approved' and total > v_total
+            from public.payroll_review_recipients where recipient_id = v_rec);
+  assert (select revoked_at is null from public.payroll_review_tokens where recipient_id = v_rec);
+  update public.assignments set hourly_rate_snapshot = 50 where hostess_id = 900003;
+  perform test.act_as('fin@test.local');
+  perform public.payroll_review_refresh(v_id, 3);
+end $$;
+
 -- test: refresh after an hours change — only that hostess gets a new row; old row superseded, its tokens revoked
 do $$
 declare v_id bigint := (select review_id from public.payroll_reviews); res jsonb; v_old bigint;
@@ -161,13 +193,13 @@ begin
   update public.assignments set actual_hours = 7 where project_id = 900101 and hostess_id = 900001;
 
   perform test.act_as('fin@test.local');
-  res := public.payroll_review_refresh(v_id, 2);
+  res := public.payroll_review_refresh(v_id, 4);
   perform test.act_as_owner();
   assert res -> 'changed_hostess_ids' = '[900001]'::jsonb, res::text;
   assert (select state = 'superseded' and not is_current from public.payroll_review_recipients where recipient_id = v_old);
   assert (select revoked_reason = 'superseded' from public.payroll_review_tokens where recipient_id = v_old);
   assert (select count(*) from public.payroll_review_recipients where hostess_id = 900001 and is_current
-           and state = 'awaiting' and revision = 3) = 1;
+           and state = 'awaiting' and revision = 5) = 1;
   -- 900003 (שלא השתנתה) שומרת את ההחלטה
   assert (select state from public.payroll_review_recipients where hostess_id = 900003 and is_current) = 'hostess_approved';
   -- הגרסה השתנתה ⇒ אישור הטיוטה של המנהלת נמחק
@@ -180,7 +212,7 @@ declare v_id bigint := (select review_id from public.payroll_reviews); res jsonb
 begin
   update public.assignments set assignment_status = 'released' where project_id = 900102 and hostess_id = 900003;
   perform test.act_as('fin@test.local');
-  res := public.payroll_review_refresh(v_id, 3);
+  res := public.payroll_review_refresh(v_id, 5);
   perform test.act_as_owner();
   assert res -> 'removed_hostess_ids' = '[900003]'::jsonb, res::text;
   assert not exists (select 1 from public.payroll_review_recipients where hostess_id = 900003 and is_current);
@@ -200,7 +232,7 @@ begin
   update public.hostesses set email = 'new900002@test.local' where hostess_id = 900002;
 
   perform test.act_as('fin@test.local');
-  res := public.payroll_review_refresh(v_id, 4);
+  res := public.payroll_review_refresh(v_id, 6);
   perform test.act_as_owner();
   assert res -> 'contact_changed_ids' = '[900002]'::jsonb, res::text;
   assert (select revoked_reason = 'contact_changed' from public.payroll_review_tokens where recipient_id = v_rec);
@@ -213,5 +245,5 @@ declare v_id bigint := (select review_id from public.payroll_reviews);
 begin
   update public.payroll_reviews set status = 'cancelled' where review_id = v_id;
   perform test.act_as('fin@test.local');
-  assert test.err(format($q$select public.payroll_review_refresh(%s, 5)$q$, v_id)) = 'REVIEW_NOT_OPEN';
+  assert test.err(format($q$select public.payroll_review_refresh(%s, 7)$q$, v_id)) = 'REVIEW_NOT_OPEN';
 end $$;

@@ -10,7 +10,7 @@
 --      דבר. הכתיבה היחידה בקריאה היא מונה הגבלת הקצב.
 --   ③ אישור/פנייה = POST מפורש, קשור לתקציר שהדיילת ראתה (p_digest), עם client_request_id
 --      ייחודי: לחיצה כפולה או ניסיון חוזר מחזירים את התוצאה השמורה.
---   ④ אין בתשובה מזהי פרויקט/דיילת/דוח, בנק או ת"ז.
+--   ④ אין בתשובה מזהי פרויקט/דיילת/דוח, בנק, ת"ז — ואין שום שדה כספי (F11: רק משמרות ושעות).
 --   ⑤ 120 קריאות לשעה ל-IP, fail-open כשאין IP — כמו התקדים feedback_rate_limit.
 -- =============================================================================
 
@@ -142,10 +142,19 @@ begin
     'deadline', v.response_deadline,
     'phase', v_phase,
     'digest', r.digest,
-    -- השורות בלי מזהי פרויקט ושיבוץ (④).
-    'rows', coalesce((select jsonb_agg(e - 'project_id' - 'assignment_number' order by ord)
+    -- F11 (הכרעת ישי 14.10 00:10, "רק משמרות ושעות"; לפניה: "זו טעות להציג שכר... זה מטעה את
+    -- הדיילת"): רק תאריך, אירוע, בסיס, שעות וסיבת אפס. שום שדה כספי לא יוצא לדפדפן — לא
+    -- תעריף, בונוס, נסיעות, סה"כ שורה או סה"כ חודש. גם בלי מזהי פרויקט/שיבוץ (④).
+    'rows', coalesce((select jsonb_agg(jsonb_build_object(
+                               'key', e -> 'key', 'event_date', e -> 'event_date',
+                               'event_name', e -> 'event_name', 'line_basis', e -> 'line_basis',
+                               'hours', e -> 'hours', 'zero_reason', e -> 'zero_reason') order by ord)
                         from jsonb_array_elements(r.rows) with ordinality x(e, ord)), '[]'::jsonb),
-    'total', r.total,
+    -- סה"כ שעות עבודה בחודש, ושעות פיצוי ביטול בנפרד — לא מערבבים עבודה ופיצוי (כמו בקובץ).
+    'total_hours', coalesce((select sum((e ->> 'hours')::numeric) from jsonb_array_elements(r.rows) e
+                              where e ->> 'line_basis' = 'actual'), 0),
+    'compensation_hours', coalesce((select sum((e ->> 'hours')::numeric) from jsonb_array_elements(r.rows) e
+                                     where e ->> 'line_basis' = 'cancellation_compensation'), 0),
     'decision', jsonb_build_object('state', r.state, 'at', r.decided_at),
     'open_case', case when c.case_id is null then null
                       else jsonb_build_object('category', c.category, 'created_at', c.created_at) end,
@@ -179,13 +188,14 @@ begin
   if p_case is null or jsonb_typeof(p_case) <> 'object' then
     return 'category';
   end if;
-  if coalesce(p_case ->> 'category', '') not in ('hours', 'rate', 'bonus_travel', 'missing_shift', 'other') then
+  if coalesce(p_case ->> 'category', '') not in ('hours', 'missing_shift', 'not_worked', 'other') then
     return 'category';
   end if;
   if jsonb_typeof(v_keys) <> 'array' then
     return 'rows';
   end if;
-  v_missing := coalesce((p_case ->> 'missing_shift')::boolean, false) or p_case ->> 'category' = 'missing_shift';
+  -- "משמרת חסרה" היא קטגוריה; היא לבדה מחליפה סימון שורה.
+  v_missing := p_case ->> 'category' = 'missing_shift';
   if jsonb_array_length(v_keys) = 0 and not v_missing then
     return 'rows';
   end if;
@@ -202,8 +212,9 @@ begin
     if jsonb_typeof(p_case -> 'suggested_value') <> 'number' then
       return 'suggested_value';
     end if;
+    -- מספר מוצע — רק בפנייה על שעות, ובין 0 ל-24 (F11).
     v_suggested := (p_case ->> 'suggested_value')::numeric;
-    if v_suggested < 0 or v_suggested > 100000 then
+    if p_case ->> 'category' <> 'hours' or v_suggested < 0 or v_suggested > 24 then
       return 'suggested_value';
     end if;
   end if;
@@ -310,7 +321,7 @@ begin
                                                status, response_id)
       values (v.review_id, r.recipient_id, r.hostess_id, 'post_issue', v.report_id, p_case ->> 'category',
               v_affected,
-              coalesce((p_case ->> 'missing_shift')::boolean, false) or p_case ->> 'category' = 'missing_shift',
+              p_case ->> 'category' = 'missing_shift',
               btrim(p_case ->> 'description'),
               case when jsonb_typeof(p_case -> 'suggested_value') = 'number'
                    then (p_case ->> 'suggested_value')::numeric end,
@@ -360,7 +371,7 @@ begin
                                            affected_rows, missing_shift, description, suggested_value,
                                            status, response_id)
   values (v.review_id, r.recipient_id, r.hostess_id, 'pre_issue', null, p_case ->> 'category', v_affected,
-          coalesce((p_case ->> 'missing_shift')::boolean, false) or p_case ->> 'category' = 'missing_shift',
+          p_case ->> 'category' = 'missing_shift',
           btrim(p_case ->> 'description'),
           case when jsonb_typeof(p_case -> 'suggested_value') = 'number'
                then (p_case ->> 'suggested_value')::numeric end,
