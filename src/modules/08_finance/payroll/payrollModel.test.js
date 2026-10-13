@@ -7,8 +7,9 @@ import {
   actionReason,
   blockerText,
   defaultFilter,
-  deliveryTag,
   filterRecipients,
+  formatHours,
+  hoursSum,
   groupReports,
   isoToJerusalemLocal,
   jerusalemLocalToIso,
@@ -21,7 +22,7 @@ import {
   parsePeriodParam,
   payrollErrorMessage,
   processStage,
-  responseTag,
+  recipientStatus,
 } from './payrollModel'
 import { makePreview, makeReview, opStatus, recipient, reportItem } from './testFixtures'
 
@@ -57,27 +58,22 @@ describe('שעון ישראל בשדה מועד אחרון', () => {
   })
 })
 
-describe('תגיות מעקב — שלושה צירים נפרדים', () => {
-  it('נשלח אינו אושר: משלוח "הסיכום נשלח" ותגובה "ממתין לתגובה"', () => {
-    const r = recipient()
-    expect(deliveryTag(r.delivery).label).toBe('הסיכום נשלח')
-    expect(responseTag(r).label).toBe('ממתין לתגובה')
+describe('recipientStatus — עמודת סטטוס אחת, לפי סדר חשיבות (תיקון ישי 14/10)', () => {
+  it.each([
+    [{ open_case_id: 5, delivery: { state: 'failed' } }, 'פנייה פתוחה', 'attention'],
+    [{ delivery: { state: 'failed' }, digest_current: false }, 'השליחה נכשלה', 'error'],
+    [{ delivery: { state: 'unknown' }, digest_current: false }, 'לא ידוע אם נשלח', 'unknown'],
+    [{ digest_current: false, state: 'hostess_approved' }, 'עודכן — נדרש אישור מחדש', 'attention'],
+    [{ delivery: null }, 'לא נשלח', 'neutral'],
+    [{}, 'ממתין לתגובה', 'neutral'],
+    [{ state: 'hostess_approved' }, 'הדיילת אישרה', 'ok'],
+    [{ state: 'manager_approved_no_response' }, 'אושר לפי תיעוד', 'ok'],
+  ])('%o ⇒ %s', (partial, label, kind) => {
+    expect(recipientStatus(recipient(partial))).toEqual({ label, kind })
   })
-  it('אישור מנהלת = "אושר לפי תיעוד", לא "הדיילת אישרה"', () => {
-    expect(responseTag(recipient({ state: 'manager_approved_no_response' })).label).toBe(
-      'אושר לפי תיעוד',
-    )
-    expect(responseTag(recipient({ state: 'hostess_approved' })).label).toBe('הדיילת אישרה')
-  })
-  it('סיכום שהשתנה גובר על כל מצב: "עודכן — נדרש אישור מחדש"', () => {
-    expect(responseTag(recipient({ state: 'hostess_approved', digest_current: false })).label).toBe(
-      'עודכן — נדרש אישור מחדש',
-    )
-  })
-  it('כשל ⇒ "לא נשלח"; לא ידוע ⇒ "לא ידוע אם נשלח"; אין ניסיון ⇒ "טרם נשלח"', () => {
-    expect(deliveryTag({ state: 'failed' }).label).toBe('לא נשלח')
-    expect(deliveryTag({ state: 'unknown' }).label).toBe('לא ידוע אם נשלח')
-    expect(deliveryTag(null).label).toBe('טרם נשלח')
+
+  it('"נשלח" אינו "אושר": משלוח מוצלח בלי תגובה = "ממתין לתגובה"', () => {
+    expect(recipientStatus(recipient()).label).toBe('ממתין לתגובה')
   })
 })
 
@@ -123,9 +119,8 @@ describe('filterRecipients — מונים על כל הרשימה, לא על הע
       distributed: true,
     })
     expect(counts.action).toBe(1)
-    expect(actionReason(late, { deadlinePassed: true, distributed: true })).toBe(
-      'המועד עבר בלי תגובה',
-    )
+    expect(actionReason(late, { deadlinePassed: true })).toBe('המועד עבר בלי תגובה')
+    expect(actionReason(recipient({ digest_current: false }), {})).toBe('יש לשלוח סיכום מעודכן')
   })
 
   it('לפני שליחה, היעדר ניסיון אינו "דורש טיפול"; אין מסננים ⇒ ברירת מחדל "הכל"', () => {
@@ -248,6 +243,9 @@ describe('processStage — שלב והצעד הבא', () => {
   it('בלי בדיקה ⇒ טיוטה; ממתין לאישור טיוטה; ממתין לתגובות; מוכן; הופק', () => {
     expect(processStage({ preview: makePreview(), review: null }).label).toBe('טיוטה')
     expect(
+      processStage({ preview: makePreview({ month_state: 'current' }), review: null }).next,
+    ).toBe('החודש עוד לא הסתיים: אפשר לבדוק את הטיוטה ולהוריד אותה')
+    expect(
       processStage({
         preview: makePreview(),
         review: makeReview({ review: { manager_approved: false, distributed_at: null } }),
@@ -266,6 +264,16 @@ describe('processStage — שלב והצעד הבא', () => {
       processStage({ preview: makePreview(), review: makeReview({ review: { status: 'issued' } }) })
         .label,
     ).toBe('הופק')
+  })
+})
+
+describe('שעות (F12)', () => {
+  it('hoursSum במאיות; ערך חסר ⇒ null ולא 0', () => {
+    expect(hoursSum([{ hours: 6 }, { hours: 4.25 }, { hours: 1.26 }])).toBe(11.51)
+    expect(hoursSum([{ hours: 6 }, { hours: null }])).toBeNull()
+    expect(formatHours(11.5)).toBe('11.5')
+    expect(formatHours(6)).toBe('6')
+    expect(formatHours(undefined)).toBeNull()
   })
 })
 

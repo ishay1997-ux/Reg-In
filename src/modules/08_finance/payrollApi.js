@@ -224,9 +224,8 @@ export function storageCodeOf(error) {
   return 'ARTIFACT_NOT_FOUND'
 }
 
-export async function getDeliveryAddress(intended) {
-  return rpc('payroll_delivery_address', { p_intended: intended })
-}
+// ✏️ `payroll_delivery_address` (חוזה §4.2) הוסר מכאן בהכרעת F13 (14/10): המסכים אינם מציגים
+// את הכתובת שאליה המייל נמסר בפועל, ולכן אין לו צרכן.
 
 // ── מחזור הבדיקה ─────────────────────────────────────────────────────────────────
 

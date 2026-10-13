@@ -26,7 +26,6 @@ vi.mock('../payrollApi', async () => {
     'listPayrollReports',
     'getPayrollReportDetail',
     'getPayrollFileUrl',
-    'getDeliveryAddress',
     'createPayrollReview',
     'getPayrollReview',
     'findPayrollReview',
@@ -117,7 +116,6 @@ beforeEach(() => {
   api.listPayrollReports.mockResolvedValue([reportItem()])
   api.getPayrollReportDetail.mockResolvedValue(reportDetail())
   api.getPayrollOperationStatus.mockResolvedValue(opStatus())
-  api.getDeliveryAddress.mockResolvedValue({ delivered: 'ishay1997@gmail.com', redirected: true })
   getEmailTemplate.mockResolvedValue(TEMPLATE)
   downloadDraft.mockResolvedValue({})
 })
@@ -154,8 +152,14 @@ describe('מצב: טיוטה מוכנה', () => {
   it('חודש, סכום, נמען, פעולות: הורד טיוטה · רענן · שלח סיכומים לדיילות', async () => {
     renderPage()
     expect(await screen.findByTestId('payroll-title')).toHaveTextContent('דוח שכר · יולי 2026')
-    expect(screen.getByTestId('payroll-tile-total')).toHaveTextContent('452.60')
-    expect(screen.getByTestId('payroll-accountant')).toHaveTextContent('ishay1997@gmail.com')
+    // F12: בלי סכום בש"ח על המסך — הסיכום בשעות (6 + 4 = 10).
+    expect(screen.getByTestId('payroll-tile-hours')).toHaveTextContent('10')
+    expect(screen.queryByText('סה"כ לתשלום')).not.toBeInTheDocument()
+    expect(screen.queryByText('452.60', { exact: false })).not.toBeInTheDocument()
+    // F13: הנמען המקורי בלבד; כתובת הבדיקה ("הופנה") לא מופיעה בשום מסך.
+    expect(screen.getByTestId('payroll-accountant')).toHaveTextContent('office@accountant.example')
+    expect(screen.getByTestId('payroll-workspace')).not.toHaveTextContent('ishay1997@gmail.com')
+    expect(screen.getByTestId('payroll-workspace')).not.toHaveTextContent('כתובת הבדיקה')
     expect(screen.getByTestId('payroll-download-draft')).toBeEnabled()
     expect(screen.getByTestId('payroll-refresh')).toBeEnabled()
     expect(screen.getByTestId('payroll-start-review')).toHaveTextContent('שלח סיכומים לדיילות')
@@ -335,19 +339,20 @@ describe('מצב: מוכן להפקה + אישור', () => {
     api.getPayrollReviewReadiness.mockResolvedValue(ready)
   })
 
-  it('מונים, סיכום ונמען; האישור מציג סוג, חודש, שורות, סכום, נמען ונעילת השעות', async () => {
+  it('מונים, סיכום ונמען; האישור מציג סוג, חודש, משמרות ושעות (בלי ₪), נמען ונעילת השעות', async () => {
     api.issuePayrollReport.mockResolvedValue({ ok: true, operation_id: 'from-server' })
     vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('from-server')
     renderPage('?period=2026-07&view=final')
     expect(await screen.findByTestId('payroll-final-summary')).toHaveTextContent(
-      'ishay1997@gmail.com',
+      'office@accountant.example',
     )
     fireEvent.click(screen.getByTestId('payroll-issue'))
     const message = await screen.findByTestId('confirm-dialog-message')
     expect(message).toHaveTextContent('רגיל · יולי 2026')
-    expect(message).toHaveTextContent('2 שורות')
-    expect(message).toHaveTextContent('452.60')
-    expect(message).toHaveTextContent('ishay1997@gmail.com')
+    expect(message).toHaveTextContent('2 משמרות · 10 שעות · 2 דיילות')
+    expect(message).not.toHaveTextContent('₪')
+    expect(message).toHaveTextContent('office@accountant.example')
+    expect(message).not.toHaveTextContent('ishay1997@gmail.com')
     expect(message).toHaveTextContent('השעות יינעלו לדוח הזה ולא ייכללו שוב')
     await confirmDialog()
     await waitFor(() => expect(api.issuePayrollReport).toHaveBeenCalled())
@@ -478,7 +483,7 @@ describe('מצבי ההפקה השמורה (op= בכתובת)', () => {
     )
     fireEvent.click(screen.getByTestId('payroll-accountant-resend'))
     expect(await screen.findByTestId('confirm-dialog-message')).toHaveTextContent(
-      'אותו קובץ יישלח אל ishay1997@gmail.com',
+      'אותו קובץ יישלח אל office@accountant.example',
     )
     await confirmDialog()
     await waitFor(() =>
@@ -692,7 +697,7 @@ describe('מעקב: מסננים, חיפוש, עימוד וכתובת', () => {
     await screen.findByTestId('payroll-review-table')
     expect(screen.getByTestId('payroll-filter-noreply')).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByTestId('payroll-review-search')).toHaveValue('דיילת 077')
-    expect(screen.getAllByTestId(/^payroll-recipient-/)).toHaveLength(1)
+    expect(screen.getAllByTestId(/^payroll-recipient-\d+$/)).toHaveLength(1)
   })
 
   it('מסנן ריק ⇒ "אין דיילות במסנן הזה" + "הצג הכל"', async () => {
@@ -703,6 +708,66 @@ describe('מעקב: מסננים, חיפוש, עימוד וכתובת', () => {
     )
     fireEvent.click(screen.getByText('הצג הכל'))
     await waitFor(() => expect(searchParams().get('filter')).toBe('all'))
+  })
+})
+
+describe('מעקב: עמודת שעות במקום סכום (הכרעת ישי 14/10)', () => {
+  it('הטבלה מציגה "11.5 שעות" ולא ₪; שעות חסרות ⇒ "—"', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({
+        review: { distributed_at: null },
+        recipients: [
+          recipient({ hostess_name: 'מאיה כהן', total_hours: 11.5, delivery: null }),
+          recipient({ recipient_id: 700009, total_hours: null, delivery: null }),
+        ],
+      }),
+    )
+    renderPage('?period=2026-07&view=review&filter=all')
+    const table = await screen.findByTestId('payroll-review-table')
+    expect(within(table).getByText('שעות', { selector: 'th' })).toBeInTheDocument()
+    expect(within(table).queryByText('סכום', { selector: 'th' })).not.toBeInTheDocument()
+    const cells = within(table).getAllByTestId('payroll-recipient-hours')
+    expect(cells.map((c) => c.textContent)).toEqual(['11.5 שעות', '—'])
+    expect(table).not.toHaveTextContent('₪')
+  })
+})
+
+describe('מעקב: סטטוס אחד וצבע רק למה שדורש פעולה (תיקון ישי 14/10 00:35)', () => {
+  it('עמודת "סטטוס" אחת; "אושר" ניטרלי עם ✓; פנייה פתוחה בתג ענבר; פרטי משלוח בשורה משנית', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({
+        recipients: [
+          recipient({ state: 'hostess_approved' }),
+          recipient({
+            recipient_id: 700002,
+            hostess_name: 'מאיה כהן',
+            open_case_id: 9,
+            state: 'objection_open',
+          }),
+        ],
+      }),
+    )
+    renderPage('?period=2026-07&view=review&filter=all')
+    const table = await screen.findByTestId('payroll-review-table')
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent)
+    expect(headers).toEqual(['דיילת', 'שעות', 'סטטוס', 'פעולה אחרונה', 'טיפול'])
+    const approved = within(screen.getByTestId('payroll-recipient-700001')).getByTestId(
+      'payroll-recipient-status',
+    )
+    expect(approved).toHaveTextContent('הדיילת אישרה')
+    expect(approved).toHaveAttribute('data-kind', 'ok')
+    expect(approved.className).not.toContain('bg-')
+    expect(approved.querySelector('svg')).not.toBeNull()
+    const open = within(screen.getByTestId('payroll-recipient-700002')).getByTestId(
+      'payroll-recipient-status',
+    )
+    expect(open).toHaveTextContent('פנייה פתוחה')
+    expect(open.className).toContain('bg-amber-50')
+    expect(
+      within(screen.getByTestId('payroll-recipient-700001')).getByTestId('payroll-delivery-line'),
+    ).toHaveTextContent('נשלח 13/10 13:00')
   })
 })
 
@@ -756,7 +821,7 @@ describe('מעקב: פעולות שורה', () => {
     expect(await screen.findByTestId('payroll-no-response-contactNote')).toBeInTheDocument()
   })
 
-  it('כשל משלוח ⇒ תג "לא נשלח", ההסבר בשורה ו"שלח שוב" עם הנמען', async () => {
+  it('כשל משלוח ⇒ סטטוס "השליחה נכשלה" (טקסט + אייקון) ו"שלח שוב" עם הנמען', async () => {
     api.findPayrollReview.mockResolvedValue(
       makeReview({
         recipients: [
@@ -774,12 +839,13 @@ describe('מעקב: פעולות שורה', () => {
     api.resendPayrollReviewMail.mockResolvedValue({ ok: true })
     renderPage('?period=2026-07&view=review')
     const row = await screen.findByTestId('payroll-recipient-700001')
-    expect(row).toHaveTextContent('לא נשלח')
-    expect(row).toHaveTextContent('השליחה נכשלה')
+    const status = within(row).getByTestId('payroll-recipient-status')
+    expect(status).toHaveTextContent('השליחה נכשלה')
+    expect(status).toHaveAttribute('data-kind', 'error')
     fireEvent.click(within(row).getByTestId('payroll-resend'))
-    expect(await screen.findByTestId('confirm-dialog-message')).toHaveTextContent(
-      'ishay1997@gmail.com',
-    )
+    const resendMessage = await screen.findByTestId('confirm-dialog-message')
+    expect(resendMessage).toHaveTextContent('noa@example.com')
+    expect(resendMessage).not.toHaveTextContent('ishay1997@gmail.com')
     await confirmDialog()
     await waitFor(() =>
       expect(api.resendPayrollReviewMail).toHaveBeenCalledWith({
@@ -963,11 +1029,11 @@ describe('היסטוריה', () => {
     )
   })
 
-  it('פרטי דוח: שורות קפואות, ניסיונות עם נועד/נשלח וזמן מלא, פיצוי "—"', async () => {
+  it('פרטי דוח: שורות קפואות, ניסיונות עם הנמען המקורי וזמן מלא, פיצוי "—"', async () => {
     renderPage('?view=history&report=31')
     const attempts = await screen.findByTestId('payroll-detail-attempts')
-    expect(attempts).toHaveTextContent('נועד ל-office@accountant.example')
-    expect(attempts).toHaveTextContent('נשלח אל ishay1997@gmail.com')
+    expect(attempts).toHaveTextContent('אל office@accountant.example')
+    expect(attempts).not.toHaveTextContent('ishay1997@gmail.com')
     expect(attempts).toHaveTextContent('13/10/2026 14:00')
     const lines = screen.getAllByTestId('payroll-detail-line')
     const comp = lines.find((row) => row.textContent.includes('מאיה כהן'))

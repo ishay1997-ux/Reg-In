@@ -1,7 +1,8 @@
 // שליחה חוזרת לרואה החשבון — אותו קובץ בדיוק, בלי הפקה מחדש (חוזה §2.3, D12).
 // משמש גם את לשונית "אישור סופי" וגם את פרטי הדוח בהיסטוריה, כדי ששני המקומות יתנהגו זהה.
 //
-// · כשל ידוע ⇒ "שלח שוב", והאישור מציג את הכתובת שאליה המייל ייצא בפועל.
+// · כשל ידוע ⇒ "שלח שוב", והאישור מציג את נמען רו"ח (הנמען המקורי; F13 — ההפניה הפנימית
+//   לכתובת הבדיקה נשמרת במסד בלבד ואינה מוצגת).
 // · לא ידוע ⇒ קודם "בדוק אם נשלח" (טעינה מחדש מהשרת). רק אם עדיין לא ידוע — "שלח שוב"
 //   עם אזהרה מפורשת שהמייל עלול להגיע פעמיים. אין שליחה חוזרת אוטומטית, ואין "סמן כנשלח".
 
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import Ltr from '@/components/Ltr'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
-import { getDeliveryAddress, retryAccountantSend } from '../payrollApi'
+import { retryAccountantSend } from '../payrollApi'
 import { payrollErrorMessage } from './payrollModel'
 
 export default function AccountantResend({ reportId, attempt, onCheck, onDone }) {
@@ -25,19 +26,13 @@ export default function AccountantResend({ reportId, attempt, onCheck, onDone })
     setBusy(true)
     try {
       const intended = attempt.intended_recipient
-      const address = await getDeliveryAddress(intended)
       const ok = await confirm({
         title: 'לשלוח את הדוח שוב לרואה החשבון?',
         message: (
           <>
             <span className="block">
-              אותו קובץ יישלח אל <Ltr>{address?.delivered ?? intended}</Ltr>
+              אותו קובץ יישלח אל <Ltr>{intended}</Ltr>
             </span>
-            {address?.redirected && (
-              <span className="block">
-                (כתובת בדיקה; נועד ל-<Ltr>{intended}</Ltr>)
-              </span>
-            )}
             {acknowledgeUnknown && (
               <span className="mt-1 block font-semibold text-amber-800">
                 לא ידוע אם המייל הקודם הגיע. שליחה נוספת עלולה להגיע פעמיים.

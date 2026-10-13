@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import LoadingOrError from '@/components/LoadingOrError'
 import Ltr from '@/components/Ltr'
-import Money from '@/components/Money'
 import StatusTag from '@/components/StatusTag'
 import { formatTimestampFull } from '@/lib/dates'
 import { salaryPeriodLabel } from '@/lib/salaryReport'
@@ -75,8 +74,7 @@ function ReportList({ update }) {
             <tr>
               <Th>חודש</Th>
               <Th>סוג</Th>
-              <Th>מספר דוח</Th>
-              <Th>סה"כ לתשלום</Th>
+              <Th>משמרות</Th>
               <Th>קובץ</Th>
               <Th>משלוח</Th>
             </tr>
@@ -108,10 +106,7 @@ function ReportList({ update }) {
                   </Td>
                   <Td>{kindLabel(report.report_kind, report.supplement_seq)}</Td>
                   <Td>
-                    <Ltr>{report.report_id}</Ltr>
-                  </Td>
-                  <Td>
-                    <Money amount={report.total_amount} cents />
+                    <Ltr>{report.line_count}</Ltr>
                   </Td>
                   <Td>{report.artifact_available ? 'שמור' : 'לא נשמר'}</Td>
                   <Td>

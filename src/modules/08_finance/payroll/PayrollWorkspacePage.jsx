@@ -57,9 +57,9 @@ export default function PayrollWorkspacePage() {
   return (
     <div className="flex flex-col gap-4" data-testid="payroll-workspace">
       <Header
+        view={view}
         period={period}
         kind={url.kind}
-        original={url.original}
         data={data}
         canEdit={canEdit}
         update={update}
@@ -177,21 +177,25 @@ function useWorkspaceData({ canEdit, period, kind, original }) {
 
 // ── כותרת: חודש, סוג, שלב הבקשה והצעד הבא ────────────────────────────────────────
 
-function Header({ period, kind, original, data, canEdit, update }) {
+function Header({ view, period, kind, data, canEdit, update }) {
+  // ההיסטוריה חוצה חודשים — אין לה חודש-עבודה, שלב או צעד הבא. כותרת אחת בלבד.
+  if (view === 'history') {
+    return (
+      <header className="flex flex-col gap-3">
+        <BackLink />
+        <h1 className="text-lg font-bold text-slate-800" data-testid="payroll-title">
+          דוחות שכר
+        </h1>
+      </header>
+    )
+  }
   const periodLabel = salaryPeriodLabel(period)
   const info = data.review?.review
   const stage = processStage({ preview: data.preview, review: data.review })
   const currentMonth = data.preview && data.preview.month_state !== 'ended'
   return (
     <header className="flex flex-col gap-3">
-      <Link
-        to="/finance"
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-800"
-        data-testid="payroll-back"
-      >
-        <ArrowRight aria-hidden="true" className="size-4" />
-        כספים
-      </Link>
+      <BackLink />
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-lg font-bold text-slate-800" data-testid="payroll-title">
           דוח שכר · {periodLabel}
@@ -201,11 +205,6 @@ function Header({ period, kind, original, data, canEdit, update }) {
           tone="outline"
           testId="payroll-kind"
         />
-        {kind === 'supplement' && original && (
-          <span className="text-sm text-slate-700">
-            דוח מקורי <Ltr>{original}</Ltr>
-          </span>
-        )}
       </div>
       {canEdit && (
         <PeriodPicker
@@ -251,6 +250,19 @@ function Header({ period, kind, original, data, canEdit, update }) {
         </Banner>
       )}
     </header>
+  )
+}
+
+function BackLink() {
+  return (
+    <Link
+      to="/finance"
+      className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-800"
+      data-testid="payroll-back"
+    >
+      <ArrowRight aria-hidden="true" className="size-4" />
+      כספים
+    </Link>
   )
 }
 

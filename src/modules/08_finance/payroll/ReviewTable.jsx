@@ -4,8 +4,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import Ltr from '@/components/Ltr'
-import Money from '@/components/Money'
-import StatusTag from '@/components/StatusTag'
+import { AlertCircle, Check, HelpCircle } from 'lucide-react'
 import { Pager } from '@/components/ListWindow'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
@@ -14,7 +13,7 @@ import { paginate } from '@/lib/listWindow'
 import { approvePayrollNoResponse, resendPayrollReviewMail } from '../payrollApi'
 import ReasonDialog from './ReasonDialog'
 import { Td, Th } from './payrollUi'
-import { actionReason, deliveryTag, payrollErrorMessage, responseTag } from './payrollModel'
+import { actionReason, formatHours, payrollErrorMessage, recipientStatus } from './payrollModel'
 
 export default function ReviewTable({ rows, page, onPage, review, canEdit, onOpenCase, onReload }) {
   const info = review.review
@@ -32,19 +31,18 @@ export default function ReviewTable({ rows, page, onPage, review, canEdit, onOpe
           <thead>
             <tr>
               <Th className="w-[22%]">דיילת</Th>
-              <Th>סכום</Th>
-              <Th>תגובה</Th>
-              <Th>משלוח</Th>
+              <Th>שעות</Th>
+              <Th className="w-[24%]">סטטוס</Th>
               <Th>פעולה אחרונה</Th>
               <Th className="w-[30%]">טיפול</Th>
             </tr>
           </thead>
           <tbody>
-            {paged.pageRows.map(({ recipient, bucket }) => (
+            {paged.pageRows.map(({ recipient }) => (
               <RecipientRow
                 key={recipient.recipient_id}
                 recipient={recipient}
-                reason={bucket === 'action' ? actionReason(recipient, flags) : null}
+                reason={actionReason(recipient, flags)}
                 canEdit={canEdit}
                 deadlinePassed={flags.deadlinePassed}
                 onOpenCase={onOpenCase}
@@ -79,8 +77,6 @@ function RecipientRow({
   onNoResponse,
   onReload,
 }) {
-  const response = responseTag(recipient)
-  const delivery = deliveryTag(recipient.delivery)
   const canApproveByRecord =
     canEdit &&
     deadlinePassed &&
@@ -95,19 +91,16 @@ function RecipientRow({
           {recipient.row_count === 1 ? 'משמרת אחת' : `${recipient.row_count} משמרות`}
         </div>
       </Td>
-      <Td>
-        <Money amount={recipient.total} cents />
+      {/* שעות ולא סכום (הכרעת ישי 14/10 00:20): הטבלה עוקבת אחרי מה שהדיילות מאשרות —
+          משמרות ושעות. הכסף נשאר בטיוטה, בפאנל הפנייה ובאישור הסופי. */}
+      <Td className="whitespace-nowrap">
+        <HoursText hours={recipient.total_hours} />
       </Td>
       <Td>
-        <StatusTag label={response.label} tone={response.tone} />
+        <RecipientStatus recipient={recipient} />
+        <DeliveryLine delivery={recipient.delivery} />
       </Td>
-      <Td>
-        <StatusTag label={delivery.label} tone={delivery.tone} />
-        {recipient.delivery?.redirected && (
-          <div className="mt-1 text-xs text-slate-600">נשלח לכתובת הבדיקה</div>
-        )}
-      </Td>
-      <Td>
+      <Td className="whitespace-nowrap">
         <Ltr>{formatTimestamp(recipient.last_action_at, '—')}</Ltr>
       </Td>
       <Td>
@@ -134,6 +127,63 @@ function RecipientRow({
         </div>
       </Td>
     </tr>
+  )
+}
+
+// "11.5 שעות" — אותו פורמט שהדיילת רואה. חסר ⇒ "—", לא 0.
+function HoursText({ hours }) {
+  const text = formatHours(hours)
+  if (text === null) {
+    return (
+      <span className="text-slate-500" data-testid="payroll-recipient-hours">
+        —
+      </span>
+    )
+  }
+  return (
+    <span data-testid="payroll-recipient-hours">
+      <Ltr>{text}</Ltr> שעות
+    </span>
+  )
+}
+
+const STATUS_LOOK = {
+  attention: 'rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-900',
+  unknown: 'rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-900',
+  error: 'text-red-700',
+  ok: 'text-green-800',
+  neutral: 'text-slate-600',
+}
+const STATUS_ICON = { error: AlertCircle, unknown: HelpCircle, ok: Check }
+
+// הסטטוס היחיד של השורה. תמיד טקסט, ואייקון היכן שיש — אף פעם לא צבע בלבד.
+function RecipientStatus({ recipient }) {
+  const status = recipientStatus(recipient)
+  const Icon = STATUS_ICON[status.kind]
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-xs font-medium ${STATUS_LOOK[status.kind]}`}
+      data-testid="payroll-recipient-status"
+      data-kind={status.kind}
+    >
+      {Icon && <Icon aria-hidden="true" className="size-3.5 shrink-0" />}
+      {status.label}
+    </span>
+  )
+}
+
+// פרטי המשלוח בשורה משנית אפורה — "נשלח 13/10 21:04". בלי צ'יפ, ובלי ההפניה הפנימית (F13).
+function DeliveryLine({ delivery }) {
+  if (!delivery) return null
+  const at = formatTimestamp(delivery.completed_at)
+  let text = null
+  if (delivery.state === 'sent') text = at ? `נשלח ${at}` : 'נשלח'
+  else if (delivery.state === 'failed' && at) text = `ניסיון אחרון ${at}`
+  if (!text) return null
+  return (
+    <div className="mt-1 text-xs text-slate-600" data-testid="payroll-delivery-line">
+      {text}
+    </div>
   )
 }
 
@@ -170,7 +220,7 @@ function ResendButton({ recipient, onReload }) {
       message: (
         <>
           <span className="block">
-            הסיכום יישלח אל <Ltr>{delivery.delivered_recipient ?? delivery.intended_recipient}</Ltr>
+            הסיכום יישלח אל <Ltr>{delivery.intended_recipient}</Ltr>
           </span>
           {acknowledgeUnknown && (
             <span className="mt-1 block font-semibold text-amber-800">

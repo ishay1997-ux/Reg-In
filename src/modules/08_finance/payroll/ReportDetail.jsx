@@ -22,6 +22,9 @@ import {
   CASE_CATEGORY_LABELS,
   accountantDeliveryTag,
   caseStatusTag,
+  countPhrase,
+  formatHours,
+  hoursSum,
   kindLabel,
   needsReconstruction,
   payrollErrorMessage,
@@ -92,7 +95,7 @@ export default function ReportDetail({ reportId, update, canEdit, page }) {
     <div className="flex flex-col gap-4" data-testid="payroll-detail">
       <Card>
         {back}
-        <DetailHeader report={report} />
+        <DetailHeader report={report} lines={detail.lines ?? []} />
         <FileActions report={report} detail={detail} />
         <Delivery report={report} detail={detail} canEdit={canEdit} onReload={reload} />
         {canEdit && report.report_kind !== 'supplement' && (
@@ -125,7 +128,15 @@ export default function ReportDetail({ reportId, update, canEdit, page }) {
   )
 }
 
-function DetailHeader({ report }) {
+function DetailHeader({ report, lines }) {
+  // F12: היקף בשעות ובמשמרות, בלי סכום בש"ח.
+  const hours = hoursSum(lines)
+  const hoursSummary = [
+    countPhrase(report.line_count ?? lines.length, 'משמרת אחת', 'משמרות'),
+    hours === null ? null : `${formatHours(hours)} שעות`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
   return (
     <div
       className="mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm"
@@ -137,27 +148,14 @@ function DetailHeader({ report }) {
       <span>
         <span className="text-slate-600">סוג:</span>{' '}
         {kindLabel(report.report_kind, report.supplement_seq)}
-        {report.original_report_id ? (
-          <>
-            {' '}
-            · דוח מקורי <Ltr>{report.original_report_id}</Ltr>
-          </>
-        ) : null}
-      </span>
-      <span>
-        <span className="text-slate-600">מספר דוח:</span> <Ltr>{report.report_id}</Ltr>
       </span>
       <span>
         <span className="text-slate-600">הופק:</span>{' '}
         <Ltr>{formatTimestampFull(report.issued_at, '—')}</Ltr>
       </span>
-      <span>
-        <span className="text-slate-600">סה"כ לתשלום:</span>{' '}
-        <b>
-          <Money amount={report.total_amount} cents />
-        </b>
+      <span data-testid="payroll-detail-hours">
+        <span className="text-slate-600">היקף:</span> {hoursSummary}
       </span>
-      {report.legacy && <span className="text-slate-600">הופק בתהליך הקודם</span>}
     </div>
   )
 }
@@ -275,14 +273,11 @@ function Delivery({ report, detail, canEdit, onReload }) {
             return (
               <li key={attempt.attempt_id} className="flex flex-wrap items-center gap-2">
                 <StatusTag label={attemptTag.label} tone={attemptTag.tone} />
+                {/* F13 (14/10): המסך מציג תמיד את הנמען המקורי. הכתובת שאליה המייל נמסר בפועל
+                    (מנגנון הבטיחות) נשמרת במסד בלבד ואינה מוצגת. */}
                 <span>
-                  נועד ל-<Ltr>{attempt.intended_recipient}</Ltr>
+                  אל <Ltr>{attempt.intended_recipient}</Ltr>
                 </span>
-                {attempt.delivered_recipient && (
-                  <span>
-                    · נשלח אל <Ltr>{attempt.delivered_recipient}</Ltr>
-                  </span>
-                )}
                 <span>
                   ·{' '}
                   <Ltr>{formatTimestampFull(attempt.completed_at ?? attempt.created_at, '—')}</Ltr>
@@ -356,7 +351,6 @@ function FrozenLines({ lines, page, onPage }) {
               <Th>תעריף</Th>
               <Th>בונוס</Th>
               <Th>נסיעות</Th>
-              <Th>סה"כ</Th>
             </tr>
           </thead>
           <tbody>
@@ -386,9 +380,6 @@ function FrozenLines({ lines, page, onPage }) {
                 </Td>
                 <Td>{extraCell(line, line.bonus)}</Td>
                 <Td>{extraCell(line, line.travel)}</Td>
-                <Td className="font-bold">
-                  <Money amount={line.line_total} cents />
-                </Td>
               </tr>
             ))}
           </tbody>

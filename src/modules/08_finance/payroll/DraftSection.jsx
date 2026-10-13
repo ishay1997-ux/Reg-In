@@ -16,7 +16,13 @@ import { paginate } from '@/lib/listWindow'
 import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { Banner, Card, NotApplicable, Td, Th } from './payrollUi'
 import { downloadDraft } from './payrollFiles'
-import { countPhrase, monthNotEndedMessage, payrollErrorMessage } from './payrollModel'
+import {
+  countPhrase,
+  formatHours,
+  hoursSum,
+  monthNotEndedMessage,
+  payrollErrorMessage,
+} from './payrollModel'
 
 const BASIS_LABELS = { actual: 'עבודה', cancellation_compensation: 'פיצוי ביטול' }
 const DEFECT_LABELS = {
@@ -89,6 +95,7 @@ export default function DraftSection({
   const pending = preview.pending_closure ?? {}
   const empty = lines.length === 0
   const allZero = !empty && Number(totals.total_amount) === 0
+  const hoursTotal = totals.hours_total ?? hoursSum(lines)
   const monthEnded = preview.month_state === 'ended'
   const missingBank = lines.filter((l) => l.show_in_file && !l.bank_account)
   const zeroDurationCount = lines.filter((l) =>
@@ -127,20 +134,23 @@ export default function DraftSection({
           testId="payroll-tile-hostesses"
         />
         <StatTile
-          label="שורות"
+          label="משמרות"
           value={<Ltr>{totals.line_count}</Ltr>}
           testId="payroll-tile-lines"
         />
+        {/* F12 (14/10): אין סכום מחושב בש"ח על המסך — הסיכום בשעות. הסכום נשאר בתשובת השרת
+            ונבדק בהתאמה של קובץ הטיוטה. */}
         <StatTile
-          label='סה"כ לתשלום'
-          value={<Money amount={totals.total_amount} cents />}
-          testId="payroll-tile-total"
+          label="שעות"
+          value={hoursTotal === null ? null : <Ltr>{formatHours(hoursTotal)}</Ltr>}
+          emptyText="—"
+          testId="payroll-tile-hours"
         />
         <StatTile
           label="ממתינות לסגירת שעות"
           value={pending.ok === false ? null : <Ltr>{pending.assignment_count ?? 0}</Ltr>}
           emptyText="לא ידוע"
-          sub={pending.ok === false ? 'הבדיקה לא הצליחה' : 'משמרות, בלי סכום'}
+          sub={pending.ok === false ? 'הבדיקה לא הצליחה' : 'משמרות'}
           testId="payroll-tile-pending"
         />
       </div>
@@ -298,14 +308,8 @@ function DraftDetails({ preview, missingBank, zeroDurationCount }) {
   return (
     <div className="mb-3 flex flex-col gap-1 text-sm text-slate-700">
       <p data-testid="payroll-accountant">
-        נמען רואה החשבון:{' '}
-        {accountant.delivered ? <Ltr>{accountant.delivered}</Ltr> : <NotApplicable />}
-        {accountant.redirected && (
-          <span className="text-slate-600">
-            {' '}
-            (כתובת בדיקה; נועד ל-<Ltr>{accountant.recipient}</Ltr>)
-          </span>
-        )}
+        נמען רואה החשבון: {/* F13: הנמען המקורי בלבד — ההפניה הפנימית אינה מוצגת. */}
+        {accountant.recipient ? <Ltr>{accountant.recipient}</Ltr> : <NotApplicable />}
       </p>
       {accountant.recipient_valid === false && (
         <p className="text-amber-800" data-testid="payroll-accountant-invalid">
@@ -356,7 +360,6 @@ function DraftTable({ rows, offset }) {
             <Th>תעריף</Th>
             <Th>בונוס</Th>
             <Th>נסיעות</Th>
-            <Th>סה"כ</Th>
           </tr>
         </thead>
         <tbody>
@@ -418,13 +421,6 @@ function DraftTable({ rows, offset }) {
                     <NotApplicable />
                   ) : (
                     <Money amount={line.travel} cents />
-                  )}
-                </Td>
-                <Td className="font-bold">
-                  {line.line_total == null ? (
-                    <NotApplicable />
-                  ) : (
-                    <Money amount={line.line_total} cents />
                   )}
                 </Td>
               </tr>

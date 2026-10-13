@@ -9,7 +9,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import LoadingOrError from '@/components/LoadingOrError'
 import Ltr from '@/components/Ltr'
-import Money from '@/components/Money'
 import StatTile from '@/components/StatTile'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
@@ -26,6 +25,8 @@ import { Banner, Card } from './payrollUi'
 import {
   blockerText,
   countPhrase,
+  formatHours,
+  hoursSum,
   isStaleCode,
   kindLabel,
   monthNotEndedMessage,
@@ -118,9 +119,18 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
   const periodLabel = salaryPeriodLabel(info.period)
   const kind = kindLabel(info.kind, preview?.supplement_seq_next)
   const monthEnded = preview?.month_state === 'ended'
-  const recipient = preview?.accountant?.delivered
+  const recipient = preview?.accountant?.recipient
   const pendingCount = preview?.pending_closure?.assignment_count ?? 0
   const blockers = readiness.blockers ?? []
+  // F12: הסיכום בשעות ולא בש"ח — "64 משמרות · 412 שעות · 32 דיילות".
+  const hoursTotal = totals.hours_total ?? hoursSum(preview?.lines)
+  const hoursSummary = [
+    countPhrase(totals.line_count ?? 0, 'משמרת אחת', 'משמרות'),
+    hoursTotal === null ? null : `${formatHours(hoursTotal)} שעות`,
+    countPhrase(totals.hostess_count ?? 0, 'דיילת אחת', 'דיילות'),
+  ]
+    .filter(Boolean)
+    .join(' · ')
   const canIssue = canEdit && readiness.ready && monthEnded && !busyOp && Boolean(preview)
 
   async function handleIssue() {
@@ -130,17 +140,8 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
         <>
           <span className="block">
             {kind} · {periodLabel}
-            {info.original_report_id ? (
-              <>
-                {' '}
-                · דוח מקורי <Ltr>{info.original_report_id}</Ltr>
-              </>
-            ) : null}
           </span>
-          <span className="block">
-            {countPhrase(totals.line_count, 'שורה אחת', 'שורות')} · סה"כ לתשלום{' '}
-            <Money amount={totals.total_amount} cents />
-          </span>
+          <span className="block">{hoursSummary}</span>
           <span className="block">
             נמען: <Ltr>{recipient ?? '—'}</Ltr>
           </span>
@@ -194,8 +195,7 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
         <StatTile label="ממתין לבדיקה חוזרת" value={<Ltr>{counts.stale_digest ?? 0}</Ltr>} />
       </div>
       <p className="mb-3 text-sm text-slate-700" data-testid="payroll-final-summary">
-        {kind} · {periodLabel} · {countPhrase(totals.line_count ?? 0, 'שורה אחת', 'שורות')} · סה"כ
-        לתשלום <Money amount={totals.total_amount} cents /> · נמען <Ltr>{recipient ?? '—'}</Ltr>
+        {kind} · {periodLabel} · {hoursSummary} · נמען <Ltr>{recipient ?? '—'}</Ltr>
       </p>
 
       {canEdit && (
@@ -216,7 +216,10 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
         </p>
       )}
       {blockers.length > 0 && (
-        <ul className="mt-3 flex flex-col gap-1.5 text-sm" data-testid="payroll-final-blockers">
+        <p className="mt-3 text-sm font-semibold text-slate-800">אי אפשר להפיק עד שאלה יטופלו:</p>
+      )}
+      {blockers.length > 0 && (
+        <ul className="mt-1.5 flex flex-col gap-1.5 text-sm" data-testid="payroll-final-blockers">
           {blockers.map((blocker) => {
             const { text, target } = blockerText(blocker, { period: info.period })
             return (
@@ -372,7 +375,9 @@ function OperationProgress({ opId, update, canEdit }) {
             onDone={load}
           />
         )}
-        {!stage.busy && (
+        {/* "בדוק סטטוס" רק כשאין פעולה ייעודית — במצב "לא ידוע" הכפתור הוא "בדוק אם נשלח"
+            (מדריך ה-UX: שם אחד לאותה פעולה). */}
+        {!stage.busy && !stage.action && stage.tone !== 'ok' && (
           <Button
             type="button"
             variant="outline"

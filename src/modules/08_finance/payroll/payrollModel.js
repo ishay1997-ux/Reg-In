@@ -112,6 +112,26 @@ export function isoToJerusalemLocal(iso) {
   return new Date(jerusalemWallClock(ms)).toISOString().slice(0, 16)
 }
 
+// ── שעות (F12: סיכומים בשעות, לא בש"ח) ──────────────────────────────────────
+
+// סכום שעות להצגה בלבד, במאיות-שעה שלמות. ערך שאינו מספר אינו נספר כאפס בשקט — הוא מחזיר null.
+export function hoursSum(lines) {
+  let hundredths = 0
+  for (const line of lines ?? []) {
+    const n = Number(line?.hours)
+    if (line?.hours == null || !Number.isFinite(n)) return null
+    hundredths += Math.round(n * 100)
+  }
+  return hundredths / 100
+}
+
+// 11.5 ⇒ "11.5" · 6 ⇒ "6" · 4.25 ⇒ "4.25"
+export function formatHours(hours) {
+  const n = Number(hours)
+  if (hours == null || !Number.isFinite(n)) return null
+  return String(Number(n.toFixed(2)))
+}
+
 // ── ספירה בעברית ───────────────────────────────────────────────────────────────
 
 export function countPhrase(n, one, many) {
@@ -194,38 +214,31 @@ const APPROVED_STATES = new Set([
   'manager_resolved',
 ])
 
-export function responseTag(recipient) {
+// עמודת סטטוס אחת למעקב (תיקון ישי 14/10 00:35: *"מרגיש יותר מדי צבועני"*): המצב החשוב
+// ביותר בלבד, לפי סדר קבוע. צבע רק למה שדורש פעולה — כמו Material 3 ו-Shopify Polaris,
+// שמשאירים מצב רגיל ניטרלי. `kind` קובע את המראה ברכיב, והטקסט תמיד נוכח (לא צבע בלבד):
+//   attention — צ'יפ ענבר רך · error — טקסט אדום עם אייקון · unknown — ענבר רך עם אייקון ·
+//   neutral — טקסט אפור · ok — ✓ וטקסט ירוק-כהה.
+export function recipientStatus(recipient) {
+  const deliveryState = recipient?.delivery?.state
+  if (recipient?.open_case_id || recipient?.state === 'objection_open') {
+    return { label: 'פנייה פתוחה', kind: 'attention' }
+  }
+  if (deliveryState === 'failed') return { label: 'השליחה נכשלה', kind: 'error' }
+  if (deliveryState === 'unknown') return { label: 'לא ידוע אם נשלח', kind: 'unknown' }
   if (recipient?.digest_current === false) {
-    return { label: 'עודכן — נדרש אישור מחדש', tone: 'warn' }
+    return { label: 'עודכן — נדרש אישור מחדש', kind: 'attention' }
   }
-  switch (recipient?.state) {
-    case 'hostess_approved':
-      return { label: 'הדיילת אישרה', tone: 'ok' }
-    case 'manager_approved_no_response':
-      return { label: 'אושר לפי תיעוד', tone: 'teal' }
-    case 'manager_resolved':
-      return { label: 'הפנייה טופלה', tone: 'teal' }
-    case 'objection_open':
-      return { label: 'פנייה פתוחה', tone: 'warn' }
-    default:
-      return { label: 'ממתין לתגובה', tone: 'muted' }
+  if (recipient?.state === 'hostess_approved') return { label: 'הדיילת אישרה', kind: 'ok' }
+  if (recipient?.state === 'manager_approved_no_response') {
+    return { label: 'אושר לפי תיעוד', kind: 'ok' }
   }
-}
-
-export function deliveryTag(delivery) {
-  switch (delivery?.state) {
-    case 'sent':
-      return { label: 'הסיכום נשלח', tone: 'ok' }
-    case 'failed':
-      return { label: 'לא נשלח', tone: 'danger' }
-    case 'unknown':
-      return { label: 'לא ידוע אם נשלח', tone: 'warn' }
-    case 'queued':
-    case 'sending':
-      return { label: 'בשליחה', tone: 'muted' }
-    default:
-      return { label: 'טרם נשלח', tone: 'muted' }
+  if (recipient?.state === 'manager_resolved') return { label: 'הפנייה טופלה', kind: 'ok' }
+  if (!recipient?.delivery) return { label: 'לא נשלח', kind: 'neutral' }
+  if (deliveryState === 'queued' || deliveryState === 'sending') {
+    return { label: 'בשליחה', kind: 'neutral' }
   }
+  return { label: 'ממתין לתגובה', kind: 'neutral' }
 }
 
 // דיילת "דורשת טיפול" כשיש משהו שהמנהלת יכולה לעשות עכשיו. סדר-המיון קבוע:
@@ -248,16 +261,15 @@ function recipientBucket(recipient, { deadlinePassed, distributed }) {
 }
 
 // למה דיילת נמצאת ב"דורש טיפול" — משפט גלוי בשורה, לא tooltip. `null` כשאין מה לעשות.
-export function actionReason(recipient, { deadlinePassed, distributed }) {
-  const deliveryState = recipient?.delivery?.state
-  if (recipient?.open_case_id || recipient?.state === 'objection_open') return 'יש פנייה פתוחה'
-  if (recipient?.digest_current === false) return 'הסיכום השתנה. יש לשלוח סיכום מעודכן'
+// הסבר קצר בעמודת "טיפול" — רק מה שהסטטוס עצמו לא אומר (מה לעשות, או למה). `null` כשאין.
+export function actionReason(recipient, { deadlinePassed }) {
+  if (recipient?.digest_current === false) return 'יש לשלוח סיכום מעודכן'
   if (recipient?.email_present === false) return 'אין כתובת מייל. אחרי המועד אפשר לאשר לפי תיעוד'
   if (recipient?.contact_changed) return 'כתובת המייל השתנתה. יש לשלוח שוב'
-  if (deliveryState === 'failed') return 'השליחה נכשלה'
-  if (deliveryState === 'unknown') return 'לא ידוע אם הסיכום נשלח. יש לבדוק לפני שליחה חוזרת'
-  if (distributed && !recipient?.delivery) return 'הסיכום עוד לא נשלח'
-  if (deadlinePassed && recipient?.state === 'awaiting') return 'המועד עבר בלי תגובה'
+  if (recipient?.delivery?.state === 'unknown') return 'יש לבדוק לפני שליחה חוזרת'
+  if (deadlinePassed && recipient?.state === 'awaiting' && !recipient?.open_case_id) {
+    return 'המועד עבר בלי תגובה'
+  }
   return null
 }
 
@@ -506,6 +518,9 @@ export function processStage({ preview, review }) {
     return { label: 'הופק', next: 'הדוח הופק. אפשר לצפות בו ובקובץ בהיסטוריה' }
   }
   if (!info) {
+    if (preview && preview.month_state !== 'ended') {
+      return { label: 'טיוטה', next: 'החודש עוד לא הסתיים: אפשר לבדוק את הטיוטה ולהוריד אותה' }
+    }
     if (preview && (preview.lines ?? []).length === 0) {
       return { label: 'טיוטה', next: 'אין כרגע שורות לדוח בחודש הזה' }
     }
