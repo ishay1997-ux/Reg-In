@@ -345,6 +345,15 @@ async function prepareArtifact(deps: PayrollDeps, operationId: string): Promise<
     const message = err instanceof Error ? err.message : undefined
     return failOperation(deps, operationId, fail(code, undefined, message))
   }
+  // F12: הרו"ח מחשב שעות נוספות לפי יום, ולכן בקובץ הסופי לכל שורה מוצגת חייב להיות תאריך.
+  // (בונה המסמך מציג `—` לתאריך חסר — זה נכון לשחזור של דוח ישן, לא לדוח שמופק עכשיו.)
+  if (doc.lines.some((line) => line.showInFile && !line.eventDate)) {
+    return failOperation(
+      deps,
+      operationId,
+      fail('SALARY_LINE_DATE_MISSING', undefined, 'לשורה בדוח חסר תאריך משמרת — הדוח לא הופק.'),
+    )
+  }
 
   let bytes: Uint8Array
   try {

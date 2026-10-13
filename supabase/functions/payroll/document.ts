@@ -19,16 +19,22 @@ export const SALARY_LINE_BASIS = {
   CANCELLATION_COMPENSATION: 'cancellation_compensation',
 } as const
 
+// ✏️ F12 (הכרעת-ישי 14.10 00:30, *"לפי מה שמקובל בישראל תברר ותחליט"*): הקובץ לרו"ח הוא
+// קובץ **שעות ורכיבים**, לא קובץ תשלום. בישראל מחלקת השכר / רו"ח מחשבים ברוטו (כולל שעות
+// נוספות 125%/150%) — ולכן אין עמודת סה"כ ₪, ויש עמודת **תאריך** לכל משמרת, כדי שאפשר יהיה
+// לחשב שעות נוספות לפי יום. הסכום עדיין מחושב במסד ומוצלב כאן לפני כתיבת הקובץ.
 export const SALARY_REPORT_COLUMNS = [
   'ת"ז',
   'שם',
   'פרטי-בנק',
+  'תאריך',
   'תעריף',
   'שעות',
   'בונוס',
   'נסיעות',
-  'סה"כ',
 ]
+export const HOURS_TOTAL_LABEL = 'סה"כ שעות'
+const HOURS_COLUMN_INDEX = SALARY_REPORT_COLUMNS.indexOf('שעות')
 
 export const NOT_APPLICABLE = '—'
 
@@ -64,11 +70,11 @@ export const COLUMN_WIDTHS = [
   { width: 14 },
   { width: 22 },
   { width: 26 },
+  { width: 12 },
   { width: 10 },
   { width: 10 },
   { width: 12 },
   { width: 12 },
-  { width: 14 },
 ]
 
 export class SalaryReportError extends Error {
@@ -106,6 +112,7 @@ export interface SalaryLine {
   travel: number | null
   lineTotal: number
   bankDetails: string | null
+  eventDate: string | null
   showInFile: boolean
 }
 
@@ -115,6 +122,7 @@ export interface SalaryTotals {
   total: number
   bonusTotal: number
   travelTotal: number
+  hoursTotal: number
 }
 
 export interface SalaryDocument {
@@ -176,6 +184,14 @@ export function salarySupplementFileName(period: unknown, supplementSeq: number)
 export function reportPeriodLabel(period: unknown, supplementSeq: number | null): string {
   const label = salaryPeriodLabel(period)
   return supplementSeq ? `${label} — השלמה ${supplementSeq}` : label
+}
+
+// תאריך האירוע `YYYY-MM-DD` ⇒ `DD/MM/YYYY` (כמו `formatDate` ב-`src/lib/dates.js`) — כמחרוזת, כדי
+// שאקסל לא יפרש אותו לפי הגדרות-אזור של המחשב הפותח. תאריך חסר/פגום ⇒ null ⇒ `—` בקובץ.
+// (שורות ישנות קפואות אינן נושאות תאריך; בהפקה הסופית `pipeline.ts` דורש תאריך לכל שורה.)
+function displayDate(value: unknown): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(textOrNull(value) ?? '')
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : null
 }
 
 function bankDetailsOf(row: Row): string | null {
@@ -242,6 +258,7 @@ function shapeLine(row: Row, index: number): SalaryLine {
       `שורת-שכר ${position} (${hostessName}) חסרה סכום.`,
     ),
     bankDetails: bankDetailsOf(row),
+    eventDate: displayDate(row?.event_date),
     showInFile:
       typeof row?.show_in_file === 'boolean'
         ? row.show_in_file
@@ -267,8 +284,10 @@ export function salaryReportTotals(lines: SalaryLine[]): SalaryTotals {
       visibleAgorot: acc.visibleAgorot + (line.showInFile ? toAgorot(line.lineTotal) : 0),
       bonusAgorot: acc.bonusAgorot + toAgorot(line.bonus ?? 0),
       travelAgorot: acc.travelAgorot + toAgorot(line.travel ?? 0),
+      // שורת הסיכום סוכמת את מה **שמופיע בקובץ** — שורות אפס מושמטות (N-4), ולכן גם השעות שלהן.
+      visibleHundredths: acc.visibleHundredths + (line.showInFile ? toAgorot(line.hours) : 0),
     }),
-    { totalAgorot: 0, visibleAgorot: 0, bonusAgorot: 0, travelAgorot: 0 },
+    { totalAgorot: 0, visibleAgorot: 0, bonusAgorot: 0, travelAgorot: 0, visibleHundredths: 0 },
   )
 
   if (totals.visibleAgorot !== totals.totalAgorot) {
@@ -284,6 +303,7 @@ export function salaryReportTotals(lines: SalaryLine[]): SalaryTotals {
     total: toShekels(totals.totalAgorot),
     bonusTotal: toShekels(totals.bonusAgorot),
     travelTotal: toShekels(totals.travelAgorot),
+    hoursTotal: toShekels(totals.visibleHundredths),
   }
 }
 
@@ -303,25 +323,25 @@ function sheetLineRow(line: SalaryLine): SheetRow {
     textCell(line.idNumber),
     textCell(line.hostessName),
     line.bankDetails ? textCell(line.bankDetails) : dashCell(),
+    line.eventDate ? textCell(line.eventDate) : dashCell(),
     moneyCell(line.rate),
     { value: line.hours, type: Number, format: HOURS_FORMAT },
     line.bonus === null ? dashCell() : moneyCell(line.bonus),
     line.travel === null ? dashCell() : moneyCell(line.travel),
-    moneyCell(line.lineTotal),
   ]
 }
 
+// שורת הסיכום (F12): `סה"כ שעות` — הסכום מתחת לעמודת השעות בלבד, שאר התאים ריקים. אין סה"כ ₪.
 function sheetTotalRow(totals: SalaryTotals): SheetRow {
-  return [
-    boldCell('סה"כ'),
-    dashCell(),
-    dashCell(),
-    dashCell(),
-    dashCell(),
-    moneyCell(totals.bonusTotal, true),
-    moneyCell(totals.travelTotal, true),
-    moneyCell(totals.total, true),
-  ]
+  const row: SheetRow = SALARY_REPORT_COLUMNS.map(() => null)
+  row[0] = boldCell(HOURS_TOTAL_LABEL)
+  row[HOURS_COLUMN_INDEX] = {
+    value: totals.hoursTotal,
+    type: Number,
+    format: HOURS_FORMAT,
+    fontWeight: 'bold',
+  }
+  return row
 }
 
 interface SheetInput {

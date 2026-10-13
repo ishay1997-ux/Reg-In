@@ -58,6 +58,7 @@ function snapshotPayload(overrides = {}) {
         bank_branch: '601',
         bank_account: '2047199',
         show_in_file: true,
+        event_date: '2026-07-15',
       },
     ],
     kind: 'regular',
@@ -491,6 +492,27 @@ describe('§3.2 — קריסה אחרי snapshot / build / upload (preparing)', 
     })
     expect(h.deps.uploadArtifact).not.toHaveBeenCalled()
     expect(h.names()).not.toContain('payroll_commit')
+  })
+
+  it('F12: שורה מוצגת בלי event_date ⇒ SALARY_LINE_DATE_MISSING, בלי קובץ ובלי commit', async () => {
+    const base = snapshotPayload()
+    const h = issueHarness('preparing', {
+      payroll_operation_snapshot: () =>
+        ok({ ...base, lines: base.lines.map((l) => ({ ...l, event_date: undefined })) }),
+    })
+    const out = await handleRequest(h.deps, issueBody(), CTX)
+    expect(out.code).toBe('SALARY_LINE_DATE_MISSING')
+    expect(h.argsOf('payroll_operation_fail').p_code).toBe('SALARY_LINE_DATE_MISSING')
+    expect(h.deps.buildXlsx).not.toHaveBeenCalled()
+    expect(h.names()).not.toContain('payroll_commit')
+  })
+
+  it('F12: הקובץ הסופי נושא תאריך לכל שורה ושורת סה"כ שעות', async () => {
+    const h = issueHarness('preparing')
+    await handleRequest(h.deps, issueBody(), CTX)
+    const doc = h.deps.buildXlsx.mock.calls[0][0]
+    expect(doc.sheet[5][3]).toEqual({ value: '15/07/2026', type: String })
+    expect(doc.sheet.at(-1)[0].value).toBe('סה"כ שעות')
   })
 
   it('כתיבת xlsx נכשלה ⇒ XLSX_BUILD_FAILED', async () => {

@@ -4,8 +4,18 @@
 // String/Number, פורמט, הדגשה, יישור), שם קובץ, סכומים, חסרי-בנק וקוד-שגיאה.
 // ועוד: הרחבת דוח-ההשלמה, שאין לה מקבילה בדפדפן.
 import { describe, it, expect } from 'vitest'
-import { buildSalaryReportDocument as browserBuild } from '@/lib/salaryReport'
+import {
+  buildSalaryReportDocument as browserBuild,
+  SALARY_REPORT_COLUMNS as BROWSER_COLUMNS,
+} from '@/lib/salaryReport'
 import { buildSalaryReportDocument as edgeBuild, reportPeriodLabel } from './document.ts'
+
+// 🚧 F12 (14.10 00:30) שינה את עמודות הקובץ. הצד של השרת כבר לפי F12; בונה D מעדכן את
+// `src/lib/salaryReport.js` באותו פורמט. **עד שהקומיט שלו ממוזג לכאן**, השוואת הגיליון המלא
+// אינה אפשרית — משווים את כל השאר (כותרת, שם קובץ, תווית, סכומים, חסרי-בנק, קודי שגיאה),
+// וגוף הגיליון נבדק מול צורה מפורשת בבלוק "F12" למטה. כשהעמודה `תאריך` מופיעה אצל D —
+// ההשוואה המלאה חוזרת לפעול מעצמה, ואת הענף הזה מוחקים באותו קומיט.
+const BROWSER_HAS_F12 = BROWSER_COLUMNS.includes('תאריך')
 
 const GENERATED_AT = '2026-08-03T21:30:00Z'
 
@@ -25,6 +35,7 @@ function line(overrides = {}) {
     bank_branch: '601',
     bank_account: '2047199',
     show_in_file: true,
+    event_date: '2026-08-03',
     ...overrides,
   }
 }
@@ -90,6 +101,7 @@ const VALID = {
   ]),
   'רשימה ריקה': payload([]),
   'תקופה בפורמט YYYY-MM': payload([line()], { period: '2026-02' }),
+  'בלי תאריך משמרת (שורה ישנה)': payload([line({ event_date: null })]),
 }
 
 // מטענים פגומים — שני הצדדים חייבים לזרוק את אותו קוד.
@@ -114,9 +126,26 @@ const INVALID = {
   'תקופה פסולה': payload([line()], { period: '2026-13-01' }),
 }
 
+const HEADER_ROWS = 3
+
 function run(build, input, options) {
   try {
     const doc = build(input, options)
+    if (!BROWSER_HAS_F12) {
+      const { lineCount, fileLineCount, total, bonusTotal, travelTotal } = doc.totals
+      return {
+        header: doc.sheet.slice(0, HEADER_ROWS),
+        fileName: doc.fileName,
+        periodLabel: doc.periodLabel,
+        totals: { lineCount, fileLineCount, total, bonusTotal, travelTotal },
+        linesMissingBankDetails: doc.linesMissingBankDetails,
+        lines: doc.lines.map((l) => {
+          const rest = { ...l }
+          delete rest.eventDate
+          return rest
+        }),
+      }
+    }
     return {
       sheet: doc.sheet,
       fileName: doc.fileName,
@@ -136,14 +165,9 @@ describe('document.ts מול src/lib/salaryReport.js — מטענים תקיני
     const edge = run(edgeBuild, input, { generatedAt: GENERATED_AT })
     expect(browser.code).toBeUndefined()
     expect(edge).toEqual(browser)
-    // הסוגים הם הקונסטרוקטורים עצמם — ת"ז כמחרוזת, כסף כמספר.
-    edge.sheet.flat().forEach((cell, i) => {
-      const other = browser.sheet.flat()[i]
-      expect(cell?.type).toBe(other?.type)
-    })
   })
 
-  it('ת"ז עם אפס מוביל נשמרת כמחרוזת בגיליון', () => {
+  it('ת"ז עם אפס מוביל נשמרת כמחרוזת בגיליון (F12: עמודה ראשונה)', () => {
     const doc = edgeBuild(VALID['ת"ז עם אפס מוביל'], { generatedAt: GENERATED_AT })
     const idCell = doc.sheet[5][0]
     expect(idCell).toEqual({ value: '012345678', type: String })
@@ -219,5 +243,110 @@ describe('דוח השלמה (חוזה §3.1)', () => {
   it('תווית החודש: רגיל מול השלמה', () => {
     expect(reportPeriodLabel('2026-08-01', null)).toBe('אוגוסט 2026')
     expect(reportPeriodLabel('2026-08-01', 2)).toBe('אוגוסט 2026 — השלמה 2')
+  })
+})
+
+describe('F12 — מבנה הקובץ לרו"ח (שעות ורכיבים, בלי סה"כ ₪)', () => {
+  const bold = (value) => ({ value, type: String, fontWeight: 'bold' })
+  const text = (value) => ({ value, type: String })
+  const dash = { value: '—', type: String, align: 'center' }
+  const money = (value) => ({ value, type: Number, format: '#,##0.00' })
+  const hours = (value) => ({ value, type: Number, format: '0.00' })
+
+  it('כותרות העמודות לפי הסדר — בלי עמודת סה"כ', () => {
+    const doc = edgeBuild(VALID['שורה אחת מלאה'], { generatedAt: GENERATED_AT })
+    expect(doc.sheet[4]).toEqual(
+      ['ת"ז', 'שם', 'פרטי-בנק', 'תאריך', 'תעריף', 'שעות', 'בונוס', 'נסיעות'].map(bold),
+    )
+  })
+
+  it('הגיליון המלא של המטען המעורב: תאריך לכל שורה, פיצוי עם —, שורת אפס מושמטת, סה"כ שעות בלבד', () => {
+    const doc = edgeBuild(VALID['מעורב: שלוש דיילות, פיצוי, אפס, בלי בנק'], {
+      generatedAt: GENERATED_AT,
+    })
+    expect(doc.sheet.slice(5)).toEqual([
+      [
+        text('203456789'),
+        text('אפרת דהן'),
+        text('הפועלים 601-2047199'),
+        text('03/08/2026'),
+        money(50),
+        hours(5),
+        money(0),
+        money(22.6),
+      ],
+      [
+        text('000000018'),
+        text('נועה'),
+        text('הפועלים 601-2047199'),
+        text('03/08/2026'),
+        money(50),
+        hours(5),
+        money(50),
+        money(22.6),
+      ],
+      [
+        text('203456789'),
+        text('אפרת דהן'),
+        text('הפועלים 601-2047199'),
+        text('03/08/2026'),
+        money(50),
+        hours(5),
+        dash,
+        dash,
+      ],
+      [
+        text('203456789'),
+        text('אפרת דהן'),
+        dash,
+        text('03/08/2026'),
+        money(50),
+        hours(5),
+        money(0),
+        money(22.6),
+      ],
+      [bold('סה"כ שעות'), null, null, null, null, { ...hours(20), fontWeight: 'bold' }, null, null],
+    ])
+  })
+
+  it('סה"כ השעות סוכם במאיות (בלי שגיאת נקודה צפה) ומשמיט שורות שאינן בקובץ', () => {
+    const doc = edgeBuild(
+      payload([
+        line({ hours: 0.1, line_total: 27.6 }),
+        line({ hours: 0.2, line_total: 32.6 }),
+        line({ hours: 4, travel: null, line_total: 0, show_in_file: false }),
+      ]),
+      { generatedAt: GENERATED_AT },
+    )
+    expect(doc.totals.hoursTotal).toBe(0.3)
+    expect(doc.sheet.at(-1)[5].value).toBe(0.3)
+  })
+
+  it('אין בגיליון שום תא של סכום-שורה או סה"כ ₪', () => {
+    const doc = edgeBuild(VALID['בונוס ונסיעות אמיתיים'], { generatedAt: GENERATED_AT })
+    const values = doc.sheet
+      .flat()
+      .filter(Boolean)
+      .map((cell) => cell.value)
+    expect(values).not.toContain(372.6)
+    expect(values).not.toContain('סה"כ')
+  })
+
+  it('ההצלבה הפנימית נשארת: סכום שורות שונה מ-total_amount ⇒ SALARY_TOTAL_MISMATCH', () => {
+    expect(
+      run(edgeBuild, payload([line()], { total_amount: 1 }), { generatedAt: GENERATED_AT }),
+    ).toEqual({
+      code: 'SALARY_TOTAL_MISMATCH',
+    })
+  })
+
+  it.each([
+    ['null', null],
+    ['פורמט אחר', '03/08/2026'],
+    ['חותמת-זמן', '2026-08-03T10:00:00Z'],
+  ])('תאריך חסר/לא תקין (%s) ⇒ "—" בבונה המסמך', (_name, value) => {
+    const doc = edgeBuild(payload([line({ event_date: value })]), { generatedAt: GENERATED_AT })
+    expect(doc.sheet[5][3]).toEqual(dash)
+    expect(doc.lines[0].eventDate).toBeNull()
   })
 })
