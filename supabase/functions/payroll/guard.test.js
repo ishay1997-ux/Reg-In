@@ -1,20 +1,13 @@
 // @vitest-environment node
-// שומר-הנמענים (חוזה D11): מי נמסר כפי שהוא, מי מופנה לכתובת של ישי, ומה חוסם שליחה.
+// שומר-הנמענים (חוזה D11 + F13): מי נמסר כפי שהוא, מי מופנה לכתובת של ישי, ומה חוסם שליחה.
+// F13: ההפניה אינה נראית במייל — השומר מחליף רק את הנמען, ואין בו שום כלי לשנות נושא או גוף.
 // ועוד: שני העותקים של הקובץ (`payroll` ו-`send-email`) זהים בבתים — כל פונקציה נפרסת לבדה.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import {
-  OWNER_ADDRESS,
-  GuardError,
-  applyRedirectNotice,
-  applyRedirectNoticeHtml,
-  guardRecipient,
-  guardedSubject,
-} from './guard.ts'
+import * as guard from './guard.ts'
 
-const LRI = String.fromCharCode(0x2066)
-const PDI = String.fromCharCode(0x2069)
+const { OWNER_ADDRESS, GuardError, guardRecipient } = guard
 
 describe('guardRecipient — רשימת המותרים', () => {
   it.each([
@@ -75,34 +68,19 @@ describe('guardRecipient — רשימת המותרים', () => {
   })
 })
 
-describe('הודעת ההפניה והנושא', () => {
-  const redirected = guardRecipient('evil@x.com')
-  const direct = guardRecipient('ishay1997@gmail.com')
-
-  it('גוף טקסט מופנה מקבל שורת הסבר בראשו', () => {
-    expect(applyRedirectNotice('שלום', redirected)).toBe(
-      'הודעת בדיקה: ההודעה נועדה ל־evil@x.com ונשלחה לכתובת הבדיקה בלבד.\n\nשלום',
-    )
+describe('F13 — ההפניה אינה נראית במייל', () => {
+  it('השומר מייצא רק את הכתובת, השגיאה ו-guardRecipient — אין כלי לשנות נושא או גוף', () => {
+    expect(Object.keys(guard).sort()).toEqual(['GuardError', 'OWNER_ADDRESS', 'guardRecipient'])
   })
 
-  it('נושא מופנה מקבל תגית עם הכתובת המקורית', () => {
-    expect(guardedSubject('דוח שכר דיילות — יולי 2026', redirected)).toBe(
-      '[הופנה: evil@x.com] דוח שכר דיילות — יולי 2026',
-    )
-  })
-
-  it('גוף HTML מופנה: הכתובת מוברחת ומבודדת כיוונית', () => {
-    const g = guardRecipient('a<b>@x.com')
-    const html = applyRedirectNoticeHtml('<div>גוף</div>', g)
-    expect(html).toBe(
-      `<div dir="rtl" style="text-align:right">הודעת בדיקה: ההודעה נועדה ל־${LRI}a&lt;b&gt;@x.com${PDI} ונשלחה לכתובת הבדיקה בלבד.</div><br><div>גוף</div>`,
-    )
-  })
-
-  it('כתובת מותרת — שום שינוי בגוף או בנושא', () => {
-    expect(applyRedirectNotice('שלום', direct)).toBe('שלום')
-    expect(applyRedirectNoticeHtml('<div>x</div>', direct)).toBe('<div>x</div>')
-    expect(guardedSubject('נושא', direct)).toBe('נושא')
+  it('בקוד השומר אין שום נוסח של הודעת-בדיקה או תגית-הפניה', () => {
+    const source = readFileSync(fileURLToPath(new URL('./guard.ts', import.meta.url)), 'utf8')
+    const NL = String.fromCharCode(10)
+    const code = source
+      .split(NL)
+      .filter((line) => !line.trim().startsWith('//'))
+      .join(NL)
+    expect(code).not.toMatch(/הודעת בדיקה|הופנה|כתובת הבדיקה/)
   })
 })
 

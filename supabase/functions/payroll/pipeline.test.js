@@ -399,7 +399,7 @@ describe('issue — מסלול מלא', () => {
       '08_2026_Payroll_Report_Supplement_1.xlsx',
     )
     const sent = h.deps.transport.mock.calls[0][0]
-    expect(sent.subject).toBe(`[הופנה: ${ACCOUNTANT}] דוח שכר דיילות — אוגוסט 2026 — השלמה 1`)
+    expect(sent.subject).toBe('דוח שכר דיילות — אוגוסט 2026 — השלמה 1')
   })
 
   it('begin כשל (הרשאה) ⇒ 403, ואין אף קריאת שירות', async () => {
@@ -691,12 +691,12 @@ describe('dispatchAccountant', () => {
     return { h, out, complete: h.argsOf('payroll_attempt_complete') }
   }
 
-  it('שולח את הקובץ החתום עם השומר: נמען ⇒ ישי, תגית בנושא, באנר בגוף, מצורף base64', async () => {
+  it('שולח את הקובץ החתום עם השומר: נמען ⇒ ישי; נושא וגוף אמיתיים (F13); מצורף base64', async () => {
     const { h, complete } = await resumeWith()
     const sent = h.deps.transport.mock.calls[0][0]
     expect(sent.to).toBe('ishay1997@gmail.com')
-    expect(sent.subject).toBe(`[הופנה: ${ACCOUNTANT}] דוח שכר דיילות — יולי 2026`)
-    expect(sent.body).toContain('הודעת בדיקה: ההודעה נועדה ל־')
+    expect(sent.subject).toBe('דוח שכר דיילות — יולי 2026')
+    expect(sent.body).not.toMatch(/הודעת בדיקה|הופנה|office@accountants/)
     expect(sent.body).toContain('שלום לצוות הנהלת חשבונות,<br>')
     expect(sent.body.startsWith('<div dir="rtl"')).toBe(true)
     expect(sent.filename).toBe('07_2026_Payroll_Report.xlsx')
@@ -713,18 +713,31 @@ describe('dispatchAccountant', () => {
     })
   })
 
-  it('נמען שהוא ישי עצמו ⇒ בלי הפניה ובלי באנר', async () => {
-    const { h, complete } = await resumeWith(
-      {
-        payroll_attempt_claim: async () =>
-          ok(await accountantClaim(new Map(), { intended_recipient: 'ishay1997+acc@gmail.com' })),
-      },
-      { downloadArtifact: vi.fn(async () => ({ bytes: XLSX_BYTES, error: null })) },
-    )
-    const sent = h.deps.transport.mock.calls[0][0]
-    expect(sent.to).toBe('ishay1997+acc@gmail.com')
-    expect(sent.body).not.toContain('הודעת בדיקה')
-    expect(complete.p_redirected).toBe(false)
+  it('F13: מייל מופנה זהה בדיוק למייל שהיה יוצא לנמען המקורי — חוץ מה-To', async () => {
+    const sendTo = async (intended) => {
+      const { h, complete } = await resumeWith(
+        {
+          payroll_attempt_claim: async () =>
+            ok(await accountantClaim(new Map(), { intended_recipient: intended })),
+        },
+        { downloadArtifact: vi.fn(async () => ({ bytes: XLSX_BYTES, error: null })) },
+      )
+      return { sent: h.deps.transport.mock.calls[0][0], complete }
+    }
+    const redirected = await sendTo(ACCOUNTANT)
+    const direct = await sendTo('ishay1997+acc@gmail.com')
+    expect(redirected.sent.to).toBe('ishay1997@gmail.com')
+    expect(direct.sent.to).toBe('ishay1997+acc@gmail.com')
+    expect({ ...redirected.sent, to: null }).toEqual({ ...direct.sent, to: null })
+    // התיעוד הפנימי בלבד: למי נועד ולאן נמסר.
+    expect(redirected.complete).toMatchObject({
+      p_delivered: 'ishay1997@gmail.com',
+      p_redirected: true,
+    })
+    expect(direct.complete).toMatchObject({
+      p_delivered: 'ishay1997+acc@gmail.com',
+      p_redirected: false,
+    })
   })
 
   async function failedBeforeFetch(overrides, extra, code) {
@@ -965,7 +978,8 @@ describe('distribute', () => {
     expect(h.deps.transport).toHaveBeenCalledTimes(2)
     const sent = h.deps.transport.mock.calls[0][0]
     expect(sent.to).toBe('ishay1997@gmail.com')
-    expect(sent.subject).toBe('[הופנה: hostess1@example.com] סיכום שעות לבדיקה — יולי 2026')
+    expect(sent.subject).toBe('סיכום שעות לבדיקה — יולי 2026')
+    expect(sent.body).not.toMatch(/הודעת בדיקה|הופנה|hostess1@example/)
     expect(sent.body).toContain(`${ORIGIN}/payroll-review/tok_1_abcdefghijklmnopqrstuvwxyz0123`)
     expect(sent.body).toContain('שלום דיילת 1,')
     expect(sent.body).toContain('נבקש להשיב עד 20/10/2026 18:00.')
@@ -1012,8 +1026,24 @@ describe('distribute', () => {
     })
     await handleRequest(h.deps, distributeBody(), CTX)
     expect(h.deps.transport.mock.calls[0][0].subject).toBe(
-      '[הופנה: hostess1@example.com] סיכום שעות לבדיקה — אוגוסט 2026 — השלמה 1',
+      'סיכום שעות לבדיקה — אוגוסט 2026 — השלמה 1',
     )
+  })
+
+  it('F13: מייל אישי מופנה זהה למייל שהיה יוצא לדיילת — חוץ מה-To', async () => {
+    const run = async (intended) => {
+      const h = reviewHarness([1], {
+        payroll_attempt_claim: (args) =>
+          ok(reviewClaim(args.p_attempt_id, { intended_recipient: intended })),
+      })
+      await handleRequest(h.deps, distributeBody(), CTX)
+      return h.deps.transport.mock.calls[0][0]
+    }
+    const redirected = await run('hostess1@example.com')
+    const direct = await run('ishay1997+hostess@gmail.com')
+    expect(redirected.to).toBe('ishay1997@gmail.com')
+    expect(direct.to).toBe('ishay1997+hostess@gmail.com')
+    expect({ ...redirected, to: null }).toEqual({ ...direct, to: null })
   })
 
   it(`יותר מ-${DISTRIBUTE_BATCH} בתור ⇒ שולחים ${DISTRIBUTE_BATCH}, remaining = השאר`, async () => {

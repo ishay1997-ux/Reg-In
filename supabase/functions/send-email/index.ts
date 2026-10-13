@@ -14,12 +14,7 @@
 // כ-🚧 מ10 "כשנוגעים בפונקציה בפעם הבאה", כי `@2` היה יכול לשבור את שער-הטיפוסים ב-CI
 // **מעצמו, בלי שאיש נגע בקוד**, ברגע שגרסה חדשה תעלה ל-JSR. מודול 4 נגע — לכן ננעל.
 import { createClient } from 'jsr:@supabase/supabase-js@2.112.0'
-import {
-  applyRedirectNoticeHtml,
-  guardedSubject,
-  guardRecipient,
-  type GuardResult,
-} from './guard.ts'
+import { guardRecipient, type GuardResult } from './guard.ts'
 import { legacyPayrollSendRefusal } from './payrollGate.ts'
 
 const CORS = {
@@ -172,14 +167,12 @@ Deno.serve(async (req) => {
   // ── דוח-שכר במסלול הישן (חוזה השכר §3.3, 13.10.2026) ─────────────────────────
   // 🔒 (1) מסרבים כשהכותב הישן כובה, או כשהדוח נוצר בתהליך החדש — דוח כזה נשלח רק מפונקציית
   //     `payroll`, מהקובץ שנחתם ומהניסיון שנשמר (`payrollGate.ts`).
-  // 🔒 (2) מה שכן נשלח — עובר את שומר-הנמענים: כל כתובת שאינה של ישי נמסרת לכתובת שלו, עם שורת
-  //     הסבר ותגית בנושא (הכרעת-ישי: *"שליחת מיילים אמיתית לכתובת ishay1997@gmail.com בלבד"*).
-  //     ביומן נרשמות שתי הכתובות: למי נועד, ולאן נמסר בפועל.
+  // 🔒 (2) מה שכן נשלח — עובר את שומר-הנמענים: כל כתובת שאינה של ישי נמסרת לכתובת שלו
+  //     (הכרעת-ישי: *"שליחת מיילים אמיתית לכתובת ishay1997@gmail.com בלבד"*). ✏️ F13: ההפניה
+  //     אינה נראית במייל — נושא וגוף ללא שינוי. ביומן נרשמות שתי הכתובות: למי נועד, ולאן נמסר.
   // ⚠️ שאר הישויות (הצעה, חשבונית, זימון, פרויקט) — ללא שינוי.
   let guard: GuardResult | null = null
   let sendTo = to
-  let sendSubject = subject
-  let sendBody = body
   if (entityType === 'salary_report') {
     const [config, report] = await Promise.all([
       admin.from('payroll_config').select('legacy_writer').maybeSingle(),
@@ -205,8 +198,6 @@ Deno.serve(async (req) => {
       return json({ error: 'כתובת הנמען אינה תקינה.', code: 'RECIPIENT_INVALID' }, 400)
     }
     sendTo = guard.delivered
-    sendSubject = guardedSubject(subject ?? '', guard)
-    sendBody = applyRedirectNoticeHtml(body, guard)
   }
 
   // ── השליחה עצמה ────────────────────────────────────────────────────────────
@@ -223,8 +214,8 @@ Deno.serve(async (req) => {
       // הוא הענף שנוסף ב-09/08/2026, השני נראה שם כמו תקלת-מיפוי). מחרוזת ריקה = אין מצורף.
       body: JSON.stringify({
         to: sendTo,
-        subject: sendSubject,
-        body: sendBody,
+        subject,
+        body,
         filename: filename ?? '',
         pdf_base64: pdf_base64 ?? '',
       }),
@@ -251,7 +242,7 @@ Deno.serve(async (req) => {
     recipient: sendTo,
     ...(guard ? { intended_recipient: guard.intended } : {}),
     template_name: templateName,
-    subject: sendSubject ?? null,
+    subject: subject ?? null,
     status: ok ? 'sent' : 'failed',
     error_message: errorMessage,
     sent_by_email: email,

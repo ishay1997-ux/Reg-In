@@ -1,7 +1,11 @@
 // שומר-הנמענים של מיילי השכר — **מקודד בקוד ולא בהגדרות, ובמכוון** (חוזה השכר D11).
 //
 // הכרעת-ישי 13.10.2026, מילה במילה: *"שליחת מיילים אמיתית לכתובת ishay1997@gmail.com בלבד"*.
-// ⇒ כל כתובת שאינה של ישי נמסרת לכתובת שלו, עם שורת-הסבר בראש ההודעה ותגית בנושא.
+// ⇒ כל כתובת שאינה של ישי נמסרת לכתובת שלו.
+// ✏️ F13 (ישי, 14.10 00:40): *"אני לא יכול להציג ככה בכנס זה צריך להראות אמיתי"* — ההפניה נשארת
+// כפויה, אבל **אינה נראית במייל**: בלי שורת-הסבר, בלי תגית בנושא, בלי אזכור כתובת בדיקה. המייל
+// המופנה זהה בדיוק למייל שהיה יוצא לנמען המקורי, חוץ מה-To. למי נועד ולאן נמסר — נרשם רק במסד
+// (`intended_recipient`, `delivered_recipient`, `redirected`).
 //
 // 🔒 **למה אין כאן משתנה-סביבה או פרמטר:** שער שאפשר להרחיב בהגדרה אחת הוא שער שנפתח בטעות.
 // הסרת השומר היא שינוי-קוד מכוון שעובר ביקורת — לא מתג.
@@ -43,26 +47,4 @@ export function guardRecipient(intended: string): GuardResult {
     return { intended: address, delivered: address, redirected: false }
   }
   return { intended: address, delivered: OWNER_ADDRESS, redirected: true }
-}
-
-// שורת-ההסבר נכנסת **לטקסט הגולמי**, לפני ההמרה ל-HTML — כך היא עוברת את אותה הברחה ואותו
-// בידוד-כיווניות כמו שאר הגוף, והכתובת הלטינית לא מתהפכת בתוך המשפט העברי.
-export function applyRedirectNotice(text: string, g: GuardResult): string {
-  if (!g.redirected) return text
-  return `הודעת בדיקה: ההודעה נועדה ל־${g.intended} ונשלחה לכתובת הבדיקה בלבד.\n\n${text}`
-}
-
-export function guardedSubject(subject: string, g: GuardResult): string {
-  if (!g.redirected) return subject
-  return `[הופנה: ${g.intended}] ${subject}`
-}
-
-// אותה הודעה, לגוף שכבר הומר ל-HTML (ב-`send-email` הדפדפן שולח גוף מוכן). הכתובת מוברחת ומבודדת
-// כיוונית (LRI…PDI), כדי שלא תתהפך בתוך המשפט העברי ולא תשבור את ה-HTML.
-export function applyRedirectNoticeHtml(html: string, g: GuardResult): string {
-  if (!g.redirected) return html
-  const address = g.intended.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const isolated = String.fromCharCode(0x2066) + address + String.fromCharCode(0x2069)
-  const notice = `הודעת בדיקה: ההודעה נועדה ל־${isolated} ונשלחה לכתובת הבדיקה בלבד.`
-  return `<div dir="rtl" style="text-align:right">${notice}</div><br>${html}`
 }

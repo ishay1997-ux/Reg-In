@@ -18,7 +18,7 @@ import {
   type SalaryDocument,
 } from './document.ts'
 import { formatTimestampFull } from './dates.ts'
-import { applyRedirectNotice, guardedSubject, GuardError, guardRecipient } from './guard.ts'
+import { GuardError, guardRecipient } from './guard.ts'
 import type { GuardResult } from './guard.ts'
 import {
   isAttachmentTooLarge,
@@ -635,12 +635,13 @@ async function deliverAttempt(
     return { ...base, recipient_id: recipientId, state: recorded ? 'failed' : 'unknown', code }
   }
 
-  const subject = guardedSubject(mail.subject, guard)
+  // F13: ההפניה משנה רק את ה-To. נושא וגוף זהים למייל שהיה יוצא לנמען המקורי.
+  const subject = mail.subject
   // שלב ב: היציאה ל-Make.
   const sent = await deps.transport({
     to: guard.delivered,
     subject,
-    body: plainTextToEmailHtml(applyRedirectNotice(mail.text, guard)),
+    body: plainTextToEmailHtml(mail.text),
     filename: mail.filename,
     pdf_base64: mail.base64,
   })
