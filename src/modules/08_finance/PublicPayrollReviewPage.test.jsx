@@ -147,6 +147,16 @@ describe('טעינה ומצבי קישור', () => {
     expect(fetchPayrollReview).toHaveBeenCalledTimes(2)
   })
 
+  it('הגבלת קצב בטעינה ⇒ הודעת המתנה עם "נסי שוב" (לא "לא בתוקף")', async () => {
+    fetchPayrollReview.mockResolvedValueOnce({ state: 'rate_limited' })
+    renderPage()
+    await screen.findByTestId('review-rate-limited')
+    expect(screen.queryByTestId('review-invalid')).toBeNull()
+    fetchPayrollReview.mockResolvedValueOnce(SUMMARY)
+    fireEvent.click(screen.getByTestId('review-retry'))
+    await screen.findByTestId('review-ready')
+  })
+
   it('הדף לא מציג בנק, ת"ז או מזהים — גם כשהשרת היה שולח אותם בטעות', async () => {
     await openReady({
       ...SUMMARY,

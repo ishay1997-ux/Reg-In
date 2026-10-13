@@ -116,6 +116,9 @@ export default function PublicPayrollReviewPage() {
         if (payload?.state === 'ok') {
           setSummary(payload)
           setLoadState('ready')
+        } else if (payload?.state === 'rate_limited') {
+          // הגבלת קצב אינה "הקישור לא בתוקף" — הקישור תקין, רק צריך לחכות.
+          setLoadState((current) => (current === 'ready' ? current : 'rate_limited'))
         } else {
           setSummary(null)
           setLoadState('invalid')
@@ -204,6 +207,9 @@ export default function PublicPayrollReviewPage() {
 
         {loadState === 'loading' && <Skeleton />}
         {loadState === 'invalid' && <Notice testId="review-invalid" text={INVALID_TEXT} />}
+        {loadState === 'rate_limited' && (
+          <Notice testId="review-rate-limited" text={OUTCOME.rate_limited.text} onRetry={reload} />
+        )}
         {loadState === 'load_failed' && (
           <Notice testId="review-load-failed" text={LOAD_FAILED_TEXT} onRetry={reload} />
         )}
