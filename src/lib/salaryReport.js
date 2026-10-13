@@ -427,3 +427,185 @@ export function writeSalaryReportXlsx(doc) {
     rightToLeft: true,
   })
 }
+
+// ── טיוטה ושחזור (דוח השכר החדש, 13/10/2026 · חוזה §4.2 + תוספת הסגן W4) ─────────────
+// 🔴 **הבונה הרגיל שלמעלה לא נגע בבייט** — בדיקת-השוויון של פונקציית השרת (`document.ts`)
+// נשענת עליו. שני הבונים כאן משתמשים באותן שורות-גוף ושורת-סה"כ (`sheetLineRow`,
+// `sheetTotalRow`) ומחליפים רק את ראש-הגיליון ואת שם-הקובץ, כדי שטיוטה ושחזור לא ייראו
+// לעולם כמו דוח שהופק: אין בהם "קוד הפקה" של הפקה אמיתית, והכותרת אומרת מה הם.
+
+const DRAFT_TITLE_PREFIX = 'טיוטה — לא הופק ולא נשלח — דוח שכר דיילות'
+const RECONSTRUCTION_TITLE_PREFIX = 'שחזור — הקובץ המקורי אינו זמין — דוח שכר דיילות'
+// פרטי-הבנק אינם נשמרים בשורות הקפואות (B-4) — בשחזור אסור להשלים אותם מהמאגר הנוכחי.
+export const BANK_NOT_STORED = 'לא נשמר בנתוני הדוח'
+
+function monthYearPrefix(period) {
+  const { year, month } = parsePeriod(period)
+  return `${String(month).padStart(2, '0')}_${year}_Payroll_Report`
+}
+
+function supplementSuffix(kind, seq) {
+  if (kind !== 'supplement') return ''
+  return Number.isInteger(seq) && seq > 0 ? `_Supplement_${seq}` : '_Supplement'
+}
+
+// `09_2026_Payroll_Report_DRAFT.xlsx` · השלמה: `08_2026_Payroll_Report_Supplement_DRAFT.xlsx`
+// (חוזה §4.2: "…_Supplement_DRAFT.xlsx" — בלי מספר, כי מספר-ההשלמה נקבע רק בהפקה).
+export function salaryReportDraftFileName(period, kind = 'regular') {
+  return `${monthYearPrefix(period)}${supplementSuffix(kind, null)}_DRAFT.xlsx`
+}
+
+// `08_2026_Payroll_Report_RECONSTRUCTED.xlsx` (תוספת הסגן W4).
+export function salaryReportReconstructionFileName(period, kind = 'regular', supplementSeq = null) {
+  return `${monthYearPrefix(period)}${supplementSuffix(kind, supplementSeq)}_RECONSTRUCTED.xlsx`
+}
+
+function titledLabel(prefix, periodLabel, kind, seq) {
+  const supplement = kind === 'supplement' && Number.isInteger(seq) ? ` — השלמה ${seq}` : ''
+  return `${prefix} — ${periodLabel}${supplement}`
+}
+
+function requireStamp(at, code, message) {
+  const stamp = formatTimestampFull(at)
+  if (!stamp) throw salaryReportError(code, message)
+  return stamp
+}
+
+// מצליב את סכום השורות ואת מספרן מול מה שהשרת עצמו החזיר — אותו עיקרון כמו בדוח הרגיל:
+// שני המספרים נולדו באותה קריאה, ופער ביניהם הוא באג-הרכבה ולא הבדל-עיגול.
+function reconcileAgainst(totals, reportedTotal, reportedCount, missingCode) {
+  if (reportedTotal === undefined || reportedCount === undefined) {
+    throw salaryReportError(missingCode, 'חסרים נתוני-האימות של הדוח — הקובץ לא הורכב.')
+  }
+  const total = toFiniteNumber(reportedTotal)
+  if (total !== null && toAgorot(total) !== toAgorot(totals.total)) {
+    throw salaryReportError(
+      'SALARY_TOTAL_MISMATCH',
+      'סכום שורות הדוח אינו תואם את הסכום שהתקבל מהשרת — הקובץ לא הורכב.',
+    )
+  }
+  const count = toFiniteNumber(reportedCount)
+  if (count !== null && count !== totals.lineCount) {
+    throw salaryReportError(
+      'SALARY_LINE_COUNT_MISMATCH',
+      'מספר שורות הדוח אינו תואם את מה שהתקבל מהשרת — הקובץ לא הורכב.',
+    )
+  }
+}
+
+function sheetWithHeader(title, headerRows, lines, totals) {
+  return [
+    [boldCell(title)],
+    ...headerRows.map(([label, value]) => [boldCell(label), textCell(String(value))]),
+    [null],
+    SALARY_REPORT_COLUMNS.map(boldCell),
+    ...lines.filter((line) => line.showInFile).map(sheetLineRow),
+    sheetTotalRow(totals),
+  ]
+}
+
+// טיוטה מתוך תשובת `payroll_preview` (חוזה §4.3). לא נשמרת, לא נשלחת, לא חותמת דבר.
+// `capturedAt` — רגע הלכידה של התצוגה המקדימה בשרת (`captured_at`), לא שעון הדפדפן: הטיוטה
+// מתארת את מה שהשרת ראה באותו רגע, וזה מה שהשורה "נלכד בתאריך" אומרת.
+export function buildSalaryReportDraftDocument(preview, { capturedAt } = {}) {
+  if (!preview || preview.ok !== true) {
+    throw salaryReportError('SALARY_DRAFT_NOT_OK', 'התצוגה המקדימה לא נטענה — הטיוטה לא הורכבה.')
+  }
+  if (!Array.isArray(preview.lines)) {
+    throw salaryReportError('SALARY_REPORT_SHAPE', 'תשובת התצוגה המקדימה חסרה את רשימת השורות.')
+  }
+  // בתצוגה המקדימה המפתח הוא `project_id`; בדוח שהופק — `source_project_id`. אותה עובדה.
+  const lines = preview.lines.map((row, index) =>
+    shapeLine({ ...row, source_project_id: row?.project_id ?? null }, index),
+  )
+  const totals = salaryReportTotals(lines)
+  reconcileAgainst(
+    totals,
+    preview.totals?.total_amount,
+    preview.totals?.line_count,
+    'SALARY_RECONCILIATION_FIELDS_MISSING',
+  )
+
+  const kind = preview.kind === 'supplement' ? 'supplement' : 'regular'
+  const periodLabel = salaryPeriodLabel(preview.period)
+  const stamp = requireStamp(
+    capturedAt ?? preview.captured_at,
+    'SALARY_DRAFT_TIMESTAMP_MISSING',
+    'חסר מועד הלכידה של התצוגה המקדימה — הטיוטה לא הורכבה.',
+  )
+  const headerRows = [
+    ['מצב', 'טיוטה'],
+    ['נלכד בתאריך', stamp],
+  ]
+  if (kind === 'supplement' && preview.original_report_id != null) {
+    headerRows.push(['דוח מקורי', preview.original_report_id])
+  }
+
+  return {
+    period: preview.period,
+    periodLabel,
+    fileName: salaryReportDraftFileName(preview.period, kind),
+    lines,
+    totals,
+    linesMissingBankDetails: lines
+      .filter((line) => line.showInFile && !line.bankDetails)
+      .map((line) => line.hostessName),
+    sheet: sheetWithHeader(
+      titledLabel(DRAFT_TITLE_PREFIX, periodLabel, kind, preview.supplement_seq_next),
+      headerRows,
+      lines,
+      totals,
+    ),
+  }
+}
+
+// שחזור לדוח ישן שקובץ-המקור שלו אינו זמין (תוספת הסגן W4), מתוך השורות הקפואות של
+// `payroll_report_detail`. 🔴 **לא נשמר, לא נשלח ולא מחליף את המקור** — הכותרת, השורה
+// "שוחזר בתאריך" ושם-הקובץ אומרים זאת בכל מקום שהקובץ יגיע אליו. עמודת הבנק נכתבת
+// `לא נשמר בנתוני הדוח` בכל שורה: פרטי-בנק נוכחיים אינם היסטוריים.
+export function buildSalaryReportReconstructionDocument(report, lines, { reconstructedAt } = {}) {
+  const reportId = report?.report_id
+  if (!Number.isInteger(reportId)) {
+    throw salaryReportError('SALARY_REPORT_ID_MISSING', 'חסר מספר הדוח — השחזור לא הורכב.')
+  }
+  if (!Array.isArray(lines)) {
+    throw salaryReportError('SALARY_REPORT_SHAPE', 'נתוני הדוח חסרים את רשימת השורות.')
+  }
+  const shaped = lines.map((row, index) => ({
+    ...shapeLine(row, index),
+    bankDetails: BANK_NOT_STORED,
+  }))
+  const totals = salaryReportTotals(shaped)
+  reconcileAgainst(
+    totals,
+    report.total_amount,
+    report.line_count,
+    'SALARY_RECONCILIATION_FIELDS_MISSING',
+  )
+
+  const kind = report.report_kind === 'supplement' ? 'supplement' : 'regular'
+  const periodLabel = salaryPeriodLabel(report.period)
+  const stamp = requireStamp(
+    reconstructedAt,
+    'SALARY_RECONSTRUCTION_TIMESTAMP_MISSING',
+    'חסר מועד השחזור — הקובץ לא הורכב.',
+  )
+
+  return {
+    reportId,
+    period: report.period,
+    periodLabel,
+    fileName: salaryReportReconstructionFileName(report.period, kind, report.supplement_seq),
+    lines: shaped,
+    totals,
+    sheet: sheetWithHeader(
+      titledLabel(RECONSTRUCTION_TITLE_PREFIX, periodLabel, kind, report.supplement_seq),
+      [
+        ['קוד הפקה', reportId],
+        ['שוחזר בתאריך', stamp],
+      ],
+      shaped,
+      totals,
+    ),
+  }
+}
