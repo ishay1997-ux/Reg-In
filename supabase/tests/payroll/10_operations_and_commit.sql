@@ -483,3 +483,18 @@ begin
   perform test.act_as_owner();
   assert (select count(*) from public.salary_reports where period = '2026-06-01') = 0;
 end $$;
+
+-- test: a version approved over defective rows still cannot be issued — snapshot says BLOCKERS_PRESENT
+do $$
+declare v_op uuid := '00000000-0000-0000-0000-00000000f001'; s jsonb;
+begin
+  perform test.project(900630, '2026-05-20', 'cancelled', '10:00', '16:00', 'customer', null);
+  perform test.assign(900630, 900001, 1, 'released', 0, 50, 0, 'finally_approved');
+  perform test.begin(v_op, public._payroll_preview_version('2026-05-01', 'regular', null),
+                     test.review('2026-05-01'), '2026-05-01');
+  perform test.act_as_service();
+  s := public.payroll_operation_snapshot(v_op, 'fin@test.local');
+  assert s ->> 'code' = 'BLOCKERS_PRESENT' and not (s ->> 'ok')::boolean, s::text;
+  perform test.act_as_owner();
+  assert (select state = 'failed' and failure_code = 'BLOCKERS_PRESENT' from public.payroll_operations where operation_id = v_op);
+end $$;

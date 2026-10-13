@@ -293,3 +293,10 @@ begin
   assert (select array_agg((x ->> 'report_id')::int) from jsonb_array_elements(public.payroll_report_list() -> 'reports') x
            where x ->> 'period' = '2026-07-01') = array[900001, 900004];
 end $$;
+
+-- test: completing or persisting an attempt that does not exist is ATTEMPT_NOT_FOUND
+do $$ begin
+  assert test.err('select public._payroll_attempt_persist_unknown(424242)') = 'ATTEMPT_NOT_FOUND';
+  perform test.act_as_service();
+  assert test.err($q$select public.payroll_attempt_complete(424242, 'fin@test.local', 'sent', null, null, null, null, null, null, null)$q$) = 'ATTEMPT_NOT_FOUND';
+end $$;
