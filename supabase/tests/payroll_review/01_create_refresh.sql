@@ -127,6 +127,7 @@ begin
   assert jsonb_array_length(res -> 'recipients') = 3;
   rec := (select e from jsonb_array_elements(res -> 'recipients') e where (e ->> 'hostess_id')::bigint = 900001);
   assert (rec ->> 'row_count')::int = 2 and (rec ->> 'digest_current')::boolean;
+  assert (rec ->> 'total_hours')::numeric = 11, rec::text; -- 6 + 5 שעות
   assert (rec ->> 'email_present')::boolean and rec -> 'delivery' = 'null'::jsonb;
   assert (res -> 'readiness' -> 'counts' ->> 'hostesses')::int = 3;
   assert (res -> 'readiness' -> 'counts' ->> 'awaiting')::int = 3;

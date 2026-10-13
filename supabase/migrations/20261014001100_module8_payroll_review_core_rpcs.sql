@@ -726,7 +726,10 @@ begin
     'recipients', coalesce((
       select jsonb_agg(jsonb_build_object(
                'recipient_id', r.recipient_id, 'hostess_id', r.hostess_id, 'hostess_name', r.hostess_name,
-               'total', r.total, 'row_count', jsonb_array_length(r.rows), 'state', r.state,
+               'total', r.total,
+               -- סה"כ שעות שהדיילת רואה (עבודה + פיצוי) — טבלת המעקב מציגה שעות, לא כסף (הסגן, 14.10 00:20).
+               'total_hours', (select coalesce(sum((e ->> 'hours')::numeric), 0) from jsonb_array_elements(r.rows) e),
+               'row_count', jsonb_array_length(r.rows), 'state', r.state,
                'decided_kind', r.decided_kind, 'decided_at', r.decided_at,
                'decision_reason', r.decision_reason, 'digest', r.digest,
                'digest_current', case when v.status = 'open'

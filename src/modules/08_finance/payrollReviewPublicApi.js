@@ -55,8 +55,8 @@ export const OBJECTION_CATEGORIES = [
   { value: 'other', label: 'אחר' },
 ]
 
-export const DESCRIPTION_MAX = 2000
-export const SUGGESTED_MAX = 24
+const DESCRIPTION_MAX = 2000
+const SUGGESTED_MAX = 24
 
 export const EMPTY_OBJECTION = {
   rowKeys: [],
