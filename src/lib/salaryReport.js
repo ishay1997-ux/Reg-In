@@ -34,7 +34,7 @@
 // דוח תקין. מה שכן נבדק: **סכום כל השורות מול `total_amount` של המסד** — שני מספרים שמקורם
 // באותה טרנזקציה, ולכן חייבים להיות זהים לאגורה.
 
-import { formatTimestampFull } from '@/lib/dates'
+import { formatDate, formatTimestampFull } from '@/lib/dates'
 import { toAgorot, toFiniteNumber, toShekels } from '@/lib/pricing'
 import writeXlsxFile from 'write-excel-file'
 
@@ -47,16 +47,23 @@ export const SALARY_LINE_BASIS = {
 // עמודות-הקובץ, בסדר של א48 (C5 §5.7.5) כפי שצעד 2.2 מונה אותן. ⚠️ **שונה בכוונה מסדר
 // טבלת-התצוגה שבמוקאפ** (שם: דיילת · ת"ז · פרטי-בנק · שעות · תעריף · …) — המוקאפ מצייר את
 // **מסך התצוגה-המקדימה**, וא48 מגדיר את **הקובץ**. מי שבונה את מסך S3 בפזה 3 מצייר לפי המוקאפ.
+// ✏️ 14/10/2026 — הכרעת ישי F12 (*"לפי מה שמקובל בישראל תברר ותחליט"*): בישראל רו"ח / משרד
+// השכר מחשבים את השכר ברוטו משעות, תעריף ותוספות — כולל שעות נוספות (125%/150%) — ולכן
+// **עמודת "סה"כ" הוסרה**: שעות × תעריף מתעלם מתוספת השעות הנוספות ועלול להטעות. נוספה
+// עמודת **תאריך** (DD/MM/YYYY), כדי שרו"ח יחשב שעות נוספות לפי יום. שורת הסיכום: "סה"כ שעות".
+// הסכומים עדיין מגיעים מהמסד ונבדקים (התאמת שורות↔סה"כ, N-4) — רק לא נכתבים לקובץ.
 export const SALARY_REPORT_COLUMNS = [
   'ת"ז',
   'שם',
   'פרטי-בנק',
+  'תאריך',
   'תעריף',
   'שעות',
   'בונוס',
   'נסיעות',
-  'סה"כ',
 ]
+
+const HOURS_TOTAL_LABEL = 'סה"כ שעות'
 
 // `—` ולא `0.00`: "לא-רלוונטי" ו"אפס שנמדד" הם שני דברים שונים (§3.7 · ה24/ה29 · S-2).
 export const NOT_APPLICABLE = '—'
@@ -98,11 +105,11 @@ const COLUMN_WIDTHS = [
   { width: 14 },
   { width: 22 },
   { width: 26 },
-  { width: 10 },
+  { width: 12 },
   { width: 10 },
   { width: 12 },
   { width: 12 },
-  { width: 14 },
+  { width: 12 },
 ]
 
 // שגיאה עם `code` — אותה מוסכמה כמו `src/lib/apiError.js` (ה-UI מבחין במקרים ידועים בלי
@@ -201,6 +208,8 @@ function shapeLine(row, index) {
     hostessName,
     idNumber,
     sourceProjectId: row?.source_project_id ?? null,
+    // תאריך המשמרת (F12) — נכנס לקובץ כטקסט DD/MM/YYYY. חסר (תשובה ישנה) ⇒ `—` בקובץ.
+    eventDate: textOrNull(row?.event_date),
     lineBasis,
     basisLabel: BASIS_LABELS[lineBasis],
     hoursLabel: HOURS_LABELS[lineBasis],
@@ -256,6 +265,11 @@ export function salaryReportTotals(lines) {
     }),
     { totalAgorot: 0, visibleAgorot: 0, bonusAgorot: 0, travelAgorot: 0 },
   )
+  // סה"כ שעות (F12) — על השורות שבגוף הקובץ בלבד, כדי שהסיכום יתאים לשורות שהרו"ח רואה.
+  // במאיות-שעה שלמות, מאותו נימוק כמו האגורות.
+  const hoursHundredths = lines
+    .filter((line) => line.showInFile)
+    .reduce((sum, line) => sum + Math.round(line.hours * 100), 0)
 
   // N-4 קובע שהשמטת שורות-האפס **אינה משנה את הסה"כ**. אם השתיים נפרדו — שורה בעלת סכום
   // הוסתרה מהקובץ, והרו"ח היה מקבל מסמך שסכומו אינו סכום שורותיו.
@@ -272,6 +286,7 @@ export function salaryReportTotals(lines) {
     total: toShekels(totals.totalAgorot),
     bonusTotal: toShekels(totals.bonusAgorot),
     travelTotal: toShekels(totals.travelAgorot),
+    hoursTotal: hoursHundredths / 100,
   }
 }
 
@@ -293,26 +308,26 @@ function sheetLineRow(line) {
     textCell(line.idNumber),
     textCell(line.hostessName),
     line.bankDetails ? textCell(line.bankDetails) : dashCell(),
+    line.eventDate ? textCell(formatDate(line.eventDate, NOT_APPLICABLE)) : dashCell(),
     moneyCell(line.rate),
     { value: line.hours, type: Number, format: HOURS_FORMAT },
     line.bonus === null ? dashCell() : moneyCell(line.bonus),
     line.travel === null ? dashCell() : moneyCell(line.travel),
-    moneyCell(line.lineTotal),
   ]
 }
 
-// שורת-הסה"כ: "שעות"/"תעריף" נשארות `—` — סיכום שעות-בפועל עם שעות-מתוכננות אינו מספר
-// בעל משמעות (S3 §⑧7, המוקאפ המאושר).
+// שורת-הסיכום (F12, 14/10/2026): "סה"כ שעות" מתחת לעמודת השעות בלבד. ✏️ עד F12 השורה
+// סיכמה בונוס/נסיעות/סה"כ בש"ח והשאירה את השעות `—`; ההכרעה הפכה זאת — הרו"ח מחשב את הכסף.
 function sheetTotalRow(totals) {
   return [
-    boldCell('סה"כ'),
-    dashCell(),
-    dashCell(),
-    dashCell(),
-    dashCell(),
-    moneyCell(totals.bonusTotal, true),
-    moneyCell(totals.travelTotal, true),
-    moneyCell(totals.total, true),
+    boldCell(HOURS_TOTAL_LABEL),
+    null,
+    null,
+    null,
+    null,
+    { value: totals.hoursTotal, type: Number, format: HOURS_FORMAT, fontWeight: 'bold' },
+    null,
+    null,
   ]
 }
 

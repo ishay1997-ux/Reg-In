@@ -44,8 +44,9 @@ describe('buildSalaryReportDraftDocument — טיוטה מהתצוגה המקד�
   it('שורת פיצוי: בונוס ונסיעות "—"; ת"ז נשמרת כטקסט', () => {
     const doc = buildSalaryReportDraftDocument(makePreview())
     const comp = doc.sheet.find((row) => row?.[0]?.value === '204455667')
-    expect(comp[5].value).toBe(NOT_APPLICABLE)
     expect(comp[6].value).toBe(NOT_APPLICABLE)
+    expect(comp[7].value).toBe(NOT_APPLICABLE)
+    expect(comp[3].value).toBe('12/07/2026')
     const work = doc.sheet.find((row) => row?.[0]?.value === '012345678')
     expect(work[0].type).toBe(String)
   })
@@ -107,14 +108,15 @@ describe('buildSalaryReportDraftDocument — טיוטה מהתצוגה המקד�
     expect(doc.sheet.some((row) => row?.[0]?.value === '305566778')).toBe(false)
   })
 
-  it('הלוך-ושוב דרך xlsx אמיתי: כותרת, 2 שורות גוף, סה"כ 452.60, ת"ז עם 0 מוביל', async () => {
+  it('הלוך-ושוב דרך xlsx אמיתי: כותרת, 2 שורות גוף, "סה"כ שעות" 10, ת"ז עם 0 מוביל', async () => {
     const rows = await readBack(buildSalaryReportDraftDocument(makePreview()))
     expect(rows[0][0]).toBe('טיוטה — לא הופק ולא נשלח — דוח שכר דיילות — יולי 2026')
     const header = rows.findIndex((row) => row[0] === 'ת"ז')
     const body = rows.slice(header + 1, rows.length - 1)
     expect(body).toHaveLength(2)
     expect(body[0][0]).toBe('012345678')
-    expect(rows[rows.length - 1][7]).toBe(452.6)
+    expect(rows[rows.length - 1][0]).toBe('סה"כ שעות')
+    expect(rows[rows.length - 1][5]).toBe(10)
   })
 
   it('כל השורות נכנסות — גם כשיש יותר מעמוד מסך אחד (אין "ייצוא עמוד")', () => {
@@ -173,8 +175,8 @@ describe('buildSalaryReportReconstructionDocument — שחזור לדוח בלי
     const doc = buildSalaryReportReconstructionDocument(report, lines, { reconstructedAt: at })
     const work = doc.sheet.find((row) => row?.[0]?.value === '012345678')
     const comp = doc.sheet.find((row) => row?.[0]?.value === '204455667')
-    expect(work[5].value).toBe(0)
-    expect(comp[5].value).toBe(NOT_APPLICABLE)
+    expect(work[6].value).toBe(0)
+    expect(comp[6].value).toBe(NOT_APPLICABLE)
   })
 
   it('סכום השורות שונה מסכום הדוח ⇒ אין שחזור', () => {
@@ -198,7 +200,7 @@ describe('buildSalaryReportReconstructionDocument — שחזור לדוח בלי
     expect(rows[0][0]).toContain('שחזור — הקובץ המקורי אינו זמין')
     const header = rows.findIndex((row) => row[0] === 'ת"ז')
     expect(rows[header + 1][2]).toBe('לא נשמר בנתוני הדוח')
-    expect(rows[rows.length - 1][7]).toBe(452.6)
+    expect(rows[rows.length - 1][5]).toBe(10)
   })
 
   it('שמות-קבצים: השלמה בטיוטה בלי מספר, בשחזור עם מספר', () => {
