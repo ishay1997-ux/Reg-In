@@ -73,6 +73,8 @@ export const REPORT_TABS = Object.freeze([
         question: 'מה מצב העסק השנה?',
         drill: false,
         topN: '8 האירועים הגדולים',
+        // ✏️ 14/10/2026 — "הכול" אינו מוצג: ה-RPC ממיר `p_from = null` לתחילת השנה (ר' `ReportsPage`).
+        noAllPeriod: true,
       },
       {
         id: 'מ3',
@@ -84,6 +86,8 @@ export const REPORT_TABS = Object.freeze([
         question: 'מה סוגר הצעה, ואיפה הכסף הולך לאיבוד?',
         // ✏️ 24/09/2026 — כבר לא דוח-קידוח: אין בו ציר-שנים לרדת בו. הסינון-הצולב (סיבה ⇐ טבלה) מחליף אותו.
         drill: false,
+        // ✏️ 14/10/2026 — "הכול" אינו מוצג: ה-RPC ממיר `p_from = null` לתחילת השנה (ר' `ReportsPage`).
+        noAllPeriod: true,
       },
       {
         id: 'מ4',
@@ -204,7 +208,7 @@ export const REPORT_TABS = Object.freeze([
         slug: 'satisfaction',
         rpc: 'report_m20_satisfaction',
         name: 'שביעות רצון',
-        question: 'מה משמח ומה מכעיס לקוחות?',
+        question: 'מה הלקוחות משבחים, ועל מה הם מתלוננים?',
         drill: false,
       },
       {

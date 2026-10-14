@@ -7,10 +7,18 @@
 // ⚠️ ולכן גם אין כאן "יפוגו תוך N ימים": רענון 14/10 מאפס את שעון-התוקף של ההצעות הפתוחות (התוכנית §4).
 
 import { Link } from 'react-router-dom'
+import { formatByType } from '@/lib/reportsFormat'
 import { ChartLead, SurfaceHint, SurfaceNote, TableLead, ExecutiveSurface } from './surfaceKit'
 
 const ROW_ACTION = 'לחיצה על שורה פותחת את הצעת המחיר'
 const EXPIRING_LINK = 'הצעות שעומדות לפוג — במסך הבית'
+
+// 🔽 14/10/2026 (ישי: *"יש שם רק מלא שורות"*) — הגרף הראשון עונה "על מה מפסידים", והטבלה היא הפירוט:
+// סגורה עד שמבקשים, ונפתחת מסוננת בלחיצה על סיבה. ‏N = כל ההצעות שנדחו (`row_total`), לא העמוד הנוכחי.
+function lostTableToggle(payload) {
+  const total = payload?.meta?.row_total ?? payload?.rows?.length ?? 0
+  return total > 0 ? `פירוט לפי הצעה (${formatByType(total, 'int')})` : null
+}
 
 function ExpiringLink() {
   return (
@@ -34,6 +42,7 @@ export default function TrendsSurface(props) {
       )}
       renderBeforeChart={() => <ChartLead hintIds={['reports.trends.reasons']} />}
       renderBeforeTable={() => <TableLead rowAction={ROW_ACTION} hintId="reports.trends.table" />}
+      tableToggle={lostTableToggle}
     />
   )
 }

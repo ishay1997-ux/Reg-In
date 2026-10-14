@@ -6,7 +6,15 @@
 // ‏(⁦12⁩ חודשים אחורה, כולל ⁦29⁩ בפברואר). חשבון שנבדק רק דרך מסך הוא חשבון שאיש לא מדד.
 
 import { describe, it, expect } from 'vitest'
-import { DEFAULT_PERIOD, PERIOD_OPTIONS, parsePeriodParam, periodRange } from './reportsPeriod'
+import {
+  DEFAULT_PERIOD,
+  PERIOD_OPTIONS,
+  parsePeriodParam,
+  periodRange,
+  yearKey,
+  yearOf,
+  yearOptions,
+} from './reportsPeriod'
 
 // 🌱 "היום" של יום-הבנייה, כפי שהשרת מחזיר אותו ב-`window.to` (C8).
 const TODAY = '2026-09-16'
@@ -87,5 +95,38 @@ describe('parsePeriodParam — הכתובת גוברת, והלשונית קוב�
   // ⚠️ ברירת-מחדל פסולה בקטלוג אינה מדליפה למסך — היא נופלת לגלובלית.
   it('ברירת-מחדל שאינה מפתח מוכר נופלת לגלובלית', () => {
     expect(parsePeriodParam(null, 'שבוע')).toBe(DEFAULT_PERIOD)
+  })
+})
+
+// ── ✏️ 14/10/2026 — שנה קלנדרית מלאה (`yYYYY`) ──────────────────────────────────
+
+describe('שנה קלנדרית — yYYYY', () => {
+  it('שנה שעברה ⇒ 1 בינואר עד 31 בדצמבר', () => {
+    expect(periodRange('y2025', TODAY)).toEqual({ from: '2025-01-01', to: '2025-12-31' })
+  })
+
+  it('השנה הנוכחית ⇒ נחתכת ב"היום" (לא שנה חלקית מול מלאה)', () => {
+    expect(periodRange('y2026', TODAY)).toEqual({ from: '2026-01-01', to: TODAY })
+  })
+
+  it('"היום" עוד לא ידוע ⇒ שני הקצוות null, כמו כל תקופה', () => {
+    expect(periodRange('y2025', null)).toEqual({ from: null, to: null })
+  })
+
+  it('הכתובת מקבלת yYYYY תקין בלבד', () => {
+    expect(parsePeriodParam('y2025')).toBe('y2025')
+    for (const bad of ['y25', 'y1999', 'y2101', 'yabcd', '2025']) {
+      expect(parsePeriodParam(bad)).toBe(DEFAULT_PERIOD)
+    }
+  })
+
+  it('yearOf / yearKey הם הפכים', () => {
+    expect(yearOf(yearKey(2024))).toBe(2024)
+    expect(yearOf('year')).toBeNull()
+  })
+
+  it('הבורר מציע את שתי השנים שלפני שנת "היום", ושום דבר לפני שהוא ידוע', () => {
+    expect(yearOptions('2026-10-14')).toEqual([2025, 2024])
+    expect(yearOptions(null)).toEqual([])
   })
 })

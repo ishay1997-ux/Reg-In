@@ -255,7 +255,8 @@ describe('מ1 — מצב-התצוגה חי בכתובת (📐13④ · S-18)', ()
   })
 
   it('"הכול" מאפס את שני הקצוות — השרת בוחר את חלון-ברירת-המחדל של הכרטיס', async () => {
-    renderPage()
+    // ✏️ 14/10/2026 — על משטח שמציג "הכול" (מ4); מ2/מ3 אינם מציגים אותו (ר' הבדיקות של `noAllPeriod`).
+    renderPage('/reports?report=discounts')
     await screen.findByTestId('reports-filters')
     await click(screen.getByTestId('reports-period-all'))
     const last = callReport.mock.calls.at(-1)[1]
@@ -377,7 +378,8 @@ describe('מ1 — מצבי-המעטפת (📐10)', () => {
 
   it('ריק בלי מסנן ⇒ "ריק-לגמרי", בלי כפתור-ניקוי', async () => {
     callReport.mockResolvedValue(emptyPayload())
-    renderPage('/reports?period=all')
+    // ✏️ 14/10/2026 — מ4 ולא ברירת-המחדל (מ2): במ2 "הכול" נקרא "השנה", כלומר כן מסנן.
+    renderPage('/reports?report=discounts&period=all')
     expect(await screen.findByText('אין נתונים עדיין')).toBeInTheDocument()
     expect(screen.queryByTestId('reports-clear-filters')).toBeNull()
   })
@@ -976,5 +978,68 @@ describe('מ1 — מנעול הלשונית הממוסכת (פריט [26])', () 
     expect(masked.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
     expect(within(masked).getByText(MASKED_TEXT)).toBeInTheDocument()
     expect(masked).toHaveAttribute('aria-disabled', 'true')
+  })
+})
+
+// ── ✏️ 14/10/2026 — בורר-שנה, ו"הכול" שאינו "הכול" על מ2/מ3 ──────────────────────
+
+describe('מ1 — בחירת שנה (ישי: "וגם מסנן לבחירת שנה")', () => {
+  it('השנתיים הקודמות לשנת השרת; בחירה שולחת שנה קלנדרית מלאה ומסמנת שום גלולה', async () => {
+    callReport.mockResolvedValue(
+      payload({ window: { from: '2026-01-01', to: '2026-10-14', label: '2026' } }),
+    )
+    renderPage()
+    const picker = await screen.findByTestId('reports-year-filter')
+    expect([...picker.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
+      '—',
+      '2025',
+      '2024',
+    ])
+    fireEvent.change(picker, { target: { value: '2025' } })
+    await waitFor(() => {
+      const last = callReport.mock.calls.at(-1)[1]
+      expect(last.from).toBe('2025-01-01')
+      expect(last.to).toBe('2025-12-31')
+    })
+    expect(screen.getByTestId('reports-period-year')).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  // 🔴 השרת מהדהד את ה-`to` ששלחנו: בלי הכלל "היום זז רק קדימה", בחירת 2025 הייתה הופכת את "היום"
+  // ל-31/12/2025, ו"השנה" שאחריה הייתה נשלחת על 2025.
+  it('אחרי בחירת שנה, "השנה" עדיין נמדדת מול היום האמיתי', async () => {
+    callReport.mockImplementation((_rpc, args) =>
+      Promise.resolve(
+        payload({
+          window: { from: args.from ?? '2026-01-01', to: args.to ?? '2026-10-14', label: 'x' },
+        }),
+      ),
+    )
+    renderPage('/reports?period=y2025')
+    await screen.findByTestId('reports-year-filter')
+    await click(screen.getByTestId('reports-period-year'))
+    await waitFor(() => {
+      const last = callReport.mock.calls.at(-1)[1]
+      expect(last.from).toBe('2026-01-01')
+      expect(last.to).toBe('2026-10-14')
+    })
+  })
+})
+
+describe('מ1 — "הכול" על מ2/מ3 (ה-RPC ממיר אותו ל"השנה")', () => {
+  it('מ2 אינו מציג את "הכול", וכתובת עם period=all נקראת כ"השנה"', async () => {
+    callReport.mockResolvedValue(
+      payload({ window: { from: '2026-01-01', to: '2026-10-14', label: '2026' } }),
+    )
+    renderPage('/reports?period=all')
+    await screen.findByTestId('reports-period-year')
+    expect(screen.queryByTestId('reports-period-all')).toBeNull()
+    await waitFor(() =>
+      expect(screen.getByTestId('reports-period-year')).toHaveAttribute('aria-pressed', 'true'),
+    )
+  })
+
+  it('מ4 עדיין מציג את "הכול"', async () => {
+    renderPage('/reports?report=discounts')
+    expect(await screen.findByTestId('reports-period-all')).toBeInTheDocument()
   })
 })
