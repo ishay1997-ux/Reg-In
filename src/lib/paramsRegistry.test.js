@@ -78,6 +78,8 @@ const LIVE_SEED_PARAM_NAMES = {
     'תבנית_מייל_הצעת_מחיר',
     'תבנית_מייל_חשבונית_מס',
     'תבנית_מייל_משוב_לקוח',
+    // 🆕 13/10/2026 — מ8 דוח שכר מקצה לקצה, מיגרציה 20261014001000 (טרם הוחלה; 47 ⇒ 48).
+    'תבנית_מייל_סיכום_שעות_דיילת',
     'תבנית_מייל_פרטי_האירוע_השתנו',
     'תבנית_מייל_שחרור_משמרת',
     'תבנית_תזכורת_משמרת',
@@ -87,10 +89,10 @@ const LIVE_SEED_PARAM_NAMES = {
 
 const LIVE_SEED_NAMES_FLAT = Object.values(LIVE_SEED_PARAM_NAMES).flat()
 
-describe('PARAM_REGISTRY — 47 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
-  it('47 שורות בדיוק', () => {
-    expect(PARAM_REGISTRY).toHaveLength(47)
-    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(47)
+describe('PARAM_REGISTRY — 48 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
+  it('48 שורות בדיוק', () => {
+    expect(PARAM_REGISTRY).toHaveLength(48)
+    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(48)
   })
 
   it('כל שם במרשם קיים בזרע החי (כיוון א׳ — לא נשאר שם-רפאים במרשם)', () => {

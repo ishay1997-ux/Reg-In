@@ -108,6 +108,11 @@ jobs:
       # כמה קבצים עוצר בראשון שנופל, והפונקציה שאחריו לא נבדקת כלל באותה ריצה.
       - name: Type-check draft-followup
         run: deno check --node-modules-dir=none supabase/functions/draft-followup/index.ts
+      # ‏`payroll` (דוח השכר, 13.10.2026) — שלב רביעי, מאותה סיבה. ‏`index.ts` מייבא את כל קבצי
+      # הפונקציה (`pipeline` · `document` · `xlsx` · `mail` · `guard` · `transport`), כך שבדיקה אחת
+      # מכסה את כולם — כולל `xlsx.ts`, היחיד שאינו עובר ב-Vitest (ייבוא `npm:`).
+      - name: Type-check payroll
+        run: deno check --node-modules-dir=none supabase/functions/payroll/index.ts
 
   secret-scan:
     name: Secret scan (gitleaks)

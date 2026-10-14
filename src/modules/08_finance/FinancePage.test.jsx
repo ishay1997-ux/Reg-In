@@ -727,10 +727,19 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
 })
 
 describe('S1 — מסלול-הכניסה ל-S3 (הכרעת Q-2)', () => {
-  it('כפתור "הפקת דוח-שכר" קיים בכותרת ופותח את הדיאלוג', async () => {
+  // ✏️ 13/10/2026 (חוזה דוח השכר §4.1, D13): "דוח שכר" מוביל למרחב העבודה החדש; הדיאלוג
+  // הישן נשאר כפעולה משנית "הפקה בתהליך הקודם" עד המעבר המלא אחרי הכנס.
+  it('"דוח שכר" מוביל ל-/finance/payroll', async () => {
+    await renderPage()
+    const link = screen.getByTestId('finance-open-payroll')
+    expect(link).toHaveTextContent('דוח שכר')
+    expect(link).toHaveAttribute('href', '/finance/payroll')
+  })
+
+  it('"הפקה בתהליך הקודם" עדיין פותח את הדיאלוג הישן', async () => {
     await renderPage()
     const button = screen.getByTestId('finance-open-salary')
-    expect(button).toHaveTextContent('הפקת דוח שכר דיילות')
+    expect(button).toHaveTextContent('הפקה בתהליך הקודם')
     expect(screen.getByTestId('salary-dialog')).toHaveAttribute('data-open', 'false')
     fireEvent.click(button)
     expect(screen.getByTestId('salary-dialog')).toHaveAttribute('data-open', 'true')

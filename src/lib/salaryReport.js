@@ -34,7 +34,7 @@
 // דוח תקין. מה שכן נבדק: **סכום כל השורות מול `total_amount` של המסד** — שני מספרים שמקורם
 // באותה טרנזקציה, ולכן חייבים להיות זהים לאגורה.
 
-import { formatTimestampFull } from '@/lib/dates'
+import { formatDate, formatTimestampFull } from '@/lib/dates'
 import { toAgorot, toFiniteNumber, toShekels } from '@/lib/pricing'
 import writeXlsxFile from 'write-excel-file'
 
@@ -47,16 +47,23 @@ export const SALARY_LINE_BASIS = {
 // עמודות-הקובץ, בסדר של א48 (C5 §5.7.5) כפי שצעד 2.2 מונה אותן. ⚠️ **שונה בכוונה מסדר
 // טבלת-התצוגה שבמוקאפ** (שם: דיילת · ת"ז · פרטי-בנק · שעות · תעריף · …) — המוקאפ מצייר את
 // **מסך התצוגה-המקדימה**, וא48 מגדיר את **הקובץ**. מי שבונה את מסך S3 בפזה 3 מצייר לפי המוקאפ.
+// ✏️ 14/10/2026 — הכרעת ישי F12 (*"לפי מה שמקובל בישראל תברר ותחליט"*): בישראל רו"ח / משרד
+// השכר מחשבים את השכר ברוטו משעות, תעריף ותוספות — כולל שעות נוספות (125%/150%) — ולכן
+// **עמודת "סה"כ" הוסרה**: שעות × תעריף מתעלם מתוספת השעות הנוספות ועלול להטעות. נוספה
+// עמודת **תאריך** (DD/MM/YYYY), כדי שרו"ח יחשב שעות נוספות לפי יום. שורת הסיכום: "סה"כ שעות".
+// הסכומים עדיין מגיעים מהמסד ונבדקים (התאמת שורות↔סה"כ, N-4) — רק לא נכתבים לקובץ.
 export const SALARY_REPORT_COLUMNS = [
   'ת"ז',
   'שם',
   'פרטי-בנק',
+  'תאריך',
   'תעריף',
   'שעות',
   'בונוס',
   'נסיעות',
-  'סה"כ',
 ]
+
+const HOURS_TOTAL_LABEL = 'סה"כ שעות'
 
 // `—` ולא `0.00`: "לא-רלוונטי" ו"אפס שנמדד" הם שני דברים שונים (§3.7 · ה24/ה29 · S-2).
 export const NOT_APPLICABLE = '—'
@@ -98,11 +105,11 @@ const COLUMN_WIDTHS = [
   { width: 14 },
   { width: 22 },
   { width: 26 },
-  { width: 10 },
+  { width: 12 },
   { width: 10 },
   { width: 12 },
   { width: 12 },
-  { width: 14 },
+  { width: 12 },
 ]
 
 // שגיאה עם `code` — אותה מוסכמה כמו `src/lib/apiError.js` (ה-UI מבחין במקרים ידועים בלי
@@ -201,6 +208,8 @@ function shapeLine(row, index) {
     hostessName,
     idNumber,
     sourceProjectId: row?.source_project_id ?? null,
+    // תאריך המשמרת (F12) — נכנס לקובץ כטקסט DD/MM/YYYY. חסר (תשובה ישנה) ⇒ `—` בקובץ.
+    eventDate: textOrNull(row?.event_date),
     lineBasis,
     basisLabel: BASIS_LABELS[lineBasis],
     hoursLabel: HOURS_LABELS[lineBasis],
@@ -256,6 +265,11 @@ export function salaryReportTotals(lines) {
     }),
     { totalAgorot: 0, visibleAgorot: 0, bonusAgorot: 0, travelAgorot: 0 },
   )
+  // סה"כ שעות (F12) — על השורות שבגוף הקובץ בלבד, כדי שהסיכום יתאים לשורות שהרו"ח רואה.
+  // במאיות-שעה שלמות, מאותו נימוק כמו האגורות.
+  const hoursHundredths = lines
+    .filter((line) => line.showInFile)
+    .reduce((sum, line) => sum + Math.round(line.hours * 100), 0)
 
   // N-4 קובע שהשמטת שורות-האפס **אינה משנה את הסה"כ**. אם השתיים נפרדו — שורה בעלת סכום
   // הוסתרה מהקובץ, והרו"ח היה מקבל מסמך שסכומו אינו סכום שורותיו.
@@ -272,6 +286,7 @@ export function salaryReportTotals(lines) {
     total: toShekels(totals.totalAgorot),
     bonusTotal: toShekels(totals.bonusAgorot),
     travelTotal: toShekels(totals.travelAgorot),
+    hoursTotal: hoursHundredths / 100,
   }
 }
 
@@ -285,6 +300,17 @@ const moneyCell = (value, bold = false) => ({
   ...(bold ? { fontWeight: 'bold' } : {}),
 })
 
+// הכרעת הסגן 14/10 (F12, בהאצלת ישי): רו"ח צריך להבחין בין פיצוי ביטול לשעות עבודה (שעות
+// נוספות) ⇒ בשורת פיצוי, תא התאריך הוא `DD/MM/YYYY (פיצוי ביטול)`. זהה ל-`document.ts` של C.
+const COMPENSATION_DATE_SUFFIX = ' (פיצוי ביטול)'
+function dateCellText(eventDate, lineBasis) {
+  const date = formatDate(eventDate, NOT_APPLICABLE)
+  if (date === NOT_APPLICABLE) return date
+  return lineBasis === SALARY_LINE_BASIS.CANCELLATION_COMPENSATION
+    ? `${date}${COMPENSATION_DATE_SUFFIX}`
+    : date
+}
+
 // 🔴 ת"ז כ-`String` מפורש ולא כמספר. ת"ז ישראלית שמתחילה באפס מאבדת אותו בשקט ברגע
 // שאקסל קורא אותה כמספר — במסמך שהולך לרו"ח, על שדה-זיהוי. אותו נימוק לפרטי-הבנק
 // (מספר-סניף/חשבון עם אפס מוביל) ולקוד-ההפקה.
@@ -293,26 +319,26 @@ function sheetLineRow(line) {
     textCell(line.idNumber),
     textCell(line.hostessName),
     line.bankDetails ? textCell(line.bankDetails) : dashCell(),
+    line.eventDate ? textCell(dateCellText(line.eventDate, line.lineBasis)) : dashCell(),
     moneyCell(line.rate),
     { value: line.hours, type: Number, format: HOURS_FORMAT },
     line.bonus === null ? dashCell() : moneyCell(line.bonus),
     line.travel === null ? dashCell() : moneyCell(line.travel),
-    moneyCell(line.lineTotal),
   ]
 }
 
-// שורת-הסה"כ: "שעות"/"תעריף" נשארות `—` — סיכום שעות-בפועל עם שעות-מתוכננות אינו מספר
-// בעל משמעות (S3 §⑧7, המוקאפ המאושר).
+// שורת-הסיכום (F12, 14/10/2026): "סה"כ שעות" מתחת לעמודת השעות בלבד. ✏️ עד F12 השורה
+// סיכמה בונוס/נסיעות/סה"כ בש"ח והשאירה את השעות `—`; ההכרעה הפכה זאת — הרו"ח מחשב את הכסף.
 function sheetTotalRow(totals) {
   return [
-    boldCell('סה"כ'),
-    dashCell(),
-    dashCell(),
-    dashCell(),
-    dashCell(),
-    moneyCell(totals.bonusTotal, true),
-    moneyCell(totals.travelTotal, true),
-    moneyCell(totals.total, true),
+    boldCell(HOURS_TOTAL_LABEL),
+    null,
+    null,
+    null,
+    null,
+    { value: totals.hoursTotal, type: Number, format: HOURS_FORMAT, fontWeight: 'bold' },
+    null,
+    null,
   ]
 }
 
@@ -426,4 +452,227 @@ export function writeSalaryReportXlsx(doc) {
     columns: COLUMN_WIDTHS,
     rightToLeft: true,
   })
+}
+
+// ── טיוטה ושחזור (דוח השכר החדש, 13/10/2026 · חוזה §4.2 + תוספת הסגן W4) ─────────────
+// 🔴 **הבונה הרגיל שלמעלה לא נגע בבייט** — בדיקת-השוויון של פונקציית השרת (`document.ts`)
+// נשענת עליו. שני הבונים כאן משתמשים באותן שורות-גוף ושורת-סה"כ (`sheetLineRow`,
+// `sheetTotalRow`) ומחליפים רק את ראש-הגיליון ואת שם-הקובץ, כדי שטיוטה ושחזור לא ייראו
+// לעולם כמו דוח שהופק: אין בהם "קוד הפקה" של הפקה אמיתית, והכותרת אומרת מה הם.
+
+const DRAFT_TITLE_PREFIX = 'טיוטה — לא הופק ולא נשלח — דוח שכר דיילות'
+const RECONSTRUCTION_TITLE_PREFIX = 'שחזור — הקובץ המקורי אינו זמין — דוח שכר דיילות'
+// פרטי-הבנק אינם נשמרים בשורות הקפואות (B-4) — בשחזור אסור להשלים אותם מהמאגר הנוכחי.
+export const BANK_NOT_STORED = 'לא נשמר בנתוני הדוח'
+
+function monthYearPrefix(period) {
+  const { year, month } = parsePeriod(period)
+  return `${String(month).padStart(2, '0')}_${year}_Payroll_Report`
+}
+
+function supplementSuffix(kind, seq) {
+  if (kind !== 'supplement') return ''
+  return Number.isInteger(seq) && seq > 0 ? `_Supplement_${seq}` : '_Supplement'
+}
+
+// `09_2026_Payroll_Report_DRAFT.xlsx` · השלמה: `08_2026_Payroll_Report_Supplement_DRAFT.xlsx`
+// (חוזה §4.2: "…_Supplement_DRAFT.xlsx" — בלי מספר, כי מספר-ההשלמה נקבע רק בהפקה).
+export function salaryReportDraftFileName(period, kind = 'regular') {
+  return `${monthYearPrefix(period)}${supplementSuffix(kind, null)}_DRAFT.xlsx`
+}
+
+// `08_2026_Payroll_Report_RECONSTRUCTED.xlsx` (תוספת הסגן W4).
+export function salaryReportReconstructionFileName(period, kind = 'regular', supplementSeq = null) {
+  return `${monthYearPrefix(period)}${supplementSuffix(kind, supplementSeq)}_RECONSTRUCTED.xlsx`
+}
+
+function titledLabel(prefix, periodLabel, kind, seq) {
+  const supplement = kind === 'supplement' && Number.isInteger(seq) ? ` — השלמה ${seq}` : ''
+  return `${prefix} — ${periodLabel}${supplement}`
+}
+
+function requireStamp(at, code, message) {
+  const stamp = formatTimestampFull(at)
+  if (!stamp) throw salaryReportError(code, message)
+  return stamp
+}
+
+// מצליב את סכום השורות ואת מספרן מול מה שהשרת עצמו החזיר — אותו עיקרון כמו בדוח הרגיל:
+// שני המספרים נולדו באותה קריאה, ופער ביניהם הוא באג-הרכבה ולא הבדל-עיגול.
+function reconcileAgainst(totals, reportedTotal, reportedCount, missingCode) {
+  if (reportedTotal === undefined || reportedCount === undefined) {
+    throw salaryReportError(missingCode, 'חסרים נתוני-האימות של הדוח — הקובץ לא הורכב.')
+  }
+  const total = toFiniteNumber(reportedTotal)
+  if (total !== null && toAgorot(total) !== toAgorot(totals.total)) {
+    throw salaryReportError(
+      'SALARY_TOTAL_MISMATCH',
+      'סכום שורות הדוח אינו תואם את הסכום שהתקבל מהשרת — הקובץ לא הורכב.',
+    )
+  }
+  const count = toFiniteNumber(reportedCount)
+  if (count !== null && count !== totals.lineCount) {
+    throw salaryReportError(
+      'SALARY_LINE_COUNT_MISMATCH',
+      'מספר שורות הדוח אינו תואם את מה שהתקבל מהשרת — הקובץ לא הורכב.',
+    )
+  }
+}
+
+function sheetWithHeader(title, headerRows, lines, totals) {
+  return [
+    [boldCell(title)],
+    ...headerRows.map(([label, value]) => [boldCell(label), textCell(String(value))]),
+    [null],
+    SALARY_REPORT_COLUMNS.map(boldCell),
+    ...lines.filter((line) => line.showInFile).map(sheetLineRow),
+    sheetTotalRow(totals),
+  ]
+}
+
+// טיוטה מתוך תשובת `payroll_preview` (חוזה §4.3). לא נשמרת, לא נשלחת, לא חותמת דבר.
+// `capturedAt` — רגע הלכידה של התצוגה המקדימה בשרת (`captured_at`), לא שעון הדפדפן: הטיוטה
+// מתארת את מה שהשרת ראה באותו רגע, וזה מה שהשורה "נכון ל-" אומרת.
+export function buildSalaryReportDraftDocument(preview, { capturedAt } = {}) {
+  if (!preview || preview.ok !== true) {
+    throw salaryReportError('SALARY_DRAFT_NOT_OK', 'התצוגה המקדימה לא נטענה — הטיוטה לא הורכבה.')
+  }
+  if (!Array.isArray(preview.lines)) {
+    throw salaryReportError('SALARY_REPORT_SHAPE', 'תשובת התצוגה המקדימה חסרה את רשימת השורות.')
+  }
+  // בתצוגה המקדימה המפתח הוא `project_id`; בדוח שהופק — `source_project_id`. אותה עובדה.
+  const lines = preview.lines.map((row, index) =>
+    shapeLine({ ...row, source_project_id: row?.project_id ?? null }, index),
+  )
+  const totals = salaryReportTotals(lines)
+  reconcileAgainst(
+    totals,
+    preview.totals?.total_amount,
+    preview.totals?.line_count,
+    'SALARY_RECONCILIATION_FIELDS_MISSING',
+  )
+
+  const kind = preview.kind === 'supplement' ? 'supplement' : 'regular'
+  const periodLabel = salaryPeriodLabel(preview.period)
+  const stamp = requireStamp(
+    capturedAt ?? preview.captured_at,
+    'SALARY_DRAFT_TIMESTAMP_MISSING',
+    'חסר מועד הלכידה של התצוגה המקדימה — הטיוטה לא הורכבה.',
+  )
+  const headerRows = [
+    ['מצב', 'טיוטה'],
+    ['נכון ל-', stamp],
+  ]
+  if (kind === 'supplement' && preview.original_report_id != null) {
+    headerRows.push(['דוח מקורי', preview.original_report_id])
+  }
+
+  return {
+    period: preview.period,
+    periodLabel,
+    fileName: salaryReportDraftFileName(preview.period, kind),
+    lines,
+    totals,
+    linesMissingBankDetails: lines
+      .filter((line) => line.showInFile && !line.bankDetails)
+      .map((line) => line.hostessName),
+    sheet: sheetWithHeader(
+      titledLabel(DRAFT_TITLE_PREFIX, periodLabel, kind, preview.supplement_seq_next),
+      headerRows,
+      lines,
+      totals,
+    ),
+  }
+}
+
+// שחזור לדוח ישן שקובץ-המקור שלו אינו זמין (תוספת הסגן W4), מתוך השורות הקפואות של
+// `payroll_report_detail`. 🔴 **לא נשמר, לא נשלח ולא מחליף את המקור** — הכותרת, השורה
+// "שוחזר בתאריך" ושם-הקובץ אומרים זאת בכל מקום שהקובץ יגיע אליו. עמודת הבנק נכתבת
+// `לא נשמר בנתוני הדוח` בכל שורה: פרטי-בנק נוכחיים אינם היסטוריים.
+export function buildSalaryReportReconstructionDocument(report, lines, { reconstructedAt } = {}) {
+  const reportId = report?.report_id
+  if (!Number.isInteger(reportId)) {
+    throw salaryReportError('SALARY_REPORT_ID_MISSING', 'חסר מספר הדוח — השחזור לא הורכב.')
+  }
+  if (!Array.isArray(lines)) {
+    throw salaryReportError('SALARY_REPORT_SHAPE', 'נתוני הדוח חסרים את רשימת השורות.')
+  }
+  const shaped = lines.map((row, index) => ({
+    ...shapeLine(row, index),
+    bankDetails: BANK_NOT_STORED,
+  }))
+  const totals = salaryReportTotals(shaped)
+  reconcileAgainst(
+    totals,
+    report.total_amount,
+    report.line_count,
+    'SALARY_RECONCILIATION_FIELDS_MISSING',
+  )
+
+  const kind = report.report_kind === 'supplement' ? 'supplement' : 'regular'
+  const periodLabel = salaryPeriodLabel(report.period)
+  const stamp = requireStamp(
+    reconstructedAt,
+    'SALARY_RECONSTRUCTION_TIMESTAMP_MISSING',
+    'חסר מועד השחזור — הקובץ לא הורכב.',
+  )
+
+  return {
+    reportId,
+    period: report.period,
+    periodLabel,
+    fileName: salaryReportReconstructionFileName(report.period, kind, report.supplement_seq),
+    lines: shaped,
+    totals,
+    sheet: sheetWithHeader(
+      titledLabel(RECONSTRUCTION_TITLE_PREFIX, periodLabel, kind, report.supplement_seq),
+      [
+        ['קוד הפקה', reportId],
+        ['שוחזר בתאריך', stamp],
+      ],
+      shaped,
+      totals,
+    ),
+  }
+}
+
+// ── תצוגה מקדימה של הקובץ על המסך (הכרעת ישי 14/10 09:15) ──────────────────────────
+// *"למה שהטיוטה לא תציג את הטיוטה שתשלח לרואה חשבון והיא תהיה התצוגה המקדימה"* — טבלת הטיוטה
+// במסך היא הקובץ אחד-לאחד: אותן עמודות (`SALARY_REPORT_COLUMNS`), אותן שורות (N-4: רק מה
+// שנכנס לקובץ), ואותו פורמט ערכים. כאן הפורמט של כל תא, מאותם כללים שהקובץ משתמש בהם, כדי
+// שהמסך והקובץ לא יוכלו לסטות זה מזה.
+const fileNumber = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+// שורת תצוגה מקדימה (צורת `payroll_preview.lines`) ⇒ שמונה ערכי-תא כטקסט, בסדר הקובץ.
+// לא זורקת: שורה חסומה מוצגת עם `—` במקום הערך החסר, והחסימה עצמה מוסברת מחוץ לטבלה.
+export function salaryFilePreviewCells(row) {
+  const isActual = row?.line_basis === SALARY_LINE_BASIS.ACTUAL
+  const number = (value) => {
+    const n = toFiniteNumber(value)
+    return n === null ? NOT_APPLICABLE : fileNumber.format(n)
+  }
+  return [
+    textOrNull(row?.id_number) ?? NOT_APPLICABLE,
+    textOrNull(row?.hostess_name) ?? NOT_APPLICABLE,
+    bankDetailsOf(row) ?? NOT_APPLICABLE,
+    dateCellText(row?.event_date, row?.line_basis),
+    number(row?.rate),
+    toFiniteNumber(row?.hours) === null ? NOT_APPLICABLE : toFiniteNumber(row.hours).toFixed(2),
+    isActual ? number(row?.bonus ?? 0) : NOT_APPLICABLE,
+    isActual ? number(row?.travel ?? 0) : NOT_APPLICABLE,
+  ]
+}
+
+// "סה"כ שעות" של שורות הקובץ, באותו פורמט כמו בקובץ (`0.00`). חסר ערך ⇒ `—`, לא 0.
+export function salaryFileHoursTotal(rows) {
+  let hundredths = 0
+  for (const row of rows ?? []) {
+    const n = toFiniteNumber(row?.hours)
+    if (n === null) return NOT_APPLICABLE
+    hundredths += Math.round(n * 100)
+  }
+  return (hundredths / 100).toFixed(2)
 }

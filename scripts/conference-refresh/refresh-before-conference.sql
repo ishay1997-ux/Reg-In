@@ -45,7 +45,9 @@
 --    שנוספה או אושרה) ⇒ לעדכן כאן, עם תאריך. אחרת — השער צודק, ולא עוקפים אותו.
 do $refresh$
 declare
-  v_expected constant int := 33;
+  -- ✏️ 14/10/2026 (הסגן): 32. נמדד: ב-11/10 אושרו 2415 · 2416 · 2417, וב-12/10 נוצרו 2429 · 2430 (33−3+2).
+  --    אף הצעה לא פגה, כי התפוגה הקרובה היא 24/10.
+  v_expected constant int := 32;
   v_open int;
   v_touched int;
 begin
@@ -73,7 +75,7 @@ begin
 end
 $refresh$;
 
--- ② אימות ① — עובר רק אם open_quotes = 33 **וגם** expiring_before_conference = 0.
+-- ② אימות ① — עובר רק אם open_quotes = 32 (✏️ 14/10; היה 33) **וגם** expiring_before_conference = 0.
 --    🔴 שתי העמודות יחד: 0 פגות לבדו עובר גם כשאין הצעות פתוחות בכלל (ר' ⓪).
 select count(*) as open_quotes,
        count(*) filter (
@@ -124,8 +126,8 @@ declare
   c_batch    constant text := 'seed-close-2026-10-14';
   c_from     constant date := '2026-09-17';
   c_to       constant date := '2026-10-07';
-  v_expected_projects constant int := 15;   -- ✏️ לעדכן ב-14/10
-  v_expected_rows     constant int := 76;   -- ✏️ לעדכן ב-14/10
+  v_expected_projects constant int := 15;   -- ✏️ נמדד מחדש 14/10/2026 09:2X (הסגן): 15, ללא שינוי
+  v_expected_rows     constant int := 76;   -- ✏️ נמדד מחדש 14/10/2026 09:2X (הסגן): 76, ללא שינוי
   v_ids int[];
   v_n int; v_n2 int; v_closed int := 0;
   v_ef_before int; v_ai_before int; v_ef_after int; v_ai_after int;
