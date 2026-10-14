@@ -56,6 +56,13 @@ begin
     $n$'שולי רווח = סך הרווח$n$,
     'm02 margin definition');
 
+  -- ✏️ הסגן, 14/10 ~17:1x: גם "שולי-הרווח" (עם ה"א) בשורת-ההחלטה ⇒ "שולי הרווח". אותה הכרעה (אין מקף בצירוף הזה),
+  -- ובלי זה האריח אומר "שולי רווח" והמשפט שמעליו "שולי-הרווח" — על אותו מסך שמוצג בבמה. נמדד: 5 מופעים בדיוק.
+  if (length(v_def) - length(replace(v_def, 'שולי-הרווח', ''))) <> 5 * length('שולי-הרווח') then
+    raise exception 'm11 stage copy: expected exactly 5 occurrences of שולי-הרווח in m02';
+  end if;
+  v_def := replace(v_def, 'שולי-הרווח', 'שולי הרווח');
+
   execute v_def;
 
   if (select p.proacl::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
