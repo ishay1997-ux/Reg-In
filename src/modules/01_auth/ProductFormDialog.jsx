@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select'
 import { PRODUCT_CATEGORY_LABELS, PRODUCT_UNITS } from '@/lib/catalog'
 import { isValidNonNegativePrice, isValidSku } from '@/lib/validators'
+import { isolatedShekels } from '@/lib/pricing'
 import { createProduct, updateProduct } from '@/modules/01_auth/pricesApi'
 import { cn } from '@/lib/utils'
 import Hint from '@/components/Hint'
@@ -65,7 +66,8 @@ function costAboveBaseNotice(form) {
   const cost = String(form.cost ?? '').trim()
   if (!isValidNonNegativePrice(base) || !isValidNonNegativePrice(cost)) return ''
   if (Number(cost) <= Number(base)) return ''
-  return `העלות (₪${Number(cost)}) גבוהה ממחיר הבסיס (₪${Number(base)}) — כל מכירה תהיה בהפסד.`
+  // הסכומים מבודדי-כיווניות (`isolatedShekels`) — אחרת ה-₪ נופל משמאל לספרות בתוך משפט עברי.
+  return `העלות (${isolatedShekels(Number(cost))}) גבוהה ממחיר הבסיס (${isolatedShekels(Number(base))}) — כל מכירה תהיה בהפסד.`
 }
 
 function CostNotice({ form }) {

@@ -60,7 +60,7 @@ import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
-import { toAgorot, toShekels } from '@/lib/pricing'
+import { isolatedShekels, toAgorot, toShekels } from '@/lib/pricing'
 import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { EMAIL_SEND_RESULT, sendResultMessage } from '@/lib/email'
 import { compensationReason } from '@/lib/projectCancellation'
@@ -277,7 +277,8 @@ export function feeAboveProposedNote({ amount, proposed }) {
   const proposedNumber = proposed == null ? null : Number(proposed)
   if (amount == null || !Number.isFinite(amount) || proposedNumber == null) return null
   if (!Number.isFinite(proposedNumber) || toAgorot(amount) <= toAgorot(proposedNumber)) return null
-  const shekel = (n) => `₪${n.toLocaleString('he-IL', { maximumFractionDigits: 2 })}`
+  // הסכום מבודד-כיווניות (`isolatedShekels`): בלי זה ה-₪ נופל משמאל לספרות בתוך משפט עברי.
+  const shekel = (n) => isolatedShekels(n.toLocaleString('he-IL', { maximumFractionDigits: 2 }))
   return `הסכום שהוזן (${shekel(amount)}) גבוה מהמוצע (${shekel(proposedNumber)}). אחרי השמירה הסכום קפוא — כדאי לוודא.`
 }
 

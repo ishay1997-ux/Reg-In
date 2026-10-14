@@ -52,7 +52,7 @@ describe('מחיר ועלות — עקביות ותקרת-שפיות', () => {
     expect(screen.queryByTestId('product-cost-notice')).toBeNull()
     fireEvent.change(screen.getByTestId('product-form-cost'), { target: { value: '6' } })
     expect(screen.getByTestId('product-cost-notice')).toHaveTextContent(
-      'העלות (₪6) גבוהה ממחיר הבסיס (₪4.5) — כל מכירה תהיה בהפסד.',
+      'העלות (⁦6 ₪⁩) גבוהה ממחיר הבסיס (⁦4.5 ₪⁩) — כל מכירה תהיה בהפסד.',
     )
   })
 

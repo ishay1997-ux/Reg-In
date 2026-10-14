@@ -1388,7 +1388,7 @@ describe('בחירה מרובה של סיבות משוב (Multi-Select Chips)', 
 describe('feeAboveProposedNote — דמי-ביטול מעל המוצע', () => {
   it('מעל המוצע ⇒ הנוסח המאושר; שווה או מתחת ⇒ null; אין הצעה ⇒ null', () => {
     expect(feeAboveProposedNote({ amount: 5000, proposed: 3508 })).toBe(
-      `הסכום שהוזן (₪${(5000).toLocaleString('he-IL')}) גבוה מהמוצע (₪${(3508).toLocaleString('he-IL')}). אחרי השמירה הסכום קפוא — כדאי לוודא.`,
+      `הסכום שהוזן (⁦${(5000).toLocaleString('he-IL')} ₪⁩) גבוה מהמוצע (⁦${(3508).toLocaleString('he-IL')} ₪⁩). אחרי השמירה הסכום קפוא — כדאי לוודא.`,
     )
     expect(feeAboveProposedNote({ amount: 3508, proposed: '3508.00' })).toBeNull()
     expect(feeAboveProposedNote({ amount: 1000, proposed: 3508 })).toBeNull()
