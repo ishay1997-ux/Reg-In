@@ -917,7 +917,7 @@ export default function QuoteBuilderPage() {
             <p className="text-sm font-medium text-red-800">
               ההנחות חורגות מ-100% ({Number(form.appliedDiscount)}% +{' '}
               {Number(form.manualDiscount) || 0}
-              %) — תקני את ההנחה הנוספת כדי לחשב ולשמור.
+              %) — יש לתקן את ההנחה הנוספת כדי לחשב ולשמור.
             </p>
           </div>
         )}

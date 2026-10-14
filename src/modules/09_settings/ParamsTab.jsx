@@ -340,7 +340,7 @@ export default function ParamsTab({ paneComponents = DEFAULT_PANE_COMPONENTS }) 
               // המקום לרשימה. המשפט המלא לכל שגיאה נשאר ליד השדות עצמם.
               blockedReason={
                 groupCrossErrors[0]?.message ||
-                (hasErrorsInGroup ? 'תקני את המסומן באדום כדי לשמור' : '')
+                (hasErrorsInGroup ? 'יש לתקן את המסומן באדום כדי לשמור' : '')
               }
               failedMessage={form.saveError}
               onCancel={() => form.reset(groupNames)}
