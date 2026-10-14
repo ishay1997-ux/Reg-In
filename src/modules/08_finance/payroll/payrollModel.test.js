@@ -23,6 +23,7 @@ import {
   payrollErrorMessage,
   processStage,
   recipientStatus,
+  resendOutcome,
 } from './payrollModel'
 import { makePreview, makeReview, opStatus, recipient, reportItem } from './testFixtures'
 
@@ -182,9 +183,9 @@ describe('operationStage — מצב ההפקה ⇒ הודעה ופעולה', () 
   })
 
   it('כשל לפני הפקה: אחסון ⇒ "הדוח לא הופק ולא נשלח"; נתונים שהשתנו ⇒ רענון', () => {
-    expect(operationStage(opStatus({ state: 'failed', failure_code: 'STORAGE_FAILED' })).text).toBe(
-      'שמירת הקובץ נכשלה. הדוח לא הופק ולא נשלח, אפשר לנסות שוב',
-    )
+    expect(
+      operationStage(opStatus({ state: 'failed', failure_code: 'STORAGE_UPLOAD_FAILED' })).text,
+    ).toBe('שמירת הקובץ נכשלה. הדוח לא הופק ולא נשלח, אפשר לנסות שוב')
     expect(
       operationStage(opStatus({ state: 'failed', failure_code: 'PREVIEW_CHANGED' })).text,
     ).toBe('הנתונים השתנו. יש לרענן לפני אישור')
@@ -225,11 +226,14 @@ describe('היסטוריה', () => {
   })
 
   it('שחזור מוצע רק לדוח בלי קובץ', () => {
-    expect(needsReconstruction(reportItem(), { reference_missing: false })).toBe(false)
-    expect(needsReconstruction(reportItem(), { reference_missing: true })).toBe(true)
-    expect(needsReconstruction(reportItem({ legacy: true, artifact_available: false }), {})).toBe(
-      true,
-    )
+    // צורת השרת: אין `artifact_available` בפרטי הדוח — ההכרעה לפי `artifact` בלבד.
+    expect(needsReconstruction({ key: 'payroll/k.xlsx', reference_missing: false })).toBe(false)
+    expect(needsReconstruction({ key: null, reference_missing: true })).toBe(true)
+    expect(needsReconstruction({ key: null })).toBe(true)
+    expect(needsReconstruction(null)).toBe(true)
+    expect(
+      operationStage(opStatus({ state: 'failed', failure_code: 'XLSX_BUILD_FAILED' })).text,
+    ).toBe('שמירת הקובץ נכשלה. הדוח לא הופק ולא נשלח, אפשר לנסות שוב')
   })
 
   it('תוויות סוג ומשלוח', () => {
@@ -288,12 +292,33 @@ describe('שעות (F12)', () => {
   })
 })
 
+describe('resendOutcome — "נשלח" רק כשהניסיון באמת נשלח', () => {
+  it.each([
+    ['sent', 'success', 'נשלח שוב'],
+    ['failed', 'error', 'השליחה החוזרת נכשלה. אפשר לנסות שוב'],
+    ['unknown', 'error', 'לא ידוע אם נשלח. יש לבדוק לפני שליחה חוזרת'],
+    [undefined, 'error', 'לא ידוע אם נשלח. יש לבדוק לפני שליחה חוזרת'],
+  ])('%s', (state, tone, text) => {
+    expect(resendOutcome(state, 'נשלח שוב')).toEqual({ tone, text })
+  })
+})
+
 describe('payrollErrorMessage', () => {
   it('קוד ידוע ⇒ ההודעה; לא ידוע ⇒ הודעה כללית', () => {
     expect(payrollErrorMessage({ code: 'PREVIEW_CHANGED' })).toBe(
       'הנתונים השתנו. יש לרענן לפני אישור',
     )
     expect(payrollErrorMessage('ZZZ')).toBe('הפעולה נכשלה. נסה שוב')
+    // קוד בלי נוסח ⇒ ההודעה העברית של השרת; SALARY_* ⇒ נוסח בניית-הקובץ.
+    expect(payrollErrorMessage({ code: 'ZZZ', serverMessage: 'כתובת רו"ח השתנתה' })).toBe(
+      'כתובת רו"ח השתנתה',
+    )
+    expect(payrollErrorMessage('SALARY_TOTAL_MISMATCH')).toBe(
+      'נתוני הדוח לא הסתדרו בבניית הקובץ. הדוח לא הופק ולא נשלח',
+    )
+    expect(payrollErrorMessage('REVIEW_NOT_OPEN')).toBe(
+      'הבדיקה לחודש הזה כבר לא פתוחה. יש לרענן את העמוד',
+    )
   })
 })
 

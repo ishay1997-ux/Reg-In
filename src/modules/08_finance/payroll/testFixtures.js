@@ -1,4 +1,7 @@
 // נתוני-בדיקה למרחב דוח השכר — בנויים לפי צורות ה-JSON המחייבות של חוזה §4.3 (+ F6).
+// ✏️ 14/10/2026: הושוו מפתח-מפתח לתשובות האמיתיות של המסד (בדיקת ההתאמה, `out.json` של
+// הבודק): פרטי דוח עטופים ב-`report` עם `line_count` ברמה העליונה, `affected_rows` כאובייקטים,
+// ו-`current_rows` בשמות של המסד (`actual_hours`, `personal_bonus`, …).
 // משמשים את בדיקות היחידה ואת מסך-ההדגמה המקומי (צילומי המסך). שמות ומספרים סינתטיים;
 // אין כאן אף אדם אמיתי. כל סכום מוקלד, לא מחושב: הבדיקות לא מחשבות שכר מחדש.
 
@@ -111,6 +114,7 @@ export function recipient(overrides = {}) {
     delivery: {
       attempt_id: 800001,
       state: 'sent',
+      created_at: '2026-10-13T10:00:00.000Z',
       intended_recipient: 'noa@example.com',
       delivered_recipient: 'ishay1997@gmail.com',
       redirected: true,
@@ -153,6 +157,8 @@ export function makeReview({ review = {}, recipients, cases = [], readiness } = 
       period: PERIOD,
       kind: 'regular',
       original_report_id: null,
+      supplement_seq: null,
+      version: 'v1:abc',
       revision: 1,
       status: 'open',
       version_current: true,
@@ -255,10 +261,33 @@ export function frozenLine(overrides = {}) {
 // צורת השרת (חוזה §4.3 + F6, ותיקון בודק 2 14/10): פרטי הדוח עטופים ב-`report` (כולל
 // `line_count`), ולצדם השורות הקפואות, הניסיונות, הקובץ והפניות אחרי ההפקה.
 // `report` — דריסות לשדות הדוח · שאר המפתחות — דריסות לרמה העליונה.
+// `report` בתוך פרטי הדוח — בשדות שהמסד מחזיר שם (בלי `line_count`/`artifact_available`, שאינם
+// חלק ממנו; `line_count` נמצא ברמה העליונה).
+function detailReport(overrides = {}) {
+  return {
+    legacy: false,
+    period: PERIOD,
+    issued_at: '2026-10-13T11:00:00.000Z',
+    issued_by: 'finance@example.com',
+    report_id: 31,
+    review_id: 600001,
+    sent_date: '2026-10-13',
+    report_kind: 'regular',
+    send_status: 'sent',
+    total_amount: 452.6,
+    delivery_state: 'sent',
+    supplement_seq: null,
+    original_report_id: null,
+    ...overrides,
+  }
+}
+
 export function reportDetail({ report = {}, ...overrides } = {}) {
   return {
     ok: true,
-    report: reportItem(report),
+    report: detailReport(report),
+    line_count: 2,
+    file_line_count: 2,
     lines: [
       frozenLine(),
       frozenLine({
@@ -284,6 +313,9 @@ export function reportDetail({ report = {}, ...overrides } = {}) {
         delivered_recipient: 'ishay1997@gmail.com',
         redirected: true,
         created_at: '2026-10-13T11:00:00.000Z',
+        created_by: 'finance@example.com',
+        error_code: null,
+        retry_reason: 'initial',
         completed_at: '2026-10-13T11:00:05.000Z',
       },
     ],
@@ -307,18 +339,30 @@ export function caseDetail(overrides = {}) {
     ok: true,
     case: {
       case_id: 500001,
+      review_id: 600001,
+      report_id: null,
       recipient_id: 700001,
       hostess_id: 900001,
       hostess_name: 'נועה לוי',
       phase: 'pre_issue',
       category: 'hours',
-      affected_rows: ['r1'],
+      affected_rows: [
+        {
+          key: 'r1',
+          event_date: '2026-07-05',
+          line_basis: 'actual',
+          project_id: 900101,
+          assignment_number: 1,
+        },
+      ],
       missing_shift: false,
       description: 'עבדתי 7 שעות ולא 6',
       suggested_value: 7,
       status: 'open',
       revision: 1,
       created_at: '2026-10-13T12:00:00.000Z',
+      resolved_at: null,
+      resolved_by: null,
       resolution_reason: null,
     },
     snapshot_rows: [
@@ -330,23 +374,22 @@ export function caseDetail(overrides = {}) {
         event_name: 'כנס מדע תל אביב',
         line_basis: 'actual',
         hours: 6,
+        zero_reason: null,
       },
     ],
     current_rows: [
       {
-        project_id: 900101,
-        assignment_number: 1,
-        event_date: '2026-07-05',
         event_name: 'כנס מדע תל אביב',
-        line_basis: 'actual',
-        hours: 6,
+        project_id: 900101,
         actual_hours: 6,
-        bonus: 0,
         personal_bonus: 0,
-        attendance_status: 'attended',
-        project_actual_hours: 6,
         project_status: 'awaiting_invoice',
         salary_report_id: null,
+        assignment_number: 1,
+        assignment_status: 'finally_approved',
+        attendance_status: null,
+        hourly_rate_snapshot: 45,
+        project_actual_hours: 6,
       },
     ],
     corrections: [],

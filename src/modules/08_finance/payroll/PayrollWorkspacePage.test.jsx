@@ -539,10 +539,41 @@ describe('מצבי ההפקה השמורה (op= בכתובת)', () => {
     )
   })
 
+  it('שליחה חוזרת לרו"ח: הכתובת הנוכחית מוצגת ונשלחת; ניסיון שנכשל ⇒ לא "נשלח"', async () => {
+    api.findPayrollReview.mockResolvedValue(makeReview({ review: { status: 'issued' } }))
+    api.getPayrollOperationStatus.mockResolvedValue(
+      opStatus({
+        accountant_attempt: {
+          attempt_id: 810001,
+          state: 'failed',
+          intended_recipient: 'office@accountant.example',
+        },
+        accountant_recipient_current: 'new-office@accountant.example',
+        next_action: 'retry_send',
+      }),
+    )
+    api.retryAccountantSend.mockResolvedValue({ ok: true, attempt: { state: 'failed' } })
+    renderPage(OP)
+    fireEvent.click(await screen.findByTestId('payroll-accountant-resend'))
+    expect(await screen.findByTestId('confirm-dialog-message')).toHaveTextContent(
+      'אותו קובץ יישלח אל new-office@accountant.example',
+    )
+    await confirmDialog()
+    expect(await screen.findByText('השליחה החוזרת נכשלה. אפשר לנסות שוב')).toBeInTheDocument()
+    expect(screen.queryByText('הדוח נשלח שוב לרואה החשבון')).not.toBeInTheDocument()
+    expect(api.retryAccountantSend).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmedRecipient: 'new-office@accountant.example' }),
+    )
+  })
+
   it('שמירת הקובץ נכשלה ⇒ "הדוח לא הופק ולא נשלח"', async () => {
     api.findPayrollReview.mockResolvedValue(makeReview())
     api.getPayrollOperationStatus.mockResolvedValue(
-      opStatus({ state: 'failed', failure_code: 'STORAGE_FAILED', accountant_attempt: null }),
+      opStatus({
+        state: 'failed',
+        failure_code: 'STORAGE_UPLOAD_FAILED',
+        accountant_attempt: null,
+      }),
     )
     renderPage(OP)
     expect(await screen.findByTestId('payroll-operation-stage')).toHaveTextContent(
@@ -961,6 +992,15 @@ describe('פאנל פנייה', () => {
     expect(rows).toHaveTextContent('שעות כעת')
     expect(rows).not.toHaveTextContent('₪')
     expect(rows).not.toHaveTextContent('סכום')
+  })
+
+  it('"שעות כעת" נקרא מ-actual_hours של המסד', async () => {
+    api.getPayrollCaseDetail.mockResolvedValue(
+      caseDetail({ current_rows: [{ ...caseDetail().current_rows[0], actual_hours: 6.5 }] }),
+    )
+    renderPage('?period=2026-07&view=review&case=500001')
+    const rows = await screen.findByTestId('payroll-case-rows')
+    expect(within(rows).getAllByRole('cell')[2]).toHaveTextContent('6.5')
   })
 
   it('תיקון: סיבה חובה; לפני/אחרי באישור; נשמר ⇒ הטוסט של מדריך ה-UX', async () => {

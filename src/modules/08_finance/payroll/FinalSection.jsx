@@ -373,6 +373,7 @@ function OperationProgress({ opId, update, canEdit }) {
           <AccountantResend
             reportId={status.report_id}
             attempt={status.accountant_attempt}
+            currentRecipient={status.accountant_recipient_current}
             onCheck={load}
             onDone={load}
           />

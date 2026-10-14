@@ -13,7 +13,13 @@ import { paginate } from '@/lib/listWindow'
 import { approvePayrollNoResponse, resendPayrollReviewMail } from '../payrollApi'
 import ReasonDialog from './ReasonDialog'
 import { Td, Th } from './payrollUi'
-import { actionReason, formatHours, payrollErrorMessage, recipientStatus } from './payrollModel'
+import {
+  actionReason,
+  formatHours,
+  payrollErrorMessage,
+  recipientStatus,
+  resendOutcome,
+} from './payrollModel'
 
 export default function ReviewTable({
   rows,
@@ -242,12 +248,13 @@ function ResendButton({ recipient, onReload }) {
     if (!ok) return
     setBusy(true)
     try {
-      await resendPayrollReviewMail({
+      const result = await resendPayrollReviewMail({
         recipientId: recipient.recipient_id,
         priorAttemptId: delivery.attempt_id,
         acknowledgeUnknown,
       })
-      toast.success('הסיכום נשלח שוב')
+      const outcome = resendOutcome(result?.attempt?.state, 'הסיכום נשלח שוב')
+      toast[outcome.tone](outcome.text)
     } catch (error) {
       toast.error(payrollErrorMessage(error))
     } finally {

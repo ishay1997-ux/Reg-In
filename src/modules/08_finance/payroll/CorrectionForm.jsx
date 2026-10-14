@@ -40,11 +40,21 @@ function validate({ row, field, value, reason }) {
   return errors
 }
 
-export default function CorrectionForm({ theCase, rows, onDirty, onSaved }) {
+export default function CorrectionForm({ theCase, rows, affectedRows = [], onDirty, onSaved }) {
   const confirm = useConfirm()
   const formId = useId()
+  // שורת פיצוי ביטול אינה ניתנת לתיקון מכאן. הבסיס נקרא מ-`line_basis` של השורה (בונה A מוסיף)
+  // ואם עוד לא הגיע — מ-`affected_rows` של הפנייה, שבהן הוא קיים (בדיקת התאמה 14/10, ממצא 7).
+  const compensationKeys = new Set(
+    affectedRows
+      .filter((r) => r?.line_basis === 'cancellation_compensation')
+      .map((r) => `${r.project_id}-${r.assignment_number}`),
+  )
   const eligible = rows.filter(
-    (row) => row.salary_report_id == null && row.line_basis !== 'cancellation_compensation',
+    (row) =>
+      row.salary_report_id == null &&
+      row.line_basis !== 'cancellation_compensation' &&
+      !compensationKeys.has(rowId(row)),
   )
   const [selected, setSelected] = useState(eligible[0] ? rowId(eligible[0]) : '')
   const [field, setField] = useState('actual_hours')

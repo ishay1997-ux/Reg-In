@@ -165,7 +165,7 @@ function FileActions({ report, detail }) {
   const [downloadError, setDownloadError] = useState('')
   const [busy, setBusy] = useState(false)
   const artifact = detail.artifact ?? {}
-  const reconstruct = needsReconstruction(report, artifact)
+  const reconstruct = needsReconstruction(artifact)
 
   async function download() {
     setBusy(true)
@@ -187,7 +187,12 @@ function FileActions({ report, detail }) {
     setBusy(true)
     setDownloadError('')
     try {
-      await downloadReconstruction(report, detail.lines ?? [], new Date())
+      // צורת השרת: `line_count` ברמה העליונה של התשובה, לא בתוך `report`.
+      await downloadReconstruction(
+        { ...report, line_count: detail.line_count ?? report.line_count },
+        detail.lines ?? [],
+        new Date(),
+      )
       toast.success('קובץ השחזור מוכן להורדה')
     } catch (err) {
       setDownloadError(err?.message || 'בניית השחזור נכשלה. נסה שוב')
@@ -271,6 +276,7 @@ function Delivery({ report, detail, canEdit, onReload }) {
           <AccountantResend
             reportId={report.report_id}
             attempt={{ ...latest, state: report.delivery_state }}
+            currentRecipient={detail.accountant_recipient_current}
             onCheck={onReload}
             onDone={onReload}
           />

@@ -263,6 +263,7 @@ function CaseBody({
         <CorrectionForm
           theCase={theCase}
           rows={detail.current_rows ?? []}
+          affectedRows={theCase.affected_rows ?? []}
           onDirty={onDirty}
           onSaved={async () => {
             toast.success('התיקון נשמר. יש לשלוח לדיילת סיכום מעודכן')
@@ -385,7 +386,12 @@ function CaseRows({ snapshot, current }) {
                     {row.hours == null ? <NotApplicable /> : <Ltr>{formatHours(row.hours)}</Ltr>}
                   </Td>
                   <Td>
-                    {now?.hours == null ? <NotApplicable /> : <Ltr>{formatHours(now.hours)}</Ltr>}
+                    {/* המסד מחזיר `actual_hours` בשורות הנוכחיות (בדיקת התאמה 14/10, ממצא 4). */}
+                    {now?.actual_hours == null ? (
+                      <NotApplicable />
+                    ) : (
+                      <Ltr>{formatHours(now.actual_hours)}</Ltr>
+                    )}
                   </Td>
                 </tr>
               )

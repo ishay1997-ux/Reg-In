@@ -192,9 +192,13 @@ describe('buildSalaryReportReconstructionDocument — שחזור לדוח בלי
   // כאן נבנה השחזור בדיוק מצורת השרת (`detail.report` + `detail.lines`), כפי שהמסך קורא לו.
   it('נבנה מצורת השרת האמיתית — detail.report (עם line_count) ו-detail.lines', () => {
     const detail = reportDetail({ report: { report_id: 15, period: '2026-08-01' } })
-    const doc = buildSalaryReportReconstructionDocument(detail.report, detail.lines, {
-      reconstructedAt: at,
-    })
+    // `line_count` ברמה העליונה של התשובה, לא בתוך `report` — כמו שהמסך מרכיב (ReportDetail).
+    expect(detail.report.line_count).toBeUndefined()
+    const doc = buildSalaryReportReconstructionDocument(
+      { ...detail.report, line_count: detail.line_count },
+      detail.lines,
+      { reconstructedAt: at },
+    )
     expect(doc.fileName).toBe('08_2026_Payroll_Report_RECONSTRUCTED.xlsx')
     expect(doc.totals.lineCount).toBe(2)
   })
