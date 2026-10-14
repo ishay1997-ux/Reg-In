@@ -633,6 +633,19 @@ begin
    where r.review_id = v.review_id and r.is_current and r.hostess_id = f.hostess_id
      and r.digest = f.digest and (r.rows is distinct from f.rows or r.total is distinct from f.total);
 
+  -- רשת ביטחון (בודק 2, 14.10): נמענת ב"פנייה פתוחה" שכל הפניות שלה כבר נסגרו והתקציר שלה לא
+  -- השתנה — עוברת ל-manager_resolved, כמו בכל סגירת פנייה. (תקציר שהשתנה כבר הוחלף למעלה.)
+  update public.payroll_review_recipients r
+     set state = 'manager_resolved', decided_kind = 'manager', decided_at = now(), decided_by = v_actor,
+         decision_reason = coalesce((select c.resolution_reason from public.payroll_review_cases c
+                                      where c.review_id = v.review_id and c.hostess_id = r.hostess_id
+                                        and c.phase = 'pre_issue'
+                                      order by c.resolved_at desc nulls last limit 1), 'הפנייה נסגרה')
+   where r.review_id = v.review_id and r.is_current and r.state = 'objection_open'
+     and not exists (select 1 from public.payroll_review_cases c
+                      where c.review_id = v.review_id and c.hostess_id = r.hostess_id
+                        and c.phase = 'pre_issue' and c.status in ('open', 'correction_pending'));
+
   -- מייל שהשתנה מאז הניסיון האחרון: הקישור הישן הלך לכתובת אחרת ⇒ מבוטל. ההחלטה נשארת.
   select coalesce(array_agg(r.hostess_id), '{}') into v_contact
     from public.payroll_review_recipients r
@@ -1246,8 +1259,10 @@ revoke execute on function public.payroll_review_case_detail(bigint) from public
 grant execute on function public.payroll_review_case_detail(bigint) to authenticated;
 
 
--- הנמענת הנוכחית עוברת ל-manager_resolved רק כשהתקציר שלה עדיין עדכני ואין לה פנייה פתוחה
--- אחרת. אחרת — רענון והחלטה חדשה יגיעו בהמשך; לא מסמנים "טופל" על נתונים שהשתנו.
+-- חישוב מחדש של מצב הנמענת בכל פעם שפנייה יוצאת ממצב פתוח (דחייה · טופל מחוץ לדוח · תיקון —
+-- בודק 2, 14.10: בלי זה נמענת נשארה "פנייה פתוחה" לנצח אחרי תיקון שלא שינה את התקציר, ו-
+-- DECISIONS_MISSING חסם את ההפקה). אין פנייה פתוחה + תקציר זהה ⇒ manager_resolved. התקציר
+-- השתנה ⇒ לא נוגעים: הרענון יחליף את השורה בשורה חדשה במצב awaiting.
 create or replace function public._payroll_review_mark_resolved(
   p_review public.payroll_reviews, p_hostess_id bigint, p_actor text, p_reason text)
 returns boolean
@@ -1263,7 +1278,8 @@ begin
   select * into r from public.payroll_review_recipients
    where review_id = p_review.review_id and hostess_id = p_hostess_id and is_current
    for update;
-  if r.recipient_id is null then
+  -- רק נמענת שתקועה ב"פנייה פתוחה" — לא דורסים אישור של הדיילת או החלטה אחרת.
+  if r.recipient_id is null or r.state <> 'objection_open' then
     return false;
   end if;
   if exists (select 1 from public.payroll_review_cases c
@@ -1289,8 +1305,10 @@ revoke execute on function public._payroll_review_mark_resolved(public.payroll_r
   from public, anon, authenticated;
 
 
--- החלטה על פנייה (חוזה §2.2 + F5): reject · accept (→ ממתין לתיקון) · accept_corrected ·
--- accept_noted ("טופל מחוץ לדוח") · reopen · close (פנייה אחרי הפקה; לעולם לא משנה כסף).
+-- החלטה על פנייה (חוזה §2.2 + F5): reject · accept (→ ממתין לתיקון) · accept_noted ("טופל מחוץ
+-- לדוח") · reopen · close (פנייה אחרי הפקה; לעולם לא משנה כסף).
+-- 🔑 אין accept_corrected (בודק 2, 14.10): פנייה עם תיקון נסגרת בתוך correct_unclaimed_assignment
+-- עצמה (resolved_accepted), כך שלא היה מצב שבו המעבר הזה נדרש.
 create or replace function public.payroll_review_resolve_case(
   p_case_id bigint, p_expected_case_revision integer, p_outcome text, p_reason text, p_evidence text)
 returns jsonb
@@ -1330,7 +1348,6 @@ begin
     v_status := case
       when p_outcome = 'reject' and c.status in ('open', 'correction_pending') then 'resolved_rejected'
       when p_outcome = 'accept' and c.status = 'open' then 'correction_pending'
-      when p_outcome = 'accept_corrected' and c.status in ('open', 'correction_pending') then 'resolved_accepted'
       when p_outcome = 'accept_noted' and c.status in ('open', 'correction_pending') then 'resolved_noted'
       when p_outcome = 'reopen' and c.status = 'correction_pending' then 'open'
       else null end;
@@ -1338,10 +1355,6 @@ begin
       perform public._payroll_raise('INVALID_TRANSITION', 'אי-אפשר לבצע את הפעולה הזו על הפנייה.', null);
     end if;
     v_reason := public._payroll_review_require_text(p_reason, case when p_outcome = 'accept_noted' then 10 else 5 end, 'reason');
-    if p_outcome = 'accept_corrected'
-       and not exists (select 1 from public.payroll_source_corrections x where x.case_id = c.case_id) then
-      perform public._payroll_raise('CORRECTION_REQUIRED', 'אין תיקון שמור לפנייה הזו. יש לשמור תיקון קודם.', null);
-    end if;
   end if;
 
   update public.payroll_review_cases

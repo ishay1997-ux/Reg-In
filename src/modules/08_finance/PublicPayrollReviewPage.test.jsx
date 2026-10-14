@@ -111,13 +111,12 @@ describe('טעינה ומצבי קישור', () => {
     }
   })
 
-  it('ביטול בכוח עליון ⇒ "האירוע בוטל — ללא שעות לתשלום" עם הסבר, בלי סכום', async () => {
+  it('ביטול בכוח עליון ⇒ שורה אחת "בוטל — לא נספר בשעות", בלי "לתשלום" ובלי הסבר כפול', async () => {
     await openReady()
     const card = screen.getAllByTestId('review-shift')[1]
-    expect(within(card).getByTestId('review-shift-hours')).toHaveTextContent(
-      'האירוע בוטל — ללא שעות לתשלום',
-    )
-    expect(card).toHaveTextContent('האירוע בוטל בכוח עליון, ולכן אין שעות לתשלום')
+    expect(within(card).getByTestId('review-shift-hours')).toHaveTextContent('בוטל — לא נספר בשעות')
+    expect(card.textContent).not.toContain('לתשלום')
+    expect(card.textContent).not.toContain('כוח עליון')
     expect(card.textContent).not.toContain('₪')
   })
 
@@ -297,18 +296,95 @@ describe('אישור', () => {
   })
 })
 
+describe('החלטה על פנייה — הסיבה מגיעה לדיילת', () => {
+  it('דחייה ⇒ "הפנייה שלך טופלה: <הסיבה>"', async () => {
+    await openReady({
+      ...SUMMARY,
+      decision: { state: 'manager_resolved', at: '2026-08-02T07:00:00Z' },
+      last_case: {
+        category: 'hours',
+        status: 'resolved_rejected',
+        resolution_reason: 'לפי דוח הנוכחות 6 שעות',
+        resolved_at: '2026-08-02T07:00:00Z',
+      },
+    })
+    expect(screen.getByTestId('review-last-case')).toHaveTextContent(
+      'הפנייה שלך טופלה: לפי דוח הנוכחות 6 שעות',
+    )
+    // השורה הכללית לא מופיעה בנוסף
+    expect(screen.queryByTestId('review-decision')).toBeNull()
+  })
+
+  it('טופל מחוץ לדוח ⇒ "הפנייה שלך התקבלה: <הסיבה>"', async () => {
+    const base = { category: 'hours', resolved_at: '2026-08-02T07:00:00Z' }
+    await openReady({
+      ...SUMMARY,
+      last_case: { ...base, status: 'resolved_noted', resolution_reason: 'יטופל בדוח ההשלמה' },
+    })
+    expect(screen.getByTestId('review-last-case')).toHaveTextContent(
+      'הפנייה שלך התקבלה: יטופל בדוח ההשלמה',
+    )
+  })
+
+  it('תוקן ⇒ "הפנייה שלך התקבלה" בלי סיבה', async () => {
+    await openReady({
+      ...SUMMARY,
+      last_case: {
+        category: 'hours',
+        status: 'resolved_accepted',
+        resolution_reason: 'תוקן לפי דוח נוכחות',
+        resolved_at: '2026-08-02T07:00:00Z',
+      },
+    })
+    expect(screen.getByTestId('review-last-case')).toHaveTextContent(/^הפנייה שלך התקבלה$/)
+  })
+
+  it('פנייה פתוחה חדשה גוברת על ההחלטה הקודמת', async () => {
+    await openReady({
+      ...SUMMARY,
+      decision: { state: 'objection_open', at: '2026-08-03T07:00:00Z' },
+      open_case: { category: 'hours', created_at: '2026-08-03T07:00:00Z' },
+      last_case: {
+        category: 'hours',
+        status: 'resolved_rejected',
+        resolution_reason: 'סיבה ישנה',
+        resolved_at: '2026-08-02T07:00:00Z',
+      },
+    })
+    expect(screen.queryByTestId('review-last-case')).toBeNull()
+    expect(screen.getByTestId('review-decision')).toHaveTextContent('הפנייה שלך בטיפול')
+  })
+})
+
 describe('"יש טעות"', () => {
   it('שליחה ריקה ⇒ סיכום שגיאות שמקבל פוקוס, ושגיאה ליד כל שדה שחוזרת על שמו; אין קריאה לשרת', async () => {
     await openReady()
     fireEvent.click(screen.getByTestId('review-object'))
+    // שורת הנחיה אחת, בלי "לחצי לסימון" על כל כרטיס (סקירת UX 1)
+    expect(document.body.textContent).not.toContain('לחצי לסימון')
+    expect(screen.getAllByText(/סמני את המשמרת/)).toHaveLength(1)
     fireEvent.click(screen.getByTestId('review-submit-objection'))
 
     const summary = await screen.findByTestId('review-error-summary')
     await waitFor(() => expect(summary).toHaveFocus())
+    // שגיאת בחירת המשמרת — פעם אחת, ליד הבחירה, לא גם בסיכום
     expect(screen.getByTestId('review-error-rows')).toHaveTextContent('משמרת:')
+    expect(screen.getAllByText(/משמרת: יש לסמן/)).toHaveLength(1)
+    expect(summary).not.toHaveTextContent('משמרת: יש לסמן')
     expect(screen.getByTestId('review-error-category')).toHaveTextContent('סוג הטעות:')
     expect(screen.getByTestId('review-error-description')).toHaveTextContent('מה לא נכון:')
     expect(respondToPayrollReview).not.toHaveBeenCalled()
+  })
+
+  it('רק המשמרת חסרה ⇒ אין סיכום, והפוקוס עובר לשגיאה שליד הבחירה', async () => {
+    await openReady()
+    fireEvent.click(screen.getByTestId('review-object'))
+    fireEvent.click(screen.getByTestId('review-category-hours'))
+    fireEvent.change(screen.getByTestId('review-description'), { target: { value: 'x' } })
+    fireEvent.click(screen.getByTestId('review-submit-objection'))
+    const rowsError = await screen.findByTestId('review-error-rows')
+    await waitFor(() => expect(rowsError).toHaveFocus())
+    expect(screen.queryByTestId('review-error-summary')).toBeNull()
   })
 
   it('מספר מוצע לא תקין ⇒ שגיאה ליד השדה', async () => {
@@ -352,7 +428,9 @@ describe('"יש טעות"', () => {
     })
     expect(screen.queryByTestId('review-objection-form')).toBeNull()
     await waitFor(() =>
-      expect(screen.getByTestId('review-decision')).toHaveTextContent('הפנייה שלך בטיפול'),
+      expect(screen.getByTestId('review-decision')).toHaveTextContent(
+        'הפנייה שלך בטיפול (נשלחה 01/08/2026 10:00)',
+      ),
     )
   })
 
