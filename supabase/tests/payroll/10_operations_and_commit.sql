@@ -550,3 +550,13 @@ begin
   assert (c ->> 'attempt_id')::bigint <> (select accountant_attempt_id from public.payroll_operations
                                              where operation_id = '00000000-0000-0000-0000-00000000b001');
 end $$;
+
+-- test: status carries the accountant address configured now (retry needs it after an address change)
+do $$ begin
+  perform test.act_as('fin@test.local');
+  assert public.payroll_operation_status('00000000-0000-0000-0000-00000000b001') ->> 'accountant_recipient_current' = 'accountant@example.test';
+  perform test.act_as_owner();
+  update public.params set param_value = 'new-office@example.test' where param_name = 'מייל_משרד_רואי_חשבון';
+  perform test.act_as('view@test.local');
+  assert public.payroll_operation_status('00000000-0000-0000-0000-00000000b001') ->> 'accountant_recipient_current' = 'new-office@example.test';
+end $$;
