@@ -168,26 +168,53 @@ describe('מצב: טיוטה מוכנה', () => {
     )
   })
 
-  it('שורת פיצוי: בונוס ונסיעות "—" ולא 0; בלי עמודות ת"ז ובנק; בנק חסר = תג (UX D1)', async () => {
+  // הכרעת ישי 14/10 09:15 (גוברת על D1): טבלת הטיוטה היא הקובץ לרו"ח, אחד-לאחד.
+  it('הטבלה = הקובץ: אותן עמודות, אותם ערכים בפורמט הקובץ, "סה"כ שעות" ובלי שורות אפס', async () => {
+    const zero = previewLine({
+      hostess_id: 900009,
+      hostess_name: 'שורת אפס',
+      hours: 0,
+      travel: 0,
+      line_total: 0,
+      show_in_file: false,
+    })
+    api.getPayrollPreview.mockResolvedValue(
+      makePreview({ lines: [previewLine(), compensationLine(), zero] }),
+    )
     renderPage()
-    const table = await screen.findByTestId('payroll-draft-table')
+    expect(await screen.findByTestId('payroll-file-preview-title')).toHaveTextContent(
+      'כך ייראה הקובץ לרואה החשבון',
+    )
+    const table = screen.getByTestId('payroll-draft-table')
     const headers = within(table)
       .getAllByRole('columnheader')
       .map((h) => h.textContent)
-    expect(headers).toEqual(['דיילת', 'שעות', 'תעריף', 'בונוס', 'נסיעות'])
+    expect(headers).toEqual(['ת"ז', 'שם', 'פרטי-בנק', 'תאריך', 'תעריף', 'שעות', 'בונוס', 'נסיעות'])
     const rows = screen.getAllByTestId('payroll-draft-row')
-    const comp = rows.find((row) => row.textContent.includes('מאיה כהן'))
-    const cells = within(comp).getAllByRole('cell')
-    expect(cells[1]).toHaveTextContent('4')
-    expect(cells[1]).not.toHaveTextContent('4.00')
-    expect(cells[3]).toHaveTextContent('—')
-    expect(cells[4]).toHaveTextContent('—')
-    expect(cells[3]).not.toHaveTextContent('0.00')
-    expect(within(comp).getByTestId('payroll-missing-bank-tag')).toHaveTextContent('חסרים פרטי בנק')
-    expect(table).not.toHaveTextContent('204455667')
-    expect(screen.getByTestId('payroll-missing-bank-summary')).toHaveTextContent(
-      'דיילת אחת בלי פרטי בנק',
+    expect(rows).toHaveLength(2)
+    expect(table).not.toHaveTextContent('שורת אפס')
+    const noa = within(rows[0])
+      .getAllByRole('cell')
+      .map((c) => c.textContent)
+    expect(noa).toEqual([
+      '012345678',
+      'נועה לוי',
+      'הפועלים 601-2047199',
+      '05/07/2026',
+      '45.00',
+      '6.00',
+      '0.00',
+      '22.60',
+    ])
+    const comp = within(rows[1]).getAllByRole('cell')
+    expect(comp[2]).toHaveTextContent('—')
+    expect(within(comp[2]).getByTestId('payroll-missing-bank-tag')).toHaveTextContent(
+      'חסרים פרטי בנק',
     )
+    expect(comp[6]).toHaveTextContent('—')
+    expect(comp[7]).toHaveTextContent('—')
+    expect(screen.getByTestId('payroll-draft-hours-total')).toHaveTextContent('סה"כ שעות')
+    expect(screen.getByTestId('payroll-draft-hours-total')).toHaveTextContent('10.00')
   })
 
   it('הורדת טיוטה: הטוסט מופיע רק אחרי שהקובץ נבנה, עם כל השורות', async () => {
@@ -374,6 +401,29 @@ describe('מצב: מוכן להפקה + אישור', () => {
     await waitFor(() => expect(api.issuePayrollReport).toHaveBeenCalled())
     // מזהה ההפקה נכתב לכתובת לפני/עם הקריאה — רענון חוזר לאותה הפקה.
     await waitFor(() => expect(searchParams().get('op')).toBe('from-server'))
+  })
+
+  it('"הורד את הקובץ שיישלח": אותו בונה טיוטה ואותה גרסת תצוגה מקדימה, עם הסבר מתחת', async () => {
+    renderPage('?period=2026-07&view=final')
+    fireEvent.click(await screen.findByTestId('payroll-download-file-to-send'))
+    expect(await screen.findByText('הטיוטה מוכנה להורדה')).toBeInTheDocument()
+    expect(downloadDraft).toHaveBeenCalledWith(expect.objectContaining({ version: 'v1:abc' }))
+    expect(screen.getByTestId('payroll-file-to-send')).toHaveTextContent(
+      'זהו הקובץ שיישלח, כולל ת"ז ופרטי בנק',
+    )
+  })
+
+  it('נתונים ישנים ⇒ במקום הורדה מבקשים לרענן', async () => {
+    const ready = makeReadiness({ ready: true, blockers: [] })
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ review: { version_current: false }, readiness: ready }),
+    )
+    renderPage('?period=2026-07&view=final')
+    expect(await screen.findByTestId('payroll-file-to-send-refresh')).toBeInTheDocument()
+    expect(screen.queryByTestId('payroll-download-file-to-send')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('payroll-file-to-send-refresh'))
+    await waitFor(() => expect(api.getPayrollPreview).toHaveBeenCalledTimes(2))
+    expect(downloadDraft).not.toHaveBeenCalled()
   })
 
   it('ביטול באישור ⇒ אין הפקה', async () => {

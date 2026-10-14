@@ -10,6 +10,8 @@ import {
   NOT_APPLICABLE,
   buildSalaryReportDraftDocument,
   buildSalaryReportReconstructionDocument,
+  salaryFileHoursTotal,
+  salaryFilePreviewCells,
   salaryReportDraftFileName,
   salaryReportReconstructionFileName,
   writeSalaryReportXlsx,
@@ -226,5 +228,30 @@ describe('buildSalaryReportReconstructionDocument — שחזור לדוח בלי
     expect(salaryReportReconstructionFileName('2026-08-01', 'supplement', 2)).toBe(
       '08_2026_Payroll_Report_Supplement_2_RECONSTRUCTED.xlsx',
     )
+  })
+})
+
+// הכרעת ישי 14/10 09:15: טבלת הטיוטה במסך = הקובץ לרו"ח. הבדיקה הזו מוכיחה שכל תא שהמסך מציג
+// שווה לתא באותו מקום בגיליון שנבנה מאותה תצוגה מקדימה — כדי שהשניים לא יוכלו לסטות.
+describe('salaryFilePreviewCells — המסך והקובץ, תא מול תא', () => {
+  const asText = (cell) =>
+    cell.type === Number
+      ? new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          .format(cell.value)
+          .replace(/,/g, cell.format === '0.00' ? '' : ',')
+      : String(cell.value)
+
+  it('כל שורת גוף בגיליון שווה לתאי המסך; "סה"כ שעות" שווה', () => {
+    const preview = makePreview()
+    const doc = buildSalaryReportDraftDocument(preview)
+    const header = doc.sheet.findIndex((row) => row?.[0]?.value === 'ת"ז')
+    const body = doc.sheet.slice(header + 1, doc.sheet.length - 1)
+    const fileRows = preview.lines.filter((l) => l.show_in_file)
+    expect(body).toHaveLength(fileRows.length)
+    body.forEach((sheetRow, i) => {
+      expect(salaryFilePreviewCells(fileRows[i])).toEqual(sheetRow.map(asText))
+    })
+    const total = doc.sheet[doc.sheet.length - 1][5]
+    expect(salaryFileHoursTotal(fileRows)).toBe(total.value.toFixed(2))
   })
 })
