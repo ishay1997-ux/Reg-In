@@ -141,7 +141,7 @@ export function eventGuestsError(value) {
 
 // התראה רכה (לא חסימה): יותר מפי 3 מהמתוכנן בהצעה — 950 במקום 95. המספר הזה לא משנה חיוב,
 // רק דוחות, ולכן רק "כדאי לוודא". אין מתוכנן ⇒ אין השוואה.
-export const GUESTS_NOTICE_FACTOR = 3
+const GUESTS_NOTICE_FACTOR = 3
 
 export function eventGuestsPlannedNotice(actualGuests, plannedGuests) {
   const actual = toNumberOrNull(actualGuests)
@@ -156,8 +156,8 @@ export function eventGuestsPlannedNotice(actualGuests, plannedGuests) {
 // באמת יכול להתארך. הסף — הפרש של 50% לפחות **וגם** 2 שעות לפחות (הכרעת-ישי 14/10), כדי
 // שאירוע של שעתיים שהתארך לשלוש לא יצעק. כיוון ההפרש לא משנה (גם 2 במקום 8 חשוד).
 // שעות-תכנון חסרות ⇒ אין השוואה (אין לנו מה לומר).
-export const HOURS_NOTICE_MIN_RATIO = 0.5
-export const HOURS_NOTICE_MIN_DIFF = 2
+const HOURS_NOTICE_MIN_RATIO = 0.5
+const HOURS_NOTICE_MIN_DIFF = 2
 
 // ⚠️ המתוכנן נגזר משעות-הפרויקט כאן, ולא מ-`plannedEventHours` — שם שעה חסרה הופכת ל-24
 // (ברירת-מחדל של תקרה), וכאן 24 מומצא היה מייצר אזהרה על כל אירוע.
@@ -271,7 +271,7 @@ export function buildPayloadRows(rows, eventHours) {
 export const EVENT_HOURS_ERROR = 'חובה להזין שעות ביצוע — מספר בין 0.5 ל-24.'
 export const EVENT_GUESTS_ERROR = 'חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזן 0.'
 // ביקורת-ולידציה, שורה 12 (14/10/2026) — לא מהכרטיס המקורי; מקור: `validation-audit.md`.
-export const EVENT_GUESTS_INT_ERROR = 'כמות האורחים חייבת להיות מספר שלם, למשל 95.'
+const EVENT_GUESTS_INT_ERROR = 'כמות האורחים חייבת להיות מספר שלם, למשל 95.'
 
 export function reportFileErrorText(maxBytes) {
   const mb = maxBytes / 1024 / 1024

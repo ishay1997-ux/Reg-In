@@ -132,8 +132,8 @@ export function eventStartInstant(eventDate, startTime) {
 // ✏️ ביקורת-ולידציה, שורה 8 (14/10/2026, הספים אושרו ע"י ישי): לשכר היה רצפה ולא תקרה —
 // `3500` במקום `35` עבר, וכל שעה בשכר ×100. **מעל פי 10 מהמינימום ⇒ חסימה** (אין דיילת כזו);
 // **מעל פי 2.5 ⇒ התראה רכה** (`highWageWarning`) — תעריף גבוה אמיתי אפשרי, ספרה שנוספה סבירה יותר.
-export const WAGE_BLOCK_FACTOR = 10
-export const WAGE_WARN_FACTOR = 2.5
+const WAGE_BLOCK_FACTOR = 10
+const WAGE_WARN_FACTOR = 2.5
 
 export function minWageError(hourlyRate, minWageParamValue) {
   const min = optionalNumber(minWageParamValue)

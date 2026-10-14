@@ -203,8 +203,8 @@ export function emailSendDisabledReason({
 // ✏️ ביקורת-ולידציה, שורה 15 (14/10/2026): כתובת שהוקלדה ידנית בשדה "נמען" אינה "של איש
 // הקשר" — הנוסח הישן האשים כרטיס-לקוח תקין בכתובת שהמשתמש עצמו הקליד. ולכן שני נוסחים,
 // לפי מקור הכתובת. ריק ⇒ '' (ריק אינו "לא תקין"; חוסר-כתובת הוא הודעה נפרדת למעלה).
-export const INVALID_TYPED_EMAIL_MESSAGE = 'כתובת המייל אינה תקינה — לדוגמה: name@company.co.il'
-export const INVALID_CONTACT_EMAIL_MESSAGE = 'כתובת המייל של איש הקשר אינה תקינה'
+const INVALID_TYPED_EMAIL_MESSAGE = 'כתובת המייל אינה תקינה — לדוגמה: name@company.co.il'
+const INVALID_CONTACT_EMAIL_MESSAGE = 'כתובת המייל של איש הקשר אינה תקינה'
 
 export function recipientEmailError(email, { typedByUser = false } = {}) {
   const trimmed = email?.trim() ?? ''

@@ -164,7 +164,7 @@ export function deriveDaysOverdue(invoiceSentAt, termsDays, today) {
 // **עתיד ⇒ חסימה** (`error`) · **לפני שליחת החשבונית ⇒ התראה רכה** (`notice`) — תשלום מראש
 // קורה, אבל הקלדת חודש/שנה שגויים סבירה יותר. "היום" ותאריך-השליחה — שניהם כיום-לוח בישראל.
 // ‏`invoiceSentAt` כאן הוא ערך-תצוגה ולא גזירת-כסף ⇒ `undefined` מתנהג כ-`null` (קטגוריה (ב)).
-export const PAYMENT_DATE_FUTURE_ERROR = 'תאריך התשלום לא יכול להיות בעתיד.'
+const PAYMENT_DATE_FUTURE_ERROR = 'תאריך התשלום לא יכול להיות בעתיד.'
 
 function isoOf(calendarDate) {
   return calendarDate === null ? null : dayNumberToIso(dayNumber(calendarDate))

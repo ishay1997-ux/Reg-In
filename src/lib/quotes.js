@@ -257,10 +257,10 @@ export function combinedTierNote(total) {
   return `מחיר מדרגה לפי ${total} יחידות בסך הכל בהצעה`
 }
 
-export const QUOTE_GUESTS_INT_MESSAGE = 'כמות האורחים חייבת להיות מספר שלם, למשל 120.'
-export const QUOTE_HOSTESS_INT_MESSAGE = 'כמות הדיילות חייבת להיות מספר שלם, למשל 6.'
-export const QUOTE_LINE_QTY_INT_MESSAGE = 'הכמות בשורה חייבת להיות מספר שלם, למשל 2.'
-export const QUOTE_RATIO_MESSAGE = 'היחס חייב להיות מספר שלם בין 1 ל-150.'
+const QUOTE_GUESTS_INT_MESSAGE = 'כמות האורחים חייבת להיות מספר שלם, למשל 120.'
+const QUOTE_HOSTESS_INT_MESSAGE = 'כמות הדיילות חייבת להיות מספר שלם, למשל 6.'
+const QUOTE_LINE_QTY_INT_MESSAGE = 'הכמות בשורה חייבת להיות מספר שלם, למשל 2.'
+const QUOTE_RATIO_MESSAGE = 'היחס חייב להיות מספר שלם בין 1 ל-150.'
 
 export function validateQuoteForm(form, lines, todayIso) {
   const errors = {}
@@ -539,7 +539,7 @@ function paramNumber(value) {
 // לאישור ולא אוסרים אותה; חסימה הייתה עוצרת עסקה לגיטימית. ‏100% בדיוק ⇒ הנוסח של הצעה על 0 ₪.
 // מעל 100 ⇒ '' — זו כבר שגיאה חוסמת ב-`validateQuoteForm`.
 // הסף מ-`סף_אזהרת_הנחה_אחוז`; חסר / מחוץ לטווח-המרשם (5–90) ⇒ 30.
-export const DEFAULT_DISCOUNT_WARNING_PERCENT = 30
+const DEFAULT_DISCOUNT_WARNING_PERCENT = 30
 
 export function discountWarningThreshold(rawParamValue) {
   const n = paramNumber(rawParamValue)
