@@ -1460,7 +1460,7 @@ function OverdueCell({ days, debtOpen, paidOn, testId }) {
     if (!paidOn) return <span className="text-slate-400">{DASH}</span>
     return (
       <>
-        <StatusTag label={PAID_TAG} tone="ok" testId={testId} />
+        <StatusTag label={PAID_TAG} tone="muted" testId={testId} />
         <div className="mt-px text-xs text-slate-500">
           <Ltr>{formatDate(paidOn, DASH)}</Ltr>
         </div>

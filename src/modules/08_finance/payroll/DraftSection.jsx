@@ -135,7 +135,6 @@ export default function DraftSection({
         <StatTile
           label="משמרות"
           value={<Ltr>{fileLines.length}</Ltr>}
-          sub={excludedLinesNote(lines) ?? undefined}
           testId="payroll-tile-lines"
         />
         {/* F12 (14/10): אין סכום מחושב בש"ח על המסך — הסיכום בשעות. הסכום נשאר בתשובת השרת
@@ -147,6 +146,12 @@ export default function DraftSection({
           testId="payroll-tile-hours"
         />
       </div>
+      {/* ישי 14/10 ~17:5x: המשפט בתוך האריח מתח אותו ושבר את שורת האריחים — הוא יושב מתחת לשורה. */}
+      {excludedLinesNote(lines) && (
+        <p className="-mt-2 text-sm text-slate-600" data-testid="payroll-excluded-note">
+          {excludedLinesNote(lines)}
+        </p>
+      )}
 
       {pending.ok === false && (
         <Banner tone="warn" testId="payroll-pending-failed">
