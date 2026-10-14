@@ -11,7 +11,7 @@ import Money from '@/components/Money'
 import StatusTag from '@/components/StatusTag'
 import { Pager } from '@/components/ListWindow'
 import { useToast } from '@/components/ToastProvider'
-import { formatDate, formatTimestampFull } from '@/lib/dates'
+import { formatDate } from '@/lib/dates'
 import { paginate } from '@/lib/listWindow'
 import { salaryPeriodLabel } from '@/lib/salaryReport'
 import { getPayrollFileUrl, getPayrollReportDetail } from '../payrollApi'
@@ -26,6 +26,7 @@ import {
   formatHours,
   hoursSum,
   kindLabel,
+  formatStoredMoment,
   needsReconstruction,
   payrollErrorMessage,
   periodParamOf,
@@ -151,7 +152,7 @@ function DetailHeader({ report, lines }) {
       </span>
       <span>
         <span className="text-slate-600">הופק:</span>{' '}
-        <Ltr>{formatTimestampFull(report.issued_at, '—')}</Ltr>
+        <Ltr>{formatStoredMoment(report.issued_at, { dateOnly: report.legacy })}</Ltr>
       </span>
       <span data-testid="payroll-detail-hours">
         <span className="text-slate-600">היקף:</span> {hoursSummary}
@@ -261,9 +262,15 @@ function Delivery({ report, detail, canEdit, onReload }) {
             {latest.completed_at && (
               <>
                 {' '}
-                · <Ltr>{formatTimestampFull(latest.completed_at)}</Ltr>
+                · <Ltr>{formatStoredMoment(latest.completed_at, { dateOnly: report.legacy })}</Ltr>
               </>
             )}
+          </span>
+        )}
+        {/* דוח מהתהליך הקודם: נשמר רק תאריך השליחה (`sent_date`) — מוצג כתאריך בלבד. */}
+        {!latest && report.sent_date && (
+          <span className="text-slate-700" data-testid="payroll-detail-sent-date">
+            <Ltr>{formatStoredMoment(report.sent_date)}</Ltr>
           </span>
         )}
       </div>
@@ -292,7 +299,11 @@ function Delivery({ report, detail, canEdit, onReload }) {
                 <li key={attempt.attempt_id}>
                   {accountantDeliveryTag(attempt.state).label} · אל{' '}
                   <Ltr>{attempt.intended_recipient}</Ltr> ·{' '}
-                  <Ltr>{formatTimestampFull(attempt.completed_at ?? attempt.created_at, '—')}</Ltr>
+                  <Ltr>
+                    {formatStoredMoment(attempt.completed_at ?? attempt.created_at, {
+                      dateOnly: report.legacy,
+                    })}
+                  </Ltr>
                 </li>
               ))}
           </ul>

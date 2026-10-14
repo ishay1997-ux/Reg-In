@@ -9,6 +9,7 @@ import {
   defaultFilter,
   filterRecipients,
   formatHours,
+  formatStoredMoment,
   hoursSum,
   isDecided,
   groupReports,
@@ -342,6 +343,19 @@ describe('resendOutcome — "נשלח" רק כשהניסיון באמת נשלח
     [undefined, 'error', 'לא ידוע אם נשלח. יש לבדוק לפני שליחה חוזרת'],
   ])('%s', (state, tone, text) => {
     expect(resendOutcome(state, 'נשלח שוב')).toEqual({ tone, text })
+  })
+})
+
+describe('formatStoredMoment — לא מציגים שעה שלא נשמרה (פוליש 14/10, פריט 3)', () => {
+  it('תאריך-בלבד נשאר תאריך, בלי שעה', () => {
+    expect(formatStoredMoment('2026-09-02')).toBe('02/09/2026')
+  })
+  it('דוח מהתהליך הקודם: חותמת יומן ⇒ תאריך בלבד בשעון ישראל', () => {
+    expect(formatStoredMoment('2026-09-02T10:00:00+00:00', { dateOnly: true })).toBe('02/09/2026')
+  })
+  it('חותמת אמיתית מהתהליך החדש ⇒ תאריך ושעה', () => {
+    expect(formatStoredMoment('2026-09-02T10:00:00+00:00')).toBe('02/09/2026 13:00')
+    expect(formatStoredMoment(null)).toBe('—')
   })
 })
 
