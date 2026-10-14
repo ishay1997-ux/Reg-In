@@ -926,7 +926,7 @@ describe('ReportSurface — שבב-ההיקף במקום שורת-האוכלוס
     callReport.mockResolvedValueOnce(
       payload({
         population: { n: 246, label: 'נכללים אירועים שהתקיימו', summary: '246 אירועים · מתוך 837' },
-        definitions: 'שולי-רווח = רווח חלקי הכנסה',
+        definitions: 'שולי רווח = רווח חלקי הכנסה',
       }),
     )
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={vi.fn()} />)

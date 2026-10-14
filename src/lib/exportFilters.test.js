@@ -13,7 +13,7 @@ const COLUMNS = [
   { key: 'bucket', label: 'מדרג', format: 'text' },
   { key: 'amount', label: 'סכום', format: 'money' },
   { key: 'days_overdue', label: 'ימי איחור', format: 'days' },
-  { key: 'margin', label: 'שולי-רווח', format: 'percent' },
+  { key: 'margin', label: 'שולי רווח', format: 'percent' },
   { key: 'sent_date', label: 'נשלחה', format: 'date' },
 ]
 
