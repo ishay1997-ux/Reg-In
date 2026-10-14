@@ -58,7 +58,7 @@ function YearPicker({ years, period, onPeriodChange }) {
   return (
     <>
       <label className={`${LABEL_CLASS} mr-2`} htmlFor="reports-year">
-        שנה
+        שנה מלאה
       </label>
       <select
         id="reports-year"

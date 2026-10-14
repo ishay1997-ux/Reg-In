@@ -55,7 +55,7 @@ describe('ExportDialog — התצוגה המקדימה היא הקובץ', () =>
     setup({
       columns: [
         { key: 'amount', label: 'סכום', format: 'money' },
-        { key: 'margin', label: 'שולי-רווח', format: 'percent' },
+        { key: 'margin', label: 'שולי רווח', format: 'percent' },
       ],
       rows: [{ amount: 7578.87, margin: 52.3095131596135 }],
     })

@@ -84,7 +84,9 @@ function shiftHoursLine(row) {
   if (row.line_basis === 'cancellation_compensation') {
     return `פיצוי ביטול — ${hoursText(row.hours)} שעות`
   }
-  if (row.zero_reason === 'no_hours') return 'לא נרשמו שעות'
+  // ישי 14.10 ~17:0x ("מאשר"): "לא נרשמו שעות" לא אמר לה למה. בפועל `no_hours` הוא שורת "לא הגיעה"
+  // בסגירה (שורת 0 שעות שהדוח שומר בכוונה) — והיא צריכה לדעת שסומנה כך כדי לדעת אם לדווח על טעות.
+  if (row.zero_reason === 'no_hours') return 'סומן שלא הגעת לאירוע — 0 שעות'
   return `${hoursText(row.hours)} שעות`
 }
 

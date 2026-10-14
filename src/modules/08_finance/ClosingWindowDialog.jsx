@@ -966,7 +966,7 @@ function InvoiceGateNote({ billingUnknown, billingEmailMissing, hasFile }) {
 }
 
 // 🔤 המשפט שמצויר בתוך ה-dropzone, מילולית מהמוקאפ המאושר.
-const DROPZONE_HINT = 'גררי קובץ-חשבונית לכאן, או'
+const DROPZONE_HINT = 'גרירת קובץ חשבונית לכאן, או'
 
 function InvoiceUploadBlock({
   file,

@@ -131,7 +131,7 @@ const m2Payload = () =>
     },
     window: { from: '2026-01-01', to: '2026-09-16', label: 'שנת 2026' },
     so_what: 'לשים לב שהצמיחה השנה לא באה על חשבון הרווח.',
-    definitions: 'שולי-רווח = סך הרווח חלקי סך ההכנסה.',
+    definitions: 'שולי רווח = סך הרווח חלקי סך ההכנסה.',
     tiles: [
       {
         key: 'revenue',
@@ -151,7 +151,7 @@ const m2Payload = () =>
       },
       {
         key: 'margin',
-        label: 'שולי-רווח גולמי',
+        label: 'שולי רווח גולמי',
         value: 58.613608308793665,
         format: 'percent',
         sub: null,
@@ -263,7 +263,7 @@ const h1Payload = (extra = {}) =>
       },
       {
         key: 'expired_value',
-        label: 'סך הצעות שפג תוקפן',
+        label: 'הצעות שפג תוקפן',
         value: 53024,
         format: 'money',
         sub: `${isolateLtr('10')} הצעות`,
@@ -273,10 +273,10 @@ const h1Payload = (extra = {}) =>
       },
       {
         key: 'new_customer_rate',
-        label: 'סגירה, לקוח חדש',
+        label: 'שיעור סגירה – לקוחות חדשים',
         value: null,
         format: 'percent',
-        sub: `אין מספיק נתונים (${isolateLtr('12')})`,
+        sub: `אין מספיק נתונים (${isolateLtr('12')} הצעות)`,
         window: 'לקוח חדש = עוד לא אישר אף הצעה לפני זו',
         compare: null,
         target: null,
@@ -319,7 +319,7 @@ const h1Payload = (extra = {}) =>
       {
         type: 'bar',
         labelKey: 'bar_label',
-        title: 'שיעור סגירה לפי מאפיין',
+        title: 'שיעור סגירה לפי סוג לקוח ומועד ההצעה',
         series: [
           { key: 'rate', label: 'שיעור סגירה', kind: 'bar', axis: 'left', format: 'percent' },
         ],
@@ -366,7 +366,7 @@ const h1Payload = (extra = {}) =>
         drill_key: { kind: 'quote', id: 1188 },
       },
     ],
-    so_what: `לעקוב אחרי הצעות פתוחות לפני שהן פגות — ${isolateLtr('10')} פגו בלי מענה, ${isolateLtr('53,024 ₪')}.`,
+    so_what: `לעקוב אחרי הצעות פתוחות לפני שהן פגות — ${isolateLtr('10')} הצעות פגו בלי מענה, בשווי ${isolateLtr('53,024 ₪')}.`,
     definitions: 'שיעור סגירה = אושרו חלקי (אושרו + נדחו)',
     meta: { measured_at: null, missing_params: [], notes: [], row_total: 102, run: null },
     ...extra,
@@ -394,7 +394,7 @@ const h2Payload = (extra = {}) =>
       },
       {
         key: 'margin_deep',
-        label: 'שולי-רווח בהנחה מעל 10%',
+        label: 'שולי רווח בהנחה מעל 10%',
         value: null,
         format: 'percent',
         sub: `אין מספיק נתונים (${isolateLtr('17')})`,
@@ -418,7 +418,7 @@ const h2Payload = (extra = {}) =>
       title: 'סגירה ורווח לפי הנחה',
       series: [
         { key: 'close_rate', label: 'שיעור סגירה', kind: 'bar', axis: 'left', format: 'percent' },
-        { key: 'margin', label: 'שולי-רווח', kind: 'bar', axis: 'left', format: 'percent' },
+        { key: 'margin', label: 'שולי רווח', kind: 'bar', axis: 'left', format: 'percent' },
       ],
       data: [
         { band: '0%', close_rate: 74, margin: 57.9, n: 477 },
@@ -538,7 +538,7 @@ describe('מ2 · מבט-על הנהלה', () => {
     renderTab('מ2')
 
     expect(await screen.findByText('הכנסות')).toBeInTheDocument()
-    for (const label of ['שולי-רווח גולמי', 'אירועים שהסתיימו', 'נתח 5 הלקוחות הגדולים']) {
+    for (const label of ['שולי רווח גולמי', 'אירועים שהסתיימו', 'נתח 5 הלקוחות הגדולים']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
     // 📐4 — ₪ בלי אגורות · אחוז בספרה אחת, שניהם מבודדים.
@@ -563,7 +563,7 @@ describe('מ2 · מבט-על הנהלה', () => {
     renderTab('מ2')
 
     expect(await screen.findByTestId('chart-note')).toHaveTextContent(
-      `חלקי — ${isolateLtr('16')} ימים בלבד`,
+      `עוד לא הסתיים (${isolateLtr('16')} ימים)`,
     )
     // 📐20 ① — הערוץ שהשכבה המשותפת פתחה: העמודה החלקית מסומנת `is_today`.
     expect(chartProps('Cell').some((props) => props.strokeDasharray)).toBe(true)
@@ -623,8 +623,8 @@ describe('ה1 · סגירת הצעות', () => {
     for (const label of [
       'שיעור סגירה',
       'הצעות מחיר שנדחו',
-      'סך הצעות שפג תוקפן',
-      'סגירה, לקוח חדש',
+      'הצעות שפג תוקפן',
+      'שיעור סגירה – לקוחות חדשים',
     ]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0)
     }
