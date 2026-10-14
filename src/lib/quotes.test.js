@@ -337,6 +337,30 @@ describe('validateQuoteForm', () => {
       'ratio',
     )
   })
+
+  // ביקורת-ולידציה, שורות 1+2 (14/10/2026): השדות האלה `integer` במסד.
+  it('שבר באורחים / בדיילות / בכמות-שורה ⇒ נחסם בהודעה שאומרת איך לתקן', () => {
+    expect(validateQuoteForm({ ...VALID_FORM, guests: '12.5' }, WORKED_LINES, TODAY).guests).toBe(
+      'כמות האורחים חייבת להיות מספר שלם, למשל 120.',
+    )
+    expect(
+      validateQuoteForm({ ...VALID_FORM, hostessCount: '2.5' }, WORKED_LINES, TODAY).hostessCount,
+    ).toBe('כמות הדיילות חייבת להיות מספר שלם, למשל 6.')
+    const fractionalLines = WORKED_LINES.map((line, i) => (i === 0 ? { ...line, qty: 1.5 } : line))
+    expect(validateQuoteForm(VALID_FORM, fractionalLines, TODAY).lines).toBe(
+      'הכמות בשורה חייבת להיות מספר שלם, למשל 2.',
+    )
+  })
+
+  it('יחס אורחים לדיילת — אותו כלל כמו במסך ההגדרות: שלם 1–150', () => {
+    const ratioError = (ratio) =>
+      validateQuoteForm({ ...VALID_FORM, ratio }, WORKED_LINES, TODAY).ratio
+    expect(ratioError(0.0001)).toBe('היחס חייב להיות מספר שלם בין 1 ל-150.')
+    expect(ratioError(5000)).toBe('היחס חייב להיות מספר שלם בין 1 ל-150.')
+    expect(ratioError('')).toBe('היחס חייב להיות מספר שלם בין 1 ל-150.')
+    expect(ratioError(1)).toBeUndefined()
+    expect(ratioError('150')).toBeUndefined()
+  })
 })
 
 describe('quoteToFormState — טעינת הצעה קיימת לעריכה', () => {

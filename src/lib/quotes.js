@@ -15,7 +15,8 @@ import { buildEmailPayload, fillEmailTemplate, findUnknownPlaceholders } from '@
 // N2 (02/09/2026): איש-הקשר הראשי הוא שורה ב-customer_contacts, לא שלוש עמודות על customers.
 // primaryContact הוא נקודת-הקריאה היחידה (src/lib/customers.js) — לא לבחור ידנית מהמערך כאן.
 import { primaryContact } from '@/lib/customers'
-import { paramLabel } from '@/lib/paramsRegistry'
+import { getParamEntry, paramLabel, validateParamValue } from '@/lib/paramsRegistry'
+import { isValidPositiveInt } from '@/lib/validators'
 
 // quotes.quote_status — שלושת הערכים של CHECK quotes_quote_status_check.
 export const QUOTE_STATUS_LABELS = {
@@ -250,6 +251,11 @@ function isPositiveQty(value) {
   return Number.isFinite(n) && n > 0
 }
 
+export const QUOTE_GUESTS_INT_MESSAGE = 'כמות האורחים חייבת להיות מספר שלם, למשל 120.'
+export const QUOTE_HOSTESS_INT_MESSAGE = 'כמות הדיילות חייבת להיות מספר שלם, למשל 6.'
+export const QUOTE_LINE_QTY_INT_MESSAGE = 'הכמות בשורה חייבת להיות מספר שלם, למשל 2.'
+export const QUOTE_RATIO_MESSAGE = 'היחס חייב להיות מספר שלם בין 1 ל-150.'
+
 export function validateQuoteForm(form, lines, todayIso) {
   const errors = {}
 
@@ -267,16 +273,25 @@ export function validateQuoteForm(form, lines, todayIso) {
     errors.eventDate = 'תאריך האירוע כבר עבר — בחר תאריך עתידי.'
   }
 
+  // ✏️ ביקורת-ולידציה, שורות 1+2 (14/10/2026): אורחים, דיילות וכמות-שורה הם `integer` במסד
+  // וה-RPC עושה `::int` — `12.5` עבר כאן ונפל בשרת כ"שמירת ההצעה נכשלה" בלי הסבר. ולכן
+  // "גדול מ-0" נבדק קודם (ההודעה הקיימת), ו"שלם" אחריו בהודעה שאומרת איך לתקן.
   const guests = Number(form.guests)
   if (!Number.isFinite(guests) || guests <= 0) errors.guests = 'כמות אורחים חייבת להיות גדולה מ-0.'
+  else if (!isValidPositiveInt(form.guests)) errors.guests = QUOTE_GUESTS_INT_MESSAGE
 
-  const ratio = Number(form.ratio)
-  if (!Number.isFinite(ratio) || ratio <= 0) errors.ratio = 'יחס אורחים לדיילת חייב להיות גדול מ-0.'
+  // שורה 2: היחס נבדק **באותו כלל בדיוק** כמו במסך ההגדרות (שלם 1–150, `PARAM_REGISTRY`) —
+  // לא העתק של הטווח, כדי ששני המסכים לא יוכלו להיפרד.
+  if (!validateParamValue(getParamEntry('יחס_אורחים_לדיילת'), form.ratio).ok) {
+    errors.ratio = QUOTE_RATIO_MESSAGE
+  }
 
   // CHECK quotes_recommended_hostess_count_check דורש > 0. מאז שהשדה נערך ידנית, משתמש
   // יכול לרוקן אותו — וריק היה מגיע לשרת כ-NULL ומפיל את ה-INSERT בשגיאה לא-קריאה.
   if (!isPositiveQty(form.hostessCount)) {
     errors.hostessCount = 'כמות הדיילות חייבת להיות גדולה מ-0.'
+  } else if (!isValidPositiveInt(form.hostessCount)) {
+    errors.hostessCount = QUOTE_HOSTESS_INT_MESSAGE
   }
 
   // ⚠️ הבחנה שנתפסה בבדיקה 29/07/2026 ושווה להסביר, כי היא נראית כמו סתירה למלכודת
@@ -299,6 +314,8 @@ export function validateQuoteForm(form, lines, todayIso) {
     // תקינוּת המספר נבדקת במפורש לפני ההשוואה.
   } else if (lines.some((line) => !line.sku || !isPositiveQty(line.qty))) {
     errors.lines = 'לכל פריט חייבים להיות מוצר וכמות גדולה מ-0.'
+  } else if (lines.some((line) => !isValidPositiveInt(line.qty))) {
+    errors.lines = QUOTE_LINE_QTY_INT_MESSAGE
   } else if (sumHostessQty(lines) <= 0) {
     // §7.53: אין אירוע בלי דיילות. ה-RPC של האישור חוסם את זה ממילא — חסימה כבר כאן
     // מונעת הצעה שנשמרת ואז מסרבת להפוך לפרויקט, בלי שהמשתמש מבין למה.
