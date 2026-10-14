@@ -94,6 +94,41 @@ export function resolveUnitPrice(product, tiers, qty) {
   return toFiniteNumber(winner.special_price) ?? basePrice
 }
 
+// ── מדרגה לפי הכמות הכוללת בהצעה (הכרעת-ישי 14/10/2026) ───────────────────
+// *"זה טריקי כי ישאלו על זה מה מקובל בדרך כלל? אי אפשר לסדר את זה?"* — **מחיר-המדרגה נקבע
+// לפי סך היחידות של אותו מוצר בכל שורות ההצעה**, לא לפי כל שורה לחוד: 50 תגים אדומים + 50
+// כחולים מתומחרים שניהם במדרגת ה-100. זה תמחור-הכמות המקובל ("mix and match": הנחות-כמות
+// שמצרפות וריאנטים של אותו מוצר ב-Shopify/WooCommerce, ונוהג ענף מוצרי-הקידום).
+// לפני כן 3+3 דיילות (בלי מדרגה) תומחרו אחרת מ-6 בשורה אחת — הפרש מחיר שקט.
+//
+// הסכום סופר רק כמויות חיוביות-סופיות: שורה שעוד מוקלדת (ריק / NaN) אינה מזיזה את המדרגה
+// של אחיותיה. שורה בלי מק"ט אינה נספרת.
+export function totalQtyBySku(lines) {
+  const totals = new Map()
+  for (const line of lines ?? []) {
+    const q = toFiniteNumber(line?.qty)
+    if (!line?.sku || q === null || q <= 0) continue
+    totals.set(line.sku, (totals.get(line.sku) ?? 0) + q)
+  }
+  return totals
+}
+
+// תמחור-מחדש של **כל** שורות המק"טים שנגעו בהם (`skus`), כל אחת לפי סך-הכמות של המק"ט שלה.
+// שורות של מק"טים אחרים **אינן נוגעות** — מחיר שנטען מהמסד נשאר כפי שנשמר עד שנוגעים במוצר
+// שלו (אותה התנהגות כמו קודם, רק ברמת-המוצר במקום ברמת-השורה). מוצר שלא נמצא בקטלוג ⇒ השורה
+// נשארת כפי שהיא (⛔ לא 0 ₪ — ר' `repriceLine` ב-QuoteLineEditor). מחזיר מערך חדש.
+export function repriceLinesBySkuTotal(lines, products, tiers, skus) {
+  const touched = new Set((skus ?? []).filter(Boolean))
+  if (touched.size === 0) return lines
+  const totals = totalQtyBySku(lines)
+  return lines.map((line) => {
+    if (!touched.has(line.sku)) return line
+    const product = (products ?? []).find((p) => p.sku === line.sku)
+    if (!product) return line
+    return { ...line, unitPrice: resolveUnitPrice(product, tiers, totals.get(line.sku) ?? 0) }
+  })
+}
+
 // סך-שורה בשקלים, מדויק לאגורה. כמות/מחיר לא-תקינים ⇒ 0 (שורה חצי-מלאה במסך-הבנייה
 // לא אמורה להפיל את הסיכום החי בזמן שהמשתמש עדיין מקליד).
 export function computeLineTotal(qty, unitPrice) {

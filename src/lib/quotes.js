@@ -251,6 +251,12 @@ function isPositiveQty(value) {
   return Number.isFinite(n) && n > 0
 }
 
+// הכרעת-ישי 14/10/2026 — מחיר-המדרגה לפי סך היחידות של המוצר בהצעה (`pricing.js`,
+// `repriceLinesBySkuTotal`). הכיתוב המשני בשורה שתומחרה לפי הסך.
+export function combinedTierNote(total) {
+  return `מחיר מדרגה לפי ${total} יחידות בסך הכל בהצעה`
+}
+
 export const QUOTE_GUESTS_INT_MESSAGE = 'כמות האורחים חייבת להיות מספר שלם, למשל 120.'
 export const QUOTE_HOSTESS_INT_MESSAGE = 'כמות הדיילות חייבת להיות מספר שלם, למשל 6.'
 export const QUOTE_LINE_QTY_INT_MESSAGE = 'הכמות בשורה חייבת להיות מספר שלם, למשל 2.'

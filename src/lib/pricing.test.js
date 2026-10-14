@@ -9,7 +9,9 @@ import {
   parseVatPercent,
   recommendHostessCount,
   computeMarginPercent,
+  repriceLinesBySkuTotal,
   resolveUnitPrice,
+  totalQtyBySku,
   validateTierRows,
 } from './pricing'
 
@@ -87,6 +89,49 @@ describe('resolveUnitPrice — בחירת מדרגת-מחיר (§7.27)', () => {
   it('מוצר בלי מדרגות ובלי מחיר-בסיס ⇒ 0 (שורה חשודה על המסך, לא קריסה)', () => {
     expect(resolveUnitPrice({ sku: 'X' }, [], 5)).toBe(0)
     expect(resolveUnitPrice(null, [], 5)).toBe(0)
+  })
+})
+
+// הכרעת-ישי 14/10/2026: מדרגה לפי סך היחידות של אותו מוצר בכל ההצעה ("mix and match").
+describe('repriceLinesBySkuTotal — מדרגה לפי הכמות הכוללת של המוצר בהצעה', () => {
+  const CATALOG = [TAG, LAN, HOSTESS_4H]
+  const TIERS = [...B_REG_TAG_TIERS, ...B_FAB_LAN_TIERS]
+  const red = { key: 'a', sku: 'B-REG-TAG', qty: 50, color: 'אדום', unitPrice: 6 }
+  const blue = { key: 'b', sku: 'B-REG-TAG', qty: 50, color: 'כחול', unitPrice: 6 }
+
+  it('50 אדומים + 50 כחולים ⇒ שתי השורות במדרגת ה-100 (5.5 ולא 6)', () => {
+    const out = repriceLinesBySkuTotal([red, blue], CATALOG, TIERS, ['B-REG-TAG'])
+    expect(out.map((l) => l.unitPrice)).toEqual([5.5, 5.5])
+    expect(totalQtyBySku([red, blue]).get('B-REG-TAG')).toBe(100)
+  })
+
+  it('מחיקת שורה ⇒ השורה שנשארה מתומחרת-מחדש לפי הסך החדש (50 ⇒ 6)', () => {
+    const both = repriceLinesBySkuTotal([red, blue], CATALOG, TIERS, ['B-REG-TAG'])
+    const out = repriceLinesBySkuTotal([both[0]], CATALOG, TIERS, ['B-REG-TAG'])
+    expect(out[0].unitPrice).toBe(6)
+  })
+
+  it('מוצרים שונים עצמאיים: 50 תגים + 50 שרוכים ⇒ כל אחד במדרגה של עצמו', () => {
+    const lan = { key: 'c', sku: 'B-FAB-LAN', qty: 50, unitPrice: 7 }
+    const out = repriceLinesBySkuTotal([red, lan], CATALOG, TIERS, ['B-REG-TAG', 'B-FAB-LAN'])
+    expect(out.map((l) => l.unitPrice)).toEqual([6, 7])
+  })
+
+  // אין במערכת דריסת-מחיר ידנית (המחיר נעול — הכרעת-ישי 29/07). המקבילה: מחיר שנשמר במסד
+  // לשורה של מוצר **אחר** אינו נדרס כשנוגעים במוצר הזה.
+  it('שורה של מוצר שלא נגעו בו שומרת את המחיר שנשמר, גם אם הוא שונה מהקטלוג', () => {
+    const savedLan = { key: 'c', sku: 'B-FAB-LAN', qty: 50, unitPrice: 6.25 }
+    const out = repriceLinesBySkuTotal([red, blue, savedLan], CATALOG, TIERS, ['B-REG-TAG'])
+    expect(out[2]).toBe(savedLan)
+  })
+
+  it('כמות שעוד מוקלדת (ריק/0) אינה נספרת, ומוצר שאינו בקטלוג נשאר כפי שהוא (לא 0 ₪)', () => {
+    const typing = { ...blue, qty: 0 }
+    expect(repriceLinesBySkuTotal([red, typing], CATALOG, TIERS, ['B-REG-TAG'])[0].unitPrice).toBe(
+      6,
+    )
+    const ghost = { key: 'g', sku: 'GONE', qty: 500, unitPrice: 3 }
+    expect(repriceLinesBySkuTotal([ghost], CATALOG, TIERS, ['GONE'])[0]).toBe(ghost)
   })
 })
 
