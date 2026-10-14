@@ -48,7 +48,10 @@ export default function CorrectionForm({ theCase, rows, onDirty, onSaved }) {
   )
   const [selected, setSelected] = useState(eligible[0] ? rowId(eligible[0]) : '')
   const [field, setField] = useState('actual_hours')
-  const [value, setValue] = useState('')
+  // D9: ממלאים מראש את מה שהדיילת הציעה (שעות בלבד, F11), כדי שלא יוקלד מחדש.
+  const [value, setValue] = useState(
+    theCase.suggested_value != null ? String(theCase.suggested_value) : '',
+  )
   const [reason, setReason] = useState('')
   const [errors, setErrors] = useState({})
   const [saveError, setSaveError] = useState('')
@@ -123,7 +126,7 @@ export default function CorrectionForm({ theCase, rows, onDirty, onSaved }) {
       className="flex flex-col gap-3 rounded-lg border border-slate-200 p-3"
       data-testid="payroll-correction-form"
     >
-      <h3 className="font-semibold text-slate-700">תיקון במקור</h3>
+      <h3 className="font-semibold text-slate-700">תיקון שעות או בונוס</h3>
       {errorList.length > 0 && (
         <div
           ref={summaryRef}
@@ -177,7 +180,7 @@ export default function CorrectionForm({ theCase, rows, onDirty, onSaved }) {
       </fieldset>
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <span className="font-medium">היום</span>
+          <span className="font-medium">ערך נוכחי</span>
           <Ltr className="py-1.5">{before}</Ltr>
         </div>
         <div className="flex flex-col gap-1">
@@ -191,7 +194,7 @@ export default function CorrectionForm({ theCase, rows, onDirty, onSaved }) {
             step="0.01"
             dir="ltr"
             value={value}
-            placeholder="0.00"
+            placeholder="למשל 7"
             aria-invalid={Boolean(errors.value)}
             onChange={touch(setValue)}
             className="w-32 rounded-lg border border-slate-300 px-2 py-1.5"

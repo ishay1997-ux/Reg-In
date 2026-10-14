@@ -18,27 +18,28 @@ import { formatTimestampFull } from '@/lib/dates'
 import { salaryPeriodLabel } from '@/lib/salaryReport'
 import { cn } from '@/lib/utils'
 import {
+  approvePayrollDraft,
+  continuePayrollDistribution,
   createPayrollReview,
+  distributePayrollReview,
   findPayrollReview,
   getPayrollPreview,
   getPayrollReview,
   refreshPayrollReview,
 } from '../payrollApi'
+import { useConfirm } from '@/components/ConfirmDialog'
 import CasePanel from './CasePanel'
 import DraftSection from './DraftSection'
 import FinalSection from './FinalSection'
 import HistorySection from './HistorySection'
 import PeriodPicker from './PeriodPicker'
 import ReviewSection from './ReviewSection'
-import { Banner } from './payrollUi'
 import { usePayrollUrl } from './usePayrollUrl'
 import {
   VIEWS,
   VIEW_LABELS,
   isStaleCode,
-  kindLabel,
   lastEndedPeriod,
-  monthNotEndedMessage,
   payrollErrorMessage,
   periodParamOf,
   processStage,
@@ -72,9 +73,12 @@ export default function PayrollWorkspacePage() {
           canEdit={canEdit}
           onClose={() => update({ caseId: null })}
           onChanged={data.reload}
-          onSendUpdated={async () => {
-            await data.refreshReview()
-            update({ caseId: null, view: 'review', filter: 'action', page: null })
+          onSendUpdated={async (theCase) => {
+            const done = await data.sendUpdatedSummary({
+              hostessId: theCase.hostess_id,
+              hostessName: theCase.hostess_name,
+            })
+            if (done) update({ caseId: null, view: 'review', page: null })
           }}
         />
       )}
@@ -86,6 +90,7 @@ export default function PayrollWorkspacePage() {
 
 function useWorkspaceData({ canEdit, period, kind, original }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const [tick, setTick] = useState(0)
   const [startingReview, setStartingReview] = useState(false)
   // כל תוצאה נשמרת עם המפתח שלה, וערך שאינו של המפתח הנוכחי נקרא כ"בטעינה" — כך מעבר חודש
@@ -163,6 +168,65 @@ function useWorkspaceData({ canEdit, period, kind, original }) {
     [preview, period, kind, original, toast, identityKey],
   )
 
+  // "שלח סיכום מעודכן" לדיילת אחת (סקירת UX D7) — דלת אחת לשני מקומות: שורת המעקב ופאנל
+  // הפנייה. סדר הפעולות קבוע: רענון הבדיקה ⇐ אישור מפורש של הטיוטה המעודכנת (השינוי מבטל
+  // את האישור הקודם, חוזה §2.2) ⇐ שליחה לשורה החדשה של הדיילת בלבד.
+  const sendUpdatedSummary = useCallback(
+    async ({ hostessId, hostessName }) => {
+      const info = review?.review
+      if (!info) return false
+      const ok = await confirm({
+        title: 'לשלוח סיכום מעודכן?',
+        message: `הנתונים של ${hostessName} עודכנו. השליחה מאשרת את הטיוטה המעודכנת ושולחת לה סיכום חדש לאישור.`,
+        confirmLabel: 'אשר ושלח',
+      })
+      if (!ok) return false
+      try {
+        const refreshed = await refreshPayrollReview({
+          reviewId: info.review_id,
+          expectedRevision: info.revision,
+        })
+        const identity = { period, kind, originalReportId: kind === 'supplement' ? original : null }
+        const [fresh, current] = await Promise.all([
+          getPayrollPreview(identity),
+          getPayrollReview(info.review_id),
+        ])
+        const revision = refreshed?.revision ?? current.review.revision
+        await approvePayrollDraft({
+          reviewId: info.review_id,
+          expectedRevision: revision,
+          version: fresh.version,
+        })
+        const target = current.recipients.find((r) => r.hostess_id === hostessId && !r.delivery)
+        if (!target) {
+          toast.info('לדיילת הזו אין סיכום חדש לשלוח')
+          return true
+        }
+        let result = await distributePayrollReview({
+          reviewId: info.review_id,
+          expectedRevision: revision,
+          recipientIds: [target.recipient_id],
+          mode: 'initial',
+          requestId: globalThis.crypto.randomUUID(),
+        })
+        const sent = [...result.processed]
+        while (result.remaining > 0) {
+          result = await continuePayrollDistribution({ reviewId: info.review_id })
+          sent.push(...result.processed)
+        }
+        if (sent.some((p) => p.state === 'sent')) toast.success('הסיכום המעודכן נשלח')
+        else toast.error('הסיכום המעודכן לא נשלח. הסיבה מסומנת ברשימה')
+        return true
+      } catch (err) {
+        toast.error(payrollErrorMessage(err))
+        return false
+      } finally {
+        setTick((t) => t + 1)
+      }
+    },
+    [review, confirm, toast, period, kind, original],
+  )
+
   return {
     preview,
     previewError,
@@ -170,6 +234,7 @@ function useWorkspaceData({ canEdit, period, kind, original }) {
     reviewError,
     reload,
     refreshReview,
+    sendUpdatedSummary,
     startReview,
     startingReview,
   }
@@ -192,7 +257,6 @@ function Header({ view, period, kind, data, canEdit, update }) {
   const periodLabel = salaryPeriodLabel(period)
   const info = data.review?.review
   const stage = processStage({ preview: data.preview, review: data.review })
-  const currentMonth = data.preview && data.preview.month_state !== 'ended'
   return (
     <header className="flex flex-col gap-3">
       <BackLink />
@@ -200,11 +264,9 @@ function Header({ view, period, kind, data, canEdit, update }) {
         <h1 className="text-lg font-bold text-slate-800" data-testid="payroll-title">
           דוח שכר · {periodLabel}
         </h1>
-        <StatusTag
-          label={kind === 'supplement' ? `השלמה · ${periodLabel}` : kindLabel(kind)}
-          tone="outline"
-          testId="payroll-kind"
-        />
+        {kind === 'supplement' && (
+          <StatusTag label={`השלמה · ${periodLabel}`} tone="outline" testId="payroll-kind" />
+        )}
       </div>
       {canEdit && (
         <PeriodPicker
@@ -236,18 +298,13 @@ function Header({ view, period, kind, data, canEdit, update }) {
           <span className="text-slate-800" data-testid="payroll-next-step">
             {stage.next}
           </span>
-          {info?.response_deadline && (
+          {info?.response_deadline && info.status !== 'issued' && (
             <span>
               <span className="text-slate-600">מועד אחרון לתגובה:</span>{' '}
               <Ltr>{formatTimestampFull(info.response_deadline)}</Ltr>
             </span>
           )}
         </div>
-      )}
-      {currentMonth && (
-        <Banner tone="warn" testId="payroll-current-month">
-          {monthNotEndedMessage(period)}. בינתיים אפשר לבדוק טיוטה ולהוריד אותה.
-        </Banner>
       )}
     </header>
   )
@@ -310,6 +367,7 @@ function SectionFor({ view, url, update, data, canEdit }) {
         update={update}
         onReload={data.reload}
         onRefreshReview={data.refreshReview}
+        onSendUpdated={data.sendUpdatedSummary}
         canEdit={canEdit}
       />
     )

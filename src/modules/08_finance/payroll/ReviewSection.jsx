@@ -54,6 +54,7 @@ export default function ReviewSection({
   update,
   onReload,
   onRefreshReview,
+  onSendUpdated,
   canEdit,
 }) {
   if (reviewError) {
@@ -104,6 +105,7 @@ export default function ReviewSection({
       update={update}
       onReload={onReload}
       onRefreshReview={onRefreshReview}
+      onSendUpdated={onSendUpdated}
       canEdit={canEdit}
     />
   )
@@ -118,6 +120,7 @@ function ReviewBody({
   update,
   onReload,
   onRefreshReview,
+  onSendUpdated,
   canEdit,
 }) {
   const info = review.review
@@ -202,6 +205,7 @@ function ReviewBody({
             canEdit={canEdit && !issued}
             onOpenCase={(caseId) => update({ caseId })}
             onReload={onReload}
+            onSendUpdated={onSendUpdated}
           />
         )}
       </Card>
@@ -221,6 +225,14 @@ function countsOnly(review, deadlinePassed, distributed) {
 }
 
 // ── שלושת הצעדים לפני שליחה: אישור טיוטה · מועד אחרון · שליחה ─────────────────────
+
+// למה אי אפשר לשלוח עכשיו — משפט גלוי ליד הכפתור, או null.
+function sendBlockReason(info) {
+  if (!info.manager_approved) return 'יש לאשר את הטיוטה קודם'
+  if (!info.response_deadline) return 'יש לקבוע מועד אחרון לתגובה'
+  if (info.version_current === false) return 'הנתונים השתנו. יש לרענן לפני שליחה'
+  return null
+}
 
 function PrepareSteps({ review, preview, onReload, onStale }) {
   const info = review.review
@@ -312,103 +324,106 @@ function PrepareSteps({ review, preview, onReload, onStale }) {
     await run('send', () => distributeAll({ info, mode, toast, setProgress, onReload }))
   }
 
-  const sendBlockedReason = !approved
-    ? 'יש לאשר את הטיוטה קודם'
-    : !deadlineSet
-      ? 'יש לקבוע מועד אחרון לתגובה'
-      : info.version_current === false
-        ? 'הנתונים השתנו. יש לרענן לפני שליחה'
-        : null
+  const sendBlockedReason = sendBlockReason(info)
 
+  // D5 (סקירת UX): אחרי השליחה שלושת הצעדים מתקפלים לשורה אחת — מתי נשלח, המועד, תזכורת
+  // ושינוי מועד — כדי שהטבלה תעלה לראש המסך. כשהנתונים התעדכנו (צריך לאשר שוב) הצעדים חוזרים.
+  const compact = distributed && approved && info.version_current !== false
   return (
     <Card testId="payroll-review-steps">
-      <ol className="flex flex-col gap-3 text-sm">
-        <li className="flex flex-wrap items-center gap-2" data-testid="payroll-step-approve">
-          <span className="font-semibold">1. אישור הטיוטה</span>
-          {approved ? (
-            <span className="text-slate-700">
-              אושרה ב-<Ltr>{formatTimestampFull(info.manager_approved_at, '—')}</Ltr>
-            </span>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-auto px-4 py-2"
-              disabled={busy !== '' || !preview?.version || info.version_current === false}
-              onClick={approve}
-              data-testid="payroll-approve-draft"
-            >
-              {busy === 'approve' ? 'שומר…' : 'אשר טיוטה'}
-            </Button>
-          )}
-        </li>
-        <li className="flex flex-wrap items-center gap-2" data-testid="payroll-step-deadline">
-          <label htmlFor="payroll-deadline" className="font-semibold">
-            2. מועד אחרון לתגובה (שעון ישראל)
-          </label>
-          <input
-            id="payroll-deadline"
-            type="datetime-local"
-            dir="ltr"
-            value={deadlineLocal}
-            onChange={(e) => setDeadlineLocal(e.target.value)}
-            className="rounded-lg border border-slate-300 px-2 py-1.5"
-            data-testid="payroll-deadline-input"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            className="h-auto px-4 py-2"
-            disabled={busy !== '' || deadlineLocal === ''}
-            onClick={() => saveDeadline()}
-            data-testid="payroll-deadline-save"
-          >
-            {busy === 'deadline' ? 'שומר…' : 'שמור מועד'}
-          </Button>
-          {deadlineSet && (
-            <span className="text-slate-700">
-              נשמר: <Ltr>{formatTimestampFull(info.response_deadline)}</Ltr>
-            </span>
-          )}
-        </li>
-        <li className="flex flex-col gap-1" data-testid="payroll-step-send">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold">3. שליחה</span>
-            <Button
-              type="button"
-              className="h-auto px-4 py-2"
-              disabled={busy !== '' || Boolean(sendBlockedReason)}
-              onClick={() => send('initial')}
-              data-testid="payroll-distribute"
-            >
-              {busy === 'send' ? 'שולח…' : 'שלח סיכומים לדיילות'}
-            </Button>
-            {distributed && (
+      {compact ? (
+        <CompactBar
+          info={info}
+          busy={busy}
+          toSend={toSend}
+          deadlineLocal={deadlineLocal}
+          onDeadlineChange={setDeadlineLocal}
+          onSaveDeadline={() => saveDeadline()}
+          onSend={send}
+        />
+      ) : (
+        <ol className="flex flex-col gap-3 text-sm">
+          <li className="flex flex-wrap items-center gap-2" data-testid="payroll-step-approve">
+            <span className="font-semibold">1. אישור הטיוטה</span>
+            {approved ? (
+              <span className="text-slate-700">
+                אושרה ב-<Ltr>{formatTimestampFull(info.manager_approved_at, '—')}</Ltr>
+              </span>
+            ) : (
               <Button
                 type="button"
                 variant="outline"
                 className="h-auto px-4 py-2"
-                disabled={busy !== '' || Boolean(sendBlockedReason)}
-                onClick={() => send('reminder')}
-                data-testid="payroll-remind"
+                disabled={busy !== '' || !preview?.version || info.version_current === false}
+                onClick={approve}
+                data-testid="payroll-approve-draft"
               >
-                שלח תזכורת
+                {busy === 'approve' ? 'שומר…' : 'אשר טיוטה'}
               </Button>
             )}
-          </div>
-          {sendBlockedReason && (
-            <p className="text-slate-700" data-testid="payroll-send-reason">
-              {sendBlockedReason}
-            </p>
-          )}
-          {distributed && (
-            <p className="text-slate-600">
-              נשלח לראשונה ב-<Ltr>{formatTimestampFull(info.distributed_at)}</Ltr>. שליחה נוספת
-              יוצאת רק למי שעוד לא קיבלה סיכום.
-            </p>
-          )}
-        </li>
-      </ol>
+          </li>
+          <li className="flex flex-wrap items-center gap-2" data-testid="payroll-step-deadline">
+            <label htmlFor="payroll-deadline" className="font-semibold">
+              2. מועד אחרון לתגובה (שעון ישראל)
+            </label>
+            <input
+              id="payroll-deadline"
+              type="datetime-local"
+              dir="ltr"
+              value={deadlineLocal}
+              onChange={(e) => setDeadlineLocal(e.target.value)}
+              className="rounded-lg border border-slate-300 px-2 py-1.5"
+              data-testid="payroll-deadline-input"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto px-4 py-2"
+              disabled={busy !== '' || deadlineLocal === ''}
+              onClick={() => saveDeadline()}
+              data-testid="payroll-deadline-save"
+            >
+              {busy === 'deadline' ? 'שומר…' : 'שמור מועד'}
+            </Button>
+            {deadlineSet && (
+              <span className="text-slate-700">
+                נשמר: <Ltr>{formatTimestampFull(info.response_deadline)}</Ltr>
+              </span>
+            )}
+          </li>
+          <li className="flex flex-col gap-1" data-testid="payroll-step-send">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold">3. שליחה</span>
+              <Button
+                type="button"
+                className="h-auto px-4 py-2"
+                disabled={busy !== '' || Boolean(sendBlockedReason)}
+                onClick={() => send('initial')}
+                data-testid="payroll-distribute"
+              >
+                {busy === 'send' ? 'שולח…' : 'שלח סיכומים לדיילות'}
+              </Button>
+              {distributed && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-auto px-4 py-2"
+                  disabled={busy !== '' || Boolean(sendBlockedReason)}
+                  onClick={() => send('reminder')}
+                  data-testid="payroll-remind"
+                >
+                  שלח תזכורת
+                </Button>
+              )}
+            </div>
+            {sendBlockedReason && (
+              <p className="text-slate-700" data-testid="payroll-send-reason">
+                {sendBlockedReason}
+              </p>
+            )}
+          </li>
+        </ol>
+      )}
       <p aria-live="polite" className="mt-2 text-sm text-slate-700" data-testid="payroll-progress">
         {progress
           ? `נשלחו ${progress.sent} מתוך ${progress.total} סיכומים${progress.done ? '' : '…'}`
@@ -419,16 +434,18 @@ function PrepareSteps({ review, preview, onReload, onStale }) {
           {error}
         </Banner>
       )}
-      <Disclosure summary="דוגמה למייל לדיילת" testId="payroll-sample-mail">
-        {template.status === 'error' ? (
-          <p>לא ניתן להציג דוגמה: התבנית חסרה או לא תקינה בהגדרות</p>
-        ) : (
-          <p className="whitespace-pre-line">
-            {sampleMail(template, review.recipients[0], periodLabel, info.response_deadline) ||
-              'טוען…'}
-          </p>
-        )}
-      </Disclosure>
+      {!distributed && (
+        <Disclosure summary="דוגמה למייל לדיילת" testId="payroll-sample-mail">
+          {template.status === 'error' ? (
+            <p>לא ניתן להציג דוגמה: התבנית חסרה או לא תקינה בהגדרות</p>
+          ) : (
+            <p className="whitespace-pre-line">
+              {sampleMail(template, review.recipients[0], periodLabel, info.response_deadline) ||
+                'טוען…'}
+            </p>
+          )}
+        </Disclosure>
+      )}
       {deadlineReasonOpen && (
         <ReasonDialog
           open
@@ -445,6 +462,93 @@ function PrepareSteps({ review, preview, onReload, onStale }) {
         />
       )}
     </Card>
+  )
+}
+
+function CompactBar({
+  info,
+  busy,
+  toSend,
+  deadlineLocal,
+  onDeadlineChange,
+  onSaveDeadline,
+  onSend,
+}) {
+  const [editing, setEditing] = useState(false)
+  return (
+    <div className="flex flex-col gap-2 text-sm" data-testid="payroll-review-compact">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-slate-700">
+          נשלח ב-<Ltr>{formatTimestampFull(info.distributed_at)}</Ltr>
+        </span>
+        <span className="text-slate-700">
+          מועד אחרון: <Ltr>{formatTimestampFull(info.response_deadline, '—')}</Ltr>
+        </span>
+        {toSend > 0 && (
+          <Button
+            type="button"
+            className="h-auto px-4 py-2"
+            disabled={busy !== ''}
+            onClick={() => onSend('initial')}
+            data-testid="payroll-distribute"
+          >
+            {busy === 'send' ? 'שולח…' : 'שלח סיכומים לדיילות'}
+          </Button>
+        )}
+        <Button
+          type="button"
+          variant="outline"
+          className="h-auto px-4 py-2"
+          disabled={busy !== ''}
+          onClick={() => onSend('reminder')}
+          data-testid="payroll-remind"
+        >
+          שלח תזכורת
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-auto px-4 py-2"
+          disabled={busy !== ''}
+          onClick={() => setEditing((v) => !v)}
+          aria-expanded={editing}
+          data-testid="payroll-change-deadline"
+        >
+          שנה מועד
+        </Button>
+      </div>
+      {toSend > 0 && (
+        <p className="text-slate-700">
+          {toSend === 1 ? 'דיילת אחת עוד לא קיבלה סיכום' : `${toSend} דיילות עוד לא קיבלו סיכום`}
+        </p>
+      )}
+      {editing && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="payroll-deadline" className="font-medium">
+            מועד אחרון חדש (שעון ישראל)
+          </label>
+          <input
+            id="payroll-deadline"
+            type="datetime-local"
+            dir="ltr"
+            value={deadlineLocal}
+            onChange={(e) => onDeadlineChange(e.target.value)}
+            className="rounded-lg border border-slate-300 px-2 py-1.5"
+            data-testid="payroll-deadline-input"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto px-4 py-2"
+            disabled={busy !== '' || deadlineLocal === ''}
+            onClick={onSaveDeadline}
+            data-testid="payroll-deadline-save"
+          >
+            {busy === 'deadline' ? 'שומר…' : 'שמור מועד'}
+          </Button>
+        </div>
+      )}
+    </div>
   )
 }
 

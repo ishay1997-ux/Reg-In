@@ -252,10 +252,13 @@ export function frozenLine(overrides = {}) {
   }
 }
 
-export function reportDetail(overrides = {}) {
+// צורת השרת (חוזה §4.3 + F6, ותיקון בודק 2 14/10): פרטי הדוח עטופים ב-`report` (כולל
+// `line_count`), ולצדם השורות הקפואות, הניסיונות, הקובץ והפניות אחרי ההפקה.
+// `report` — דריסות לשדות הדוח · שאר המפתחות — דריסות לרמה העליונה.
+export function reportDetail({ report = {}, ...overrides } = {}) {
   return {
     ok: true,
-    ...reportItem(),
+    report: reportItem(report),
     lines: [
       frozenLine(),
       frozenLine({

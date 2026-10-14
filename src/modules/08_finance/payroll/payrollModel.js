@@ -263,7 +263,6 @@ function recipientBucket(recipient, { deadlinePassed, distributed }) {
 // למה דיילת נמצאת ב"דורש טיפול" — משפט גלוי בשורה, לא tooltip. `null` כשאין מה לעשות.
 // הסבר קצר בעמודת "טיפול" — רק מה שהסטטוס עצמו לא אומר (מה לעשות, או למה). `null` כשאין.
 export function actionReason(recipient, { deadlinePassed }) {
-  if (recipient?.digest_current === false) return 'יש לשלוח סיכום מעודכן'
   if (recipient?.email_present === false) return 'אין כתובת מייל. אחרי המועד אפשר לאשר לפי תיעוד'
   if (recipient?.contact_changed) return 'כתובת המייל השתנתה. יש לשלוח שוב'
   if (recipient?.delivery?.state === 'unknown') return 'יש לבדוק לפני שליחה חוזרת'
@@ -353,7 +352,8 @@ export function blockerText(blocker, { period }) {
       }
     case 'DIGEST_STALE':
       return {
-        text: `${countPhrase(n, 'סיכום אחד', 'סיכומים')} השתנו ומחכים לבדיקה חוזרת`,
+        text:
+          n === 1 ? 'סיכום אחד השתנה ומחכה לבדיקה חוזרת' : `${n} סיכומים השתנו ומחכים לבדיקה חוזרת`,
         target: { view: 'review', filter: 'action' },
       }
     case 'OBJECTION_OPEN':
@@ -519,7 +519,10 @@ export function processStage({ preview, review }) {
   }
   if (!info) {
     if (preview && preview.month_state !== 'ended') {
-      return { label: 'טיוטה', next: 'החודש עוד לא הסתיים: אפשר לבדוק את הטיוטה ולהוריד אותה' }
+      return {
+        label: 'טיוטה',
+        next: `${monthNotEndedMessage(preview.period)}. בינתיים אפשר לבדוק את הטיוטה ולהוריד אותה`,
+      }
     }
     if (preview && (preview.lines ?? []).length === 0) {
       return { label: 'טיוטה', next: 'אין כרגע שורות לדוח בחודש הזה' }

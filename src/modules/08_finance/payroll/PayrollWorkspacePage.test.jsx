@@ -168,15 +168,26 @@ describe('מצב: טיוטה מוכנה', () => {
     )
   })
 
-  it('שורת פיצוי: בונוס ונסיעות "—" ולא 0; בנק חסר "—"', async () => {
+  it('שורת פיצוי: בונוס ונסיעות "—" ולא 0; בלי עמודות ת"ז ובנק; בנק חסר = תג (UX D1)', async () => {
     renderPage()
-    const rows = await screen.findAllByTestId('payroll-draft-row')
+    const table = await screen.findByTestId('payroll-draft-table')
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent)
+    expect(headers).toEqual(['דיילת', 'שעות', 'תעריף', 'בונוס', 'נסיעות'])
+    const rows = screen.getAllByTestId('payroll-draft-row')
     const comp = rows.find((row) => row.textContent.includes('מאיה כהן'))
     const cells = within(comp).getAllByRole('cell')
-    expect(cells[2]).toHaveTextContent('—')
-    expect(cells[5]).toHaveTextContent('—')
-    expect(cells[6]).toHaveTextContent('—')
-    expect(cells[5]).not.toHaveTextContent('0.00')
+    expect(cells[1]).toHaveTextContent('4')
+    expect(cells[1]).not.toHaveTextContent('4.00')
+    expect(cells[3]).toHaveTextContent('—')
+    expect(cells[4]).toHaveTextContent('—')
+    expect(cells[3]).not.toHaveTextContent('0.00')
+    expect(within(comp).getByTestId('payroll-missing-bank-tag')).toHaveTextContent('חסרים פרטי בנק')
+    expect(table).not.toHaveTextContent('204455667')
+    expect(screen.getByTestId('payroll-missing-bank-summary')).toHaveTextContent(
+      'דיילת אחת בלי פרטי בנק',
+    )
   })
 
   it('הורדת טיוטה: הטוסט מופיע רק אחרי שהקובץ נבנה, עם כל השורות', async () => {
@@ -222,15 +233,16 @@ describe('מצב: חסימה', () => {
   it('שגיאה בשורה + סיכום למעלה; שליחה וטיוטה מושבתות עם סיבה גלויה', async () => {
     api.getPayrollPreview.mockResolvedValue(blocked())
     renderPage()
-    expect(await screen.findByTestId('payroll-blockers')).toHaveTextContent('שורה אחת חסומה')
+    // UX D4: הודעה אחת שאומרת מה חסר ואיפה משלימים — לא שלוש.
+    expect(await screen.findByTestId('payroll-blockers')).toHaveTextContent(
+      'שורה אחת חסומה: חסרה ת"ז או שם. יש להשלים בכרטיס הדיילת',
+    )
     const row = screen.getAllByTestId('payroll-draft-row')[0]
     expect(row).toHaveTextContent('חסרים שם או ת"ז')
     expect(screen.getByTestId('payroll-start-review')).toBeDisabled()
-    expect(screen.getByTestId('payroll-start-reason')).toHaveTextContent(
-      'יש לתקן את השורות החסומות לפני שליחת הסיכומים',
-    )
     expect(screen.getByTestId('payroll-download-draft')).toBeDisabled()
-    expect(screen.getByTestId('payroll-draft-reason')).toBeInTheDocument()
+    expect(screen.queryByTestId('payroll-start-reason')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('payroll-draft-reason')).not.toBeInTheDocument()
   })
 })
 
@@ -267,8 +279,10 @@ describe('מצב: אין שורות זכאיות', () => {
   it('בדיקת "ממתינות לסגירה" נכשלה ⇒ "לא ידוע", לא 0', async () => {
     api.getPayrollPreview.mockResolvedValue(makePreview({ pending_closure: { ok: false } }))
     renderPage()
-    expect(await screen.findByTestId('payroll-tile-pending')).toHaveTextContent('לא ידוע')
-    expect(screen.getByTestId('payroll-pending-failed')).toBeInTheDocument()
+    expect(await screen.findByTestId('payroll-pending-failed')).toHaveTextContent(
+      'לא ניתן לבדוק כרגע',
+    )
+    expect(screen.queryByTestId('payroll-pending')).not.toBeInTheDocument()
   })
 })
 
@@ -303,14 +317,16 @@ describe('מצב: לחודש כבר הופק דוח רגיל', () => {
 })
 
 describe('מצב: החודש הנוכחי', () => {
-  it('באנר עם התאריך המחושב; שליחה ואישור סופי מושבתים עם הסיבה', async () => {
+  it('התאריך המחושב (מהשרת) בשורת השלב ומתחת לכפתור; שליחה מושבתת (UX D11)', async () => {
     api.getPayrollPreview.mockResolvedValue(
       makePreview({ period: '2026-10-01', month_state: 'current' }),
     )
     renderPage('?period=2026-10')
-    expect(await screen.findByTestId('payroll-current-month')).toHaveTextContent(
+    expect(await screen.findByTestId('payroll-next-step')).toHaveTextContent(
       'הפקה ושליחה יתאפשרו מ-01/11/2026, אחרי סוף החודש',
     )
+    expect(screen.getByTestId('payroll-start-reason')).toHaveTextContent('01/11/2026')
+    expect(screen.queryByTestId('payroll-current-month')).not.toBeInTheDocument()
     expect(screen.getByTestId('payroll-start-review')).toBeDisabled()
     expect(screen.getByTestId('payroll-download-draft')).toBeEnabled()
   })
@@ -765,9 +781,67 @@ describe('מעקב: סטטוס אחד וצבע רק למה שדורש פעולה
     )
     expect(open).toHaveTextContent('פנייה פתוחה')
     expect(open.className).toContain('bg-amber-50')
-    expect(
-      within(screen.getByTestId('payroll-recipient-700001')).getByTestId('payroll-delivery-line'),
-    ).toHaveTextContent('נשלח 13/10 13:00')
+    // UX D6: אין שורה משנית שחוזרת על "פעולה אחרונה".
+    expect(screen.queryByTestId('payroll-delivery-line')).not.toBeInTheDocument()
+  })
+})
+
+describe('מעקב אחרי שליחה — שורה מקופלת ושליחת סיכום מעודכן (UX D5, D7)', () => {
+  it('אחרי השליחה: שורה אחת עם מועד, "שלח תזכורת" ו"שנה מועד"; בלי שלבים ובלי דוגמת מייל', async () => {
+    api.findPayrollReview.mockResolvedValue(makeReview())
+    renderPage('?period=2026-07&view=review')
+    const bar = await screen.findByTestId('payroll-review-compact')
+    expect(bar).toHaveTextContent('מועד אחרון: 14/10/2026 18:00')
+    expect(screen.queryByTestId('payroll-step-approve')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('payroll-sample-mail')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('payroll-deadline-input')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('payroll-change-deadline'))
+    expect(screen.getByTestId('payroll-deadline-input')).toHaveValue('2026-10-14T18:00')
+  })
+
+  it('"שלח סיכום מעודכן" בשורה: אישור מפורש ⇒ רענון ⇒ אישור טיוטה ⇒ שליחה לשורה החדשה בלבד', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ recipients: [recipient({ digest_current: false })] }),
+    )
+    api.refreshPayrollReview.mockResolvedValue({ ok: true, revision: 2 })
+    api.getPayrollReview.mockResolvedValue(
+      makeReview({
+        review: { revision: 2, manager_approved: false },
+        recipients: [recipient({ recipient_id: 700050, delivery: null })],
+      }),
+    )
+    api.approvePayrollDraft.mockResolvedValue({ ok: true })
+    api.distributePayrollReview.mockResolvedValue({
+      ok: true,
+      processed: [{ recipient_id: 700050, state: 'sent' }],
+      skipped: [],
+      remaining: 0,
+    })
+    renderPage('?period=2026-07&view=review&filter=all')
+    fireEvent.click(await screen.findByTestId('payroll-send-updated-row'))
+    expect(await screen.findByTestId('confirm-dialog-message')).toHaveTextContent('נועה לוי')
+    await confirmDialog()
+    expect(await screen.findByText('הסיכום המעודכן נשלח')).toBeInTheDocument()
+    expect(api.approvePayrollDraft).toHaveBeenCalledWith({
+      reviewId: 600001,
+      expectedRevision: 2,
+      version: 'v1:abc',
+    })
+    expect(api.distributePayrollReview).toHaveBeenCalledWith(
+      expect.objectContaining({ recipientIds: [700050], mode: 'initial', expectedRevision: 2 }),
+    )
+  })
+
+  it('ביטול באישור ⇒ לא נשלח ולא רוענן', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ recipients: [recipient({ digest_current: false })] }),
+    )
+    renderPage('?period=2026-07&view=review&filter=all')
+    fireEvent.click(await screen.findByTestId('payroll-send-updated-row'))
+    fireEvent.click(await screen.findByTestId('confirm-dialog-cancel'))
+    await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument())
+    expect(api.refreshPayrollReview).not.toHaveBeenCalled()
+    expect(api.distributePayrollReview).not.toHaveBeenCalled()
   })
 })
 
@@ -882,7 +956,9 @@ describe('פאנל פנייה', () => {
     expect(quote).toHaveTextContent('עבדתי 7 שעות ולא 6')
     expect(quote).toHaveAttribute('dir', 'auto')
     const rows = screen.getByTestId('payroll-case-rows')
-    expect(rows).toHaveTextContent('6.00')
+    expect(rows).toHaveTextContent('6')
+    expect(rows).not.toHaveTextContent('6.00')
+    expect(rows).toHaveTextContent('שעות כעת')
     expect(rows).not.toHaveTextContent('₪')
     expect(rows).not.toHaveTextContent('סכום')
   })
@@ -916,6 +992,12 @@ describe('פאנל פנייה', () => {
       reason: 'לפי דוח הנוכחות',
       caseId: 500001,
     })
+  })
+
+  it('ערך חדש ממולא מראש במה שהדיילת הציעה; התווית "ערך נוכחי" (UX D9)', async () => {
+    renderPage('?period=2026-07&view=review&case=500001')
+    expect(await screen.findByTestId('payroll-correction-value')).toHaveValue(7)
+    expect(screen.getByTestId('payroll-correction-form')).toHaveTextContent('ערך נוכחי')
   })
 
   it('תיקון נכשל ⇒ הודעה ליד הטופס, והערך שהוקלד נשאר', async () => {
@@ -1031,10 +1113,12 @@ describe('היסטוריה', () => {
 
   it('פרטי דוח: שורות קפואות, ניסיונות עם הנמען המקורי וזמן מלא, פיצוי "—"', async () => {
     renderPage('?view=history&report=31')
-    const attempts = await screen.findByTestId('payroll-detail-attempts')
-    expect(attempts).toHaveTextContent('אל office@accountant.example')
-    expect(attempts).not.toHaveTextContent('ishay1997@gmail.com')
-    expect(attempts).toHaveTextContent('13/10/2026 14:00')
+    const latest = await screen.findByTestId('payroll-detail-latest')
+    expect(latest).toHaveTextContent('אל office@accountant.example · 13/10/2026 14:00')
+    expect(screen.getByTestId('payroll-detail')).not.toHaveTextContent('ishay1997@gmail.com')
+    // UX D10: ניסיון אחד ⇒ אין רשימת ניסיונות נוספת, ו"נשלח" מופיע פעם אחת.
+    expect(screen.queryByTestId('payroll-detail-attempts')).not.toBeInTheDocument()
+    expect(screen.getAllByText('נשלח')).toHaveLength(1)
     const lines = screen.getAllByTestId('payroll-detail-line')
     const comp = lines.find((row) => row.textContent.includes('מאיה כהן'))
     expect(within(comp).getAllByRole('cell')[4]).toHaveTextContent('—')
@@ -1063,8 +1147,7 @@ describe('היסטוריה', () => {
   it('דוח ישן בלי קובץ ⇒ ההסבר + "הורד שחזור" שבונה מהשורות הקפואות', async () => {
     api.getPayrollReportDetail.mockResolvedValue(
       reportDetail({
-        legacy: true,
-        artifact_available: false,
+        report: { legacy: true, artifact_available: false },
         artifact: { key: null, filename: null, reference_missing: true },
         attempts: [],
       }),
@@ -1078,7 +1161,9 @@ describe('היסטוריה', () => {
     fireEvent.click(screen.getByTestId('payroll-download-reconstruction'))
     await waitFor(() => expect(downloadReconstruction).toHaveBeenCalled())
     const [report, lines] = downloadReconstruction.mock.calls[0]
+    // צורת השרת: פרטי הדוח מתוך `report` (עם `line_count`), השורות מהרמה העליונה.
     expect(report.report_id).toBe(31)
+    expect(report.line_count).toBe(2)
     expect(lines).toHaveLength(2)
   })
 

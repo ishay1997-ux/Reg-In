@@ -66,6 +66,7 @@ const PAYROLL_REPORT_LIST_FIELDS = [
   'open_post_issue_cases',
 ]
 const PAYROLL_REPORT_DETAIL_FIELDS = [
+  'report',
   'lines',
   'attempts',
   'artifact',

@@ -3,7 +3,7 @@
 //
 // 🔴 **הכרעת הסגן F5b (13/10 23:40):** טופס התיקון מוצג למי שיש לו 'כספים' עריכה או
 // 'פרויקטים' עריכה, תמיד מתוך פנייה של דיילת ורק לשיבוצים שבפנייה. השרת אוכף.
-// פנייה שאין לה תיקון במערכת (תעריף, משמרת חסרה, אחר) נסגרת ב"טופל מחוץ לדוח" — לעולם לא
+// פנייה שאין לה תיקון במערכת (משמרת חסרה, או טענה שמטופלת מחוץ לדוח) נסגרת ב"טופל מחוץ לדוח" — לעולם לא
 // בתווית "תוקן".
 
 import { useEffect, useState } from 'react'
@@ -23,6 +23,7 @@ import { Banner, NotApplicable, Td, Th } from './payrollUi'
 import {
   CASE_CATEGORY_LABELS,
   caseStatusTag,
+  formatHours,
   isCaseOpen,
   payrollErrorMessage,
 } from './payrollModel'
@@ -134,13 +135,8 @@ export default function CasePanel({ caseId, canEdit, onClose, onChanged, onSendU
 
   async function sendUpdated() {
     setSendState('sending')
-    try {
-      await onSendUpdated()
-      setSendState('done')
-    } catch (err) {
-      setActionError(payrollErrorMessage(err))
-      setSendState('idle')
-    }
+    const done = await onSendUpdated(detail.case)
+    setSendState(done ? 'done' : 'idle')
   }
 
   return (
@@ -374,7 +370,7 @@ function CaseRows({ snapshot, current }) {
             <tr>
               <Th>משמרת</Th>
               <Th>שעות בסיכום</Th>
-              <Th>שעות היום</Th>
+              <Th>שעות כעת</Th>
             </tr>
           </thead>
           <tbody>
@@ -386,18 +382,10 @@ function CaseRows({ snapshot, current }) {
                     {row.event_name} · <Ltr>{formatDate(row.event_date, '—')}</Ltr>
                   </Td>
                   <Td>
-                    {row.hours == null ? (
-                      <NotApplicable />
-                    ) : (
-                      <Ltr>{Number(row.hours).toFixed(2)}</Ltr>
-                    )}
+                    {row.hours == null ? <NotApplicable /> : <Ltr>{formatHours(row.hours)}</Ltr>}
                   </Td>
                   <Td>
-                    {now?.hours == null ? (
-                      <NotApplicable />
-                    ) : (
-                      <Ltr>{Number(now.hours).toFixed(2)}</Ltr>
-                    )}
+                    {now?.hours == null ? <NotApplicable /> : <Ltr>{formatHours(now.hours)}</Ltr>}
                   </Td>
                 </tr>
               )

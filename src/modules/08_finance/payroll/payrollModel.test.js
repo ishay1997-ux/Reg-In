@@ -120,7 +120,7 @@ describe('filterRecipients — מונים על כל הרשימה, לא על הע
     })
     expect(counts.action).toBe(1)
     expect(actionReason(late, { deadlinePassed: true })).toBe('המועד עבר בלי תגובה')
-    expect(actionReason(recipient({ digest_current: false }), {})).toBe('יש לשלוח סיכום מעודכן')
+    expect(actionReason(recipient({ digest_current: false }), {})).toBeNull()
   })
 
   it('לפני שליחה, היעדר ניסיון אינו "דורש טיפול"; אין מסננים ⇒ ברירת מחדל "הכל"', () => {
@@ -243,8 +243,19 @@ describe('processStage — שלב והצעד הבא', () => {
   it('בלי בדיקה ⇒ טיוטה; ממתין לאישור טיוטה; ממתין לתגובות; מוכן; הופק', () => {
     expect(processStage({ preview: makePreview(), review: null }).label).toBe('טיוטה')
     expect(
-      processStage({ preview: makePreview({ month_state: 'current' }), review: null }).next,
-    ).toBe('החודש עוד לא הסתיים: אפשר לבדוק את הטיוטה ולהוריד אותה')
+      processStage({
+        preview: makePreview({ period: '2026-10-01', month_state: 'current' }),
+        review: null,
+      }).next,
+    ).toBe(
+      'הפקה ושליחה יתאפשרו מ-01/11/2026, אחרי סוף החודש. בינתיים אפשר לבדוק את הטיוטה ולהוריד אותה',
+    )
+    expect(blockerText({ code: 'DIGEST_STALE', count: 1 }, {}).text).toBe(
+      'סיכום אחד השתנה ומחכה לבדיקה חוזרת',
+    )
+    expect(blockerText({ code: 'DIGEST_STALE', count: 2 }, {}).text).toBe(
+      '2 סיכומים השתנו ומחכים לבדיקה חוזרת',
+    )
     expect(
       processStage({
         preview: makePreview(),
