@@ -548,6 +548,7 @@ protection is false until it does.
   - ⏳ `20261014000900_module8_payroll_august_claim_repair` — W0-1 passed 13.10 (83/83, 0/0/0); raises unless exactly 83 re-linked; backup `seed_snapshot.assignments_payroll_claim_20261014`. Re-run W0-1 right before applying (the 14/10 refresh script runs first).
   - ⏳ `20261014002000_module8_payroll_operations` (FKs to B's `payroll_reviews`) · ⏳ `20261014002100_module8_payroll_operation_rpcs`.
   - ⏳ `20261014002110_module8_payroll_snapshot_event_date` — fix-forward on 15 (deputy task 14/10 03:33, contract fix F12): `payroll_operation_snapshot` lines gain `event_date` (ISO) and `assignment_number`, so the accountant file can carry the shift date. Body = 15 + two fields; ACL unchanged.
+  - ⏳ `20261014002120_module8_payroll_checker2_fixes` — fix-forward (checker 2, deputy 14/10 04:5X–05:0X): `payroll_commit` re-call returns the report's newest accountant attempt and maps `deadlock_detected` to `PAYROLL_BUSY`; `payroll_accountant_retry_reserve` is idempotent on a queued newest attempt and maps deadlocks to `PAYROLL_BUSY`; `payroll_report_detail` gains `line_count` / `file_line_count` and returns `post_issue_cases` to finance edit only (view ⇒ null). Same signatures and ACLs.
   - ⏳ `20261014003000_module8_payroll_enable_new_flow` — only at the start of production acceptance (§7 step 8).
   - ⏳ `20261016000000_module8_payroll_legacy_cutover` — see §9א row **PAY-17**.
   - B's 7, 10–13 — paragraphs come from B through the deputy.

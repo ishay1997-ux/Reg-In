@@ -52,6 +52,11 @@ begin
      and exists (select 1 from public.payroll_operations) then
     raise exception 'שחזור נעצר: כבר הופקו דוחות שכר בתהליך החדש. שחזור תמונת-המצב היה מוחק את שיוכי המשמרות לדוחות, והדוח הבא היה משלם אותן פעמיים.';
   end if;
+  -- any claimed shift at all (new flow, legacy dialog, or the August repair) is paid money that a
+  -- restore would turn back into "unpaid" (checker 2, 14/10/2026)
+  if exists (select 1 from public.assignments where salary_report_id is not null) then
+    raise exception 'שחזור נעצר: יש במסד משמרות שכבר שויכו לדוח שכר. שחזור תמונת-המצב היה מבטל את השיוך, והדוח הבא היה משלם אותן פעמיים.';
+  end if;
 
   if stamp = 'YYYYMMDD' then
     raise exception 'stamp was never set -- refusing to run';

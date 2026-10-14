@@ -66,3 +66,19 @@ begin
   -- the replica has no snapshot of the other 22 tables, so the script's own existence check stops it
   assert v like 'snapshot seed_snapshot.%_20260915 does not exist%', v;
 end $$;
+
+-- test: checker 2 — any claimed shift blocks the restore, even with no operation and no extra report
+do $$
+declare v text;
+begin
+  perform test.hostess(900001, 'דיילת', '000900001');
+  perform test.project(900101, '2026-01-10', 'finished');
+  perform public._payroll_writer_begin();
+  insert into public.salary_reports (report_id, period) values (900003, '2026-01-01');
+  insert into seed_snapshot.salary_reports_20260915 (report_id, period, send_status) values (3, '2026-03-01', 'sent');
+  perform test.assign(900101, 900001, 1, 'finally_approved', 6, 50, 0);
+  update public.assignments set salary_report_id = 900003 where project_id = 900101;
+  v := test.run_restore();
+  assert v like 'שחזור נעצר: יש במסד משמרות שכבר שויכו לדוח שכר.%', v;
+  assert (select count(*) from public.assignments where salary_report_id = 900003) = 1;
+end $$;
