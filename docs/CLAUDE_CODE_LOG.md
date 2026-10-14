@@ -46,6 +46,9 @@
 
 ## Session Log (newest first)
 
+### 14/10/2026 — docs sync for the payroll go-live and the pre-conference releases (builder, `ishay/docs-14-10`)
+- Docs only. Recorded PR #188–#197 (`main` @ `4c5e223e`), the 24 live registry rows of the payroll migrations plus the 2 params, 4 report-wording migrations and the invite-template edit, edge function `payroll` v2; closed §7.104–108; wrote the open debts into `PROJECT_MASTER §6`. Every SHA, count and name was read from git or by SELECT on the live DB the same day. Not touched: code (a stale comment at `FinancePage.jsx` ~line 83 is listed as a debt), and the older ⏳/count drift elsewhere in `schema.sql`.
+
 ### 08–09/10/2026 — pre-conference fixes from the blind check (builder, `ishay/conference-fixes-2026-10-09`, plan B step 4)
 - **Customers — partial save.** New customer with no contact: the client counted the empty starting row as "the primary", wrote the customer, then `replace_customer_contacts` (which drops nameless rows first) refused ⇒ customer with 0 contacts (492/493 live). Fix: `validateContactSet` in `src/lib/customers.js` mirrors the RPC rule before any write; add-mode retry after a mid-flight failure updates the created customer instead of re-creating it (no 23505). Siblings tested: edit + clear the only contact · edit + clear the primary while another exists. Customers 492/493 left as-is (data, not code).
 - **Reports export — "הסינון לא הותיר שורות".** `ExportBar` read raw `?tab=`; entering `/reports` without it, the shell opens the first allowed tab but the export saw `null` ⇒ no reports ⇒ no rows. Fix: `ReportsShellContext` now carries `activeTabKey`/`activeReportSlug`; no selected report ⇒ an explicit blocked reason. Affected every report of the default tab, not only "סגירת הצעות".
