@@ -25,7 +25,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Hint from '@/components/Hint'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty, { DENIED_MARK } from '@/components/PermissionAwareEmpty'
 import StatTile from '@/components/StatTile'
@@ -79,7 +79,10 @@ import SalaryReportDialog from './SalaryReportDialog'
 // יושב בקומפוננטה שלו: זהו טקסט של משטח יחיד. **כולן בלשון-נקבה** (S-28).
 const PAGE_TITLE = 'כספים'
 const PAGE_SUBTITLE = 'בקרת גבייה, סגירת-תיקים ודו"ח-שכר'
-const SALARY_BUTTON_LABEL = 'הפקת דוח שכר דיילות'
+// ✏️ 13/10/2026 (חוזה דוח השכר §4.1, D13): הכפתור הראשי מוביל למרחב העבודה החדש
+// `/finance/payroll`; הדיאלוג הישן נשאר כפעולה משנית עד המעבר המלא (אחרי הכנס).
+const SALARY_BUTTON_LABEL = 'דוח שכר'
+const LEGACY_SALARY_LABEL = 'הפקה בתהליך הקודם'
 const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני הכספים.'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקה סינון'
@@ -998,15 +1001,24 @@ function PageHeader({ onOpenSalary }) {
         <h1 className="text-lg font-bold text-slate-800">{PAGE_TITLE}</h1>
         <p className="mt-0.5 text-sm text-slate-500">{PAGE_SUBTITLE}</p>
       </div>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onOpenSalary}
-        className="h-auto rounded-lg border-slate-300 px-4 py-2 font-medium text-slate-700"
-        data-testid="finance-open-salary"
-      >
-        {SALARY_BUTTON_LABEL}
-      </Button>
+      <div className="flex flex-col items-end gap-1">
+        <Link
+          to="/finance/payroll"
+          className="inline-flex h-auto items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+          data-testid="finance-open-payroll"
+        >
+          {SALARY_BUTTON_LABEL}
+        </Link>
+        <Button
+          type="button"
+          variant="link"
+          onClick={onOpenSalary}
+          className="h-auto p-0 text-xs text-slate-600 underline"
+          data-testid="finance-open-salary"
+        >
+          {LEGACY_SALARY_LABEL}
+        </Button>
+      </div>
     </div>
   )
 }
