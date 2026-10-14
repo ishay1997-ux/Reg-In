@@ -108,7 +108,7 @@ export function gapSentence(project) {
   if (status === 'event_finished') {
     return rowCount === 0
       ? 'האירוע עבר ולא נסגר — לא נשלח בו אף זימון מעולם'
-      : 'ממתין להזנת שעות בפועל, כמות אורחים ודוח-סיכום'
+      : 'חסרים: שעות, אורחים, דוח סיכום'
   }
 
   // מצבים פעילים — שאלת-החוסר עצמה.
@@ -311,7 +311,9 @@ export function gapTone(project) {
   const status = project.project_status
   if (HANDED_OFF_STATUSES.includes(status)) return 'calm'
   const untouched = (project.assignments_row_count ?? 0) === 0
-  if (status === 'event_finished') return untouched ? 'miss' : 'hint'
+  // ✏️ 14/10/2026 (סיור-השופט): "חסרים: שעות, אורחים, דוח סיכום" הוא שלב-עבודה רגיל ולא התרעה ⇒
+  // אפור קריא (`done` = text-slate-500, ניגודיות AA), לא ענבר. האדום של "אף זימון" נשאר.
+  if (status === 'event_finished') return untouched ? 'miss' : 'done'
   if (!overviewHasGap(project)) return 'calm'
   return untouched ? 'miss' : 'hint'
 }

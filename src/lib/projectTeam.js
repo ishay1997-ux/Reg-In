@@ -16,7 +16,6 @@ export const CANCELLED_SCOPE_REASON = 'הפרויקט בוטל — לא ניתן
 export const TEAM_NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בצוות הדיילות.'
 export const NO_INVITES_TITLE = 'טרם נשלח אף זימון לאירוע הזה.'
 export const SORT_LINE = 'ממוין: בפנים · פתוח · יצא'
-export const SMART_MATCH_CLARIFICATION = 'השליחה במסך השיבוץ לאירוע נעשית בידי מנהלת הגיוס.'
 // ‏ζ (צעד 3.0): תג אחראית-המשמרת בלי ★ — הגליף כבר אומר "התרשמות" ב-RatingStars.
 export const SHIFT_LEAD_LABEL = 'אחראית משמרת'
 // 🧹 איפוס-שלב-4 (08–09/09/2026): SCOPE_NOTE ("שינוי הכמות נרשם כשינוי-תכולה…") ו-
@@ -216,7 +215,7 @@ export function hostessCountChanges(changes) {
 // 🧹 המשפט האמצעי של המוקאפ ("כל שינוי יופיע כאן בשורה משלו — מה השתנה · בכמה · מי
 // ביצע · מתי · והסיבה שנרשמה") הוסר — תיאור-מראש של שורה שהיא עדיין לא ראתה (R28: היא לא
 // עושה שום דבר אחרת בזכותו; ברגע שתהיה שורה ראשונה, ScopeChangesSection מדגים אותה בעצמה).
-export function scopeFactSentence({ required, approvedOnText } = {}) {
+export function scopeFactSentence({ approvedOnText } = {}) {
   const since = approvedOnText ? ` (${approvedOnText})` : ''
-  return `הכמות עומדת על ${Number(required) || 0} מאז אישור ההצעה${since}. ההצעה עצמה נשארת קפואה ואינה משתנה לעולם.`
+  return `אין שינויים מאז אישור ההצעה${since}.`
 }

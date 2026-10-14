@@ -200,7 +200,7 @@ describe('ProjectsPage — לשונית "בעבודה" (ברירת-מחדל)', (
     expect(screen.getAllByRole('columnheader')).toHaveLength(7)
     expect(screen.getByRole('columnheader', { name: 'לוגיסטיקה' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'לכרטיס →' })).toHaveLength(4)
-    expect(screen.getByText('ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע')).toBeInTheDocument()
+    expect(screen.getByText('מיון: חסרים קודם, ואז לפי תאריך')).toBeInTheDocument()
   })
 
   it('גלולות-הסטטוס אינן קיימות מחוץ ללשונית "הכול"', async () => {
@@ -342,7 +342,7 @@ describe('ProjectsPage — לשונית "הכול": גלולות ומסנן', ()
     await screen.findByTestId('projects-table')
     expect(rowOrder()).toHaveLength(7)
     expect(rowOrder()).not.toContain(104)
-    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לחלון')
+    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לתקופה')
 
     // מעבר ל"הכול" (גלולת-חלון, לא גלולת-סטטוס) מחזיר את #104 ומכבה את רמז-החוסר.
     fireEvent.click(screen.getByTestId('list-window-all'))

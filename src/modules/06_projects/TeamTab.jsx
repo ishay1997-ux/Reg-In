@@ -51,7 +51,6 @@ import {
   TEAM_NO_PERMISSION_SENTENCE,
   NO_INVITES_TITLE,
   SORT_LINE,
-  SMART_MATCH_CLARIFICATION,
   SHIFT_LEAD_LABEL,
   assignmentMeaning,
   teamHeadline,
@@ -262,23 +261,8 @@ export default function TeamTab({
         <PermissionAwareEmpty
           state="empty"
           title={NO_INVITES_TITLE}
-          action={
-            // 🔗 **הקישור נושא את הפרויקט איתו** (ישי, 22/08/2026 — "יותר נכון שיוביל
-            // לשיבוץ של אותו פרויקט"). עד אז הוא נחת על מבט-העל של הגיוס, והמנהלת נאלצה
-            // לאתר את הפרויקט שממנו בדיוק יצאה.
-            // 🚫 **ולמה `state` ולא מסלול/פרמטר-שאילתה:** `HostessesPage` מצהיר במפורש
-            // ששיבוץ-חכם **אינו מסלול** — "המנהלת נכנסת ויוצאת עשרות פעמים ביום, ומסלול
-            // היה מאבד את מצב-הסינון של המבט-על בכל חזרה". `state` נושא הקשר לכניסה
-            // **הזאת בלבד** ואינו הופך את המסך לכתובת.
-            <Link
-              to="/hostesses"
-              state={{ smartMatchProjectId: projectId }}
-              className="text-xs font-semibold text-teal-700"
-              data-testid="team-empty-smart-match-link"
-            >
-              פתח שיבוץ לאירוע →
-            </Link>
-          }
+          // ✏️ 14/10/2026 (סיור-השופט): הקישור "פתח שיבוץ לאירוע →" שהיה כאן הוסר — הוא כפל את
+          // הקישור שבסרגל-הפעולות שמעל, שמוצג גם במצב הזה.
           testId="team-state-no-invites"
         />
       ) : (
@@ -291,7 +275,7 @@ export default function TeamTab({
       )}
 
       {/* ── שינויי-תכולה בכמות הדיילות — יושבים איפה שהתוצאה שלהם נראית ── */}
-      <ScopeChangesSection project={project} hostessChanges={hostessChanges} required={required} />
+      <ScopeChangesSection project={project} hostessChanges={hostessChanges} />
 
       {/* ── היסטוריית הסבבים — הסטטוס הגולמי, מקופלת כברירת-מחדל ── */}
       {canReadHostesses && rows.length > 0 && (
@@ -337,7 +321,10 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
             שנה כמות דיילות
           </button>
         )}
-        {/* 🔗 נושא את הפרויקט איתו — ר' ההערה על הקישור התאום למעלה. */}
+        {/* 🔗 **הקישור נושא את הפרויקט איתו** (ישי, 22/08/2026 — "יותר נכון שיוביל לשיבוץ של
+            אותו פרויקט"). 🚫 **ולמה `state` ולא מסלול/פרמטר-שאילתה:** `HostessesPage` מצהיר
+            ששיבוץ-חכם **אינו מסלול** — `state` נושא הקשר לכניסה **הזאת בלבד**. זה הקישור היחיד
+            לשיבוץ בלשונית, גם במצב "טרם נשלח אף זימון" (התאום שבמצב-הריק הוסר 14/10/2026). */}
         {canReadHostesses && (
           <Link
             to="/hostesses"
@@ -350,15 +337,8 @@ function ActionsBar({ project, canEdit, canReadHostesses, onScopeChange, showSor
         )}
         {showSortLine && <span className="mr-auto text-xs text-slate-400">{SORT_LINE}</span>}
       </div>
-      {/* 🧹 SCOPE_NOTE ("שינוי הכמות נרשם כשינוי-תכולה…") הוסר — ScopeChangeDialog כבר אומר
-          את זה בפועל ברגע שהיא לוחצת (R27). מה שנשאר כאן אמיתי-לכל מי שרואה 'דיילות':
-          שהיעד של "פתח שיבוץ לאירוע" הוא מסך-צפייה בשבילה. גם מי שאין לה 'עריכה' (מנהלת
-          הגיוס) צריכה את זה — לכן התנאי הוא canReadHostesses בלבד, לא canEdit||canReadHostesses
-          (הזוג היחיד עם canEdit במטריצה — מנכ"ל ומנהלת פרויקטים — גם קורא 'דיילות' תמיד,
-          screens-approved.md §⑤). */}
-      {canReadHostesses && (
-        <p className="mb-3 text-xs leading-relaxed text-slate-400">{SMART_MATCH_CLARIFICATION}</p>
-      )}
+      {/* 🧹 14/10/2026 (סיור-השופט): גם משפט-ההבהרה "השליחה במסך השיבוץ… נעשית בידי מנהלת
+          הגיוס" הוסר (כמו SCOPE_NOTE לפניו) — הסבר שאינו משנה פעולה. */}
     </>
   )
 }
@@ -463,15 +443,13 @@ function whenCell(row) {
   )
 }
 
-function ScopeChangesSection({ project, hostessChanges, required }) {
+function ScopeChangesSection({ project, hostessChanges }) {
   return (
     <div className="mt-6" data-testid="team-scope-changes">
       <h2 className="text-sm font-bold text-slate-700">שינויי-תכולה בכמות הדיילות</h2>
       {hostessChanges.length === 0 ? (
         <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-600">
-          <b>אין.</b>{' '}
           {scopeFactSentence({
-            required,
             // רגע-האישור: הפרויקט נולד מאישור-ההצעה, ולכן created_at שלו הוא התאריך (`הנחתי`).
             approvedOnText: formatDate(String(project?.created_at ?? '').slice(0, 10)) || null,
           })}

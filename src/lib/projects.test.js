@@ -192,7 +192,7 @@ describe('gapSentence — עמודת "מה חסר": משפט במילים, לע�
   it('ממתין לסגירה רגיל — מפרט מה נדרש להזין', () => {
     expect(
       gapSentence({ ...base, project_status: 'event_finished', assignments_row_count: 5 }),
-    ).toBe('ממתין להזנת שעות בפועל, כמות אורחים ודוח-סיכום')
+    ).toBe('חסרים: שעות, אורחים, דוח סיכום')
   })
 
   it('אצל הכספים — אינו דורש פעולה ממנהלת הפרויקטים', () => {
@@ -615,7 +615,7 @@ describe('gapTone — צבע עמודת "מה חסר" צמוד לענפי gapSen
     ).toBe('miss')
     expect(
       gapTone(overviewRow({ project_status: 'event_finished', assignments_row_count: 7 })),
-    ).toBe('hint')
+    ).toBe('done')
     expect(gapTone(overviewRow({ hostesses_confirmed: 1, assignments_row_count: 9 }))).toBe('hint')
     expect(
       gapTone(overviewRow({ project_status: 'ready', hostesses_confirmed: 6, logistics_ready: 2 })),

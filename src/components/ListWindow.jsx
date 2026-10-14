@@ -30,7 +30,7 @@ export function WindowChips({ value, onChange, hiddenCount = 0, testId = 'list-w
       ))}
       {value !== 'all' && hiddenCount > 0 && (
         <span className="text-sm text-slate-400" data-testid={`${testId}-hidden`}>
-          (עוד {hiddenCount} מחוץ לחלון)
+          (עוד {hiddenCount} מחוץ לתקופה)
         </span>
       )}
     </div>

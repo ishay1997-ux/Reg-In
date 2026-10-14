@@ -274,7 +274,7 @@ describe('וריאנט "טרם נשלח אף זימון"', () => {
     getProjectAssignments.mockResolvedValue([])
     await renderTab()
     expect(screen.getByText('טרם נשלח אף זימון לאירוע הזה.')).toBeInTheDocument()
-    const link = screen.getByTestId('team-empty-smart-match-link')
+    const link = screen.getByTestId('team-smart-match-link')
     expect(link).toHaveAttribute('href', '/hostesses')
     expect(screen.queryByTestId('team-tile-missing')).not.toBeInTheDocument()
     expect(screen.queryByTestId('team-headline')).not.toBeInTheDocument()
@@ -351,8 +351,7 @@ describe('מקטע שינויי-התכולה בכמות הדיילות', () => {
   it('בלי שינויים — שורת-העובדה עם הכמות החיה', async () => {
     await renderTab()
     const section = screen.getByTestId('team-scope-changes')
-    expect(section).toHaveTextContent('אין.')
-    expect(section).toHaveTextContent('הכמות עומדת על 6 מאז אישור ההצעה')
+    expect(section).toHaveTextContent('אין שינויים מאז אישור ההצעה')
   })
 
   it('שינוי כמות-דיילות מוצג; שינויי-תגים אינם נכנסים לכאן', async () => {

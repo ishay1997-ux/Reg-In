@@ -78,7 +78,7 @@ import ClosingWindowDialog from './ClosingWindowDialog'
 // ואינן מנוסחות מחדש. הן יושבות כאן ולא ב-`src/lib` מאותו טעם ש-`OUTBOUND_LEGEND` של מ5
 // יושב בקומפוננטה שלו: זהו טקסט של משטח יחיד. **כולן בלשון-נקבה** (S-28).
 const PAGE_TITLE = 'כספים'
-const PAGE_SUBTITLE = 'בקרת גבייה, סגירת-תיקים ודו"ח-שכר'
+const PAGE_SUBTITLE = 'גבייה, סגירת תיקים ודוח שכר'
 // ✏️ 13/10/2026 (חוזה דוח השכר §4.1, D13): הכפתור הראשי מוביל למרחב העבודה החדש
 // `/finance/payroll`; הדיאלוג הישן נשאר כפעולה משנית עד המעבר המלא (אחרי הכנס).
 const SALARY_BUTTON_LABEL = 'דוח שכר'
@@ -86,8 +86,8 @@ const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני �
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקה סינון'
 const CANCELLATION_FEE_TAG = 'דמי-ביטול'
-const CANCELLATION_FEE_UNRESOLVED = 'דמי-ביטול — טרם נפתרו'
-const OPERATIONALLY_CLOSED_NOTE = 'נסגר תפעולית'
+const CANCELLATION_FEE_UNRESOLVED = 'דמי ביטול — טרם נקבעו'
+const OPERATIONALLY_CLOSED_NOTE = 'האירוע נסגר'
 // 🔤 המילה שהמוקאפ המאושר מצייר **בתא-התאריך** של שורה מבוטלת (שורת #14:
 // `<div class="calm">בוטל</div>`) — בדיוק כפי ש-`OPERATIONALLY_CLOSED_NOTE` יושב שם לשורה
 // שנסגרה תפעולית. **סוג-הביטול אינו כאן** אלא בשורת-ההקשר שתחת שם-הפרויקט, שם המוקאפ מצייר
@@ -491,7 +491,7 @@ function financeExportColumns(tab) {
     },
     {
       key: 'operationally_closed_at',
-      label: 'נסגר תפעולית',
+      label: 'האירוע נסגר',
       format: 'text',
       value: (e) => stampDate(e.row.operationally_closed_at),
     },
@@ -1290,7 +1290,8 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
             className="mt-px text-xs text-slate-500"
             data-testid={`finance-cancel-context-${row.project_id}`}
           >
-            {CANCEL_TYPE_LABELS[row.cancel_type]}
+            {/* "אחר" לבדו אינו אומר כלום — רק לו נוסף "סיבת ביטול:" (סיור-השופט 14/10). */}
+            {row.cancel_type === 'other' ? 'סיבת ביטול: אחר' : CANCEL_TYPE_LABELS[row.cancel_type]}
           </div>
         )}
         {/* אותו תנאי בדיוק כמו `isActionable` — הרקע והשורה מספרים סיפור אחד, ותיק

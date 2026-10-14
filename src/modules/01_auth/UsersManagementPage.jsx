@@ -386,7 +386,7 @@ export default function UsersManagementPage() {
             <th className="py-2 font-medium">טלפון</th>
             <th className="py-2 font-medium">תפקיד</th>
             <th className="py-2 font-medium">סטטוס</th>
-            {isCeo && <th className="py-2 font-medium">מצב הטמעה</th>}
+            {isCeo && <th className="py-2 font-medium">רמת הסברים</th>}
             <th className="py-2 font-medium">פעולות</th>
           </tr>
         </thead>
@@ -426,7 +426,7 @@ export default function UsersManagementPage() {
                         }
                         onCheckedChange={(next) => handleOnboardingToggle(targetUser, next)}
                         disabled={onboardingSaving === targetUser.email}
-                        aria-label={`מצב הטמעה — ${targetUser.full_name}`}
+                        aria-label={`רמת הסברים — ${targetUser.full_name}`}
                         data-testid={`users-onboarding-${targetUser.email}`}
                       />
                     )}

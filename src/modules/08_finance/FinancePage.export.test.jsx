@@ -154,7 +154,7 @@ describe('FinancePage — חיבור לחלון-הייצוא, ליבה פר-לש
     for (const label of ['תאריך', 'מהות התאריך', 'סוג ביטול', 'חוב אבוד', 'נדרשת חשבונית זיכוי']) {
       expect(heads).toContain(label)
     }
-    expect(heads).not.toContain('נסגר תפעולית')
+    expect(heads).not.toContain('האירוע נסגר')
     expect(heads).not.toContain('תאריך ביטול')
   })
 

@@ -493,7 +493,7 @@ function MetaStrip({ project, detail, statusLabel }) {
       </span>
       {/* ‏`operationally_closed_at` אינו ב-RPC של S2 — הוא מגיע משורת-S1 והוא תצוגה בלבד. */}
       {project.operationally_closed_at ? (
-        <MetaItem label="נסגר תפעולית" value={project.operationally_closed_at} />
+        <MetaItem label="האירוע נסגר" value={project.operationally_closed_at} />
       ) : null}
       {detail.cancelled_at ? <MetaItem label="בוטל" value={detail.cancelled_at} /> : null}
       {detail.archived_at ? <MetaItem label="הועבר לארכיון" value={detail.archived_at} /> : null}

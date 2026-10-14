@@ -159,7 +159,7 @@ export function kpiCards(summary) {
     },
     {
       key: 'quotes',
-      label: 'הצעות ממתינות',
+      label: 'הצעות פתוחות',
       masked: !quotesVisible,
       value: quotesVisible ? paramNumber(summary?.pending_quotes_count) : null,
     },
