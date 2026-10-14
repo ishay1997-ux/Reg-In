@@ -163,6 +163,23 @@ describe('EditProjectDetailsDialog — שדות-חובה, זהים-בייט לש
   })
 })
 
+describe('EditProjectDetailsDialog — פורמט שעה (ביקורת ולידציות, שורה 17)', () => {
+  it('"930" בשעת ההתחלה: הודעה ליד השדה, והשמירה לא יוצאת לשרת', async () => {
+    renderDialog()
+    fireEvent.change(await screen.findByTestId('edit-project-start-input'), {
+      target: { value: '930' },
+    })
+    fireEvent.click(screen.getByTestId('edit-project-save'))
+    expect(await screen.findByTestId('edit-project-error-hours')).toHaveTextContent(
+      'שעה צריכה להיות בפורמט 24 שעות, למשל 18:30.',
+    )
+    expect(updateProjectDetails).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByTestId('edit-project-start-input'), { target: { value: '09:30' } })
+    fireEvent.click(screen.getByTestId('edit-project-save'))
+    await waitFor(() => expect(updateProjectDetails).toHaveBeenCalledTimes(1))
+  })
+})
+
 describe('EditProjectDetailsDialog — באנר-ההשלכה (㉑)', () => {
   it('עם הרשאת-דיילות: הבאנר נוקב בשם ובמדד — לפני האישור, בלי שום שמירה', async () => {
     renderDialog()
