@@ -6,6 +6,7 @@ import {
   buildEmailPayload,
   classifySendError,
   emailSendDisabledReason,
+  recipientEmailError,
   fillEmailTemplate,
   findUnknownPlaceholders,
   isAttachmentTooLarge,
@@ -341,6 +342,13 @@ describe('emailSendDisabledReason — למה כפתור-השליחה מושבת'
     )
   })
 
+  // שורה 15 בביקורת-הוולידציה: כתובת שהמשתמש הקליד אינה "של איש הקשר".
+  it('כתובת פגומה שהוקלדה ידנית ⇒ נוסח בלי "איש הקשר", עם דוגמה לתיקון', () => {
+    expect(emailSendDisabledReason({ ...OK, email: 'abc', typedByUser: true })).toBe(
+      'כתובת המייל אינה תקינה — לדוגמה: name@company.co.il',
+    )
+  })
+
   it('תבנית חסרה — אחרונה בסדר, כי זו תקלת-הגדרות ולא של המשתמש', () => {
     expect(emailSendDisabledReason({ ...OK, template: '' })).toBe('תבנית המייל אינה מוגדרת במערכת')
   })
@@ -414,5 +422,21 @@ describe('מצב "לא ידוע אם כבר נשלח" (סבב-תיקון 31/07)'
   it('שלושת הנוסחים נבדלים זה מזה — הם שלושה מצבים, לא אחד', () => {
     const all = [SEND_HISTORY_UNKNOWN_NOTICE, SEND_HISTORY_UNKNOWN_CONFIRM, SEND_LOG_FAILED_NOTICE]
     expect(new Set(all).size).toBe(3)
+  })
+})
+
+describe('recipientEmailError — שורת-השגיאה הגלויה מתחת לשדה "נמען" (ביקורת-ולידציה, שורה 15)', () => {
+  it('ריק ⇒ אין שגיאה (ריק אינו "לא תקין")', () => {
+    expect(recipientEmailError('')).toBe('')
+    expect(recipientEmailError('   ', { typedByUser: true })).toBe('')
+  })
+  it('כתובת תקינה ⇒ אין שגיאה', () => {
+    expect(recipientEmailError('dana@company.co.il', { typedByUser: true })).toBe('')
+  })
+  it('פגומה ⇒ הנוסח לפי מקור הכתובת', () => {
+    expect(recipientEmailError('abc', { typedByUser: true })).toBe(
+      'כתובת המייל אינה תקינה — לדוגמה: name@company.co.il',
+    )
+    expect(recipientEmailError('abc')).toBe('כתובת המייל של איש הקשר אינה תקינה')
   })
 })
