@@ -5,6 +5,8 @@
 // כל מחרוזת כאן היא נוסח מוצר מתוך טבלאות האפיון אחרי תיקוני מדריך ה-UX (`ux-guide.md` §ב).
 // מסכי צוות: לשון נייטרלית או זכר ("נסה שוב", "יש לרענן").
 
+import { formatDate, formatTimestampFull } from '@/lib/dates'
+
 export const VIEWS = ['draft', 'review', 'final', 'history']
 export const FILTERS = ['action', 'noreply', 'approved', 'all']
 export const KINDS = ['regular', 'supplement']
@@ -510,6 +512,18 @@ export function resendOutcome(state, sentText) {
   if (state === 'sent') return { tone: 'success', text: sentText }
   if (state === 'failed') return { tone: 'error', text: 'השליחה החוזרת נכשלה. אפשר לנסות שוב' }
   return { tone: 'error', text: 'לא ידוע אם נשלח. יש לבדוק לפני שליחה חוזרת' }
+}
+
+// מועד שמור להצגה בהיסטוריה (פוליש 14/10, פריט 3): **לעולם לא שעה שלא נשמרה.**
+// ערך תאריך-בלבד (`YYYY-MM-DD`, כמו `sent_date`) ⇒ `DD/MM/YYYY`. דוח מהתהליך הקודם (`legacy`)
+// שמר רק תאריך שליחה — זמני היומן שלו אינם מקור לשעה (נמדד: דוח 15 נשא 10:00:00 עגול) ⇒ תאריך
+// בלבד, בשעון ישראל. אחרת ⇒ `DD/MM/YYYY HH:MM`.
+export function formatStoredMoment(value, { dateOnly = false } = {}, emptyText = '—') {
+  if (!value) return emptyText
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return formatDate(value, emptyText)
+  const full = formatTimestampFull(value, '')
+  if (!full) return emptyText
+  return dateOnly ? full.slice(0, 10) : full
 }
 
 // ── היסטוריה ───────────────────────────────────────────────────────────────────

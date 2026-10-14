@@ -95,7 +95,12 @@ export default function DraftSection({
   const pending = preview.pending_closure ?? {}
   const empty = lines.length === 0
   const allZero = !empty && Number(totals.total_amount) === 0
-  const hoursTotal = totals.hours_total ?? hoursSum(lines)
+  // F15: האריחים מסכמים את מה שבקובץ, כמו הטבלה שמתחתם (פוליש 14/10, פריט 1). שורות באפס
+  // (N-4) נשמרות בדוח אבל לא נכנסות לקובץ — ולכן לא נספרות כאן; שורה משנית אומרת כמה הן.
+  const fileLines = lines.filter((l) => l.show_in_file !== false)
+  const zeroLines = lines.length - fileLines.length
+  const fileHostesses = new Set(fileLines.map((l) => l.hostess_id)).size
+  const hoursTotal = hoursSum(fileLines)
   const monthEnded = preview.month_state === 'ended'
   // D2: נספרות דיילות, לא שורות.
   const missingBank = [
@@ -104,8 +109,6 @@ export default function DraftSection({
   const zeroDurationCount = lines.filter((l) =>
     (l.warnings ?? []).includes('COMP_DURATION_ZERO'),
   ).length
-  // הטבלה היא הקובץ לרו"ח (הכרעת ישי 14/10): רק השורות שנכנסות לקובץ (N-4).
-  const fileLines = lines.filter((l) => l.show_in_file !== false)
   const firstBlockedIndex = fileLines.findIndex((l) => (l.defects ?? []).length > 0)
   const paged = paginate(fileLines, page)
 
@@ -117,12 +120,19 @@ export default function DraftSection({
       <div className="flex flex-wrap gap-3">
         <StatTile
           label="דיילות"
-          value={<Ltr>{totals.hostess_count}</Ltr>}
+          value={<Ltr>{fileHostesses}</Ltr>}
           testId="payroll-tile-hostesses"
         />
         <StatTile
           label="משמרות"
-          value={<Ltr>{totals.line_count}</Ltr>}
+          value={<Ltr>{fileLines.length}</Ltr>}
+          sub={
+            zeroLines > 0
+              ? zeroLines === 1
+                ? 'משמרת אחת ללא תשלום אינה נכללת בקובץ'
+                : `${zeroLines} משמרות ללא תשלום אינן נכללות בקובץ`
+              : undefined
+          }
           testId="payroll-tile-lines"
         />
         {/* F12 (14/10): אין סכום מחושב בש"ח על המסך — הסיכום בשעות. הסכום נשאר בתשובת השרת
@@ -282,8 +292,6 @@ export default function DraftSection({
 }
 
 function DraftDetails({ preview, missingBank, zeroDurationCount }) {
-  const totals = preview.totals ?? {}
-  const zeroLines = totals.zero_line_count ?? 0
   const accountant = preview.accountant ?? {}
   return (
     <div className="mb-3 flex flex-col gap-1 text-sm text-slate-700">
@@ -311,12 +319,6 @@ function DraftDetails({ preview, missingBank, zeroDurationCount }) {
         <p>
           נאסף ב-<Ltr>{formatTimestampFull(preview.captured_at, '—')}</Ltr>
         </p>
-        {zeroLines > 0 && (
-          <p data-testid="payroll-zero-lines">
-            {countPhrase(zeroLines, 'שורה אחת באפס', 'שורות באפס')} — נשמרות בדוח ולא נכנסות לקובץ
-            לרואה החשבון
-          </p>
-        )}
         {zeroDurationCount > 0 && (
           <p>
             {countPhrase(zeroDurationCount, 'שורת פיצוי אחת', 'שורות פיצוי')} עם שעת התחלה זהה לשעת
