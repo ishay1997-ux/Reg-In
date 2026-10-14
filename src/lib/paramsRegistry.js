@@ -270,7 +270,7 @@ export function parseForDisplay(entry, rawText) {
   }
 }
 
-// ── המרשם עצמו — 49 שורות (43 + ארבע של מודול 11 + תבנית סיכום השעות + סף משך האירוע) ──
+// ── המרשם עצמו — 50 שורות (43 + ארבע של מודול 11 + תבנית סיכום השעות + סף משך האירוע + סף ההנחה) ──
 // כל שורה: { name, label, hint, kind, unit?, min?, max?, decimals?, group, affects?, layerHint?, note? }.
 // `layerHint` (25/09/2026): מפתח ב-`onboardingCopy.js` — ה"למה" של השורה, מוצג רק במצב-ההטמעה (`ParamRow`).
 // `group` הוא ה-`type` (מפתח ל-PARAM_GROUPS), לא התווית — מקור-אמת יחיד לתווית.
