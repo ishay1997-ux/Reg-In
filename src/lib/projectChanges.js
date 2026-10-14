@@ -31,6 +31,18 @@ export function computeDeltaQty(plannedQty, targetQty) {
   return target - planned
 }
 
+// ✏️ ביקורת-ולידציה שורה 14 (14/10/2026): קפיצה חריגה בכמות (10 ⇒ 1000) — **התראה רכה בלבד**;
+// הדיאלוג כבר מציג את הסכום החדש, וזה ממתן. התנאי: פי 3 לפחות **וגם** תוספת של 20 לפחות,
+// כדי ש-2 ⇒ 6 לא יצעק. כמות מתוכננת 0 או חסרה ⇒ אין "פי" ⇒ אין התראה.
+export function qtyJumpNotice(plannedQty, targetQty) {
+  const from = toFiniteNumber(plannedQty)
+  const to = toFiniteNumber(targetQty)
+  if (from === null || to === null || from <= 0) return null
+  if (to < from * 3 || to - from < 20) return null
+  const factor = Math.round((to / from) * 10) / 10
+  return `הכמות עולה מ-${from} ל-${to} (פי ${factor}) — כדאי לוודא שזו הכמות הנכונה.`
+}
+
 // סכום-שורה בשקלים, מדויק לאגורה — תואם בייט-בבייט ל-`revenue_delta` שה-RPC מחזיר
 // (as-built ③: `round(delta_qty × unit_price_snapshot, 2)`). 🔴 **בכוונה לא מאפס `delta_qty`
 // שלילי** (בניגוד ל-`pricing.js:lineAgorot`) — הפחתה היא סכום-שורה שלילי לגיטימי, לא שורה

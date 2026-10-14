@@ -41,6 +41,7 @@ import {
   lateChangeBanner,
   lineChangeAmount,
   projectTotalAfterChange,
+  qtyJumpNotice,
   staffingConsequence,
   tierCrossingNotice,
 } from '@/lib/projectChanges'
@@ -456,6 +457,17 @@ function RemovalButton({
   )
 }
 
+// שורה 14 בביקורת-הוולידציה — ענבר, לא חוסם ("המערכת מודיעה ולא מחליטה", ⑯).
+function QtyJumpNotice({ from, to }) {
+  const text = qtyJumpNotice(from, to)
+  if (!text) return null
+  return (
+    <div className="mt-1 text-xs font-semibold text-amber-700" role="status">
+      {text}
+    </div>
+  )
+}
+
 function ExistingLineRow({ state, quoteReadable, submitting, onQtyChange }) {
   const { model, raw, target, error, delta, changed, amount, removable, blockedReason } = state
   // ㊳ ② — מצב-הפריט מוצג **בתוך שורת-המשנה הקיימת** (היחידה), ולא בעמודה שביעית:
@@ -523,6 +535,7 @@ function ExistingLineRow({ state, quoteReadable, submitting, onQtyChange }) {
             onChange={(e) => onQtyChange(model.key, e.target.value)}
           />
         )}
+        <QtyJumpNotice from={model.effectiveQty} to={error ? null : target} />
         {showRemoval ? (
           <RemovalButton
             model={model}
