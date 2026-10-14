@@ -81,7 +81,7 @@ const TEAM_PARAM_NAMES = [HOSTESS_PARAM_NAMES.inviteValidityHours]
 // 🧹 שוכתב מ"אחרי האירוע, שינויים מוזנים בלשונית 'סגירת אירוע'" (B13: פעולה קודמת לעובדה).
 // ⚠️ אותה קבועה בדיוק יושבת גם ב-ProjectCardPage.jsx:66 (מחוץ לסט הקבצים שלי) — דווח כ"פגיעה
 // מחוץ לסט" כדי שהניסוח יתאזן בשני המקומות.
-const SCOPE_BLOCKED_TITLE = "עברי ללשונית 'סגירת אירוע' לשינוי תכולה אחרי האירוע"
+const SCOPE_BLOCKED_TITLE = "שינוי תכולה אחרי האירוע נעשה בלשונית 'סגירת אירוע'."
 
 export default function TeamTab({
   project,

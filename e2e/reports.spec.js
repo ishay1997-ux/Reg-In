@@ -40,7 +40,7 @@ const PROJECTS_PASSWORD = process.env.E2E_PROJECTS_PASSWORD
 // `EXPORT_NO_ROWS`/`EXPORT_NO_APPROVED_RUN` (`src/lib/reportsExport.js`) ·
 // כותרת-הכשל ו-"נסי שוב" (`src/components/PermissionAwareEmpty.jsx`).
 const MASKED_TEXT = 'לא זמין בתפקידך'
-const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פני למנכ"ל'
+const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פנה למנכ"ל'
 const EXPORT_NO_APPROVED_RUN = 'אין שורות לייצא — טרם אושרה ריצת-ניתוח'
 // 🔤 **נוסח של החלון עצמו** (`NO_ROWS_AFTER_FILTER` ב-`src/components/ExportDialog.jsx`).
 // 🔴 **ואינו אותו דבר כמו `EXPORT_NO_ROWS`, ולכן אינו מחליף אותו:** ‏`EXPORT_NO_ROWS` נזרק

@@ -35,7 +35,7 @@ export default class ErrorBoundary extends Component {
         <p className="max-w-sm text-slate-500">
           קרתה שגיאה בלתי צפויה במסך. רענון הדף בדרך כלל פותר את זה. אם זה חוזר, יש לפנות למנכ״ל.
         </p>
-        <Button onClick={this.handleReload}>רענני את הדף</Button>
+        <Button onClick={this.handleReload}>רענן את הדף</Button>
       </div>
     )
   }

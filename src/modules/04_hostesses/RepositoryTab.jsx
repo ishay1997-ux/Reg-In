@@ -424,7 +424,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                       onOpenCard(hostess.hostess_id)
                     }
                   }}
-                  aria-label={`פתחי כרטיס דיילת: ${hostess.full_name}`}
+                  aria-label={`פתח כרטיס דיילת: ${hostess.full_name}`}
                   className={`cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${hostess.status === 'active' ? '' : 'bg-slate-50'}`}
                   data-testid={`repository-row-${hostess.hostess_id}`}
                 >

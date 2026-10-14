@@ -27,7 +27,7 @@ vi.mock('./api', () => ({
 // docs/micro_guides/module-6.md, ‏Step 3.2 ‏↳ as-built 14/08/2026 ②, שנקרא מ-pg_get_functiondef.
 // אם בדיקה זו נשברת — או שהלקוח סטה מהשרת, או שהשרת שונה ואז יש לעדכן את שני הצדדים יחד.
 const SERVER_LOCATION_MSG = 'חובה למלא מיקום — הוא נשלח לדיילות ומשמש לדירוג הקרבה בשיבוץ.'
-const SERVER_HOURS_MSG = 'מלאי גם שעת התחלה וגם שעת סיום, או השאירי את שתיהן ריקות.'
+const SERVER_HOURS_MSG = 'יש למלא שעת התחלה ושעת סיום, או להשאיר את שתיהן ריקות.'
 
 function offsetIso(days) {
   return new Date(Date.now() + days * 86400000).toISOString().slice(0, 10)

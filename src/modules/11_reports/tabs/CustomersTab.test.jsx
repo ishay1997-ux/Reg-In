@@ -898,7 +898,7 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     callReport.mockResolvedValue(notesPayload())
     renderTab(SURFACES.מ22)
     const button = await screen.findByTestId('m25-run-button')
-    expect(button).toHaveTextContent('הריצי שוב')
+    expect(button).toHaveTextContent('הרץ שוב')
     invoke.mockResolvedValueOnce({ data: { status: 'noop' }, error: null })
     fireEvent.click(button)
     await waitFor(() =>
@@ -1007,7 +1007,7 @@ describe('מ22 · ניתוח הערות + מ25 · פס-הניתוח', () => {
     renderTab(SURFACES.מ22)
     // §1.5 — ציווי בנקבה. הכרטיס כתב "פנה"; כלל-הניסוח גובר, ו-C2 מתיר בדיוק את זה.
     expect(await screen.findByTestId('m25-run-text')).toHaveTextContent(
-      'טרם אושרה ריצת-ניתוח — פני למנכ"ל',
+      'טרם אושרה ריצת-ניתוח — פנה למנכ"ל',
     )
     expect(screen.queryByTestId('m25-run-button')).toBeNull()
   })

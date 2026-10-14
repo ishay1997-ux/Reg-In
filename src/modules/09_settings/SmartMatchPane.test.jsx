@@ -102,7 +102,7 @@ describe('SmartMatchPane', () => {
   it('variant="owner" מציגה את אזהרת-הבעלים הנעולה, לא את אזהרת-המנכ"ל', async () => {
     await renderPane({ variant: 'owner' })
     const banner = screen.getByTestId('settings-smartmatch-warning-owner')
-    expect(banner.textContent).toBe('שינוי כאן משנה את הדירוג שתראי מחר במסך השיבוץ.')
+    expect(banner.textContent).toBe('שינוי כאן ישנה את הדירוג במסך השיבוץ.')
     expect(screen.queryByTestId('settings-smartmatch-warning')).not.toBeInTheDocument()
   })
 

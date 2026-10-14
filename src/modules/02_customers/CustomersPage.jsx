@@ -1043,7 +1043,7 @@ export default function CustomersPage() {
                                 openCard(customer.customer_id)
                               }
                             }}
-                            aria-label={`פתחי כרטיס לקוח: ${customer.company_name}`}
+                            aria-label={`פתח כרטיס לקוח: ${customer.company_name}`}
                             className={cn(
                               'border-b border-slate-100 cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
                               !isActive && 'opacity-60',

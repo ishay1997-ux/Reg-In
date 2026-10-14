@@ -137,7 +137,7 @@ describe('MySettingsPage — הפאנלים האמיתיים (תבניות/Smart
     ])
     renderPage()
     expect(await screen.findByTestId('settings-smartmatch-warning-owner')).toHaveTextContent(
-      'שינוי כאן משנה את הדירוג שתראי מחר במסך השיבוץ.',
+      'שינוי כאן ישנה את הדירוג במסך השיבוץ.',
     )
     expect(screen.queryByTestId('settings-smartmatch-warning')).not.toBeInTheDocument()
   })

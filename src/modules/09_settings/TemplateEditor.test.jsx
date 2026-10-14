@@ -203,7 +203,7 @@ describe('TemplateEditor', () => {
     })
     const blocked = screen.getByTestId('settings-template-blocked')
     expect(blocked.textContent).toContain('משתנה לא מוכר בתבנית')
-    expect(blocked.textContent).toContain('מחקי את המשתנה מהטקסט — עד אז אי-אפשר לשמור')
+    expect(blocked.textContent).toContain('מחק את המשתנה מהטקסט — עד אז אי-אפשר לשמור')
     expect(blocked.textContent).not.toContain('אפשר להחזיר את המשתנה מהרשימה שלמטה')
   })
 

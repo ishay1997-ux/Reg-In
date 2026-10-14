@@ -63,7 +63,7 @@ const TAB_COMPONENTS = {
 // עליו — ולכן זה תיקון ולא ניסוח-מחדש. ⚠️ **ואדוות-התיעוד מדווחת ולא בוצעה:**
 // `processes-approved.md:616` ו-`cards-customers.md:511,533` נושאים את אותו זכר,
 // וכך גם `tabs/customers/AnalysisRunBar.jsx:39` — קובץ של בונה-הלקוחות.
-export const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פני למנכ"ל'
+export const NO_TABS_SENTENCE = 'אין דוחות זמינים בתפקידך — פנה למנכ"ל'
 
 /**
  * 🚪 **מנתב-הדלתות של המעטפת — אחד לכל ארבע הלשוניות** (הכרעה 33 · הכרעה 19).

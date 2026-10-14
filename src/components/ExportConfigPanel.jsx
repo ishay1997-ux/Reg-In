@@ -73,7 +73,7 @@ function ColumnRow({
         className={ICON_BTN}
         disabled={index === 0}
         onClick={() => onMoveToTop(column.key)}
-        aria-label={`העבירי את ${column.label} לראש הרשימה`}
+        aria-label={`העבר את ${column.label} לראש הרשימה`}
       >
         <ChevronsUp className="size-4" aria-hidden="true" />
       </button>
@@ -197,7 +197,7 @@ function FilterRow({ condition, columns, rows, onChange, onRemove }) {
         type="button"
         className={`${ICON_BTN} shrink-0`}
         onClick={onRemove}
-        aria-label="הסירי מסנן"
+        aria-label="הסר מסנן"
       >
         ✕
       </button>

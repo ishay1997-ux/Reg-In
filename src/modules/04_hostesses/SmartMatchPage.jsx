@@ -264,7 +264,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
   function reportMail({ sent, unknown, failed }, verb) {
     const parts = []
     if (sent > 0) parts.push(`${sent} ${verb}`)
-    if (unknown > 0) parts.push(`${unknown} — לא ידוע אם יצאו (ייתכן שכן; אל תשלחי שוב מיד)`)
+    if (unknown > 0) parts.push(`${unknown} — לא ידוע אם יצאו (ייתכן שכן; אל תשלח שוב מיד)`)
     if (failed > 0) parts.push(`${failed} נכשלו`)
     if (parts.length === 0) return
     if (unknown > 0 || failed > 0) toast.error(parts.join(' · '))
@@ -280,7 +280,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
       return
     }
     if (unknown > 0) {
-      toast.error(`${who} שוחררה — לא ידוע אם ההודעה יצאה (ייתכן שכן; אל תשלחי שוב מיד).`)
+      toast.error(`${who} שוחררה — לא ידוע אם ההודעה יצאה (ייתכן שכן; אל תשלח שוב מיד).`)
       return
     }
     toast.success(`${who} שוחררה, והודעה נשלחה אליה`)
@@ -351,7 +351,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
     })
     if (
       notice &&
-      !(await confirm({ title: notice.title, message: notice.note, confirmLabel: 'אשרי בכל זאת' }))
+      !(await confirm({ title: notice.title, message: notice.note, confirmLabel: 'אשר בכל זאת' }))
     )
       return
 
@@ -367,7 +367,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
       !(await confirm({
         title: `המכסה תיסגר — ${releasing.length} דיילות שאישרו זמינות ישוחררו`,
         message: `${releasing.map((r) => r.hostesses?.full_name).join(' · ')} — כל אחת מהן תקבל הודעה שהמשרה אוישה.`,
-        confirmLabel: 'אשרי ושחררי',
+        confirmLabel: 'אשר ושחרר',
       }))
     ) {
       return
@@ -421,7 +421,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
           title: `לשחרר את ${name} מהאירוע?`,
           message:
             'היא תקבל הודעה שהמשרה אוישה. שחרור אינו נספר לרעתה בשום צד של הדירוג — הוא פעולת מערכת.',
-          confirmLabel: 'שחררי',
+          confirmLabel: 'שחרר',
         }))
       ) {
         return
@@ -480,7 +480,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
         !(await confirm({
           title: notice.title,
           message: notice.note,
-          confirmLabel: 'אשרי בכל זאת',
+          confirmLabel: 'אשר בכל זאת',
         }))
       )
         return

@@ -1004,7 +1004,7 @@ export async function createHostess(payload) {
     if (bankError) {
       throw toWriteError(
         bankError,
-        `${data.full_name} נשמרה, אך פרטי הבנק שלה לא נשמרו — פתחי אותה לעריכה והזיני אותם שוב.`,
+        `${data.full_name} נשמרה, אך פרטי הבנק שלה לא נשמרו — יש לפתוח את הכרטיס לעריכה ולהזין שוב.`,
       )
     }
     assertRowsAffected(bankRows, `${data.full_name} נשמרה, אך אין לך הרשאה לשמור את פרטי הבנק שלה.`)
@@ -1019,7 +1019,7 @@ export async function createHostess(payload) {
     } catch (languagesError) {
       throw toWriteError(
         languagesError,
-        `${data.full_name} נשמרה, אך השפות שלה לא נשמרו — פתחי אותה לעריכה וסמני אותן שוב.`,
+        `${data.full_name} נשמרה, אך השפות שלה לא נשמרו — יש לפתוח את הכרטיס לעריכה ולהזין שוב.`,
       )
     }
   }
