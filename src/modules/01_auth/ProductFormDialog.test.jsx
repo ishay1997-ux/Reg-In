@@ -2,7 +2,7 @@
 // ✏️ מבקרים טריים: הרמז אומר "שינוי מחיר כאן לא משנה הצעות שכבר נשמרו" — ולמוצר חדש אין עדיין
 // אף הצעה. ⇒ הוא מוצג בעריכה בלבד. ה-API ממוקק כולו — אין Supabase בבדיקה.
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import ProductFormDialog from './ProductFormDialog'
 
 vi.mock('@/supabaseClient', () => ({ supabase: {} }))
@@ -42,5 +42,27 @@ describe('מצב 2: `prices.openQuotes`', () => {
     render(<ProductFormDialog open onOpenChange={vi.fn()} editingProduct={null} />)
     expect(screen.getByTestId('product-form-base-price')).toBeInTheDocument()
     expect(screen.queryByTestId('hint-prices.openQuotes')).toBeNull()
+  })
+})
+
+// ביקורת-ולידציה, שורה 10 (14/10/2026): עלות > מחיר ⇒ התראה רכה; מחיר > 100,000 ⇒ חסימה.
+describe('מחיר ועלות — עקביות ותקרת-שפיות', () => {
+  it('עלות גבוהה מהמחיר ⇒ התראה ענבר; עלות תקינה ⇒ בלי', () => {
+    render(<ProductFormDialog open onOpenChange={vi.fn()} editingProduct={PRODUCT} />)
+    expect(screen.queryByTestId('product-cost-notice')).toBeNull()
+    fireEvent.change(screen.getByTestId('product-form-cost'), { target: { value: '6' } })
+    expect(screen.getByTestId('product-cost-notice')).toHaveTextContent(
+      'העלות (₪6) גבוהה ממחיר הבסיס (₪4.5) — כל מכירה תהיה בהפסד.',
+    )
+  })
+
+  it('מחיר מעל 100,000 ⇒ שגיאה חוסמת', () => {
+    render(<ProductFormDialog open onOpenChange={vi.fn()} editingProduct={PRODUCT} />)
+    const price = screen.getByTestId('product-form-base-price')
+    fireEvent.change(price, { target: { value: '5000000' } })
+    fireEvent.blur(price)
+    expect(screen.getByTestId('product-field-error-base_price')).toHaveTextContent(
+      'המחיר חורג מכל טווח סביר — יש לבדוק שלא נוספו אפסים.',
+    )
   })
 })

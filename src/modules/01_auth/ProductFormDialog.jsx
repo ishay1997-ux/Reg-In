@@ -52,6 +52,32 @@ function FieldError({ name, message }) {
   )
 }
 
+// ✏️ ביקורת-ולידציה, שורה 10 (14/10/2026): תקרת-שפיות למחיר-בסיס — `5000000` עבר. 100,000 ₪
+// ליחידה רחוק מכל פריט בקטלוג (דיילת, תג, שרוך, אתר) — מטרתה לתפוס אפסים שנוספו בטעות,
+// כמו תקרת ה-200 על שכר המינימום. **חסימה**, כי מחיר כזה תמיד טעות.
+const MAX_SANE_BASE_PRICE = 100000
+const BASE_PRICE_INSANE_MESSAGE = 'המחיר חורג מכל טווח סביר — יש לבדוק שלא נוספו אפסים.'
+
+// והשנייה — **התראה רכה**: עלות גבוהה ממחיר-הבסיס. מסך-המדרגות הסמוך כבר מזהיר "מתחת לעלות"
+// (`validateTierRows`) — אותו ערך, וכאן לא היה שום כלל. לא חוסמים: מוצר-הפסד מכוון אפשרי.
+function costAboveBaseNotice(form) {
+  const base = String(form.base_price ?? '').trim()
+  const cost = String(form.cost ?? '').trim()
+  if (!isValidNonNegativePrice(base) || !isValidNonNegativePrice(cost)) return ''
+  if (Number(cost) <= Number(base)) return ''
+  return `העלות (₪${Number(cost)}) גבוהה ממחיר הבסיס (₪${Number(base)}) — כל מכירה תהיה בהפסד.`
+}
+
+function CostNotice({ form }) {
+  const text = costAboveBaseNotice(form)
+  if (!text) return null
+  return (
+    <p className="text-amber-700 text-sm" role="status" data-testid="product-cost-notice">
+      {text}
+    </p>
+  )
+}
+
 // הכללים עצמם קצרים ומקומיים לטופס הזה (בניגוד ללקוחות, שם הם חיים ב-src/lib/customers.js
 // כי גם מסכים אחרים מוודאים לקוח). כאן אין צרכן שני — המרכיבים הכלליים (SKU/מחיר) כן
 // מיובאים מ-validators.js ולא נכתבים מחדש.
@@ -68,7 +94,8 @@ function validateProductField(name, value) {
     case 'unit':
       return text === '' ? 'יש לבחור יחידת מכירה' : ''
     case 'base_price':
-      return isValidNonNegativePrice(text) ? '' : 'מחיר במספרים, אפס ומעלה'
+      if (!isValidNonNegativePrice(text)) return 'מחיר במספרים, אפס ומעלה'
+      return Number(text) > MAX_SANE_BASE_PRICE ? BASE_PRICE_INSANE_MESSAGE : ''
     case 'cost':
       return isValidNonNegativePrice(text) ? '' : 'עלות במספרים, אפס ומעלה'
     default:
@@ -335,6 +362,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
                 data-testid="product-form-cost"
               />
               <FieldError name="cost" message={fieldErrors.cost} />
+              <CostNotice form={form} />
             </div>
           </div>
 
