@@ -44,6 +44,8 @@ import {
   pendingQuotesLabel,
   missingPricingParamsMessage,
   quoteServerErrorMessage,
+  discountNotice,
+  discountWarningThreshold,
 } from '@/lib/quotes'
 
 // תרחיש-האפיון המחייב (C5 §5.5.4) — אותו תרחיש שמאמת את מנוע-הכסף, כאן בצורת-המסך.
@@ -1492,5 +1494,27 @@ describe('hasQuoteChanged — עדכון בלי שינוי', () => {
     ['שדה שרוקן', () => hasQuoteChanged({ ...FORM, manualDiscount: '' }, LINES, FORM, LINES)],
   ])('בספק — %s ⇒ true (לעולם לא בולעים עריכה)', (_label, run) => {
     expect(run()).toBe(true)
+  })
+})
+
+// ביקורת-ולידציה שורה 4 + כלל-ההנחה של ישי (14/10/2026): התראה רכה מעל הסף (ברירת-מחדל 30).
+describe('discountNotice — הנחה גבוהה מודיעה, לא חוסמת', () => {
+  it('מעל 30% ⇒ הנוסח המאושר; 30% בדיוק ⇒ בלי', () => {
+    expect(discountNotice(10, 25, undefined)).toBe(
+      'סך ההנחות 35% — גבוה מהרגיל. כדאי לוודא שזו ההנחה הנכונה.',
+    )
+    expect(discountNotice(10, 20, undefined)).toBe('')
+  })
+  it('100% בדיוק ⇒ נוסח ההצעה על 0 ₪ (גם 33.33 + 66.67); מעל 100 ⇒ ריק (השגיאה החוסמת מטפלת)', () => {
+    expect(discountNotice(33.33, 66.67, '30')).toBe('סך ההנחות הוא 100% — ההצעה תהיה על 0 ₪.')
+    expect(discountNotice(50, 60, '30')).toBe('')
+  })
+  it('הסף מהפרמטר; חסר או מחוץ ל-5–90 ⇒ 30', () => {
+    expect(discountNotice(0, 35, '40')).toBe('')
+    expect(discountNotice(0, 45, '40')).toContain('45%')
+    expect(discountWarningThreshold(null)).toBe(30)
+    expect(discountWarningThreshold('2')).toBe(30)
+    expect(discountWarningThreshold('95')).toBe(30)
+    expect(discountWarningThreshold('20')).toBe(20)
   })
 })

@@ -57,6 +57,7 @@ import {
 import CustomerPicker from '@/modules/03_quotes/CustomerPicker'
 import QuoteDocumentDialog from '@/modules/03_quotes/QuoteDocumentDialog'
 import QuoteLineEditor from '@/modules/03_quotes/QuoteLineEditor'
+import DiscountNotice from '@/modules/03_quotes/DiscountNotice'
 import QuoteSummaryPanel from '@/modules/03_quotes/QuoteSummaryPanel'
 
 const EMPTY_FORM = {
@@ -850,6 +851,11 @@ export default function QuoteBuilderPage() {
                     {errors.manualDiscount}
                   </p>
                 )}
+                <DiscountNotice
+                  applied={form.appliedDiscount}
+                  manual={form.manualDiscount}
+                  threshold={screenParams[QUOTE_SCREEN_PARAM_NAMES.discountWarningPercent]}
+                />
               </div>
 
               <Field

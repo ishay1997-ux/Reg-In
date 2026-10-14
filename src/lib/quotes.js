@@ -499,6 +499,9 @@ export function crossesMidnight(startTime, endTime) {
 // שהוא ה-SSOT למחרוזת הזו — שכפולה היה מאפשר לשתי העתקות להתפצל בשקט בהקלדה.
 export const QUOTE_SCREEN_PARAM_NAMES = {
   vatPercent: PRICING_PARAM_NAMES.VAT_PERCENT,
+  // 🆕 14/10/2026 — סף ההערה "סך ההנחות גבוה מהרגיל" (`discountNotice`). חסר במסד ⇒ 30 בקוד:
+  // הסף רק מודיע, ולכן אינו נכנס לאזהרת "פרמטר חסר" של המסך.
+  discountWarningPercent: 'סף_אזהרת_הנחה_אחוז',
   validityDays: 'ימי_תוקף_הצעה',
   eventWarningDays: 'ימי_אזהרה_קדם_אירוע',
   // 🆕 מודול 9 (צעד 2.3) — הסף של "פג בקרוב", שעד אז היה קבוע מיוצא בקובץ הזה.
@@ -529,6 +532,32 @@ function paramNumber(value) {
   if (value === null || value === undefined || value === '') return null
   const n = Number(value)
   return Number.isFinite(n) ? n : null
+}
+
+// ── הנחה גבוהה — התראה רכה (ביקורת-ולידציה שורה 4 + כלל-ההנחה של ישי, 14/10/2026) ──
+// סך ההנחות (קבועה + נוספת) **מעל הסף ⇒ הערה, לא חסימה**: כלי CPQ מקובלים מעבירים הנחה גדולה
+// לאישור ולא אוסרים אותה; חסימה הייתה עוצרת עסקה לגיטימית. ‏100% בדיוק ⇒ הנוסח של הצעה על 0 ₪.
+// מעל 100 ⇒ '' — זו כבר שגיאה חוסמת ב-`validateQuoteForm`.
+// הסף מ-`סף_אזהרת_הנחה_אחוז`; חסר / מחוץ לטווח-המרשם (5–90) ⇒ 30.
+export const DEFAULT_DISCOUNT_WARNING_PERCENT = 30
+
+export function discountWarningThreshold(rawParamValue) {
+  const n = paramNumber(rawParamValue)
+  const entry = getParamEntry('סף_אזהרת_הנחה_אחוז')
+  if (n === null || n < entry.min || n > entry.max) return DEFAULT_DISCOUNT_WARNING_PERCENT
+  return n
+}
+
+export function discountNotice(appliedDiscount, manualDiscount, thresholdParam) {
+  const applied = paramNumber(appliedDiscount) ?? 0
+  const manual = paramNumber(manualDiscount) ?? 0
+  // במאיות-שלמות, כמו ב-`computeQuoteTotals`: 33.33+66.67 הוא 100 בדיוק.
+  const totalHundredths = Math.round(applied * 100) + Math.round(manual * 100)
+  if (totalHundredths > 10000) return ''
+  if (totalHundredths === 10000) return 'סך ההנחות הוא 100% — ההצעה תהיה על 0 ₪.'
+  const total = totalHundredths / 100
+  if (total <= discountWarningThreshold(thresholdParam)) return ''
+  return `סך ההנחות ${total}% — גבוה מהרגיל. כדאי לוודא שזו ההנחה הנכונה.`
 }
 
 // שורת-האזהרה שמסך-ההצעות מציג כששורת-פרמטר תמחור חסרה מ-`params` (הכרעת-ישי 31/07/2026).
