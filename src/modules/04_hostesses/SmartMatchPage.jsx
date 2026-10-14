@@ -71,7 +71,7 @@ const VISIBLE_CANDIDATES = 8
 // "על מה הציון מבוסס כרגע" — רק המרכיבים שמשקלם בפועל גדול מ-0, כל אחוז צמוד למילה שלו
 // (ר' הערת-ה-bidi בבאנר: צמד `62% / 38%` מתהפך). נגזר מ-`activeWeights`, לא ממספר קשיח.
 const BASIS_LABELS = [
-  ['responsiveness', 'שיעור-היענות'],
+  ['responsiveness', 'שיעור היענות'],
   ['reliability', 'אמינות'],
   ['proximity', 'קרבה'],
 ]
@@ -531,7 +531,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
         className="mb-2 h-auto p-0 text-sm font-semibold text-teal-700"
         data-testid="smart-match-back"
       >
-        ← חזרה למבט-על
+        ← חזרה למבט על
       </Button>
 
       <div className="mb-3">

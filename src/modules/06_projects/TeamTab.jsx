@@ -206,7 +206,7 @@ export default function TeamTab({
         <StatTile
           label="כמות נדרשת"
           value={<Ltr>{String(required)}</Ltr>}
-          sub={hostessChanges.length > 0 ? 'עודכן בשינוי-תכולה' : 'מההצעה'}
+          sub={hostessChanges.length > 0 ? 'עודכן בשינוי תכולה' : 'מההצעה'}
           testId="team-tile-required"
         />
         <StatTile
@@ -446,7 +446,7 @@ function whenCell(row) {
 function ScopeChangesSection({ project, hostessChanges }) {
   return (
     <div className="mt-6" data-testid="team-scope-changes">
-      <h2 className="text-sm font-bold text-slate-700">שינויי-תכולה בכמות הדיילות</h2>
+      <h2 className="text-sm font-bold text-slate-700">שינויי תכולה בכמות הדיילות</h2>
       {hostessChanges.length === 0 ? (
         <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-600">
           {scopeFactSentence({

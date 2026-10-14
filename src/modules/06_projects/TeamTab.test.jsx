@@ -381,7 +381,7 @@ describe('מקטע שינויי-התכולה בכמות הדיילות', () => {
     expect(screen.getByTestId('team-scope-change-7')).toHaveTextContent('הלקוח הגדיל את האירוע')
     expect(screen.queryByTestId('team-scope-change-8')).not.toBeInTheDocument()
     // אריח "כמות נדרשת" מפסיק לטעון שהכמות מההצעה.
-    expect(screen.getByTestId('team-tile-required')).toHaveTextContent('עודכן בשינוי-תכולה')
+    expect(screen.getByTestId('team-tile-required')).toHaveTextContent('עודכן בשינוי תכולה')
   })
 })
 

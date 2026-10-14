@@ -55,7 +55,7 @@ export const SALARY_LINE_BASIS = {
 export const SALARY_REPORT_COLUMNS = [
   'ת"ז',
   'שם',
-  'פרטי-בנק',
+  'פרטי בנק',
   'תאריך',
   'תעריף',
   'שעות',
@@ -370,7 +370,7 @@ function buildSalaryReportSheet({ reportId, periodLabel, generatedAt, lines, tot
 // אין עמודת ₪ (F12) — רו"ח מחשב את הכסף. גיליון 1 לא משתנה. הכותרת היא שורת-הכותרת של
 // גיליון 1, כדי שטיוטה או שחזור יגידו מה הם גם בגיליון השני.
 export const HOSTESS_SUMMARY_SHEET_NAME = 'סיכום לפי דיילת'
-export const HOSTESS_SUMMARY_COLUMNS = ['ת"ז', 'שם', 'פרטי-בנק', 'משמרות', 'סה"כ שעות']
+export const HOSTESS_SUMMARY_COLUMNS = ['ת"ז', 'שם', 'פרטי בנק', 'משמרות', 'סה"כ שעות']
 export const HOSTESS_SUMMARY_TOTAL_LABEL = 'סה"כ'
 const HOSTESS_SUMMARY_WIDTHS = [
   { width: 14 },

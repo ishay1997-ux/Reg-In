@@ -380,7 +380,7 @@ describe('buildSalaryReportDocument — המסמך המלא', () => {
     expect(SALARY_REPORT_COLUMNS).toEqual([
       'ת"ז',
       'שם',
-      'פרטי-בנק',
+      'פרטי בנק',
       'תאריך',
       'תעריף',
       'שעות',

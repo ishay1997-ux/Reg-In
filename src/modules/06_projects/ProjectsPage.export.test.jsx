@@ -14,6 +14,9 @@ vi.mock('@/contexts/AuthContext', () => ({
 
 const listProjectsOverview = vi.fn()
 vi.mock('./api', () => ({ listProjectsOverview: (...a) => listProjectsOverview(...a) }))
+vi.mock('@/api/params', () => ({
+  getParamValues: () => Promise.resolve({ event_warning_days: '14' }),
+}))
 
 import ProjectsPage from './ProjectsPage'
 import { staffingCell, PROJECT_STATUS_LABELS } from '@/lib/projects'

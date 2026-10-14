@@ -112,7 +112,7 @@ describe('מ1 — מיסוך הלשוניות (הכרעה 2 · 15-ה · ת8)', (
       'true',
     )
     expect(screen.getAllByText(MASKED_TEXT)).toHaveLength(3)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט על דיילות')
   })
 
   // 🔤 ת8 #5, מילה-במילה: **לא מסך ריק** — ארבע לשוניות ממוסכות והודעה אחת.
@@ -146,7 +146,7 @@ describe('מ1 — מיסוך הלשוניות (הכרעה 2 · 15-ה · ת8)', (
 describe('מ1 — בורר-הדוח (הכרעה 18 · 29)', () => {
   it('לחיצה על שבב מחליפה את הכותרת ואת השאלה (הכרעה 18)', async () => {
     renderPage()
-    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('מבט-על הנהלה')
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('מבט על הנהלה')
     expect(screen.getByText('מה מצב העסק השנה?')).toBeInTheDocument()
 
     await click(screen.getByTestId('reports-chip-trends'))
@@ -180,7 +180,7 @@ describe('מ1 — בורר-הדוח (הכרעה 18 · 29)', () => {
       .getAllByRole('button')
       .filter((b) => b.getAttribute('aria-current') === 'true')
     expect(current).toHaveLength(1)
-    expect(current[0]).toHaveTextContent('מבט-על הנהלה')
+    expect(current[0]).toHaveTextContent('מבט על הנהלה')
   })
 
   it('המשטחים הנדחים אינם על המסך כלל — גם לא מנוטרלים', async () => {
@@ -213,13 +213,13 @@ describe('מ1 — מצב-התצוגה חי בכתובת (📐13④ · S-18)', ()
     renderPage('/reports?tab=exec&report=discounts')
     await screen.findByRole('heading', { level: 1 })
     await click(screen.getByTestId('reports-tab-hostesses'))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט על דיילות')
   })
 
   // S-18: ערך זר בכתובת אינו מסך שבור — הוא נופל לברירת-המחדל.
   it('לשונית או דוח לא-מוכרים בכתובת ⇒ ברירת-מחדל, בלי קריסה', async () => {
     renderPage('/reports?tab=nope&report=nope')
-    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('מבט-על הנהלה')
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('מבט על הנהלה')
   })
 
   it('כתובת חוסמת לשונית שאין לה הרשאה — נופלת לראשונה המותרת', async () => {
@@ -561,7 +561,7 @@ describe('מ1 — מנתב-הדלתות', () => {
     // האריח עצמו על המסך, עם הערך — רק הדלת אינה קיימת.
     expect(await screen.findByTestId('report-tile-red')).toHaveTextContent('דיילות אדומות')
     expect(screen.queryByTestId('report-tile-link-red')).toBeNull()
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט על דיילות')
   })
 
   // 🔑 **אותו אריח בדיוק, למנכ"ל — הדלת שם.** בלי הצד הזה הבדיקה שמעל הייתה עוברת גם אילו
@@ -669,7 +669,7 @@ describe('מ1 — מנתב-הדלתות', () => {
     )
     renderDoors()
     await click(await screen.findByTestId('report-tile-link-red'))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט על דיילות')
     expect(callReport.mock.calls.at(-1)[1].drill).toBeNull()
   })
 
@@ -805,11 +805,12 @@ describe('מ1 — הייצוא יושב בשורת-המסננים', () => {
   })
 })
 
-describe('מ1 — ציווי בנקבה', () => {
-  // ‏`spec.md §1.5` + S-28 נועלים ציווי בנקבה בכל הממשק.
-  it('משפט "אין דוחות" פונה בנקבה', () => {
-    expect(NO_TABS_SENTENCE).toContain('פני')
-    expect(NO_TABS_SENTENCE).not.toContain('פנה')
+describe('מ1 — פנייה למנהל בזכר או ניטרלי', () => {
+  // ✏️ הכרעת-ישי 11/10/2026 (PR #177) גוברת על `spec.md §1.5` + S-28: נוסח שפונה למנהל — בזכר
+  // או ניטרלי; נקבה רק בטקסט שפונה לדיילת.
+  it('משפט "אין דוחות" פונה למנהל בזכר', () => {
+    expect(NO_TABS_SENTENCE).toContain('פנה')
+    expect(NO_TABS_SENTENCE).not.toContain('פני')
   })
 })
 

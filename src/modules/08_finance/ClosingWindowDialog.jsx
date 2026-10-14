@@ -805,7 +805,7 @@ function FeeActions({ busy, actions }) {
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={actions.onSaveFee}
         >
-          {busy === 'fee' ? 'שומר…' : 'שמור דמי-ביטול'}
+          {busy === 'fee' ? 'שומר…' : 'שמור דמי ביטול'}
         </Button>
         <Button
           type="button"
@@ -932,7 +932,7 @@ function FeeSavedBlock({ detail, creditNoteFlag }) {
       data-testid="closing-fee-saved"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-sm font-semibold text-slate-700">דמי-ביטול שנקבעו</span>
+        <span className="text-sm font-semibold text-slate-700">דמי ביטול שנקבעו</span>
         <Money
           amount={detail.cancellation_fee}
           cents
@@ -1428,7 +1428,7 @@ function BalanceBlock({ detail }) {
       >
         <BalanceRow
           // ה2
-          label="הכנסות (הצעה-קפואה + שינויי-תכולה)"
+          label="הכנסות (הצעה-קפואה + שינויי תכולה)"
           amount={detail.revenue}
           testId="closing-balance-revenue"
         />

@@ -85,7 +85,7 @@ const SALARY_BUTTON_LABEL = 'דוח שכר'
 const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני הכספים.'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקה סינון'
-const CANCELLATION_FEE_TAG = 'דמי-ביטול'
+const CANCELLATION_FEE_TAG = 'דמי ביטול'
 const CANCELLATION_FEE_UNRESOLVED = 'דמי ביטול — טרם נקבעו'
 const OPERATIONALLY_CLOSED_NOTE = 'האירוע נסגר'
 // 🔤 המילה שהמוקאפ המאושר מצייר **בתא-התאריך** של שורה מבוטלת (שורת #14:
@@ -112,8 +112,8 @@ const DASH = '—'
 // החלון), והלשוניות מתחתם — רק בחלון שנבחר (ברירת-מחדל "3 חודשים"). באתר: "72 תיקים" מול 29+25 בלשוניות, בלי מילה.
 // ⇒ ההיקף נאמר בתווית, באותה מילה כמו אריח-הנתח של מ2 ("כל הזמנים").
 const SUMMARY_OPEN_LABEL = 'סה"כ ממתין לגבייה · כל הזמנים'
-const SUMMARY_OVERDUE_LABEL = 'מתוכו באיחור-תשלום · כל הזמנים'
-const SUMMARY_OPEN_UNKNOWN = 'לא ידוע — דמי-ביטול טרם נקבעו'
+const SUMMARY_OVERDUE_LABEL = 'מתוכו באיחור תשלום · כל הזמנים'
+const SUMMARY_OPEN_UNKNOWN = 'לא ידוע — דמי ביטול טרם נקבעו'
 // 🔤 נעול (`ui-copy-styleguide.md` §5) — משתנה רק יחד עם הבדיקה. עמודת "כולל מע"מ" ריקה
 // בקובץ שנראה שלם היא הכשל ש-`src/CLAUDE.md §3` אוסר; לכן חסימה עם סיבה, לא תא ריק.
 const EXPORT_BLOCKED_VAT = 'שיעור המע"מ לא נטען — לחץ "נסה שוב" ואז ייצא'
@@ -401,7 +401,7 @@ function summaryOpenSub(summary) {
   if (summary.openCount === 0) return 'אין תיקים פתוחים לגבייה כרגע'
   const base = `${countLabel(summary.openCount, 'תיק', 'תיקים')} בטיפול`
   if (summary.unresolvedCount === 0) return base
-  const missing = countLabel(summary.unresolvedCount, 'דמי-ביטול', 'דמי-ביטול')
+  const missing = countLabel(summary.unresolvedCount, 'דמי ביטול', 'דמי ביטול')
   // ✏️ 25/09/2026 (מעבר-העיניים #8): "לא כולל" נקרא כאילו התיקים לא נספרו — והם כן נספרים ב-N. רק הסכום בלעדיהם.
   return `${base} · הסכום לא כולל ${missing} שטרם נקבעו`
 }
@@ -1016,7 +1016,7 @@ function SummaryTiles({ summary }) {
       <StatTile
         label={SUMMARY_OVERDUE_LABEL}
         value={summary.overdueTotal}
-        sub={`${countLabel(summary.overdueCount, 'תיק', 'תיקים')} באיחור-תשלום`}
+        sub={`${countLabel(summary.overdueCount, 'תיק', 'תיקים')} באיחור תשלום`}
         testId="finance-summary-overdue"
       />
     </div>
@@ -1298,7 +1298,7 @@ function FinanceRow({ entry, tab, satisfactionThreshold, onOpen }) {
             מארוכב אינו מבקש בירור שכבר נעשה כתנאי לארכובו. */}
         {!row.archived_at && needsClarification && (
           <div className="mt-0.5 text-xs font-semibold text-amber-700">
-            ⚠ ציון-משוב <Ltr>{String(entry.score.score)}</Ltr> — נדרש בירור טלפוני
+            ⚠ ציון משוב <Ltr>{String(entry.score.score)}</Ltr> — נדרש בירור טלפוני
           </div>
         )}
         {row.credit_note_flag && (

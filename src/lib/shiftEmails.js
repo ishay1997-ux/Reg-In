@@ -271,7 +271,7 @@ export function feedbackUrlFor(origin, token) {
 }
 
 export function projectReportSubject(project) {
-  return `דוח-סיכום האירוע — ${project?.event_name ?? ''}`.trim()
+  return `דוח סיכום האירוע — ${project?.event_name ?? ''}`.trim()
 }
 
 export function feedbackSurveySubject(project) {
@@ -284,7 +284,7 @@ export function feedbackSurveySubject(project) {
 // לשורת-params תהיה העתקה, לא שכתוב. ההמרה ל-HTML-עם-כיווניות קורית ב-buildEmailPayload
 // (plainTextToEmailHtml) — כמו כל מייל אחר.
 const PROJECT_REPORT_BODY_TEMPLATE = `שלום [שם_איש_קשר],
-מצורף בזאת דוח-סיכום האירוע '[שם_פרויקט]' שהתקיים בתאריך [תאריך_אירוע].
+מצורף בזאת דוח סיכום האירוע '[שם_פרויקט]' שהתקיים בתאריך [תאריך_אירוע].
 נשמח לעמוד לרשותך בכל שאלה על האירוע ועל הדוח.
 בברכה,
 צוות REG-IN.`

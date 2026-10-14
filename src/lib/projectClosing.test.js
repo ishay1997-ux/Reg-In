@@ -213,7 +213,7 @@ describe('closingValidationSummary — משפט-החסימה היחיד ליד "
         fullRow(),
       ],
     }
-    expect(closingValidationSummary(draft)).toBe('לא ניתן לסגור: חסרים 2 סימוני-איכות ודוח-סיכום.')
+    expect(closingValidationSummary(draft)).toBe('לא ניתן לסגור: חסרים 2 סימוני-איכות ודוח סיכום.')
   })
 
   it('סימון-איכות חסר יחיד ⇒ יחיד ("סימון-איכות אחד"), לא "1 סימוני-איכות" — הנחתי', () => {

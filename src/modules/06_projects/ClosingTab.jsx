@@ -625,7 +625,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
 
           <div className="flex flex-col gap-1">
             <span className="text-xs text-slate-500">
-              <span className="font-semibold text-slate-600">דוח-סיכום אירוע</span> · חובה
+              <span className="font-semibold text-slate-600">דוח סיכום אירוע</span> · חובה
             </span>
             <div
               className="flex min-h-9 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5"
@@ -804,7 +804,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
           >
             <b className="text-slate-700">{ready ? 'מוכן לשליחה' : 'טרם מוכן לשליחה'}</b>
             <ReadyItem ok={fieldsOk}>שלושת שדות-האירוע מולאו</ReadyItem>
-            <ReadyItem ok={Boolean(reportFile)}>דוח-סיכום הועלה</ReadyItem>
+            <ReadyItem ok={Boolean(reportFile)}>דוח סיכום הועלה</ReadyItem>
             {rows.length > 0 && (
               <ReadyItem ok={allMarked}>
                 <Ltr>{`${marked}/${rows.length}`}</Ltr> דיילות סומנו
@@ -1268,7 +1268,7 @@ function ClosedView({
           </span>
         </div>
         <div className="flex flex-col items-start gap-0.5">
-          <span className="text-xs text-slate-500">דוח-סיכום אירוע</span>
+          <span className="text-xs text-slate-500">דוח סיכום אירוע</span>
           {reportPath ? (
             <span className="text-sm">
               <span className="font-semibold text-slate-800">

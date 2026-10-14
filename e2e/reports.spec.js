@@ -195,10 +195,10 @@ async function fakeM22WithoutApprovedRun(page) {
 }
 
 const DEFAULT_SURFACES = [
-  { tab: 'exec', report: 'exec-overview', name: 'מבט-על הנהלה' },
-  { tab: 'finance', report: 'finance-overview', name: 'מבט-על כספים' },
-  { tab: 'hostesses', report: 'hostess-overview', name: 'מבט-על דיילות' },
-  { tab: 'customers', report: 'customers-overview', name: 'מבט-על לקוחות' },
+  { tab: 'exec', report: 'exec-overview', name: 'מבט על הנהלה' },
+  { tab: 'finance', report: 'finance-overview', name: 'מבט על כספים' },
+  { tab: 'hostesses', report: 'hostess-overview', name: 'מבט על דיילות' },
+  { tab: 'customers', report: 'customers-overview', name: 'מבט על לקוחות' },
 ]
 
 test.describe('מודול 11 · מעטפת-הדוחות והמסעות שלה', () => {
@@ -222,7 +222,7 @@ test.describe('מודול 11 · מעטפת-הדוחות והמסעות שלה', 
 
     const surface = page.getByTestId('report-exec-overview')
     await expect(surface).toBeVisible()
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('מבט-על הנהלה')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('מבט על הנהלה')
     // ✏️ 23/09/2026 (טיפוגרפיה פזה ב׳, הדגם שישי אישר): האוכלוסייה וההגדרות מקופלות בשבב-ההיקף.
     // גלוי: השבב, עם ה-n מתוך ה-N מהשרת (`population.summary`). בפנים: ההצהרה המלאה וההגדרות.
     await expect(page.getByTestId('report-scope-summary')).toContainText('אירועים שהסתיימו')
@@ -386,7 +386,7 @@ test.describe('מודול 11 · מיסוך לפי תפקיד (התוצאה הנ�
     )
     // ברירת-המחדל היא **הלשונית הראשונה שמותר לה**, ולא "הנהלה" קשיח.
     await expect(page.getByTestId('reports-tab-hostesses')).toHaveAttribute('aria-selected', 'true')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('מבט-על דיילות')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('מבט על דיילות')
   })
 })
 
