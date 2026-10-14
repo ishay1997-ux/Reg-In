@@ -137,3 +137,11 @@ begin
   assert public._payroll_month_state((v_this - interval '1 month')::date) = 'ended';
   assert public._payroll_month_state((v_this + interval '1 month')::date) = 'future';
 end $$;
+
+-- test: a missing config row is CONFIG_MISSING, not a silent default
+do $$ begin
+  delete from public.payroll_config;
+  assert test.err('select public._payroll_config()') = 'CONFIG_MISSING';
+  raise exception using errcode = 'XRB01';
+exception when sqlstate 'XRB01' then null;
+end $$;

@@ -433,3 +433,14 @@ do $$ begin
   perform test.act_as('view@test.local');
   assert test.err($q$select public.payroll_delivery_address('a@x.com')$q$) = 'SQLSTATE:42501';
 end $$;
+
+-- test: F12 — every preview line carries its ISO shift date
+do $$
+declare v jsonb;
+begin
+  perform test.act_as('fin@test.local');
+  v := public.payroll_preview('2026-08-01');
+  assert not exists (select 1 from jsonb_array_elements(v -> 'lines') x
+                      where x ->> 'event_date' is null or x ->> 'event_date' !~ '^\d{4}-\d{2}-\d{2}$');
+  assert (select x ->> 'event_date' from jsonb_array_elements(v -> 'lines') x where (x ->> 'project_id')::int = 900201) = '2026-08-31';
+end $$;

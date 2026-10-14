@@ -293,3 +293,19 @@ begin
   assert (select array_agg((x ->> 'report_id')::int) from jsonb_array_elements(public.payroll_report_list() -> 'reports') x
            where x ->> 'period' = '2026-07-01') = array[900001, 900004];
 end $$;
+
+-- test: completing or persisting an attempt that does not exist is ATTEMPT_NOT_FOUND
+do $$ begin
+  assert test.err('select public._payroll_attempt_persist_unknown(424242)') = 'ATTEMPT_NOT_FOUND';
+  perform test.act_as_service();
+  assert test.err($q$select public.payroll_attempt_complete(424242, 'fin@test.local', 'sent', null, null, null, null, null, null, null)$q$) = 'ATTEMPT_NOT_FOUND';
+end $$;
+
+-- test: F12 — report detail lines carry event_date (null only on legacy lines, which never stored it)
+do $$
+declare v jsonb;
+begin
+  perform test.act_as('fin@test.local');
+  v := public.payroll_report_detail(900001);
+  assert v -> 'lines' -> 0 ->> 'event_date' = '2026-07-10' and v -> 'lines' -> 0 ? 'event_date';
+end $$;
