@@ -66,7 +66,7 @@ describe('PROJECT_STATUS_TONES — כל תווית פותרת טון (S-1 · S-2
     expect(PROJECT_STATUS_TONES['בוטל']).toBe('dashed')
     expect(PROJECT_STATUS_TONES['מוכן לביצוע']).toBe('teal')
     expect(PROJECT_STATUS_TONES['בתהליך']).toBe('muted')
-    expect(PROJECT_STATUS_TONES['פרויקט הסתיים']).toBe('ok')
+    expect(PROJECT_STATUS_TONES['פרויקט הסתיים']).toBe('muted') // ישי 14/10: מצב-סיום בלי צבע
   })
 })
 

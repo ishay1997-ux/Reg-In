@@ -15,11 +15,13 @@
 
 // טון ⇒ המחלקות שלו. `warn` הוא ענבר: **לא הצלחה ולא שגיאה — אזהרת-היגיינה** (זו המשפחה
 // של "פג תוקף" ושל "לא זמינה", וכך נומקה במוקאפ 03 במפורש).
+// ✏️ ישי 14/10 ~18:0x ("צבעוני מדי ולא מקצועי... בעיה נרחבת בכל המערכת... תעשה בקטנה"): רקעים רכים
+// (‎-50 במקום ‎-100/‎-200) לכל הטונים — אותה משמעות, פחות רעש. מצבי-סיום עברו לאפור ב-`projects.js`.
 const TONES = {
-  ok: 'bg-green-100 text-green-700',
-  teal: 'bg-teal-100 text-teal-700',
+  ok: 'bg-green-50 text-green-700',
+  teal: 'bg-teal-50 text-teal-700',
   muted: 'bg-slate-100 text-slate-500',
-  warn: 'bg-amber-200 text-amber-800',
+  warn: 'bg-amber-50 text-amber-800',
   outline: 'bg-slate-100 text-slate-600 border border-slate-200',
   dashed: 'bg-slate-100 text-slate-500 border border-dashed border-slate-300',
   // 🔴 `danger` — אדום, ונוסף למען מודול 8 (‏27/08/2026). **הרחבה מאושרת, לא המצאה:** ה16
@@ -30,7 +32,7 @@ const TONES = {
   // והשורה למטה (`?? TONES.muted`) הייתה מציגה אותו **אפור, בלי שגיאה** — כלומר "טעון בירור"
   // היה נראה בדיוק כמו סטטוס נייטרלי. זה בדיוק כשל-ההאפרה שההערה של `PROJECT_STATUS_TONES`
   // מזהירה ממנו, ונתפס ע"י בודק בפזה 2 לפני שנבנה ולו מסך אחד.
-  danger: 'bg-red-100 text-red-700',
+  danger: 'bg-red-50 text-red-700',
 }
 
 import { PROJECT_STATUS_TONES } from '@/lib/projects'
@@ -49,7 +51,7 @@ const TONE_BY_LABEL = {
   שוחררה: 'dashed',
   'ביטלה אחרי אישור': 'muted',
   'פג תוקף': 'warn',
-  הושלם: 'ok',
+  הושלם: 'muted', // מצב-סיום: אין מה לעשות ⇒ בלי צבע (ישי 14/10)
   // 🔴 שמונת סטטוסי-הפרויקט (מודול 6) — ב-spread מ-`src/lib/projects.js`, לא בהקלדה
   // מחדש: מקור-אמת אחד לתווית-וטון, כי תווית שהוקלדה כאן שוב ונבדלת בתו אחד נופלת
   // בשקט ל-`muted` (למטה, `?? TONES.muted`) — אפור שזהה-בייט לטון של סטטוס אמיתי,
