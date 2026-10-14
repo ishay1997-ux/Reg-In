@@ -43,6 +43,8 @@ import ProjectsPage from '@/modules/06_projects/ProjectsPage'
 import ProjectCardPage from '@/modules/06_projects/ProjectCardPage'
 import PublicConfirmPage from '@/modules/04_hostesses/PublicConfirmPage'
 import FinancePage from '@/modules/08_finance/FinancePage'
+import PayrollWorkspacePage from '@/modules/08_finance/payroll/PayrollWorkspacePage'
+import PublicPayrollReviewRoute from '@/modules/08_finance/payroll/PublicPayrollReviewRoute'
 import PublicFeedbackPage from '@/modules/08_finance/PublicFeedbackPage'
 import ParamsTab from '@/modules/09_settings/ParamsTab'
 import MySettingsPage from '@/modules/09_settings/MySettingsPage'
@@ -89,6 +91,13 @@ function App() {
                     `ALLOWED_UNPROTECTED`** — מאותו נימוק שכבר נכתב מעל: רשומה כזו הייתה
                     משתיקה את השומר אם מישהו יעביר את הדף לתוך MainLayout בעתיד. */}
                 <Route path="/feedback/:token" element={<PublicFeedbackPage />} />
+
+                {/* דוח השכר — הדף האישי של הדיילת לבדיקת הסיכום שלה (חוזה §4.1; הרכיב של בונה B).
+                    אותו תקדים כמו `/shift/:token` ו-`/feedback/:token`: הדיילת אין לה חשבון,
+                    ולכן מחוץ ל-MainLayout ובלי ProtectedRoute. הקישור נצרב במייל (`payroll`
+                    edge: `${app_origin}/payroll-review/${token}`) — הנתיב נעול מרגע השליחה
+                    הראשונה. ‏`Referrer-Policy: no-referrer` לנתיב הזה ב-`vercel.json`. */}
+                <Route path="/payroll-review/:token" element={<PublicPayrollReviewRoute />} />
 
                 <Route element={<MainLayout />}>
                   {/* מודול 7 (03/09/2026): מסך-הבית במקום WelcomePage. §7.10 — לכולם, בכוונה בלי
@@ -209,6 +218,16 @@ function App() {
                     element={
                       <ProtectedRoute allow="כספים">
                         <FinancePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* דוח השכר החדש (13/10/2026, חוזה §4.1 · D13) — מרחב עבודה ולא דיאלוג: מעקב של
+                      מאות דיילות ופאנל פנייה לא נכנסים לחלון. אותו שומר בדיוק כמו `finance`. */}
+                  <Route
+                    path="finance/payroll"
+                    element={
+                      <ProtectedRoute allow="כספים">
+                        <PayrollWorkspacePage />
                       </ProtectedRoute>
                     }
                   />
