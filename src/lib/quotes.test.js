@@ -21,7 +21,6 @@ import {
   validateQuoteForm,
   quoteToFormState,
   computeEventHours,
-  crossesMidnight,
   quoteToPdfModel,
   MANUAL_REJECTION_REASONS,
   NON_LOSS_REJECTION_REASONS,
@@ -436,15 +435,11 @@ describe('quoteToFormState — טעינת הצעה קיימת לעריכה', () 
   })
 })
 
-describe('computeEventHours / crossesMidnight (LOCAL-2)', () => {
+describe('computeEventHours (LOCAL-2)', () => {
   it('אירוע רגיל', () => expect(computeEventHours('18:00', '22:00')).toBe(4))
   it('חצי שעה נשמרת', () => expect(computeEventHours('18:00', '22:30')).toBe(4.5))
   it('גלגול חוצה-חצות (+24), כמו העמודה המחושבת ב-DB', () => {
     expect(computeEventHours('20:00', '02:00')).toBe(6)
-    expect(crossesMidnight('20:00', '02:00')).toBe(true)
-  })
-  it('אירוע רגיל אינו מסומן כחוצה-חצות', () => {
-    expect(crossesMidnight('18:00', '22:00')).toBe(false)
   })
   it('קלט חסר ⇒ null ולא 0 (0 שעות היה נראה כמו נתון אמיתי)', () => {
     expect(computeEventHours('', '22:00')).toBeNull()

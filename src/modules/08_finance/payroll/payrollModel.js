@@ -10,6 +10,9 @@ import { formatDate, formatTimestampFull } from '@/lib/dates'
 export const VIEWS = ['draft', 'review', 'final', 'history']
 export const FILTERS = ['action', 'noreply', 'approved', 'all']
 export const KINDS = ['regular', 'supplement']
+// מתג התצוגה בטבלת הטיוטה — שני הגיליונות של הקובץ לרואה החשבון (F15 + כרטיס 14/10).
+export const SHEETS = ['shift', 'hostess']
+export const SHEET_LABELS = { shift: 'לפי משמרת', hostess: 'סיכום לפי דיילת' }
 
 export const VIEW_LABELS = {
   draft: 'טיוטה',
@@ -141,6 +144,30 @@ export function countPhrase(n, one, many) {
   return `${n} ${many}`
 }
 
+// שורה משנית באריח "משמרות" — כמה משמרות לא נכנסות לקובץ (N-4) ו**למה**, לפי בסיס השורה:
+// שעות בפועל באפס = "בלי שעות עבודה" · פיצוי באפס = "ביטול בלי דמי ביטול" (קבלה בייצור, 14/10).
+// חלק שספירתו 0 מושמט; כשיש סוג אחד בלבד — משפט אחד בלי פירוט. אין שורות כאלה ⇒ null.
+export function excludedLinesNote(lines) {
+  const excluded = (lines ?? []).filter((l) => l?.show_in_file === false)
+  if (excluded.length === 0) return null
+  const comp = excluded.filter((l) => l.line_basis === 'cancellation_compensation').length
+  const work = excluded.length - comp
+  if (comp === 0) {
+    return work === 1
+      ? 'משמרת אחת בלי שעות עבודה לא נכללת בקובץ'
+      : `${work} משמרות בלי שעות עבודה לא נכללות בקובץ`
+  }
+  if (work === 0) {
+    return comp === 1
+      ? 'ביטול אחד בלי דמי ביטול לא נכלל בקובץ'
+      : `${comp} ביטולים בלי דמי ביטול לא נכללים בקובץ`
+  }
+  const workPart = work === 1 ? 'אחת בלי שעות עבודה' : `${work} בלי שעות עבודה`
+  // "וביטול אחד" — אבל "ו-3 ביטולים": ו' החיבור לפני ספרה נכתבת עם מקף.
+  const compPart = comp === 1 ? 'וביטול אחד בלי דמי ביטול' : `ו-${comp} ביטולים בלי דמי ביטול`
+  return `${excluded.length} משמרות לא נכללות בקובץ: ${workPart}, ${compPart}`
+}
+
 // ── שגיאות ─────────────────────────────────────────────────────────────────────
 
 const ERROR_MESSAGES = {
@@ -213,6 +240,15 @@ export function payrollErrorMessage(codeOrError) {
   return 'הפעולה נכשלה. נסה שוב'
 }
 
+// תשובות שאומרות שההפקה שהמסך מחכה לה כבר לא רלוונטית כאן: הדוח הופק בלשונית או במכשיר
+// אחר, או שההפקה שבכתובת לא קיימת. המסך מרענן את הנתונים ומפסיק לשאול על מצבה — בלי זה
+// הלשונית השנייה נשארה על "מוכן להפקה" ושאלה שוב ושוב (קבלה בייצור על יולי, 14/10).
+const ISSUED_ELSEWHERE_CODES = new Set(['REVIEW_NOT_OPEN', 'PERIOD_EXISTS', 'OPERATION_NOT_FOUND'])
+
+export function isIssuedElsewhereCode(code) {
+  return ISSUED_ELSEWHERE_CODES.has(code)
+}
+
 export function isStaleCode(code) {
   return code === 'PREVIEW_CHANGED' || code === 'STALE_VERSION' || code === 'STALE_ATTEMPT'
 }
@@ -248,6 +284,21 @@ export function isDecided(recipient) {
   )
 }
 
+// מי אפשר "לאשר לפי תיעוד" — דלת אחת לשורה ולפעולה המרוכזת: ממתינה, בלי פנייה פתוחה, על סיכום
+// עדכני. המועד האחרון נבדק בנפרד (לפניו הפעולה מושבתת), וגם השרת בודק את כל אלה מחדש.
+export function isNoResponseCandidate(recipient) {
+  return (
+    recipient?.state === 'awaiting' &&
+    !recipient?.open_case_id &&
+    recipient?.digest_current !== false
+  )
+}
+
+// הסיכום לא הגיע אליה במייל ⇒ חובה לתעד איך נוצר קשר (השרת: CONTACT_EVIDENCE_REQUIRED).
+export function needsContactNote(recipient) {
+  return recipient?.delivery?.state !== 'sent'
+}
+
 const DECISION_LABELS = {
   hostess_approved: 'הדיילת אישרה',
   manager_approved_no_response: 'אושר לפי תיעוד',
@@ -262,10 +313,12 @@ export function recipientStatus(recipient) {
   if (isDecided(recipient)) return { label: DECISION_LABELS[recipient.state], kind: 'ok' }
   if (deliveryState === 'failed') return { label: 'השליחה נכשלה', kind: 'error' }
   if (deliveryState === 'unknown') return { label: 'לא ידוע אם נשלח', kind: 'unknown' }
+  // סיכום שמעולם לא יצא אליה הוא "לא נשלח" — גם אם הנתונים השתנו בינתיים: "עודכן — נדרש אישור
+  // מחדש" מניח שהיא כבר קיבלה ואישרה (קבלה בייצור על יולי, 14/10).
+  if (!recipient?.delivery) return { label: 'לא נשלח', kind: 'neutral' }
   if (recipient?.digest_current === false) {
     return { label: 'עודכן — נדרש אישור מחדש', kind: 'attention' }
   }
-  if (!recipient?.delivery) return { label: 'לא נשלח', kind: 'neutral' }
   if (deliveryState === 'queued' || deliveryState === 'sending') {
     return { label: 'בשליחה', kind: 'neutral' }
   }
@@ -299,15 +352,23 @@ export function actionReason(recipient, { deadlinePassed, distributed } = {}) {
   // שורה שתוקנה ומחכה לסיכום מעודכן (הסיכום הישן הוחלף, או שהשורה החדשה עוד לא נשלחה) —
   // זה מה שיש לעשות, לא "המועד עבר" (סקירת UX מקומית, פריט 4).
   if (recipient?.email_present === false) return 'אין כתובת מייל. אחרי המועד אפשר לאשר לפי תיעוד'
-  if (recipient?.digest_current === false || (distributed && !recipient?.delivery)) {
-    return 'יש לשלוח סיכום מעודכן'
-  }
+  // בלי ניסיון משלוח על השורה הנוכחית אי אפשר לדעת אם קיבלה פעם סיכום קודם (שורה חדשה אחרי
+  // תיקון) או שמעולם לא קיבלה — לכן ניסוח שנכון בשני המקרים, ולא "מעודכן" (קבלה בייצור, 14/10).
+  if (!recipient?.delivery) return distributed ? 'יש לשלוח את הסיכום' : null
+  if (recipient?.digest_current === false) return 'יש לשלוח סיכום מעודכן'
   if (recipient?.contact_changed) return 'כתובת המייל השתנתה. יש לשלוח שוב'
   if (recipient?.delivery?.state === 'unknown') return 'יש לבדוק לפני שליחה חוזרת'
   if (deadlinePassed && recipient?.state === 'awaiting' && !recipient?.open_case_id) {
     return 'המועד עבר בלי תגובה'
   }
   return null
+}
+
+// "פעולה אחרונה" בטבלת המעקב. יצירת השורה אינה פעולה: לדיילת שלא נשלח אליה סיכום ולא הוחלט
+// עליה אין פעולה אחרונה ⇒ null ("—"), גם אם המסד מחזיר את זמן היצירה.
+export function lastActionAt(recipient) {
+  if (!recipient?.delivery && !recipient?.decided_at) return null
+  return recipient?.last_action_at ?? null
 }
 
 const BUCKET_ORDER = { action: 0, noreply: 1, approved: 2 }

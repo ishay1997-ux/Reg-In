@@ -7,6 +7,7 @@ import {
   actionReason,
   blockerText,
   defaultFilter,
+  excludedLinesNote,
   filterRecipients,
   formatHours,
   formatStoredMoment,
@@ -24,6 +25,7 @@ import {
   parsePeriodParam,
   payrollErrorMessage,
   processStage,
+  lastActionAt,
   recipientStatus,
   resendOutcome,
 } from './payrollModel'
@@ -111,13 +113,42 @@ describe('החלטה גוברת על מצב המשלוח (סקירת UX מקומ
     expect(recipientStatus(r).label).toBe('עודכן — נדרש אישור מחדש')
   })
 
-  it('שורה שתוקנה ומחכה לסיכום מעודכן: "יש לשלוח סיכום מעודכן" ולא "המועד עבר" (פריט 4)', () => {
-    expect(
-      actionReason(recipient({ delivery: null }), { deadlinePassed: true, distributed: true }),
-    ).toBe('יש לשלוח סיכום מעודכן')
+  it('שורה שתוקנה אחרי שליחה: "יש לשלוח סיכום מעודכן" ולא "המועד עבר" (פריט 4)', () => {
     expect(actionReason(recipient({ digest_current: false }), { deadlinePassed: true })).toBe(
       'יש לשלוח סיכום מעודכן',
     )
+  })
+})
+
+describe('דיילת שלא נשלח אליה סיכום (קבלה בייצור על יולי, 14/10)', () => {
+  const flags = { deadlinePassed: true, distributed: true }
+
+  it('סטטוס "לא נשלח" — גם כשהנתונים השתנו; ההסבר אינו "מעודכן"', () => {
+    for (const partial of [{ delivery: null }, { delivery: null, digest_current: false }]) {
+      const r = recipient(partial)
+      expect(recipientStatus(r)).toEqual({ label: 'לא נשלח', kind: 'neutral' })
+      expect(actionReason(r, flags)).toBe('יש לשלוח את הסיכום')
+    }
+  })
+
+  it('לפני שליחת הסיכומים — אין הסבר בשורה', () => {
+    expect(actionReason(recipient({ delivery: null }), { distributed: false })).toBeNull()
+  })
+
+  it('"פעולה אחרונה": בלי משלוח ובלי החלטה ⇒ null (זמן יצירת השורה אינו פעולה)', () => {
+    const created = { last_action_at: '2026-10-13T10:00:00.000Z' }
+    expect(lastActionAt(recipient({ ...created, delivery: null }))).toBeNull()
+    expect(lastActionAt(recipient({ ...created }))).toBe('2026-10-13T10:00:00.000Z')
+    expect(
+      lastActionAt(
+        recipient({
+          ...created,
+          delivery: null,
+          state: 'manager_approved_no_response',
+          decided_at: '2026-10-21T09:00:00.000Z',
+        }),
+      ),
+    ).toBe('2026-10-13T10:00:00.000Z')
   })
 })
 
@@ -386,5 +417,41 @@ describe('קטגוריות פנייה (F11 — משמרות ושעות בלבד)
       not_worked: 'משמרת שלא עבדתי בה',
       other: 'אחר',
     })
+  })
+})
+
+describe('excludedLinesNote — למה משמרות לא נכללות בקובץ (קבלה בייצור, 14/10)', () => {
+  const work = { line_basis: 'actual', show_in_file: false }
+  const comp = { line_basis: 'cancellation_compensation', show_in_file: false }
+  const inFile = { line_basis: 'actual', show_in_file: true }
+  const times = (n, row) => Array.from({ length: n }, () => row)
+
+  it.each([
+    [
+      '20 עבודה + ביטול אחד (הדוגמה מהכרטיס)',
+      [...times(20, work), comp],
+      '21 משמרות לא נכללות בקובץ: 20 בלי שעות עבודה, וביטול אחד בלי דמי ביטול',
+    ],
+    [
+      'אחת + אחד',
+      [work, comp],
+      '2 משמרות לא נכללות בקובץ: אחת בלי שעות עבודה, וביטול אחד בלי דמי ביטול',
+    ],
+    [
+      '2 עבודה + 3 ביטולים',
+      [...times(2, work), ...times(3, comp)],
+      '5 משמרות לא נכללות בקובץ: 2 בלי שעות עבודה, ו-3 ביטולים בלי דמי ביטול',
+    ],
+    ['עבודה בלבד, אחת', [work], 'משמרת אחת בלי שעות עבודה לא נכללת בקובץ'],
+    ['עבודה בלבד, רבות', times(4, work), '4 משמרות בלי שעות עבודה לא נכללות בקובץ'],
+    ['ביטול בלבד, אחד', [comp], 'ביטול אחד בלי דמי ביטול לא נכלל בקובץ'],
+    ['ביטולים בלבד', times(2, comp), '2 ביטולים בלי דמי ביטול לא נכללים בקובץ'],
+  ])('%s', (_name, rows, text) => {
+    expect(excludedLinesNote([inFile, ...rows])).toBe(text)
+  })
+
+  it('אין שורות מחוץ לקובץ ⇒ null', () => {
+    expect(excludedLinesNote([inFile, { line_basis: 'actual' }])).toBeNull()
+    expect(excludedLinesNote([])).toBeNull()
   })
 })

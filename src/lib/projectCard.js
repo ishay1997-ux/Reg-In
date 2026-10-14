@@ -55,14 +55,23 @@ export function isoToDmy(iso) {
   return `${day}/${month}/${year}`
 }
 
-// ולידציית הטופס — שלושת הכללים שהשרת אוכף, באותן מילים. מחזירה מפה ריקה כשהכול תקין.
+// שעה בשדה טקסט חופשי: `25:99`, `930` ו-`18.30` עברו עד היום ל-RPC, והמשתמשת קיבלה רק "עדכון
+// פרטי הפרויקט נכשל" (ביקורת ולידציות, שורה 17, 14/10/2026). ⚠️ זו בדיקה של הלקוח בלבד — לשרת
+// אין הודעה משלו לכלל הזה, ולכן הנוסח כאן אינו העתק של raise.
+export const TIME_FORMAT_MSG = 'שעה צריכה להיות בפורמט 24 שעות, למשל 18:30.'
+const TIME_24H_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
+
+// ולידציית הטופס — שלושת הכללים שהשרת אוכף, באותן מילים, ועוד פורמט השעה. מפה ריקה = תקין.
 export function validateDetailsForm({ dateText, location, startTime, endTime }) {
   const errors = {}
   if (!parseDmyToIso(dateText)) errors.date = DATE_REQUIRED_MSG
   if (!String(location ?? '').trim()) errors.location = LOCATION_REQUIRED_MSG
-  const hasStart = Boolean(String(startTime ?? '').trim())
-  const hasEnd = Boolean(String(endTime ?? '').trim())
-  if (hasStart !== hasEnd) errors.hours = HOURS_BOTH_OR_NEITHER_MSG
+  const start = String(startTime ?? '').trim()
+  const end = String(endTime ?? '').trim()
+  if (Boolean(start) !== Boolean(end)) errors.hours = HOURS_BOTH_OR_NEITHER_MSG
+  else if (start && (!TIME_24H_PATTERN.test(start) || !TIME_24H_PATTERN.test(end))) {
+    errors.hours = TIME_FORMAT_MSG
+  }
   return errors
 }
 

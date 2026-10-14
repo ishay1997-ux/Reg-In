@@ -19,6 +19,8 @@ import {
   renderAccountantText,
   renderReviewText,
   reviewEmailSubject,
+  reviewTextToEmailHtml,
+  REVIEW_LINK_LABEL,
   salaryReportEmailSubject,
   templateWithoutAccountantName,
 } from './mail.ts'
@@ -161,5 +163,33 @@ ${values.link}
   it('שם עם סוגריים הוא דאטה ולא שדה — לא חוסם', () => {
     const rendered = renderReviewText(REVIEW_TEMPLATE, { ...values, hostessName: 'נועה [דמו]' })
     expect(rendered.text).toContain('שלום נועה [דמו],')
+  })
+})
+
+describe('reviewTextToEmailHtml — קישור לחיץ במייל לדיילת (חדש, אין מקביל באפליקציה)', () => {
+  const origin = 'https://reg-in.example'
+  const token = 'abcDEF_123-xyz0123456789abcdefghijklmnopq'
+  const link = `${origin}/payroll-review/${token}`
+  const text = `שלום אפרת,\nאפשר לאשר את הנתונים בקישור:\n${link}\n\nנבקש להשיב עד 20/10/2026 18:00.`
+
+  it('href הוא בדיוק origin/payroll-review/token, בלי תווי-בידוד', () => {
+    const html = reviewTextToEmailHtml(text, link)
+    const hrefs = [...html.matchAll(/<a href="([^"]*)">([^<]*)<\/a>/g)]
+    expect(hrefs).toHaveLength(1)
+    expect(hrefs[0][1]).toBe(`${origin}/payroll-review/${token}`)
+    expect(hrefs[0][1]).not.toMatch(/[\u2066-\u2069]/)
+    expect(hrefs[0][2]).toBe(REVIEW_LINK_LABEL)
+  })
+
+  it('שאר הגוף מוברח כמו plainTextToEmailHtml', () => {
+    const html = reviewTextToEmailHtml(text, link)
+    expect(html.startsWith('<div dir="rtl" style="text-align:right">שלום אפרת,<br>')).toBe(true)
+    expect(html).toContain('בקישור:<br><a href=')
+    expect(html).toContain('</a><br><br>נבקש להשיב עד 20/10/2026 18:00.</div>')
+  })
+
+  it('בלי הקישור בטקסט ⇒ בדיוק plainTextToEmailHtml', () => {
+    expect(reviewTextToEmailHtml('שלום', link)).toBe(plainTextToEmailHtml('שלום'))
+    expect(reviewTextToEmailHtml('', link)).toBe('')
   })
 })

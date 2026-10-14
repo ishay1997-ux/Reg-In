@@ -44,10 +44,7 @@ function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-// טקסט-פשוט ⇒ HTML עברי: מעברי-שורה, `dir="rtl"`, הברחה, ובידוד רצפים לטיניים (כתובת, קישור).
-export function plainTextToEmailHtml(text: string): string {
-  if (!text) return ''
-  const source = String(text)
+function escapeTextRuns(source: string): string {
   let escaped = ''
   let cursor = 0
   for (const match of source.matchAll(LTR_RUN_PATTERN)) {
@@ -56,8 +53,35 @@ export function plainTextToEmailHtml(text: string): string {
     escaped += LTR_ISOLATE_START + escapeHtml(match[0]) + LTR_ISOLATE_END
     cursor = index + match[0].length
   }
-  escaped += escapeHtml(source.slice(cursor))
+  return escaped + escapeHtml(source.slice(cursor))
+}
+
+function wrapRtl(escaped: string): string {
   return `<div dir="rtl" style="text-align:right">${escaped.replace(/\r\n|\r|\n/g, '<br>')}</div>`
+}
+
+// טקסט-פשוט ⇒ HTML עברי: מעברי-שורה, `dir="rtl"`, הברחה, ובידוד רצפים לטיניים (כתובת, קישור).
+export function plainTextToEmailHtml(text: string): string {
+  if (!text) return ''
+  return wrapRtl(escapeTextRuns(String(text)))
+}
+
+// הטקסט הגלוי של הקישור במייל לדיילת: תווית עברית במקום כתובת ארוכה עם אסימון.
+export const REVIEW_LINK_LABEL = 'לצפייה בסיכום השעות'
+
+function escapeAttribute(text: string): string {
+  return escapeHtml(text).replace(/"/g, '&quot;')
+}
+
+// המייל לדיילת: כמו `plainTextToEmailHtml`, אבל הקישור הוא `<a href>` אמיתי.
+// למה: כתובת עטופה בתווי-בידוד היא טקסט, ו-Gmail מזהה אותה כקישור רק לפעמים. ה-href הוא
+// הכתובת המדויקת, בלי תווי-בידוד בתוכה — הבידוד חל רק על הטקסט שמסביב.
+export function reviewTextToEmailHtml(text: string, link: string): string {
+  if (!text) return ''
+  const source = String(text)
+  if (!link || !source.includes(link)) return plainTextToEmailHtml(source)
+  const anchor = `<a href="${escapeAttribute(link)}">${REVIEW_LINK_LABEL}</a>`
+  return wrapRtl(source.split(link).map(escapeTextRuns).join(anchor))
 }
 
 const ACCOUNTANT_NAME_TOKEN = '[שם_רואה_חשבון]'
