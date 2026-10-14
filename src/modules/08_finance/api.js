@@ -150,14 +150,18 @@ export async function listSalaryReports() {
   // מ-`mailer-daemon` עם `DNS Error`, והיומן ממשיך לומר `sent`). זהו חוב של מודול-המיילים.
   const { data: logRows } = await supabase
     .from('email_log')
-    .select('entity_id, recipient, created_at')
+    .select('entity_id, recipient, intended_recipient, created_at')
     .eq('entity_type', 'salary_report')
     .order('created_at', { ascending: false })
 
   // השורה הראשונה לכל דוח היא האחרונה בזמן (הסדר יורד) — שליחה-חוזרת גוברת על המקורית.
   const sentTo = new Map()
   for (const row of logRows ?? []) {
-    if (!sentTo.has(row.entity_id)) sentTo.set(row.entity_id, row.recipient)
+    // ✏️ 14/10/2026 (F13): הנמען המקורי (`intended_recipient`) כשהוא קיים — כתובת הבדיקה שאליה
+    // המייל נמסר בפועל היא מנגנון בטיחות פנימי ואינה מוצגת על המסך. שורות ישנות בלי העמודה ⇒ `recipient`.
+    if (!sentTo.has(row.entity_id)) {
+      sentTo.set(row.entity_id, row.intended_recipient ?? row.recipient)
+    }
   }
   // ‏`undefined` ולא `null`: "היומן לא נקרא / אין שורה" אינו "נשלח לאף אחד", והמסך מציג
   // עליו את אותו `—` שהוא מציג על כל נתון חסר (§4.3).

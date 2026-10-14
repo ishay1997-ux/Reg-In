@@ -217,7 +217,8 @@ function Td({ children, className }) {
   )
 }
 
-const COLUMN_WIDTHS = ['21%', '12%', '15%', '9%', '8%', '9%', '12%', '14%']
+// ✏️ 14/10/2026 (F12): עמודת "סה"כ" הוסרה — בשום מסך אין סכום מחושב בש"ח.
+const COLUMN_WIDTHS = ['24%', '13%', '19%', '10%', '10%', '12%', '12%']
 
 // ---------------------------------------------------------------------------
 // SalaryReportDialog — הדיאלוג עצמו
@@ -387,7 +388,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
       if (generated.sendResult === EMAIL_SEND_RESULT.SENT) {
         if (generated.fileError) {
           toast.error(
-            'הדוח נחתם והמייל נשלח, אך שמירת קובץ ה-Excel באחסון נכשלה — לא ניתן יהיה לשלוח אותו שוב מההיסטוריה.',
+            'הדוח הופק והמייל נשלח, אך שמירת קובץ ה-Excel באחסון נכשלה — לא ניתן יהיה לשלוח אותו שוב מההיסטוריה.',
           )
         } else if (generated.logFailed) {
           toast.error('הדוח נשלח, אך רישום השליחה ביומן נכשל.')
@@ -856,12 +857,6 @@ function ResultView({ result }) {
             <span className="text-slate-400">{NOT_APPLICABLE}</span>
           )}
         </span>
-        <span>
-          <span className="text-xs text-slate-500">סה"כ לתשלום:</span>{' '}
-          <b>
-            <Money amount={totals?.total} cents />
-          </b>
-        </span>
         <SendResultTag result={result} />
       </div>
 
@@ -901,7 +896,7 @@ function ResultView({ result }) {
           <table className="w-full table-fixed text-sm" data-testid="salary-report-result-table">
             <thead>
               <tr>
-                {['דיילת', 'ת"ז', 'פרטי-בנק', 'שעות', 'תעריף', 'בונוס', 'נסיעות', 'סה"כ'].map(
+                {['דיילת', 'ת"ז', 'פרטי-בנק', 'שעות', 'תעריף', 'בונוס', 'נסיעות'].map(
                   (label, i) => (
                     <Th key={label} className="text-right" style={{ width: COLUMN_WIDTHS[i] }}>
                       {label}
@@ -965,29 +960,20 @@ function ResultView({ result }) {
                         <Money amount={line.travel} cents />
                       )}
                     </Td>
-                    <Td>
-                      <span className="font-bold">
-                        <Money amount={line.lineTotal} cents />
-                      </span>
-                    </Td>
                   </tr>
                 )
               })}
               <tr className="bg-slate-50">
-                <Td className="font-bold border-t-2 border-slate-300">סה"כ</Td>
-                <Td className="border-t-2 border-slate-300 text-slate-400">{NOT_APPLICABLE}</Td>
-                <Td className="border-t-2 border-slate-300 text-slate-400">{NOT_APPLICABLE}</Td>
-                <Td className="border-t-2 border-slate-300 text-slate-400">{NOT_APPLICABLE}</Td>
-                <Td className="border-t-2 border-slate-300 text-slate-400">{NOT_APPLICABLE}</Td>
+                {/* F12: שורת הסיכום בשעות בלבד, כמו בקובץ לרו"ח. */}
+                <Td className="font-bold border-t-2 border-slate-300">סה"כ שעות</Td>
+                <Td className="border-t-2 border-slate-300" />
+                <Td className="border-t-2 border-slate-300" />
                 <Td className="border-t-2 border-slate-300 font-bold">
-                  <Money amount={totals?.bonusTotal} cents />
+                  <Ltr>{totals?.hoursTotal ?? NOT_APPLICABLE}</Ltr>
                 </Td>
-                <Td className="border-t-2 border-slate-300 font-bold">
-                  <Money amount={totals?.travelTotal} cents />
-                </Td>
-                <Td className="border-t-2 border-slate-300 font-bold">
-                  <Money amount={totals?.total} cents />
-                </Td>
+                <Td className="border-t-2 border-slate-300" />
+                <Td className="border-t-2 border-slate-300" />
+                <Td className="border-t-2 border-slate-300" />
               </tr>
             </tbody>
           </table>
@@ -1017,8 +1003,8 @@ function ResultView({ result }) {
                     <Ltr>{omittedFromFile}</Ltr> שורות
                   </>
                 )}{' '}
-                בסכום <Money amount={0} cents /> נחתמו ונרשמו כדי שלא ייאספו שוב, ואינן נכללות בגוף
-                הקובץ שנשלח. בקובץ עצמו <Ltr>{totals.fileLineCount}</Ltr> שורות.
+                באפס נחתמו ונרשמו כדי שלא ייאספו שוב, ואינן נכללות בגוף הקובץ שנשלח. בקובץ עצמו{' '}
+                <Ltr>{totals.fileLineCount}</Ltr> שורות.
               </p>
             )}
             {/* ה19: המקור הוא הטבלה המוגנת hostess_bank_details, שקריאה ממנה מוגבלת להרשאת
@@ -1166,12 +1152,11 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
           <table className="w-full table-fixed text-sm">
             <thead>
               <tr>
-                <Th style={{ width: '18%' }}>תקופה</Th>
-                <Th style={{ width: '14%' }}>סטטוס</Th>
-                <Th style={{ width: '16%' }}>נשלח בתאריך</Th>
-                <Th style={{ width: '26%' }}>נשלח אל</Th>
-                <Th style={{ width: '14%' }}>סה"כ ששולם</Th>
-                <Th style={{ width: '12%' }}>קובץ</Th>
+                <Th style={{ width: '20%' }}>תקופה</Th>
+                <Th style={{ width: '16%' }}>סטטוס</Th>
+                <Th style={{ width: '18%' }}>נשלח בתאריך</Th>
+                <Th style={{ width: '30%' }}>נשלח אל</Th>
+                <Th style={{ width: '16%' }}>קובץ</Th>
               </tr>
             </thead>
             <tbody>
@@ -1204,9 +1189,6 @@ export function SalaryReportHistoryCard({ refreshToken, embedded = false }) {
                         ר' ההנמקה המלאה ב-`listSalaryReports`. נפילה-לאחור לפרמטר הוסרה
                         בכוונה: היא הייתה מחזירה בדיוק את השקר שהתיקון בא להסיר. */}
                     <Ltr>{row.sent_to ?? '—'}</Ltr>
-                  </Td>
-                  <Td>
-                    <Money amount={row.total_amount} cents />
                   </Td>
                   <Td>
                     <div className="flex flex-wrap gap-1.5">

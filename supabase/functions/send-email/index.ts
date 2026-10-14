@@ -14,6 +14,9 @@
 // כ-🚧 מ10 "כשנוגעים בפונקציה בפעם הבאה", כי `@2` היה יכול לשבור את שער-הטיפוסים ב-CI
 // **מעצמו, בלי שאיש נגע בקוד**, ברגע שגרסה חדשה תעלה ל-JSR. מודול 4 נגע — לכן ננעל.
 import { createClient } from 'jsr:@supabase/supabase-js@2.112.0'
+import { guardRecipient, type GuardResult } from './guard.ts'
+import { legacyPayrollSendRefusal } from './payrollGate.ts'
+import { sanitizeDetail } from './sanitize.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -157,6 +160,47 @@ Deno.serve(async (req) => {
   const entityId = Number(payload.entity_id) || null
   const templateName = payload.template_name ?? null
 
+  const admin = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  )
+
+  // ── דוח-שכר במסלול הישן (חוזה השכר §3.3, 13.10.2026) ─────────────────────────
+  // 🔒 (1) מסרבים כשהכותב הישן כובה, או כשהדוח נוצר בתהליך החדש — דוח כזה נשלח רק מפונקציית
+  //     `payroll`, מהקובץ שנחתם ומהניסיון שנשמר (`payrollGate.ts`).
+  // 🔒 (2) מה שכן נשלח — עובר את שומר-הנמענים: כל כתובת שאינה של ישי נמסרת לכתובת שלו
+  //     (הכרעת-ישי: *"שליחת מיילים אמיתית לכתובת ishay1997@gmail.com בלבד"*). ✏️ F13: ההפניה
+  //     אינה נראית במייל — נושא וגוף ללא שינוי. ביומן נרשמות שתי הכתובות: למי נועד, ולאן נמסר.
+  // ⚠️ שאר הישויות (הצעה, חשבונית, זימון, פרויקט) — ללא שינוי.
+  let guard: GuardResult | null = null
+  let sendTo = to
+  if (entityType === 'salary_report') {
+    const [config, report] = await Promise.all([
+      admin.from('payroll_config').select('legacy_writer').maybeSingle(),
+      admin
+        .from('salary_reports')
+        .select('operation_id')
+        .eq('report_id', entityId ?? -1)
+        .maybeSingle(),
+    ])
+    const refusal = legacyPayrollSendRefusal({
+      configRead: !config.error && !!config.data,
+      legacyWriter: config.data?.legacy_writer ?? null,
+      reportFound: !report.error && !!report.data,
+      operationId: report.data?.operation_id ?? null,
+    })
+    if (refusal) {
+      return json({ error: 'שליחת הדוח הזה בתהליך הקודם אינה זמינה.', code: refusal }, 409)
+    }
+    try {
+      guard = guardRecipient(to)
+    } catch {
+      // שומר שזרק = אין שליחה (חוזה §3.1). הכתובת עצמה אינה תקינה.
+      return json({ error: 'כתובת הנמען אינה תקינה.', code: 'RECIPIENT_INVALID' }, 400)
+    }
+    sendTo = guard.delivered
+  }
+
   // ── השליחה עצמה ────────────────────────────────────────────────────────────
   // ⚠️ התרחיש ב-Make מחזיר 200 **רק אחרי** שמודול-הדואר הצליח, ו-502 בכשל (מודול
   // Webhook-response). בלי זה Make עונה "התקבל" מיד והתשובה חסרת-משמעות.
@@ -170,7 +214,7 @@ Deno.serve(async (req) => {
       // שערכו `undefined`, ותרחיש ה-Make מפריד בין "אין מצורף" לבין "השדה נעלם" (הראשון
       // הוא הענף שנוסף ב-09/08/2026, השני נראה שם כמו תקלת-מיפוי). מחרוזת ריקה = אין מצורף.
       body: JSON.stringify({
-        to,
+        to: sendTo,
         subject,
         body,
         filename: filename ?? '',
@@ -180,7 +224,8 @@ Deno.serve(async (req) => {
     ok = res.ok
     if (!ok) errorMessage = `Make responded ${res.status}`
   } catch (err) {
-    errorMessage = err instanceof Error ? err.message : 'network error'
+    // 🔒 הודעת-רשת עלולה לכלול את כתובת ה-webhook (סוד) — מנוקה לפני התשובה ולפני היומן.
+    errorMessage = sanitizeDetail(err instanceof Error ? err.message : 'network error')
   }
 
   // ── היומן ──────────────────────────────────────────────────────────────────
@@ -193,14 +238,11 @@ Deno.serve(async (req) => {
   //    ל"כבר נשלח", ולכן כשל בכתיבתו **מכבה בשקט** את ההגנה מפני שליחה-כפולה — בדיוק
   //    הכשל שהטבלה נועדה למנוע. התשובה מדווחת `log_failed` והמסך אומר זאת למשתמש.
   //    השדה **אדיטיבי**: לקוח שאינו מכיר אותו מתנהג בדיוק כמו קודם.
-  const admin = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  )
   const { error: logError } = await admin.from('email_log').insert({
     entity_type: entityType,
     entity_id: entityId,
-    recipient: to,
+    recipient: sendTo,
+    ...(guard ? { intended_recipient: guard.intended } : {}),
     template_name: templateName,
     subject: subject ?? null,
     status: ok ? 'sent' : 'failed',

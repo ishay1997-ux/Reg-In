@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { TEMPLATE_PLACEHOLDERS, templateSaveVerdict } from './emailTemplates'
+import {
+  TEMPLATE_PLACEHOLDERS,
+  TEMPLATE_SAMPLE_VALUES,
+  renderTemplateSample,
+  templateSaveVerdict,
+} from './emailTemplates'
 import { buildShiftInvitePayload } from './shiftEmails'
 
 const TEMPLATE_NAMES = Object.keys(TEMPLATE_PLACEHOLDERS)
@@ -10,9 +15,9 @@ function fullBody(name) {
   return `שלום ${[...required, ...optional].join(' ')} תודה.`
 }
 
-describe('TEMPLATE_PLACEHOLDERS — 11 התבניות של §3.7, בייט-בבייט', () => {
-  it('11 תבניות בדיוק, ואיפוס-סיסמה/קישור-סקר לא ביניהן (Q-2)', () => {
-    expect(TEMPLATE_NAMES).toHaveLength(11)
+describe('TEMPLATE_PLACEHOLDERS — 12 התבניות (11 של §3.7 + סיכום השעות של מ8), בייט-בבייט', () => {
+  it('12 תבניות בדיוק, ואיפוס-סיסמה/קישור-סקר לא ביניהן (Q-2)', () => {
+    expect(TEMPLATE_NAMES).toHaveLength(12)
     expect(TEMPLATE_PLACEHOLDERS).not.toHaveProperty('תבנית_איפוס_סיסמה')
     expect(TEMPLATE_PLACEHOLDERS).not.toHaveProperty('קישור_בסיס_סקר_לקוחות')
   })
@@ -139,5 +144,77 @@ describe('עקביות מול הגופים הזרועים (§3.7, מתוארך 0
     // נשאר לא-מוכר, `fillEmailTemplate` הייתה מחזירה גוף ריק ו-`buildShiftInvitePayload` null.
     expect(payload.body).toContain('רוני לוי')
     expect(payload.body).toContain(confirmUrl)
+  })
+})
+
+// 🆕 13/10/2026 — מ8 דוח שכר מקצה לקצה: תבנית הסיכום האישי ותצוגה מקדימה בעורך.
+describe('תבנית_מייל_סיכום_שעות_דיילת — חוזה ארבעת המשתנים', () => {
+  const NAME = 'תבנית_מייל_סיכום_שעות_דיילת'
+  // גוף ברירת המחדל מהמיגרציה 20261014001000, מילה במילה.
+  const DEFAULT_BODY = `שלום [שם_דיילת],
+
+סיכום השעות שלך לחודש [חודש_דיווח_ושנה] מוכן לבדיקה.
+אפשר לאשר את הנתונים או לדווח על טעות בקישור:
+[לינק_בדיקת_שעות]
+
+נשמח לתשובתך עד [מועד_אחרון_לתגובה].`
+
+  it('ארבעה משתני חובה בדיוק, בלי רשות — אותה רשימה שהשרת בודק', () => {
+    expect(TEMPLATE_PLACEHOLDERS[NAME]).toEqual({
+      required: ['[שם_דיילת]', '[חודש_דיווח_ושנה]', '[לינק_בדיקת_שעות]', '[מועד_אחרון_לתגובה]'],
+      optional: [],
+    })
+  })
+
+  it('גוף ברירת המחדל מהמיגרציה עובר את שער השמירה', () => {
+    expect(templateSaveVerdict(NAME, DEFAULT_BODY).status).toBe('ok')
+  })
+
+  it.each([
+    ['[לינק_בדיקת_שעות]', 'בלי [לינק_בדיקת_שעות] הדיילת לא תוכל לאשר את השעות או לדווח על טעות.'],
+    ['[מועד_אחרון_לתגובה]', 'בלי [מועד_אחרון_לתגובה] הדיילת לא תדע עד מתי להשיב.'],
+  ])('מחיקת %s ⇒ חסום עם תוצאה מוצרית', (token, message) => {
+    const verdict = templateSaveVerdict(NAME, DEFAULT_BODY.split(token).join(''))
+    expect(verdict.status).toBe('blocked')
+    expect(verdict.message).toBe(message)
+  })
+
+  it('משתנה של תבנית רואה החשבון בתוך הסיכום האישי ⇒ לא מוכר וחסום', () => {
+    const verdict = templateSaveVerdict(NAME, `${DEFAULT_BODY}\n[שם_רואה_חשבון]`)
+    expect(verdict.status).toBe('blocked')
+    expect(verdict.unknown).toEqual(['[שם_רואה_חשבון]'])
+  })
+})
+
+describe('TEMPLATE_SAMPLE_VALUES / renderTemplateSample — תצוגה מקדימה שלא שולחת', () => {
+  it('לכל משתנה בכל אחת מ-12 התבניות יש ערך דוגמה לא ריק', () => {
+    for (const name of TEMPLATE_NAMES) {
+      const { required, optional } = TEMPLATE_PLACEHOLDERS[name]
+      for (const token of [...required, ...optional]) {
+        expect(TEMPLATE_SAMPLE_VALUES[token], `${name} · ${token}`).toBeTruthy()
+      }
+    }
+  })
+
+  it.each(TEMPLATE_NAMES)('%s — גוף מלא מוצג בלי אף סוגר גולמי', (name) => {
+    const rendered = renderTemplateSample(name, fullBody(name))
+    expect(rendered).not.toBe('')
+    expect(rendered).not.toMatch(/\[[^\]\n]+\]/)
+  })
+
+  it('הסיכום האישי מוצג עם ערכי הדוגמה במקומם', () => {
+    const rendered = renderTemplateSample(
+      'תבנית_מייל_סיכום_שעות_דיילת',
+      'שלום [שם_דיילת], [חודש_דיווח_ושנה] [לינק_בדיקת_שעות] עד [מועד_אחרון_לתגובה]',
+    )
+    expect(rendered).toBe(
+      'שלום נועה כהן, ספטמבר 2026 https://example.com/payroll-review/sample עד 20/10/2026 18:00',
+    )
+  })
+
+  it('משתנה לא מוכר בגוף ⇒ ריק (אותו סירוב כמו במייל אמיתי), תבנית לא מוכרת ⇒ ריק', () => {
+    expect(renderTemplateSample('תבנית_מייל_סיכום_שעות_דיילת', 'שלום [שם_חברה]')).toBe('')
+    expect(renderTemplateSample('לא_תבנית', 'שלום')).toBe('')
+    expect(renderTemplateSample('תבנית_מייל_סיכום_שעות_דיילת', '')).toBe('')
   })
 })

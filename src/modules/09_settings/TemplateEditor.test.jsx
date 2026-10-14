@@ -259,3 +259,61 @@ describe('TemplateEditor', () => {
     )
   })
 })
+
+// 🆕 13/10/2026 — מ8 (§7.108): תצוגה מקדימה עם נתוני דוגמה, ותבנית הסיכום האישי לדיילת.
+describe('TemplateEditor — תצוגה מקדימה', () => {
+  const REVIEW_ROW = {
+    param_name: 'תבנית_מייל_סיכום_שעות_דיילת',
+    param_value: '',
+    param_type: 'templates',
+    owner_role_id: null,
+  }
+  const REVIEW_BODY =
+    'שלום [שם_דיילת],\nסיכום [חודש_דיווח_ושנה]: [לינק_בדיקת_שעות]\nעד [מועד_אחרון_לתגובה].'
+
+  it('סגורה כברירת מחדל; פתיחה מציגה את המייל ממולא בנתוני דוגמה, בלי סוגריים', () => {
+    const { onChange } = renderEditor({
+      rows: [REVIEW_ROW],
+      values: { [REVIEW_ROW.param_name]: REVIEW_BODY },
+    })
+    expect(
+      screen.getByTestId('settings-template-item-תבנית_מייל_סיכום_שעות_דיילת'),
+    ).toHaveTextContent('סיכום שעות לדיילת')
+    expect(screen.queryByTestId('settings-template-preview')).toBeNull()
+
+    const toggle = screen.getByTestId('settings-template-preview-toggle')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+
+    const body = screen.getByTestId('settings-template-preview-body')
+    expect(body).toHaveTextContent('שלום נועה כהן,')
+    expect(body).toHaveTextContent('https://example.com/payroll-review/sample')
+    expect(body.textContent).not.toMatch(/\[[^\]\n]+\]/)
+    expect(screen.getByTestId('settings-template-preview')).toHaveTextContent('לא נשלח מייל')
+    // התצוגה המקדימה לא משנה את הגוף.
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('משתנה לא מוכר ⇒ הודעה במקום תצוגה (לא טקסט חצי ממולא)', () => {
+    renderEditor({
+      rows: [REVIEW_ROW],
+      values: { [REVIEW_ROW.param_name]: `${REVIEW_BODY} [שם_חברה]` },
+    })
+    fireEvent.click(screen.getByTestId('settings-template-preview-toggle'))
+    expect(screen.queryByTestId('settings-template-preview-body')).toBeNull()
+    expect(screen.getByTestId('settings-template-preview-empty')).toHaveTextContent(
+      'אי-אפשר להציג תצוגה מקדימה עד שהתבנית תהיה תקינה',
+    )
+  })
+
+  it('זמינה גם במצב צפייה בלבד (קריאה, לא עריכה)', () => {
+    renderEditor({
+      rows: [REVIEW_ROW],
+      values: { [REVIEW_ROW.param_name]: REVIEW_BODY },
+      canEdit: () => false,
+    })
+    fireEvent.click(screen.getByTestId('settings-template-preview-toggle'))
+    expect(screen.getByTestId('settings-template-preview-body')).toHaveTextContent('נועה כהן')
+  })
+})

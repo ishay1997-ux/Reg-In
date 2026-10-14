@@ -35,6 +35,7 @@ const efratLiveTravel = {
   hostess_name: 'אפרת דהן',
   id_number: '301554333',
   source_project_id: 12,
+  event_date: '2026-08-05',
   line_basis: 'actual',
   hours: 6,
   rate: 45,
@@ -371,41 +372,50 @@ describe('buildSalaryReportDocument — המסמך המלא', () => {
     expect(doc.sheet[2][1].value).toBe(GENERATED_AT_TEXT)
   })
 
-  it('שורת-הכותרות היא בדיוק שמונה עמודות א48, בסדר של צעד 2.2', () => {
+  // ✏️ 14/10/2026 — הכרעת ישי F12: עמודת "תאריך" נוספה, עמודת "סה"כ" הוסרה, ושורת הסיכום
+  // היא "סה"כ שעות" בלבד (בישראל רו"ח מחשב את הכסף, כולל שעות נוספות). הבדיקות כאן נכתבו מחדש
+  // לפורמט הזה; הסכומים עדיין נבדקים בהתאמה הפנימית (`doc.totals.total`, `SALARY_TOTAL_MISMATCH`).
+  it('שורת-הכותרות: שמונה עמודות לפי F12 — עם תאריך ובלי סה"כ', () => {
     expect(doc.sheet[4].map((cell) => cell.value)).toEqual(SALARY_REPORT_COLUMNS)
     expect(SALARY_REPORT_COLUMNS).toEqual([
       'ת"ז',
       'שם',
       'פרטי-בנק',
+      'תאריך',
       'תעריף',
       'שעות',
       'בונוס',
       'נסיעות',
-      'סה"כ',
     ])
   })
 
-  it('שורת-הסה"כ: שעות ותעריף "—" (S3 §⑧7), בונוס/נסיעות/סה"כ מספרים', () => {
+  it('שורת הסיכום: "סה"כ שעות" 22 מתחת לעמודת השעות בלבד, בלי ש"ח', () => {
     const totalRow = doc.sheet[doc.sheet.length - 1]
-    expect(totalRow[0].value).toBe('סה"כ')
-    expect(totalRow[3].value).toBe(NOT_APPLICABLE)
-    expect(totalRow[4].value).toBe(NOT_APPLICABLE)
-    expect(totalRow[5].value).toBe(0)
-    expect(totalRow[6].value).toBe(22.6)
-    expect(totalRow[7].value).toBe(620.6)
+    expect(totalRow[0].value).toBe('סה"כ שעות')
+    expect(totalRow[5]).toMatchObject({ value: 22, type: Number })
+    expect([totalRow[1], totalRow[2], totalRow[3], totalRow[4], totalRow[6], totalRow[7]]).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ])
+    expect(doc.totals.hoursTotal).toBe(22)
   })
 
-  // תא-הבונוס בגוף-הגיליון ובשורת-הסה"כ, על שורה שבונוסה אינו אפס — שני התאים היחידים
-  // שבהם בונוס אמיתי נראה לרו"ח.
-  it('בונוס-אישי מודפס בתא-הגוף ובשורת-הסה"כ, ולא כ-0.00', () => {
+  it('תאריך המשמרת בקובץ: DD/MM/YYYY כטקסט; תאריך חסר ⇒ "—"', () => {
+    expect(doc.sheet[5][3]).toMatchObject({ value: '05/08/2026', type: String })
+    expect(doc.sheet[6][3].value).toBe(NOT_APPLICABLE)
+  })
+
+  // תא-הבונוס בגוף-הגיליון — התא היחיד שבו בונוס אמיתי נראה לרו"ח.
+  it('בונוס-אישי מודפס בתא-הגוף ולא כ-0.00; ההתאמה הפנימית עדיין 870.60', () => {
     const docBonus = buildSalaryReportDocument(augustPayload(efratWithPersonalBonus), {
       generatedAt: GENERATED_AT,
     })
-    expect(docBonus.sheet[5][5].value).toBe(250)
-    expect(docBonus.sheet[5][7].value).toBe(542.6)
-    const totalRow = docBonus.sheet[docBonus.sheet.length - 1]
-    expect(totalRow[5].value).toBe(250)
-    expect(totalRow[7].value).toBe(870.6)
+    expect(docBonus.sheet[5][6].value).toBe(250)
+    expect(docBonus.totals.total).toBe(870.6)
   })
 
   it('דיילת בלי פרטי-בנק מסומנת להתרעה, ובקובץ מקבלת "—" ולא תא ריק', () => {
@@ -432,7 +442,7 @@ describe('writeSalaryReportXlsx — הלוך-ושוב אמיתי דרך קובץ
     return { doc, rows, headerIndex }
   }
 
-  it('הקובץ נקרא חזרה: כותרת, שמונה עמודות, חמש שורות-גוף ושורת-סה"כ 620.60', async () => {
+  it('הקובץ נקרא חזרה: כותרת, שמונה עמודות, חמש שורות-גוף ושורת "סה"כ שעות" 22', async () => {
     const { rows, headerIndex } = await parseGeneratedFile(augustPayload(efratRuling20Travel))
 
     expect(rows[0][0]).toBe('דוח שכר דיילות — אוגוסט 2026')
@@ -443,8 +453,8 @@ describe('writeSalaryReportXlsx — הלוך-ושוב אמיתי דרך קובץ
     expect(body).toHaveLength(5)
 
     const totalRow = rows[rows.length - 1]
-    expect(totalRow[0]).toBe('סה"כ')
-    expect(totalRow[7]).toBe(620.6)
+    expect(totalRow[0]).toBe('סה"כ שעות')
+    expect(totalRow[5]).toBe(22)
   })
 
   it('ת"ז חוזרת כמחרוזת ולא כמספר — אפס מוביל לא נעלם במסמך שהולך לרו"ח', async () => {
@@ -455,56 +465,48 @@ describe('writeSalaryReportXlsx — הלוך-ושוב אמיתי דרך קובץ
     expect(firstBodyRow[2]).toBe('הפועלים 601-2047199')
   })
 
-  it('עברית, עשרוניות ו-"—" שורדים את ההלוך-ושוב', async () => {
+  it('עברית, תאריך, עשרוניות ו-"—" שורדים את ההלוך-ושוב', async () => {
     const { rows, headerIndex } = await parseGeneratedFile(augustPayload(efratRuling20Travel))
     const efrat = rows[headerIndex + 1]
     const orly = rows[headerIndex + 2]
 
     expect(efrat[1]).toBe('אפרת דהן')
-    // ⚠️ תעריף (3) ושעות (4) **בסדר הזה** — א48. שני המספרים ניתנים להחלפה בלי לשנות את
-    // סכום-השורה, ולכן החלפה שקטה הייתה מדווחת לרו"ח "45 שעות בתעריף 6" ועוברת בירוק.
-    // שורת-הסה"כ אינה מבחינה ביניהם (שני התאים `—`), ולכן הפין חייב לשבת בשורת-גוף.
-    expect(efrat[3]).toBe(45)
-    expect(efrat[4]).toBe(6)
-    // בונוס-אפס בשורת שעות-בפועל הוא **אפס שנמדד** ⇒ 0.00 ולא `—` (המוקאפ המאושר; פסקת-הסתירה
-    // בראש `salaryReport.js`). זהו הצד השני של `orly[5]` שמתחתיו.
-    expect(efrat[5]).toBe(0)
-    expect(efrat[6]).toBe(22.6)
-    expect(efrat[7]).toBe(292.6)
+    expect(efrat[3]).toBe('05/08/2026')
+    // ⚠️ תעריף (4) ושעות (5) **בסדר הזה**. שני המספרים ניתנים להחלפה בלי שום שגיאה, ולכן
+    // החלפה שקטה הייתה מדווחת לרו"ח "45 שעות בתעריף 6" — הפין חייב לשבת בשורת-גוף.
+    expect(efrat[4]).toBe(45)
+    expect(efrat[5]).toBe(6)
+    // בונוס-אפס בשורת שעות-בפועל הוא **אפס שנמדד** ⇒ 0 ולא `—` (פסקת-הסתירה בראש
+    // `salaryReport.js`). זהו הצד השני של `orly[6]` שמתחתיו.
+    expect(efrat[6]).toBe(0)
+    expect(efrat[7]).toBe(22.6)
+    expect(efrat).toHaveLength(8)
 
     expect(orly[1]).toBe('אורלי שני')
-    expect(orly[5]).toBe(NOT_APPLICABLE)
+    expect(orly[5]).toBe(4)
     expect(orly[6]).toBe(NOT_APPLICABLE)
-    expect(orly[7]).toBe(86)
+    expect(orly[7]).toBe(NOT_APPLICABLE)
   })
 
-  it('N-4 בקובץ עצמו: שורת האפס אינה בגוף הקובץ, והסה"כ נשאר 620.60', async () => {
+  it('N-4 בקובץ עצמו: שורת האפס אינה בגוף הקובץ, וסה"כ השעות נשאר 22', async () => {
     const { rows, headerIndex } = await parseGeneratedFile(
       augustPayload(efratRuling20Travel, [zeroLine]),
     )
     const body = rows.slice(headerIndex + 1, rows.length - 1)
     expect(body).toHaveLength(5)
     expect(body.map((row) => row[1])).not.toContain('מיכל אברהם')
-    expect(rows[rows.length - 1][7]).toBe(620.6)
+    expect(rows[rows.length - 1][5]).toBe(22)
   })
 
-  // המסלול המלא של הבונוס — מהמיפוי ועד הבתים שנפתחים באקסל אצל הרו"ח.
-  it('בונוס-אישי שורד את ההלוך-ושוב: 250 בתא-הגוף, 250 בסה"כ, שורה 542.60 ודוח 870.60', async () => {
+  it('בונוס-אישי שורד את ההלוך-ושוב: 250 בתא-הגוף', async () => {
     const { rows, headerIndex } = await parseGeneratedFile(augustPayload(efratWithPersonalBonus))
     const efrat = rows[headerIndex + 1]
     expect(efrat[1]).toBe('אפרת דהן')
-    expect(efrat[5]).toBe(250)
-    expect(efrat[7]).toBe(542.6)
-
-    const totalRow = rows[rows.length - 1]
-    expect(totalRow[5]).toBe(250)
-    expect(totalRow[7]).toBe(870.6)
+    expect(efrat[6]).toBe(250)
   })
 
-  it('וריאנט הפרמטר החי (נסיעות 0): שורת אפרת 270.00 וסה"כ 598.00', async () => {
+  it('וריאנט הפרמטר החי (נסיעות 0): נסיעות 0 בשורת אפרת', async () => {
     const { rows, headerIndex } = await parseGeneratedFile(augustPayload(efratLiveTravel))
-    expect(rows[headerIndex + 1][6]).toBe(0)
-    expect(rows[headerIndex + 1][7]).toBe(270)
-    expect(rows[rows.length - 1][7]).toBe(598)
+    expect(rows[headerIndex + 1][7]).toBe(0)
   })
 })

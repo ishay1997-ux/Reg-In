@@ -19,13 +19,46 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { TEMPLATE_PLACEHOLDERS, templateSaveVerdict } from '@/lib/emailTemplates'
+import {
+  TEMPLATE_PLACEHOLDERS,
+  renderTemplateSample,
+  templateSaveVerdict,
+} from '@/lib/emailTemplates'
 import { getParamEntry } from '@/lib/paramsRegistry'
 import Ltr from '@/components/Ltr'
 import Hint from '@/components/Hint'
 
 function tokenTestId(token) {
   return token.replace(/[[\]]/g, '')
+}
+
+// 🆕 13/10/2026 (מ8, §7.108) — תצוגה מקדימה של המייל עם נתוני דוגמה. **לא שולחת דבר.**
+// המילוי עובר דרך `renderTemplateSample` ⇒ `fillEmailTemplate`, אותה פונקציה שממלאת מייל
+// אמיתי — לא העתק. העטיפה ל-HTML (`plainTextToEmailHtml`) היא עניין של המשלוח בלבד, ולכן
+// כאן הטקסט מוצג כטקסט עם שבירות השורה שלו (`whitespace-pre-line`), בלי הזרקת HTML.
+function TemplatePreview({ name, body }) {
+  const rendered = renderTemplateSample(name, body)
+  return (
+    <div
+      className="mt-3 rounded-lg border border-slate-200 bg-white p-3"
+      data-testid="settings-template-preview"
+    >
+      <div className="mb-2 text-xs text-slate-500">נתונים לדוגמה · לא נשלח מייל</div>
+      {rendered ? (
+        <p
+          dir="auto"
+          className="whitespace-pre-line text-sm leading-relaxed text-slate-700"
+          data-testid="settings-template-preview-body"
+        >
+          {rendered}
+        </p>
+      ) : (
+        <p className="text-sm text-slate-600" data-testid="settings-template-preview-empty">
+          אי-אפשר להציג תצוגה מקדימה עד שהתבנית תהיה תקינה
+        </p>
+      )}
+    </div>
+  )
 }
 
 function TemplateChip({ token, required, missing, disabled, onInsert }) {
@@ -63,6 +96,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
   )
 
   const [selectedName, setSelectedName] = useState(templateRows[0]?.param_name ?? null)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const textareaRef = useRef(null)
   // 🔴 **מיקום-הסמן נשמר בעצמנו ולא נקרא מ-`selectionStart` ברגע הלחיצה — וזה לא קפדנות,
   // זה באג שנמדד** (03/09/2026): כש-React כותב `value` לתוך ה-DOM, הדפדפן מזיז את הסמן
@@ -194,6 +228,17 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
             data-testid="settings-template-body"
           />
           {editable && <Hint id="templates.chipInsertPoint" />}
+
+          <button
+            type="button"
+            onClick={() => setPreviewOpen((open) => !open)}
+            aria-expanded={previewOpen}
+            className="mt-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-teal-700"
+            data-testid="settings-template-preview-toggle"
+          >
+            {previewOpen ? 'הסתר תצוגה מקדימה' : 'תצוגה מקדימה'}
+          </button>
+          {previewOpen && <TemplatePreview name={selectedRow.param_name} body={body} />}
 
           {verdict?.status === 'blocked' && (
             <div
