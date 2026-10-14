@@ -758,6 +758,9 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
 
     await screen.findByTestId('salary-report-result')
     expect(screen.getByTestId('salary-report-send-tag')).toHaveTextContent('קובץ לא נשמר')
+    // R2: "הופק" ולא "נחתם" (מונח פנימי) בהודעה שהמשתמשת רואה.
+    expect(await screen.findByText(/הדוח הופק והמייל נשלח/)).toBeInTheDocument()
+    expect(screen.queryByText(/נחתם/)).toBeNull()
   })
 
   // 🔴 **הצירוף ששרד עד `01/09/2026`, ושתי הבדיקות שמעליו לא כיסו: שניהם נכשלו.**

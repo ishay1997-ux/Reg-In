@@ -163,7 +163,8 @@ function ReviewBody({
 
       <Card>
         <div className="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="סינון">
-          {FILTERS.map((key) => (
+          {/* לפני השליחה אף אחת לא קיבלה סיכום — אין מה לספור ב"לא השיבו" (סקירת UX, פריט 5). */}
+          {FILTERS.filter((key) => distributed || key !== 'noreply').map((key) => (
             <FilterPill
               key={key}
               on={activeFilter === key}

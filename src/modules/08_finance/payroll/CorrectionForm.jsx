@@ -40,7 +40,16 @@ function validate({ row, field, value, reason }) {
   return errors
 }
 
-export default function CorrectionForm({ theCase, rows, affectedRows = [], onDirty, onSaved }) {
+// F14.2: מי שיש לו רק 'כספים' עריכה מתקן שעות בפועל בלבד; בונוס אישי — רק עם 'פרויקטים' עריכה.
+export default function CorrectionForm({
+  theCase,
+  rows,
+  affectedRows = [],
+  canEditProjects = false,
+  onDirty,
+  onSaved,
+}) {
+  const fieldKeys = canEditProjects ? Object.keys(FIELDS) : ['actual_hours']
   const confirm = useConfirm()
   const formId = useId()
   // שורת פיצוי ביטול אינה ניתנת לתיקון מכאן. הבסיס נקרא מ-`line_basis` של השורה (בונה A מוסיף)
@@ -136,7 +145,9 @@ export default function CorrectionForm({ theCase, rows, affectedRows = [], onDir
       className="flex flex-col gap-3 rounded-lg border border-slate-200 p-3"
       data-testid="payroll-correction-form"
     >
-      <h3 className="font-semibold text-slate-700">תיקון שעות או בונוס</h3>
+      <h3 className="font-semibold text-slate-700">
+        {fieldKeys.length > 1 ? 'תיקון שעות או בונוס' : 'תיקון שעות'}
+      </h3>
       {errorList.length > 0 && (
         <div
           ref={summaryRef}
@@ -173,21 +184,23 @@ export default function CorrectionForm({ theCase, rows, affectedRows = [], onDir
           </select>
         </label>
       )}
-      <fieldset className="flex flex-wrap gap-4">
-        <legend className="mb-1 font-medium">מה מתקנים</legend>
-        {Object.entries(FIELDS).map(([key, def]) => (
-          <label key={key} className="flex items-center gap-1.5">
-            <input
-              type="radio"
-              name={`${formId}-field`}
-              value={key}
-              checked={field === key}
-              onChange={touch(setField)}
-            />
-            {def.label}
-          </label>
-        ))}
-      </fieldset>
+      {fieldKeys.length > 1 && (
+        <fieldset className="flex flex-wrap gap-4" data-testid="payroll-correction-fields">
+          <legend className="mb-1 font-medium">מה מתקנים</legend>
+          {fieldKeys.map((key) => (
+            <label key={key} className="flex items-center gap-1.5">
+              <input
+                type="radio"
+                name={`${formId}-field`}
+                value={key}
+                checked={field === key}
+                onChange={touch(setField)}
+              />
+              {FIELDS[key].label}
+            </label>
+          ))}
+        </fieldset>
+      )}
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <span className="font-medium">ערך נוכחי</span>

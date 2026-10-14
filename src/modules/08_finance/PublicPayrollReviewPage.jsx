@@ -322,6 +322,13 @@ function ReviewBody({
 }) {
   const objecting = mode === 'objection'
   const deadline = formatTimestampFull(summary.deadline)
+  // פתיחת "יש טעות" ⇒ הפוקוס עובר לבחירת המשמרת הראשונה — הצעד הראשון בטופס (סקירת UX, פריט 8).
+  const shiftListRef = useRef(null)
+  useEffect(() => {
+    if (objecting) shiftListRef.current?.querySelector('button')?.focus()
+  }, [objecting])
+  // אחרי שאישרה — "הנתונים נכונים" כבר עשה את שלו ולא מוצג שוב; "יש טעות" נשאר (סקירת UX, פריט 8).
+  const alreadyApproved = summary.decision?.state === 'hostess_approved' || outcome === 'approved'
 
   return (
     <div className="flex flex-col gap-4" data-testid="review-ready">
@@ -356,6 +363,7 @@ function ReviewBody({
       {objecting && <ObjectionIntro errors={formErrors} />}
 
       <ShiftList
+        listRef={shiftListRef}
         rows={summary.rows ?? []}
         selectable={objecting}
         selected={form.rowKeys}
@@ -398,7 +406,7 @@ function ReviewBody({
         />
       ) : (
         <Actions
-          canApprove={Boolean(summary.can_approve)}
+          canApprove={Boolean(summary.can_approve) && !alreadyApproved}
           canObject={Boolean(summary.can_object)}
           saving={saving}
           onApprove={onApprove}
@@ -545,12 +553,12 @@ function ShiftCard({ row, selectable, selected, onToggle }) {
   )
 }
 
-function ShiftList({ rows, selectable, selected, onToggle }) {
+function ShiftList({ listRef, rows, selectable, selected, onToggle }) {
   if (rows.length === 0) {
     return <p className="text-sm text-slate-600">אין משמרות בסיכום הזה</p>
   }
   return (
-    <ul className="flex flex-col gap-2.5" aria-label="המשמרות בחודש">
+    <ul ref={listRef} className="flex flex-col gap-2.5" aria-label="המשמרות בחודש">
       {rows.map((row) => (
         <ShiftCard
           key={row.key}

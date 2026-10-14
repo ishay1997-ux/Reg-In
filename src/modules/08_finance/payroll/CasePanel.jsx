@@ -65,9 +65,28 @@ const OUTCOME_DIALOGS = {
   },
 }
 
-export default function CasePanel({ caseId, canEdit, onClose, onChanged, onSendUpdated }) {
+export default function CasePanel({
+  caseId,
+  canEdit,
+  canEditProjects = false,
+  onClose,
+  onChanged,
+  onSendUpdated,
+}) {
   const confirm = useConfirm()
   const toast = useToast()
+  // הכפתור שפתח את הפאנל ("פתח פנייה") — נלכד ברינדור הראשון, לפני שהפאנל לוקח את הפוקוס,
+  // ומקבל אותו בחזרה כשהפאנל נסגר (Esc, "סגירה", או אחרי פעולה). הפאנל מוסר מהעץ ולא רק
+  // נסגר, ולכן ההחזרה האוטומטית של Radix אינה אמינה כאן (סקירת UX מקומית 14/10, פריט 7).
+  const [opener] = useState(() => (typeof document === 'undefined' ? null : document.activeElement))
+  useEffect(
+    () => () => {
+      setTimeout(() => {
+        if (opener?.isConnected) opener.focus()
+      }, 0)
+    },
+    [opener],
+  )
   const [detail, setDetail] = useState(null)
   const [error, setError] = useState(null)
   const [tick, setTick] = useState(0)
@@ -176,6 +195,7 @@ export default function CasePanel({ caseId, canEdit, onClose, onChanged, onSendU
             <CaseBody
               detail={detail}
               canEdit={canEdit}
+              canEditProjects={canEditProjects}
               onDirty={setDirty}
               onOutcome={setOutcome}
               onReopen={reopen}
@@ -204,6 +224,7 @@ export default function CasePanel({ caseId, canEdit, onClose, onChanged, onSendU
 function CaseBody({
   detail,
   canEdit,
+  canEditProjects,
   onDirty,
   onOutcome,
   onReopen,
@@ -263,6 +284,7 @@ function CaseBody({
         <CorrectionForm
           theCase={theCase}
           rows={detail.current_rows ?? []}
+          canEditProjects={canEditProjects}
           affectedRows={theCase.affected_rows ?? []}
           onDirty={onDirty}
           onSaved={async () => {

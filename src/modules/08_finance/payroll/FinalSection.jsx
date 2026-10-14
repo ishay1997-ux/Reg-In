@@ -37,7 +37,17 @@ import {
 
 const POLL_MS = 2000
 
-export default function FinalSection({ review, preview, opId, update, canEdit, onStale }) {
+// `onIssued` — רענון הנתונים ברמת העמוד אחרי הפקה מוצלחת, כדי ששורת השלב, ההיסטוריה ולשונית
+// האישור הסופי יציגו "הופק" ופקדי ההפקה ייעלמו (סקירת UX מקומית 14/10, פריט 2).
+export default function FinalSection({
+  review,
+  preview,
+  opId,
+  update,
+  canEdit,
+  onStale,
+  onIssued,
+}) {
   const activeOpId = opId ?? preview?.active_operation?.operation_id ?? null
   if (!review) {
     return (
@@ -61,7 +71,14 @@ export default function FinalSection({ review, preview, opId, update, canEdit, o
   return (
     <div className="flex flex-col gap-4" data-testid="payroll-final">
       {activeOpId && (
-        <OperationProgress opId={activeOpId} update={update} canEdit={canEdit} key={activeOpId} />
+        <OperationProgress
+          opId={activeOpId}
+          update={update}
+          canEdit={canEdit}
+          reviewIssued={review.review.status === 'issued'}
+          onIssued={onIssued}
+          key={activeOpId}
+        />
       )}
       {review.review.status !== 'issued' && (
         <Readiness
@@ -70,6 +87,7 @@ export default function FinalSection({ review, preview, opId, update, canEdit, o
           update={update}
           canEdit={canEdit}
           onStale={onStale}
+          onIssued={onIssued}
           busyOp={Boolean(activeOpId)}
         />
       )}
@@ -77,7 +95,7 @@ export default function FinalSection({ review, preview, opId, update, canEdit, o
   )
 }
 
-function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
+function Readiness({ review, preview, update, canEdit, onStale, onIssued, busyOp }) {
   const info = review.review
   const confirm = useConfirm()
   const [readiness, setReadiness] = useState(null)
@@ -174,6 +192,7 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
       if (result?.operation_id && result.operation_id !== operationId) {
         update({ opId: result.operation_id })
       }
+      await onIssued?.()
     } catch (err) {
       setIssueError(err)
       if (isStaleCode(err?.code)) onStale()
@@ -259,7 +278,7 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
   )
 }
 
-// "הורד את הקובץ שיישלח" — אותו handler של "הורד טיוטה" (`useDraftDownload`): אותו בונה ואותה
+// "הורד תצוגה מקדימה של הקובץ" — אותו handler של "הורד טיוטה" (`useDraftDownload`): אותו בונה ואותה
 // גרסת תצוגה מקדימה. נתונים ישנים ⇒ מבקשים לרענן קודם, כמו בכל פעולה אחרת.
 function FileToBeSent({ preview, stale, onStale }) {
   const draft = useDraftDownload(preview)
@@ -287,11 +306,12 @@ function FileToBeSent({ preview, stale, onStale }) {
           onClick={draft.download}
           data-testid="payroll-download-file-to-send"
         >
-          {draft.downloading ? 'מכין קובץ…' : 'הורד את הקובץ שיישלח'}
+          {draft.downloading ? 'מכין קובץ…' : 'הורד תצוגה מקדימה של הקובץ'}
         </Button>
       )}
       <p className="text-xs text-slate-600">
-        זהו הקובץ שיישלח, כולל ת"ז ופרטי בנק. הקובץ הסופי ייבנה מאותם נתונים בדיוק ברגע ההפקה.
+        תצוגה מקדימה של הקובץ לרואה החשבון, כולל ת"ז ופרטי בנק. הקובץ הסופי ייבנה מאותם נתונים בדיוק
+        ברגע ההפקה.
       </p>
       {draft.error && (
         <Banner tone="error" testId="payroll-file-to-send-error">
@@ -303,7 +323,7 @@ function FileToBeSent({ preview, stale, onStale }) {
 }
 
 // מצב ההפקה השמור, נשאל מהשרת כל 2 שניות כל עוד הוא באמצע. יציאה מהמסך לא מבטלת דבר.
-function OperationProgress({ opId, update, canEdit }) {
+function OperationProgress({ opId, update, canEdit, reviewIssued, onIssued }) {
   const toast = useToast()
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
@@ -338,6 +358,16 @@ function OperationProgress({ opId, update, canEdit }) {
       clearTimeout(timer)
     }
   }, [load])
+
+  // הדוח הופק (committed) והעמוד עוד חושב שהבדיקה פתוחה ⇒ רענון ברמת העמוד, פעם אחת לכל הפקה.
+  // מכסה כל דרך להגיע לכאן: תשובה רגילה, "המשך", או "בדוק סטטוס" אחרי תשובה שאבדה.
+  const issuedNotified = useRef(false)
+  useEffect(() => {
+    if (status?.state === 'committed' && !reviewIssued && !issuedNotified.current) {
+      issuedNotified.current = true
+      onIssued?.()
+    }
+  }, [status?.state, reviewIssued, onIssued])
 
   // טוסט רק במעבר שנצפה כאן (לא בכל פתיחה של דוח ישן) — המצב הקבוע נשאר בכרטיס.
   useEffect(() => {

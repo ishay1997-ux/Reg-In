@@ -71,6 +71,7 @@ export default function PayrollWorkspacePage() {
         <CasePanel
           caseId={url.caseId}
           canEdit={canEdit}
+          canEditProjects={permissions?.['פרויקטים'] === 'edit'}
           onClose={() => update({ caseId: null })}
           onChanged={data.reload}
           onSendUpdated={async (theCase) => {
@@ -381,6 +382,7 @@ function SectionFor({ view, url, update, data, canEdit }) {
         update={update}
         canEdit={canEdit}
         onStale={data.reload}
+        onIssued={data.reload}
       />
     )
   }

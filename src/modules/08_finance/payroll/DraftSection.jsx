@@ -26,7 +26,6 @@ import {
   payrollErrorMessage,
 } from './payrollModel'
 
-const BASIS_LABELS = { actual: 'עבודה', cancellation_compensation: 'פיצוי ביטול' }
 // D4: שורה אחת שאומרת מה חסר ואיפה משלימים. (כרטיס הדיילת נמצא במודול "דיילות"; מנהלת
 // הכספים חסומה ממנו, ולכן אין כאן קישור — היא מעבירה למי שאחראית על הדיילות.)
 const BLOCKER_FIX = {
@@ -359,9 +358,6 @@ function DraftTable({ rows, offset, hoursTotal }) {
                 </Td>
                 <Td>
                   <div className="font-semibold text-slate-800">{cells[1]}</div>
-                  {line.line_basis === 'cancellation_compensation' && (
-                    <div className="text-xs text-slate-600">{BASIS_LABELS[line.line_basis]}</div>
-                  )}
                   {defects.length > 0 && (
                     <div className="mt-1 text-xs font-semibold text-red-700" role="note">
                       {defects.map((d) => DEFECT_LABELS[d] ?? payrollErrorMessage(d)).join(' · ')}

@@ -234,6 +234,25 @@ describe('אישור', () => {
     expect(screen.getByTestId('review-object')).toBeInTheDocument()
   })
 
+  // סקירת UX מקומית 14/10, פריט 8: גם אם השרת עדיין מחזיר can_approve=true אחרי שאישרה.
+  it('אחרי שאישרה, "הנתונים נכונים" לא מוצג גם כש-can_approve עדיין true', async () => {
+    await openReady({
+      ...SUMMARY,
+      decision: { state: 'hostess_approved', at: '2026-08-01T07:00:00Z' },
+      can_approve: true,
+    })
+    expect(screen.queryByTestId('review-approve')).toBeNull()
+    expect(screen.getByTestId('review-object')).toBeInTheDocument()
+  })
+
+  it('פתיחת "יש טעות" מעבירה את הפוקוס לבחירת המשמרת הראשונה', async () => {
+    await openReady()
+    fireEvent.click(screen.getByTestId('review-object'))
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByTestId('review-shift-select-r1')),
+    )
+  })
+
   it('פתיחת הדף לבדה לא שולחת אף תשובה (GET בלבד)', async () => {
     await openReady()
     expect(respondToPayrollReview).not.toHaveBeenCalled()

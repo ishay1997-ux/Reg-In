@@ -300,6 +300,17 @@ const moneyCell = (value, bold = false) => ({
   ...(bold ? { fontWeight: 'bold' } : {}),
 })
 
+// הכרעת הסגן 14/10 (F12, בהאצלת ישי): רו"ח צריך להבחין בין פיצוי ביטול לשעות עבודה (שעות
+// נוספות) ⇒ בשורת פיצוי, תא התאריך הוא `DD/MM/YYYY (פיצוי ביטול)`. זהה ל-`document.ts` של C.
+const COMPENSATION_DATE_SUFFIX = ' (פיצוי ביטול)'
+function dateCellText(eventDate, lineBasis) {
+  const date = formatDate(eventDate, NOT_APPLICABLE)
+  if (date === NOT_APPLICABLE) return date
+  return lineBasis === SALARY_LINE_BASIS.CANCELLATION_COMPENSATION
+    ? `${date}${COMPENSATION_DATE_SUFFIX}`
+    : date
+}
+
 // 🔴 ת"ז כ-`String` מפורש ולא כמספר. ת"ז ישראלית שמתחילה באפס מאבדת אותו בשקט ברגע
 // שאקסל קורא אותה כמספר — במסמך שהולך לרו"ח, על שדה-זיהוי. אותו נימוק לפרטי-הבנק
 // (מספר-סניף/חשבון עם אפס מוביל) ולקוד-ההפקה.
@@ -308,7 +319,7 @@ function sheetLineRow(line) {
     textCell(line.idNumber),
     textCell(line.hostessName),
     line.bankDetails ? textCell(line.bankDetails) : dashCell(),
-    line.eventDate ? textCell(formatDate(line.eventDate, NOT_APPLICABLE)) : dashCell(),
+    line.eventDate ? textCell(dateCellText(line.eventDate, line.lineBasis)) : dashCell(),
     moneyCell(line.rate),
     { value: line.hours, type: Number, format: HOURS_FORMAT },
     line.bonus === null ? dashCell() : moneyCell(line.bonus),
@@ -521,7 +532,7 @@ function sheetWithHeader(title, headerRows, lines, totals) {
 
 // טיוטה מתוך תשובת `payroll_preview` (חוזה §4.3). לא נשמרת, לא נשלחת, לא חותמת דבר.
 // `capturedAt` — רגע הלכידה של התצוגה המקדימה בשרת (`captured_at`), לא שעון הדפדפן: הטיוטה
-// מתארת את מה שהשרת ראה באותו רגע, וזה מה שהשורה "נלכד בתאריך" אומרת.
+// מתארת את מה שהשרת ראה באותו רגע, וזה מה שהשורה "נכון ל-" אומרת.
 export function buildSalaryReportDraftDocument(preview, { capturedAt } = {}) {
   if (!preview || preview.ok !== true) {
     throw salaryReportError('SALARY_DRAFT_NOT_OK', 'התצוגה המקדימה לא נטענה — הטיוטה לא הורכבה.')
@@ -550,7 +561,7 @@ export function buildSalaryReportDraftDocument(preview, { capturedAt } = {}) {
   )
   const headerRows = [
     ['מצב', 'טיוטה'],
-    ['נלכד בתאריך', stamp],
+    ['נכון ל-', stamp],
   ]
   if (kind === 'supplement' && preview.original_report_id != null) {
     headerRows.push(['דוח מקורי', preview.original_report_id])
@@ -647,7 +658,7 @@ export function salaryFilePreviewCells(row) {
     textOrNull(row?.id_number) ?? NOT_APPLICABLE,
     textOrNull(row?.hostess_name) ?? NOT_APPLICABLE,
     bankDetailsOf(row) ?? NOT_APPLICABLE,
-    formatDate(row?.event_date, NOT_APPLICABLE),
+    dateCellText(row?.event_date, row?.line_basis),
     number(row?.rate),
     toFiniteNumber(row?.hours) === null ? NOT_APPLICABLE : toFiniteNumber(row.hours).toFixed(2),
     isActual ? number(row?.bonus ?? 0) : NOT_APPLICABLE,

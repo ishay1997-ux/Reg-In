@@ -34,11 +34,11 @@ async function readBack(doc) {
 }
 
 describe('buildSalaryReportDraftDocument — טיוטה מהתצוגה המקדימה', () => {
-  it('כותרת "טיוטה — לא הופק ולא נשלח", "מצב | טיוטה", "נלכד בתאריך" ובלי "קוד הפקה"', () => {
+  it('כותרת "טיוטה — לא הופק ולא נשלח", "מצב | טיוטה", "נכון ל-" ובלי "קוד הפקה"', () => {
     const doc = buildSalaryReportDraftDocument(makePreview())
     expect(doc.sheet[0][0].value).toBe('טיוטה — לא הופק ולא נשלח — דוח שכר דיילות — יולי 2026')
     expect(doc.sheet[1].map((c) => c.value)).toEqual(['מצב', 'טיוטה'])
-    expect(doc.sheet[2].map((c) => c.value)).toEqual(['נלכד בתאריך', CAPTURED_TEXT])
+    expect(doc.sheet[2].map((c) => c.value)).toEqual(['נכון ל-', CAPTURED_TEXT])
     expect(doc.sheet.flat().some((c) => c?.value === 'קוד הפקה')).toBe(false)
     expect(doc.fileName).toBe('07_2026_Payroll_Report_DRAFT.xlsx')
     expect(doc.totals.total).toBe(452.6)
@@ -49,7 +49,7 @@ describe('buildSalaryReportDraftDocument — טיוטה מהתצוגה המקד�
     const comp = doc.sheet.find((row) => row?.[0]?.value === '204455667')
     expect(comp[6].value).toBe(NOT_APPLICABLE)
     expect(comp[7].value).toBe(NOT_APPLICABLE)
-    expect(comp[3].value).toBe('12/07/2026')
+    expect(comp[3].value).toBe('12/07/2026 (פיצוי ביטול)')
     const work = doc.sheet.find((row) => row?.[0]?.value === '012345678')
     expect(work[0].type).toBe(String)
   })

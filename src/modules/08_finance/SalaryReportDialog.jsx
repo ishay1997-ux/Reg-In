@@ -388,7 +388,7 @@ export default function SalaryReportDialog({ open, onOpenChange }) {
       if (generated.sendResult === EMAIL_SEND_RESULT.SENT) {
         if (generated.fileError) {
           toast.error(
-            'הדוח נחתם והמייל נשלח, אך שמירת קובץ ה-Excel באחסון נכשלה — לא ניתן יהיה לשלוח אותו שוב מההיסטוריה.',
+            'הדוח הופק והמייל נשלח, אך שמירת קובץ ה-Excel באחסון נכשלה — לא ניתן יהיה לשלוח אותו שוב מההיסטוריה.',
           )
         } else if (generated.logFailed) {
           toast.error('הדוח נשלח, אך רישום השליחה ביומן נכשל.')

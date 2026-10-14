@@ -235,21 +235,34 @@ const APPROVED_STATES = new Set([
 // שמשאירים מצב רגיל ניטרלי. `kind` קובע את המראה ברכיב, והטקסט תמיד נוכח (לא צבע בלבד):
 //   attention — צ'יפ ענבר רך · error — טקסט אדום עם אייקון · unknown — ענבר רך עם אייקון ·
 //   neutral — טקסט אפור · ok — ✓ וטקסט ירוק-כהה.
+// החלטה תקפה (אישור דיילת / אושר לפי תיעוד / פנייה שטופלה, על סיכום עדכני ובלי פנייה פתוחה)
+// גוברת על מצב המשלוח: מי שכבר הוחלט עליה לא "דורשת טיפול" ולא מקבלת "שלח שוב" — גם אם
+// המייל שלה נכשל או שמצבו לא ידוע (סקירת UX מקומית 14/10, פריט 1).
+export function isDecided(recipient) {
+  return (
+    APPROVED_STATES.has(recipient?.state) &&
+    recipient?.digest_current !== false &&
+    !recipient?.open_case_id
+  )
+}
+
+const DECISION_LABELS = {
+  hostess_approved: 'הדיילת אישרה',
+  manager_approved_no_response: 'אושר לפי תיעוד',
+  manager_resolved: 'הפנייה טופלה',
+}
+
 export function recipientStatus(recipient) {
   const deliveryState = recipient?.delivery?.state
   if (recipient?.open_case_id || recipient?.state === 'objection_open') {
     return { label: 'פנייה פתוחה', kind: 'attention' }
   }
+  if (isDecided(recipient)) return { label: DECISION_LABELS[recipient.state], kind: 'ok' }
   if (deliveryState === 'failed') return { label: 'השליחה נכשלה', kind: 'error' }
   if (deliveryState === 'unknown') return { label: 'לא ידוע אם נשלח', kind: 'unknown' }
   if (recipient?.digest_current === false) {
     return { label: 'עודכן — נדרש אישור מחדש', kind: 'attention' }
   }
-  if (recipient?.state === 'hostess_approved') return { label: 'הדיילת אישרה', kind: 'ok' }
-  if (recipient?.state === 'manager_approved_no_response') {
-    return { label: 'אושר לפי תיעוד', kind: 'ok' }
-  }
-  if (recipient?.state === 'manager_resolved') return { label: 'הפנייה טופלה', kind: 'ok' }
   if (!recipient?.delivery) return { label: 'לא נשלח', kind: 'neutral' }
   if (deliveryState === 'queued' || deliveryState === 'sending') {
     return { label: 'בשליחה', kind: 'neutral' }
@@ -261,6 +274,7 @@ export function recipientStatus(recipient) {
 // דורש טיפול ⇐ לא השיבו ⇐ אושרו, ואז לפי שם (מדריך ה-UX §ד).
 function recipientBucket(recipient, { deadlinePassed, distributed }) {
   const deliveryState = recipient?.delivery?.state
+  if (isDecided(recipient)) return 'approved'
   const needsAction =
     Boolean(recipient?.open_case_id) ||
     recipient?.state === 'objection_open' ||
@@ -278,8 +292,14 @@ function recipientBucket(recipient, { deadlinePassed, distributed }) {
 
 // למה דיילת נמצאת ב"דורש טיפול" — משפט גלוי בשורה, לא tooltip. `null` כשאין מה לעשות.
 // הסבר קצר בעמודת "טיפול" — רק מה שהסטטוס עצמו לא אומר (מה לעשות, או למה). `null` כשאין.
-export function actionReason(recipient, { deadlinePassed }) {
+export function actionReason(recipient, { deadlinePassed, distributed } = {}) {
+  if (isDecided(recipient)) return null
+  // שורה שתוקנה ומחכה לסיכום מעודכן (הסיכום הישן הוחלף, או שהשורה החדשה עוד לא נשלחה) —
+  // זה מה שיש לעשות, לא "המועד עבר" (סקירת UX מקומית, פריט 4).
   if (recipient?.email_present === false) return 'אין כתובת מייל. אחרי המועד אפשר לאשר לפי תיעוד'
+  if (recipient?.digest_current === false || (distributed && !recipient?.delivery)) {
+    return 'יש לשלוח סיכום מעודכן'
+  }
   if (recipient?.contact_changed) return 'כתובת המייל השתנתה. יש לשלוח שוב'
   if (recipient?.delivery?.state === 'unknown') return 'יש לבדוק לפני שליחה חוזרת'
   if (deadlinePassed && recipient?.state === 'awaiting' && !recipient?.open_case_id) {

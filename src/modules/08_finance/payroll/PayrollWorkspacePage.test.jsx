@@ -207,6 +207,10 @@ describe('מצב: טיוטה מוכנה', () => {
       '22.60',
     ])
     const comp = within(rows[1]).getAllByRole('cell')
+    // הכרעת הסגן 14/10: פיצוי ביטול מסומן בתא התאריך, כמו בקובץ — לא מתחת לשם.
+    expect(comp[3]).toHaveTextContent('12/07/2026 (פיצוי ביטול)')
+    expect(comp[1]).toHaveTextContent('מאיה כהן')
+    expect(comp[1]).not.toHaveTextContent('פיצוי ביטול')
     expect(comp[2]).toHaveTextContent('—')
     expect(within(comp[2]).getByTestId('payroll-missing-bank-tag')).toHaveTextContent(
       'חסרים פרטי בנק',
@@ -403,13 +407,15 @@ describe('מצב: מוכן להפקה + אישור', () => {
     await waitFor(() => expect(searchParams().get('op')).toBe('from-server'))
   })
 
-  it('"הורד את הקובץ שיישלח": אותו בונה טיוטה ואותה גרסת תצוגה מקדימה, עם הסבר מתחת', async () => {
+  it('"הורד תצוגה מקדימה של הקובץ": אותו בונה טיוטה ואותה גרסת תצוגה מקדימה, עם הסבר מתחת', async () => {
     renderPage('?period=2026-07&view=final')
-    fireEvent.click(await screen.findByTestId('payroll-download-file-to-send'))
+    const button = await screen.findByTestId('payroll-download-file-to-send')
+    expect(button).toHaveTextContent('הורד תצוגה מקדימה של הקובץ')
+    fireEvent.click(button)
     expect(await screen.findByText('הטיוטה מוכנה להורדה')).toBeInTheDocument()
     expect(downloadDraft).toHaveBeenCalledWith(expect.objectContaining({ version: 'v1:abc' }))
     expect(screen.getByTestId('payroll-file-to-send')).toHaveTextContent(
-      'זהו הקובץ שיישלח, כולל ת"ז ופרטי בנק',
+      'תצוגה מקדימה של הקובץ לרואה החשבון, כולל ת"ז ופרטי בנק',
     )
   })
 
@@ -424,6 +430,24 @@ describe('מצב: מוכן להפקה + אישור', () => {
     fireEvent.click(screen.getByTestId('payroll-file-to-send-refresh'))
     await waitFor(() => expect(api.getPayrollPreview).toHaveBeenCalledTimes(2))
     expect(downloadDraft).not.toHaveBeenCalled()
+  })
+
+  it('הפקה מוצלחת ⇒ רענון ברמת העמוד: "הופק", ופקדי ההפקה נעלמים (סקירת UX, פריט 2)', async () => {
+    api.issuePayrollReport.mockResolvedValue({ ok: true, operation_id: 'op-1' })
+    renderPage('?period=2026-07&view=final')
+    fireEvent.click(await screen.findByTestId('payroll-issue'))
+    // אחרי ההפקה המסד מחזיר את הבדיקה כ-issued והתצוגה המקדימה כ-PERIOD_EXISTS.
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ review: { status: 'issued', report_id: 31 } }),
+    )
+    api.getPayrollPreview.mockRejectedValue(
+      new PayrollError('PERIOD_EXISTS', { hint: { report_id: 31 } }),
+    )
+    await confirmDialog()
+    await waitFor(() => expect(screen.getByTestId('payroll-stage')).toHaveTextContent('הופק'))
+    expect(screen.queryByTestId('payroll-issue')).toBeNull()
+    expect(screen.queryByTestId('payroll-download-file-to-send')).toBeNull()
+    expect(api.findPayrollReview.mock.calls.length).toBeGreaterThan(1)
   })
 
   it('ביטול באישור ⇒ אין הפקה', async () => {
@@ -926,6 +950,40 @@ describe('מעקב אחרי שליחה — שורה מקופלת ושליחת ס
   })
 })
 
+describe('מעקב: החלטה גוברת על מצב משלוח; לפני שליחה אין "לא השיבו" (סקירת UX מקומית 14/10)', () => {
+  it('דיילת שאישרה ומייל שנכשל ⇒ "הדיילת אישרה", בלי "שלח שוב" ולא ב"דורש טיפול"', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({
+        recipients: [
+          recipient({
+            state: 'hostess_approved',
+            delivery: { attempt_id: 9, state: 'failed', intended_recipient: 'noa@example.com' },
+          }),
+        ],
+      }),
+    )
+    renderPage('?period=2026-07&view=review&filter=all')
+    const row = await screen.findByTestId('payroll-recipient-700001')
+    expect(within(row).getByTestId('payroll-recipient-status')).toHaveTextContent('הדיילת אישרה')
+    expect(row).not.toHaveTextContent('השליחה נכשלה')
+    expect(within(row).queryByTestId('payroll-resend')).toBeNull()
+    expect(screen.getByTestId('payroll-filter-action')).toHaveTextContent('0')
+  })
+
+  it('לפני השליחה אין מונה "לא השיבו"', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({
+        review: { distributed_at: null },
+        recipients: [recipient({ delivery: null })],
+      }),
+    )
+    renderPage('?period=2026-07&view=review')
+    await screen.findByTestId('payroll-review-table')
+    expect(screen.queryByTestId('payroll-filter-noreply')).toBeNull()
+    expect(screen.getByTestId('payroll-filter-all')).toBeInTheDocument()
+  })
+})
+
 describe('מעקב: פעולות שורה', () => {
   it('"אשר לפי תיעוד" רק אחרי המועד; דורש סיבה וראיה; נשמר כ"אושר לפי תיעוד"', async () => {
     api.findPayrollReview.mockResolvedValue(
@@ -1011,6 +1069,23 @@ describe('מעקב: פעולות שורה', () => {
     )
   })
 
+  it('Esc סוגר את פאנל הפנייה והפוקוס חוזר לכפתור "פתח פנייה" (סקירת UX, פריט 7)', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ recipients: [recipient({ state: 'objection_open', open_case_id: 500001 })] }),
+    )
+    api.getPayrollCaseDetail.mockResolvedValue(caseDetail())
+    renderPage('?period=2026-07&view=review')
+    const opener = await screen.findByTestId('payroll-open-case')
+    opener.focus()
+    fireEvent.click(opener)
+    const panel = await screen.findByTestId('payroll-case-panel')
+    fireEvent.keyDown(panel, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByTestId('payroll-case-panel')).toBeNull())
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByTestId('payroll-open-case')),
+    )
+  })
+
   it('פנייה פתוחה ⇒ "פתח פנייה" כותב case= לכתובת ופותח את הפאנל', async () => {
     api.findPayrollReview.mockResolvedValue(
       makeReview({ recipients: [recipient({ state: 'objection_open', open_case_id: 500001 })] }),
@@ -1082,6 +1157,33 @@ describe('פאנל פנייה', () => {
       reason: 'לפי דוח הנוכחות',
       caseId: 500001,
     })
+  })
+
+  it('רק "כספים" עריכה ⇒ תיקון שעות בלבד, בלי "בונוס אישי" (F14.2)', async () => {
+    renderPage('?period=2026-07&view=review&case=500001')
+    const form = await screen.findByTestId('payroll-correction-form')
+    expect(form).toHaveTextContent('תיקון שעות')
+    expect(form).not.toHaveTextContent('בונוס אישי')
+    expect(screen.queryByTestId('payroll-correction-fields')).toBeNull()
+  })
+
+  it('עם "פרויקטים" עריכה ⇒ אפשר לבחור גם "בונוס אישי"', async () => {
+    useAuth.mockReturnValue({ permissions: { כספים: 'edit', פרויקטים: 'edit' } })
+    render(
+      <MemoryRouter initialEntries={['/finance/payroll?period=2026-07&view=review&case=500001']}>
+        <ConfirmProvider>
+          <ToastProvider>
+            <Routes>
+              <Route path="/finance/payroll" element={<PayrollWorkspacePage />} />
+            </Routes>
+          </ToastProvider>
+        </ConfirmProvider>
+      </MemoryRouter>,
+    )
+    const fields = await screen.findByTestId('payroll-correction-fields')
+    expect(fields).toHaveTextContent('שעות בפועל')
+    expect(fields).toHaveTextContent('בונוס אישי')
+    expect(screen.getByTestId('payroll-correction-form')).toHaveTextContent('תיקון שעות או בונוס')
   })
 
   it('ערך חדש ממולא מראש במה שהדיילת הציעה; התווית "ערך נוכחי" (UX D9)', async () => {

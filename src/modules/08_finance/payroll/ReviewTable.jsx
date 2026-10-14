@@ -16,6 +16,7 @@ import { Td, Th } from './payrollUi'
 import {
   actionReason,
   formatHours,
+  isDecided,
   payrollErrorMessage,
   recipientStatus,
   resendOutcome,
@@ -134,7 +135,9 @@ function RecipientRow({
               פתח פנייה
             </SmallButton>
           )}
-          {canEdit && <ResendButton recipient={recipient} onReload={onReload} />}
+          {canEdit && !isDecided(recipient) && (
+            <ResendButton recipient={recipient} onReload={onReload} />
+          )}
           {canEdit && recipient.digest_current === false && (
             <SmallButton
               onClick={() =>

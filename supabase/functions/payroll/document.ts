@@ -318,13 +318,24 @@ const moneyCell = (value: number, bold = false): SheetCell => ({
   ...(bold ? { fontWeight: 'bold' as const } : {}),
 })
 
+// הכרעת הסגן 14/10 (F12, בהאצלת ישי): רו"ח צריך להבחין בין פיצוי ביטול לשעות עבודה (שעות
+// נוספות) ⇒ בשורת פיצוי, תא התאריך הוא `DD/MM/YYYY (פיצוי ביטול)`. זהה ל-`src/lib/salaryReport.js`.
+const COMPENSATION_DATE_SUFFIX = ' (פיצוי ביטול)'
+function dateCellText(line: SalaryLine): string {
+  const date = displayDate(line.eventDate)
+  if (!date) return NOT_APPLICABLE
+  return line.lineBasis === SALARY_LINE_BASIS.CANCELLATION_COMPENSATION
+    ? `${date}${COMPENSATION_DATE_SUFFIX}`
+    : date
+}
+
 // ת"ז, פרטי-בנק וקוד-הפקה כ-`String`: אפס מוביל בת"ז נעלם בשקט ברגע שאקסל קורא אותה כמספר.
 function sheetLineRow(line: SalaryLine): SheetRow {
   return [
     textCell(line.idNumber),
     textCell(line.hostessName),
     line.bankDetails ? textCell(line.bankDetails) : dashCell(),
-    line.eventDate ? textCell(displayDate(line.eventDate) ?? NOT_APPLICABLE) : dashCell(),
+    line.eventDate ? textCell(dateCellText(line)) : dashCell(),
     moneyCell(line.rate),
     { value: line.hours, type: Number, format: HOURS_FORMAT },
     line.bonus === null ? dashCell() : moneyCell(line.bonus),

@@ -10,6 +10,7 @@ import {
   filterRecipients,
   formatHours,
   hoursSum,
+  isDecided,
   groupReports,
   isoToJerusalemLocal,
   jerusalemLocalToIso,
@@ -78,6 +79,47 @@ describe('recipientStatus — עמודת סטטוס אחת, לפי סדר חשי
   })
 })
 
+describe('החלטה גוברת על מצב המשלוח (סקירת UX מקומית 14/10, פריט 1)', () => {
+  const decided = ['hostess_approved', 'manager_approved_no_response', 'manager_resolved']
+  const labels = {
+    hostess_approved: 'הדיילת אישרה',
+    manager_approved_no_response: 'אושר לפי תיעוד',
+    manager_resolved: 'הפנייה טופלה',
+  }
+  for (const state of decided) {
+    for (const deliveryState of ['failed', 'unknown']) {
+      it(`${state} + משלוח ${deliveryState} ⇒ ההחלטה, לא "דורש טיפול", בלי הסבר`, () => {
+        const r = recipient({ state, delivery: { attempt_id: 1, state: deliveryState } })
+        expect(recipientStatus(r)).toEqual({ label: labels[state], kind: 'ok' })
+        expect(isDecided(r)).toBe(true)
+        const { counts } = filterRecipients([r], {
+          filter: 'all',
+          query: '',
+          deadlinePassed: true,
+          distributed: true,
+        })
+        expect(counts).toMatchObject({ action: 0, approved: 1 })
+        expect(actionReason(r, { deadlinePassed: true, distributed: true })).toBeNull()
+      })
+    }
+  }
+
+  it('החלטה על סיכום שהשתנה אינה גוברת — "עודכן — נדרש אישור מחדש"', () => {
+    const r = recipient({ state: 'hostess_approved', digest_current: false })
+    expect(isDecided(r)).toBe(false)
+    expect(recipientStatus(r).label).toBe('עודכן — נדרש אישור מחדש')
+  })
+
+  it('שורה שתוקנה ומחכה לסיכום מעודכן: "יש לשלוח סיכום מעודכן" ולא "המועד עבר" (פריט 4)', () => {
+    expect(
+      actionReason(recipient({ delivery: null }), { deadlinePassed: true, distributed: true }),
+    ).toBe('יש לשלוח סיכום מעודכן')
+    expect(actionReason(recipient({ digest_current: false }), { deadlinePassed: true })).toBe(
+      'יש לשלוח סיכום מעודכן',
+    )
+  })
+})
+
 describe('filterRecipients — מונים על כל הרשימה, לא על העמוד', () => {
   const many = Array.from({ length: 300 }, (_, i) =>
     recipient({
@@ -121,7 +163,7 @@ describe('filterRecipients — מונים על כל הרשימה, לא על הע
     })
     expect(counts.action).toBe(1)
     expect(actionReason(late, { deadlinePassed: true })).toBe('המועד עבר בלי תגובה')
-    expect(actionReason(recipient({ digest_current: false }), {})).toBeNull()
+    expect(actionReason(recipient({ digest_current: false }), {})).toBe('יש לשלוח סיכום מעודכן')
   })
 
   it('לפני שליחה, היעדר ניסיון אינו "דורש טיפול"; אין מסננים ⇒ ברירת מחדל "הכל"', () => {
