@@ -7,6 +7,7 @@ import {
   actionReason,
   blockerText,
   defaultFilter,
+  excludedLinesNote,
   filterRecipients,
   formatHours,
   formatStoredMoment,
@@ -416,5 +417,41 @@ describe('קטגוריות פנייה (F11 — משמרות ושעות בלבד)
       not_worked: 'משמרת שלא עבדתי בה',
       other: 'אחר',
     })
+  })
+})
+
+describe('excludedLinesNote — למה משמרות לא נכללות בקובץ (קבלה בייצור, 14/10)', () => {
+  const work = { line_basis: 'actual', show_in_file: false }
+  const comp = { line_basis: 'cancellation_compensation', show_in_file: false }
+  const inFile = { line_basis: 'actual', show_in_file: true }
+  const times = (n, row) => Array.from({ length: n }, () => row)
+
+  it.each([
+    [
+      '20 עבודה + ביטול אחד (הדוגמה מהכרטיס)',
+      [...times(20, work), comp],
+      '21 משמרות לא נכללות בקובץ: 20 בלי שעות עבודה, וביטול אחד בלי דמי ביטול',
+    ],
+    [
+      'אחת + אחד',
+      [work, comp],
+      '2 משמרות לא נכללות בקובץ: אחת בלי שעות עבודה, וביטול אחד בלי דמי ביטול',
+    ],
+    [
+      '2 עבודה + 3 ביטולים',
+      [...times(2, work), ...times(3, comp)],
+      '5 משמרות לא נכללות בקובץ: 2 בלי שעות עבודה, ו-3 ביטולים בלי דמי ביטול',
+    ],
+    ['עבודה בלבד, אחת', [work], 'משמרת אחת בלי שעות עבודה לא נכללת בקובץ'],
+    ['עבודה בלבד, רבות', times(4, work), '4 משמרות בלי שעות עבודה לא נכללות בקובץ'],
+    ['ביטול בלבד, אחד', [comp], 'ביטול אחד בלי דמי ביטול לא נכלל בקובץ'],
+    ['ביטולים בלבד', times(2, comp), '2 ביטולים בלי דמי ביטול לא נכללים בקובץ'],
+  ])('%s', (_name, rows, text) => {
+    expect(excludedLinesNote([inFile, ...rows])).toBe(text)
+  })
+
+  it('אין שורות מחוץ לקובץ ⇒ null', () => {
+    expect(excludedLinesNote([inFile, { line_basis: 'actual' }])).toBeNull()
+    expect(excludedLinesNote([])).toBeNull()
   })
 })

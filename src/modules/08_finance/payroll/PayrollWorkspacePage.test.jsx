@@ -324,7 +324,7 @@ describe('פוליש 14/10: האריחים מסכמים את הקובץ (פרי�
     renderPage()
     const tile = await screen.findByTestId('payroll-tile-lines')
     expect(tile).toHaveTextContent('2')
-    expect(tile).toHaveTextContent('משמרת אחת ללא תשלום אינה נכללת בקובץ')
+    expect(tile).toHaveTextContent('ביטול אחד בלי דמי ביטול לא נכלל בקובץ')
     expect(screen.getAllByTestId('payroll-draft-row')).toHaveLength(2)
     expect(screen.getByTestId('payroll-tile-hours')).toHaveTextContent('10')
     expect(screen.getByTestId('payroll-tile-hostesses')).toHaveTextContent('2')

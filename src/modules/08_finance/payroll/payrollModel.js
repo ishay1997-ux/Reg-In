@@ -144,6 +144,30 @@ export function countPhrase(n, one, many) {
   return `${n} ${many}`
 }
 
+// שורה משנית באריח "משמרות" — כמה משמרות לא נכנסות לקובץ (N-4) ו**למה**, לפי בסיס השורה:
+// שעות בפועל באפס = "בלי שעות עבודה" · פיצוי באפס = "ביטול בלי דמי ביטול" (קבלה בייצור, 14/10).
+// חלק שספירתו 0 מושמט; כשיש סוג אחד בלבד — משפט אחד בלי פירוט. אין שורות כאלה ⇒ null.
+export function excludedLinesNote(lines) {
+  const excluded = (lines ?? []).filter((l) => l?.show_in_file === false)
+  if (excluded.length === 0) return null
+  const comp = excluded.filter((l) => l.line_basis === 'cancellation_compensation').length
+  const work = excluded.length - comp
+  if (comp === 0) {
+    return work === 1
+      ? 'משמרת אחת בלי שעות עבודה לא נכללת בקובץ'
+      : `${work} משמרות בלי שעות עבודה לא נכללות בקובץ`
+  }
+  if (work === 0) {
+    return comp === 1
+      ? 'ביטול אחד בלי דמי ביטול לא נכלל בקובץ'
+      : `${comp} ביטולים בלי דמי ביטול לא נכללים בקובץ`
+  }
+  const workPart = work === 1 ? 'אחת בלי שעות עבודה' : `${work} בלי שעות עבודה`
+  // "וביטול אחד" — אבל "ו-3 ביטולים": ו' החיבור לפני ספרה נכתבת עם מקף.
+  const compPart = comp === 1 ? 'וביטול אחד בלי דמי ביטול' : `ו-${comp} ביטולים בלי דמי ביטול`
+  return `${excluded.length} משמרות לא נכללות בקובץ: ${workPart}, ${compPart}`
+}
+
 // ── שגיאות ─────────────────────────────────────────────────────────────────────
 
 const ERROR_MESSAGES = {

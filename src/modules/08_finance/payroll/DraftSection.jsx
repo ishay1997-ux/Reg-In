@@ -25,6 +25,7 @@ import {
   SHEETS,
   SHEET_LABELS,
   countPhrase,
+  excludedLinesNote,
   formatHours,
   hoursSum,
   monthNotEndedMessage,
@@ -103,9 +104,8 @@ export default function DraftSection({
   const empty = lines.length === 0
   const allZero = !empty && Number(totals.total_amount) === 0
   // F15: האריחים מסכמים את מה שבקובץ, כמו הטבלה שמתחתם (פוליש 14/10, פריט 1). שורות באפס
-  // (N-4) נשמרות בדוח אבל לא נכנסות לקובץ — ולכן לא נספרות כאן; שורה משנית אומרת כמה הן.
+  // (N-4) נשמרות בדוח אבל לא נכנסות לקובץ — ולכן לא נספרות כאן; שורה משנית אומרת כמה הן ולמה.
   const fileLines = lines.filter((l) => l.show_in_file !== false)
-  const zeroLines = lines.length - fileLines.length
   const fileHostesses = new Set(fileLines.map((l) => l.hostess_id)).size
   const hoursTotal = hoursSum(fileLines)
   const monthEnded = preview.month_state === 'ended'
@@ -135,13 +135,7 @@ export default function DraftSection({
         <StatTile
           label="משמרות"
           value={<Ltr>{fileLines.length}</Ltr>}
-          sub={
-            zeroLines > 0
-              ? zeroLines === 1
-                ? 'משמרת אחת ללא תשלום אינה נכללת בקובץ'
-                : `${zeroLines} משמרות ללא תשלום אינן נכללות בקובץ`
-              : undefined
-          }
+          sub={excludedLinesNote(lines) ?? undefined}
           testId="payroll-tile-lines"
         />
         {/* F12 (14/10): אין סכום מחושב בש"ח על המסך — הסיכום בשעות. הסכום נשאר בתשובת השרת
