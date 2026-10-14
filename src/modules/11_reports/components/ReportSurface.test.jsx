@@ -124,7 +124,7 @@ describe('ReportSurface — extension slots', () => {
         meta: {
           extra_tables: [
             {
-              title: 'אי-הגעה לפי דירוג',
+              title: 'אי הגעה לפי דירוג',
               sort: { key: 'rating', direction: 'ascending' },
               columns: [
                 { key: 'rating', label: 'דירוג', format: 'int' },
@@ -141,7 +141,7 @@ describe('ReportSurface — extension slots', () => {
     )
     render(<ReportSurface surface={surface} filters={filters} drill={null} onDrill={() => {}} />)
     const extra = await screen.findByTestId('report-extra-table')
-    expect(within(extra).getByRole('heading', { level: 3 })).toHaveTextContent('אי-הגעה לפי דירוג')
+    expect(within(extra).getByRole('heading', { level: 3 })).toHaveTextContent('אי הגעה לפי דירוג')
     expect(within(extra).getAllByTestId('report-row')).toHaveLength(2)
     // ‏`table.sort` של ה-RPC מנצח את `columns[].sorted` — אחרת אין `aria-sort` על טבלה נוספת.
     expect(within(extra).getAllByRole('columnheader')[0]).toHaveAttribute('aria-sort', 'ascending')
@@ -156,7 +156,7 @@ describe('ReportSurface — extension slots', () => {
       meta: {
         extra_tables: [
           {
-            title: 'אי-הגעה לפי דירוג',
+            title: 'אי הגעה לפי דירוג',
             note: 'אפשר להשוות בין דירוגים בתוך עמודה, לא בין העמודות.',
             columns: [{ key: 'rating', label: 'דירוג', format: 'int' }],
             rows: [{ row_key: 3, rating: 3 }],
@@ -348,7 +348,7 @@ describe('ReportSurface — 📐8: הצהרת תקרת-השורות', () => {
 
 const CHART = {
   type: 'bar',
-  title: 'אי-הגעה לפי דירוג',
+  title: 'אי הגעה לפי דירוג',
   xKey: 'rating',
   series: [{ key: 'n', label: 'שורות' }],
   data: [

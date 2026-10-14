@@ -181,7 +181,7 @@ const overviewPayload = () =>
     ],
     chart: {
       type: 'line',
-      title: 'ממוצע שביעות-הרצון לפי חודש',
+      title: 'ממוצע שביעות הרצון לפי חודש',
       // i2 — ציר-הזמן נושא שם-חודש עברי ולא `2026-01`.
       xKey: 'label',
       series: [{ key: 'avg_score', label: 'ממוצע' }],
@@ -504,7 +504,7 @@ const notesPayload = ({ run = APPROVED_RUN, runInProgress = FAILED_RUN_IN_PROGRE
           },
         ]
       : [],
-    so_what: run ? 'לשקול קטגוריה חדשה בטופס-המשוב.' : 'להריץ את הניתוח על 426 ההערות.',
+    so_what: run ? 'לשקול קטגוריה חדשה בטופס המשוב.' : 'להריץ את הניתוח על 426 ההערות.',
     definitions: 'הגדרות: הערה חופשית = טקסט שהלקוח כתב.',
     meta: {
       missing_params: [],

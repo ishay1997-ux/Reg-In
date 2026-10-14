@@ -456,7 +456,7 @@ const doorPayload = (over = {}) =>
     tiles: [
       {
         key: 'red',
-        label: 'דיילות אדומות',
+        label: 'דיילות בסיכון גבוה',
         value: 6,
         format: 'int',
         compare: null,
@@ -531,7 +531,7 @@ describe('מ1 — מנתב-הדלתות', () => {
         tiles: [
           {
             key: 'red',
-            label: 'דיילות אדומות',
+            label: 'דיילות בסיכון גבוה',
             value: 6,
             format: 'int',
             compare: null,
@@ -559,7 +559,7 @@ describe('מ1 — מנתב-הדלתות', () => {
     callReport.mockResolvedValue(doorPayload())
     renderDoors()
     // האריח עצמו על המסך, עם הערך — רק הדלת אינה קיימת.
-    expect(await screen.findByTestId('report-tile-red')).toHaveTextContent('דיילות אדומות')
+    expect(await screen.findByTestId('report-tile-red')).toHaveTextContent('דיילות בסיכון גבוה')
     expect(screen.queryByTestId('report-tile-link-red')).toBeNull()
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('מבט-על דיילות')
   })
@@ -658,7 +658,7 @@ describe('מ1 — מנתב-הדלתות', () => {
         tiles: [
           {
             key: 'red',
-            label: 'דיילות אדומות',
+            label: 'דיילות בסיכון גבוה',
             value: 6,
             format: 'int',
             compare: null,
