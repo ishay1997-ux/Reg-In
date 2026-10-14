@@ -365,6 +365,89 @@ function buildSalaryReportSheet({ reportId, periodLabel, generatedAt, lines, tot
   ]
 }
 
+// ── גיליון 2: "סיכום לפי דיילת" (כרטיס תיקונים לפני הכנס, 14/10/2026) ─────────────────
+// שורה לכל דיילת על השורות **שבקובץ** (N-4), ממוינת לפי שם, ושורת סיכום של משמרות ושעות.
+// אין עמודת ₪ (F12) — רו"ח מחשב את הכסף. גיליון 1 לא משתנה. הכותרת היא שורת-הכותרת של
+// גיליון 1, כדי שטיוטה או שחזור יגידו מה הם גם בגיליון השני.
+export const HOSTESS_SUMMARY_SHEET_NAME = 'סיכום לפי דיילת'
+export const HOSTESS_SUMMARY_COLUMNS = ['ת"ז', 'שם', 'פרטי-בנק', 'משמרות', 'סה"כ שעות']
+export const HOSTESS_SUMMARY_TOTAL_LABEL = 'סה"כ'
+const HOSTESS_SUMMARY_WIDTHS = [
+  { width: 14 },
+  { width: 22 },
+  { width: 26 },
+  { width: 10 },
+  { width: 12 },
+]
+
+// קיבוץ לפי דיילת — טהור, ומשותף לקובץ ולמסך (`salaryFileHostessSummary`), כדי ששניהם לא יסטו.
+// `pick(item)` ⇒ { key, idNumber, hostessName, bankDetails, hours } (hours: מספר או null).
+// המיון: שם (עברית), ואז ת"ז — סדר קבוע גם לשתי דיילות באותו שם.
+function groupByHostess(items, pick) {
+  const groups = new Map()
+  for (const item of items) {
+    const p = pick(item)
+    const group = groups.get(p.key) ?? {
+      idNumber: p.idNumber,
+      hostessName: p.hostessName,
+      bankDetails: p.bankDetails,
+      shifts: 0,
+      hundredths: 0,
+    }
+    group.shifts += 1
+    // שעה חסרה (שורה חסומה במסך) ⇒ סכום השעות של הדיילת אינו ידוע — null, לא 0.
+    group.hundredths =
+      group.hundredths === null || p.hours === null ? null : group.hundredths + toAgorot(p.hours)
+    groups.set(p.key, group)
+  }
+  return [...groups.values()].sort(
+    (a, b) =>
+      String(a.hostessName).localeCompare(String(b.hostessName), 'he') ||
+      String(a.idNumber).localeCompare(String(b.idNumber)),
+  )
+}
+
+const lineSummaryPick = (line) => ({
+  key: line.hostessId ?? `id:${line.idNumber}`,
+  idNumber: line.idNumber,
+  hostessName: line.hostessName,
+  bankDetails: line.bankDetails,
+  hours: line.hours,
+})
+
+function buildHostessSummarySheet(titleRow, lines) {
+  const groups = groupByHostess(
+    lines.filter((line) => line.showInFile),
+    lineSummaryPick,
+  )
+  const shifts = groups.reduce((sum, g) => sum + g.shifts, 0)
+  const hundredths = groups.reduce((sum, g) => sum + g.hundredths, 0)
+  return [
+    titleRow,
+    [null],
+    HOSTESS_SUMMARY_COLUMNS.map(boldCell),
+    ...groups.map((g) => [
+      textCell(g.idNumber),
+      textCell(g.hostessName),
+      g.bankDetails ? textCell(g.bankDetails) : dashCell(),
+      { value: g.shifts, type: Number },
+      { value: toShekels(g.hundredths), type: Number, format: HOURS_FORMAT },
+    ]),
+    [
+      boldCell(HOSTESS_SUMMARY_TOTAL_LABEL),
+      null,
+      null,
+      { value: shifts, type: Number, fontWeight: 'bold' },
+      { value: toShekels(hundredths), type: Number, format: HOURS_FORMAT, fontWeight: 'bold' },
+    ],
+  ]
+}
+
+// גיליון 1 + גיליון 2 מאותן שורות — לכל שלושת הבונים (רגיל, טיוטה, שחזור).
+function withHostessSummary(sheet, lines) {
+  return { sheet, summarySheet: buildHostessSummarySheet(sheet[0], lines) }
+}
+
 // שני השדות שההרכבה מצליבה מולם את מה שהיא עצמה חישבה. הם **חייבים להגיע** — ר' שער-הצורה
 // בגוף `buildSalaryReportDocument`. שינית את צורת-ההחזרה של `generate_salary_report`? עדכן
 // את הרשימה באותו קומיט (אותה מוסכמה כמו רשימות-השדות של `assertFinanceShape`).
@@ -439,7 +522,10 @@ export function buildSalaryReportDocument(payload, { generatedAt } = {}) {
     linesMissingBankDetails: lines
       .filter((line) => line.showInFile && !line.bankDetails)
       .map((line) => line.hostessName),
-    sheet: buildSalaryReportSheet({ reportId, periodLabel, generatedAt, lines, totals }),
+    ...withHostessSummary(
+      buildSalaryReportSheet({ reportId, periodLabel, generatedAt, lines, totals }),
+      lines,
+    ),
   }
 }
 
@@ -447,9 +533,9 @@ export function buildSalaryReportDocument(payload, { generatedAt } = {}) {
 // בדפדפן ומועלה ל-bucket `finance` — בדיוק תקדים `quotePdf.jsx` (B-5). `rightToLeft` הופך את
 // כיוון-הגיליון עצמו, אחרת אקסל פותח מסמך עברי עם עמודה A משמאל.
 export function writeSalaryReportXlsx(doc) {
-  return writeXlsxFile(doc.sheet, {
-    sheet: doc.periodLabel,
-    columns: COLUMN_WIDTHS,
+  return writeXlsxFile([doc.sheet, doc.summarySheet], {
+    sheets: [doc.periodLabel, HOSTESS_SUMMARY_SHEET_NAME],
+    columns: [COLUMN_WIDTHS, HOSTESS_SUMMARY_WIDTHS],
     rightToLeft: true,
   })
 }
@@ -576,11 +662,14 @@ export function buildSalaryReportDraftDocument(preview, { capturedAt } = {}) {
     linesMissingBankDetails: lines
       .filter((line) => line.showInFile && !line.bankDetails)
       .map((line) => line.hostessName),
-    sheet: sheetWithHeader(
-      titledLabel(DRAFT_TITLE_PREFIX, periodLabel, kind, preview.supplement_seq_next),
-      headerRows,
+    ...withHostessSummary(
+      sheetWithHeader(
+        titledLabel(DRAFT_TITLE_PREFIX, periodLabel, kind, preview.supplement_seq_next),
+        headerRows,
+        lines,
+        totals,
+      ),
       lines,
-      totals,
     ),
   }
 }
@@ -624,14 +713,17 @@ export function buildSalaryReportReconstructionDocument(report, lines, { reconst
     fileName: salaryReportReconstructionFileName(report.period, kind, report.supplement_seq),
     lines: shaped,
     totals,
-    sheet: sheetWithHeader(
-      titledLabel(RECONSTRUCTION_TITLE_PREFIX, periodLabel, kind, report.supplement_seq),
-      [
-        ['קוד הפקה', reportId],
-        ['שוחזר בתאריך', stamp],
-      ],
+    ...withHostessSummary(
+      sheetWithHeader(
+        titledLabel(RECONSTRUCTION_TITLE_PREFIX, periodLabel, kind, report.supplement_seq),
+        [
+          ['קוד הפקה', reportId],
+          ['שוחזר בתאריך', stamp],
+        ],
+        shaped,
+        totals,
+      ),
       shaped,
-      totals,
     ),
   }
 }

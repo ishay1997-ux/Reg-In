@@ -134,6 +134,7 @@ export interface SalaryDocument {
   totals: SalaryTotals
   linesMissingBankDetails: string[]
   sheet: SheetRow[]
+  summarySheet: SheetRow[]
   kind: 'regular' | 'supplement'
   supplementSeq: number | null
   originalReportId: number | null
@@ -394,6 +395,73 @@ function buildSalaryReportSheet(input: SheetInput): SheetRow[] {
   ]
 }
 
+// ── גיליון 2: "סיכום לפי דיילת" — העתק של `src/lib/salaryReport.js`, נעול ב-`document.parity.test.js`.
+// שורה לכל דיילת על השורות שבקובץ (N-4), לפי שם, ושורת סיכום של משמרות ושעות. בלי ₪ (F12).
+export const HOSTESS_SUMMARY_SHEET_NAME = 'סיכום לפי דיילת'
+export const HOSTESS_SUMMARY_COLUMNS = ['ת"ז', 'שם', 'פרטי-בנק', 'משמרות', 'סה"כ שעות']
+const HOSTESS_SUMMARY_TOTAL_LABEL = 'סה"כ'
+export const HOSTESS_SUMMARY_WIDTHS = [
+  { width: 14 },
+  { width: 22 },
+  { width: 26 },
+  { width: 10 },
+  { width: 12 },
+]
+
+interface HostessGroup {
+  idNumber: string
+  hostessName: string
+  bankDetails: string | null
+  shifts: number
+  hundredths: number
+}
+
+function groupByHostess(lines: SalaryLine[]): HostessGroup[] {
+  const groups = new Map<unknown, HostessGroup>()
+  for (const line of lines) {
+    const key = line.hostessId ?? `id:${line.idNumber}`
+    const group = groups.get(key) ?? {
+      idNumber: line.idNumber,
+      hostessName: line.hostessName,
+      bankDetails: line.bankDetails,
+      shifts: 0,
+      hundredths: 0,
+    }
+    group.shifts += 1
+    group.hundredths += toAgorot(line.hours)
+    groups.set(key, group)
+  }
+  return [...groups.values()].sort(
+    (a, b) =>
+      a.hostessName.localeCompare(b.hostessName, 'he') || a.idNumber.localeCompare(b.idNumber),
+  )
+}
+
+function buildHostessSummarySheet(titleRow: SheetRow, lines: SalaryLine[]): SheetRow[] {
+  const groups = groupByHostess(lines.filter((line) => line.showInFile))
+  const shifts = groups.reduce((sum, g) => sum + g.shifts, 0)
+  const hundredths = groups.reduce((sum, g) => sum + g.hundredths, 0)
+  return [
+    titleRow,
+    [null],
+    HOSTESS_SUMMARY_COLUMNS.map(boldCell),
+    ...groups.map((g): SheetRow => [
+      textCell(g.idNumber),
+      textCell(g.hostessName),
+      g.bankDetails ? textCell(g.bankDetails) : dashCell(),
+      { value: g.shifts, type: Number },
+      { value: toShekels(g.hundredths), type: Number, format: HOURS_FORMAT },
+    ]),
+    [
+      boldCell(HOSTESS_SUMMARY_TOTAL_LABEL),
+      null,
+      null,
+      { value: shifts, type: Number, fontWeight: 'bold' },
+      { value: toShekels(hundredths), type: Number, format: HOURS_FORMAT, fontWeight: 'bold' },
+    ],
+  ]
+}
+
 const RECONCILIATION_FIELDS = ['total_amount', 'line_count']
 
 // זהות דוח-ההשלמה מגיעה מתמונת-המצב (`kind`, `supplement_seq`, `original_report_id`). השלמה בלי
@@ -471,6 +539,15 @@ export function buildSalaryReportDocument(
       ? salaryReportFileName(payload.period)
       : salarySupplementFileName(payload.period, identity.supplementSeq)
 
+  const sheet = buildSalaryReportSheet({
+    reportId: reportId as number,
+    titleLabel: reportPeriodLabel(payload.period, identity.supplementSeq),
+    generatedAt,
+    lines,
+    totals,
+    originalReportId: identity.originalReportId,
+  })
+
   return {
     reportId: reportId as number,
     period: payload.period,
@@ -481,14 +558,8 @@ export function buildSalaryReportDocument(
     linesMissingBankDetails: lines
       .filter((line) => line.showInFile && !line.bankDetails)
       .map((line) => line.hostessName),
-    sheet: buildSalaryReportSheet({
-      reportId: reportId as number,
-      titleLabel: reportPeriodLabel(payload.period, identity.supplementSeq),
-      generatedAt,
-      lines,
-      totals,
-      originalReportId: identity.originalReportId,
-    }),
+    sheet,
+    summarySheet: buildHostessSummarySheet(sheet[0], lines),
     ...identity,
   }
 }
