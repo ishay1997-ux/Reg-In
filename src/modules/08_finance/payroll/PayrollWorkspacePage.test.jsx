@@ -1044,6 +1044,51 @@ describe('מעקב: החלטה גוברת על מצב משלוח; לפני של�
   })
 })
 
+describe('מעקב: דיילת שלא נשלח אליה סיכום (קבלה בייצור על יולי, 14/10)', () => {
+  it('סטטוס "לא נשלח", הסבר בלי "מעודכן", ו"פעולה אחרונה" = —', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({
+        recipients: [
+          recipient({ delivery: null, last_action_at: '2026-10-13T09:00:00.000Z' }),
+          recipient({ recipient_id: 700002, hostess_name: 'מאיה כהן' }),
+        ],
+      }),
+    )
+    renderPage('?period=2026-07&view=review&filter=all')
+    const never = await screen.findByTestId('payroll-recipient-700001')
+    expect(within(never).getByTestId('payroll-recipient-status')).toHaveTextContent('לא נשלח')
+    expect(within(never).getByTestId('payroll-action-reason')).toHaveTextContent(
+      'יש לשלוח את הסיכום',
+    )
+    expect(never).not.toHaveTextContent('מעודכן')
+    expect(within(never).getByTestId('payroll-recipient-last-action')).toHaveTextContent('—')
+    const sent = screen.getByTestId('payroll-recipient-700002')
+    expect(within(sent).getByTestId('payroll-recipient-last-action')).toHaveTextContent(
+      '13/10 13:00',
+    )
+  })
+})
+
+describe('מעקב: כפתור השליחה בשורה שהנתונים שלה השתנו', () => {
+  it('לא נשלח אליה סיכום ⇒ "שלח סיכום"; נשלח ⇒ "שלח סיכום מעודכן"', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({
+        recipients: [
+          recipient({ delivery: null, digest_current: false }),
+          recipient({ recipient_id: 700002, hostess_name: 'מאיה כהן', digest_current: false }),
+        ],
+      }),
+    )
+    renderPage('?period=2026-07&view=review&filter=all')
+    const never = await screen.findByTestId('payroll-recipient-700001')
+    expect(within(never).getByTestId('payroll-send-updated-row')).toHaveTextContent(/^שלח סיכום$/)
+    const sent = screen.getByTestId('payroll-recipient-700002')
+    expect(within(sent).getByTestId('payroll-send-updated-row')).toHaveTextContent(
+      'שלח סיכום מעודכן',
+    )
+  })
+})
+
 describe('מעקב: פעולות שורה', () => {
   it('"אשר לפי תיעוד" רק אחרי המועד; דורש סיבה וראיה; נשמר כ"אושר לפי תיעוד"', async () => {
     api.findPayrollReview.mockResolvedValue(

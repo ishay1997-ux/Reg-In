@@ -262,10 +262,12 @@ export function recipientStatus(recipient) {
   if (isDecided(recipient)) return { label: DECISION_LABELS[recipient.state], kind: 'ok' }
   if (deliveryState === 'failed') return { label: 'השליחה נכשלה', kind: 'error' }
   if (deliveryState === 'unknown') return { label: 'לא ידוע אם נשלח', kind: 'unknown' }
+  // סיכום שמעולם לא יצא אליה הוא "לא נשלח" — גם אם הנתונים השתנו בינתיים: "עודכן — נדרש אישור
+  // מחדש" מניח שהיא כבר קיבלה ואישרה (קבלה בייצור על יולי, 14/10).
+  if (!recipient?.delivery) return { label: 'לא נשלח', kind: 'neutral' }
   if (recipient?.digest_current === false) {
     return { label: 'עודכן — נדרש אישור מחדש', kind: 'attention' }
   }
-  if (!recipient?.delivery) return { label: 'לא נשלח', kind: 'neutral' }
   if (deliveryState === 'queued' || deliveryState === 'sending') {
     return { label: 'בשליחה', kind: 'neutral' }
   }
@@ -299,15 +301,23 @@ export function actionReason(recipient, { deadlinePassed, distributed } = {}) {
   // שורה שתוקנה ומחכה לסיכום מעודכן (הסיכום הישן הוחלף, או שהשורה החדשה עוד לא נשלחה) —
   // זה מה שיש לעשות, לא "המועד עבר" (סקירת UX מקומית, פריט 4).
   if (recipient?.email_present === false) return 'אין כתובת מייל. אחרי המועד אפשר לאשר לפי תיעוד'
-  if (recipient?.digest_current === false || (distributed && !recipient?.delivery)) {
-    return 'יש לשלוח סיכום מעודכן'
-  }
+  // בלי ניסיון משלוח על השורה הנוכחית אי אפשר לדעת אם קיבלה פעם סיכום קודם (שורה חדשה אחרי
+  // תיקון) או שמעולם לא קיבלה — לכן ניסוח שנכון בשני המקרים, ולא "מעודכן" (קבלה בייצור, 14/10).
+  if (!recipient?.delivery) return distributed ? 'יש לשלוח את הסיכום' : null
+  if (recipient?.digest_current === false) return 'יש לשלוח סיכום מעודכן'
   if (recipient?.contact_changed) return 'כתובת המייל השתנתה. יש לשלוח שוב'
   if (recipient?.delivery?.state === 'unknown') return 'יש לבדוק לפני שליחה חוזרת'
   if (deadlinePassed && recipient?.state === 'awaiting' && !recipient?.open_case_id) {
     return 'המועד עבר בלי תגובה'
   }
   return null
+}
+
+// "פעולה אחרונה" בטבלת המעקב. יצירת השורה אינה פעולה: לדיילת שלא נשלח אליה סיכום ולא הוחלט
+// עליה אין פעולה אחרונה ⇒ null ("—"), גם אם המסד מחזיר את זמן היצירה.
+export function lastActionAt(recipient) {
+  if (!recipient?.delivery && !recipient?.decided_at) return null
+  return recipient?.last_action_at ?? null
 }
 
 const BUCKET_ORDER = { action: 0, noreply: 1, approved: 2 }

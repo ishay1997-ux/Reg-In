@@ -17,6 +17,7 @@ import {
   actionReason,
   formatHours,
   isDecided,
+  lastActionAt,
   payrollErrorMessage,
   recipientStatus,
   resendOutcome,
@@ -118,7 +119,9 @@ function RecipientRow({
         <RecipientStatus recipient={recipient} />
       </Td>
       <Td className="whitespace-nowrap">
-        <Ltr>{formatTimestamp(recipient.last_action_at, '—')}</Ltr>
+        <span data-testid="payroll-recipient-last-action">
+          <Ltr>{formatTimestamp(lastActionAt(recipient), '—')}</Ltr>
+        </span>
       </Td>
       <Td>
         {reason && (
@@ -148,7 +151,7 @@ function RecipientRow({
               }
               testId="payroll-send-updated-row"
             >
-              שלח סיכום מעודכן
+              {recipient.delivery ? 'שלח סיכום מעודכן' : 'שלח סיכום'}
             </SmallButton>
           )}
           {canApproveByRecord && (

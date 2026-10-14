@@ -24,6 +24,7 @@ import {
   parsePeriodParam,
   payrollErrorMessage,
   processStage,
+  lastActionAt,
   recipientStatus,
   resendOutcome,
 } from './payrollModel'
@@ -111,13 +112,42 @@ describe('החלטה גוברת על מצב המשלוח (סקירת UX מקומ
     expect(recipientStatus(r).label).toBe('עודכן — נדרש אישור מחדש')
   })
 
-  it('שורה שתוקנה ומחכה לסיכום מעודכן: "יש לשלוח סיכום מעודכן" ולא "המועד עבר" (פריט 4)', () => {
-    expect(
-      actionReason(recipient({ delivery: null }), { deadlinePassed: true, distributed: true }),
-    ).toBe('יש לשלוח סיכום מעודכן')
+  it('שורה שתוקנה אחרי שליחה: "יש לשלוח סיכום מעודכן" ולא "המועד עבר" (פריט 4)', () => {
     expect(actionReason(recipient({ digest_current: false }), { deadlinePassed: true })).toBe(
       'יש לשלוח סיכום מעודכן',
     )
+  })
+})
+
+describe('דיילת שלא נשלח אליה סיכום (קבלה בייצור על יולי, 14/10)', () => {
+  const flags = { deadlinePassed: true, distributed: true }
+
+  it('סטטוס "לא נשלח" — גם כשהנתונים השתנו; ההסבר אינו "מעודכן"', () => {
+    for (const partial of [{ delivery: null }, { delivery: null, digest_current: false }]) {
+      const r = recipient(partial)
+      expect(recipientStatus(r)).toEqual({ label: 'לא נשלח', kind: 'neutral' })
+      expect(actionReason(r, flags)).toBe('יש לשלוח את הסיכום')
+    }
+  })
+
+  it('לפני שליחת הסיכומים — אין הסבר בשורה', () => {
+    expect(actionReason(recipient({ delivery: null }), { distributed: false })).toBeNull()
+  })
+
+  it('"פעולה אחרונה": בלי משלוח ובלי החלטה ⇒ null (זמן יצירת השורה אינו פעולה)', () => {
+    const created = { last_action_at: '2026-10-13T10:00:00.000Z' }
+    expect(lastActionAt(recipient({ ...created, delivery: null }))).toBeNull()
+    expect(lastActionAt(recipient({ ...created }))).toBe('2026-10-13T10:00:00.000Z')
+    expect(
+      lastActionAt(
+        recipient({
+          ...created,
+          delivery: null,
+          state: 'manager_approved_no_response',
+          decided_at: '2026-10-21T09:00:00.000Z',
+        }),
+      ),
+    ).toBe('2026-10-13T10:00:00.000Z')
   })
 })
 
