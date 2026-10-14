@@ -189,13 +189,27 @@ export function emailSendDisabledReason({
   template,
   canEdit = true,
   noPermissionReason = 'אין לך הרשאה לשלוח',
+  typedByUser = false,
 } = {}) {
   if (!canEdit) return noPermissionReason
   const trimmed = email?.trim() ?? ''
   if (!trimmed) return 'אין כתובת מייל לאיש הקשר'
-  if (!EMAIL_REGEX.test(trimmed)) return 'כתובת המייל של איש הקשר אינה תקינה'
+  const formatError = recipientEmailError(trimmed, { typedByUser })
+  if (formatError) return formatError
   if (!template?.trim()) return 'תבנית המייל אינה מוגדרת במערכת'
   return ''
+}
+
+// ✏️ ביקורת-ולידציה, שורה 15 (14/10/2026): כתובת שהוקלדה ידנית בשדה "נמען" אינה "של איש
+// הקשר" — הנוסח הישן האשים כרטיס-לקוח תקין בכתובת שהמשתמש עצמו הקליד. ולכן שני נוסחים,
+// לפי מקור הכתובת. ריק ⇒ '' (ריק אינו "לא תקין"; חוסר-כתובת הוא הודעה נפרדת למעלה).
+const INVALID_TYPED_EMAIL_MESSAGE = 'כתובת המייל אינה תקינה — לדוגמה: name@company.co.il'
+const INVALID_CONTACT_EMAIL_MESSAGE = 'כתובת המייל של איש הקשר אינה תקינה'
+
+export function recipientEmailError(email, { typedByUser = false } = {}) {
+  const trimmed = email?.trim() ?? ''
+  if (!trimmed || EMAIL_REGEX.test(trimmed)) return ''
+  return typedByUser ? INVALID_TYPED_EMAIL_MESSAGE : INVALID_CONTACT_EMAIL_MESSAGE
 }
 
 // ── שלושת מצבי-התוצאה של שליחה ──────────────────────────────────────────────

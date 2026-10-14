@@ -118,7 +118,10 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
   }
 
   const rowError = (i, field) => validation.rowErrors?.[i]?.[field]
-  const rowWarning = (i, field) => validation.warnings?.[i]?.[field]
+  // ⚠️ אזהרות (רכות) נגזרות **חי** מהשורות, ולא רק בלחיצת "שמור": שמירה תקינה סוגרת את החלון
+  // אחרי 900ms, ואזהרה שמופיעה רק אז לא נקראת לעולם (ביקורת-ולידציה שורה 11, 14/10/2026).
+  const liveWarnings = validateTierRows(rows, product).warnings
+  const rowWarning = (i, field) => liveWarnings?.[i]?.[field]
 
   return (
     <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>

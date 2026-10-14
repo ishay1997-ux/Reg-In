@@ -15,7 +15,8 @@ import { buildEmailPayload, fillEmailTemplate, findUnknownPlaceholders } from '@
 // N2 (02/09/2026): איש-הקשר הראשי הוא שורה ב-customer_contacts, לא שלוש עמודות על customers.
 // primaryContact הוא נקודת-הקריאה היחידה (src/lib/customers.js) — לא לבחור ידנית מהמערך כאן.
 import { primaryContact } from '@/lib/customers'
-import { paramLabel } from '@/lib/paramsRegistry'
+import { getParamEntry, paramLabel, validateParamValue } from '@/lib/paramsRegistry'
+import { isValidPositiveInt } from '@/lib/validators'
 
 // quotes.quote_status — שלושת הערכים של CHECK quotes_quote_status_check.
 export const QUOTE_STATUS_LABELS = {
@@ -250,6 +251,22 @@ function isPositiveQty(value) {
   return Number.isFinite(n) && n > 0
 }
 
+// ✏️ ביקורת-ולידציה שורה 19 (14/10/2026): תקרות-אורך לשדות הטקסט שנכנסים ל-PDF ולמייל ללקוח
+// (עמודות `text` בלי תקרה). 120 לשם ולמיקום, 1000 להערות — הצעת-הביקורת; הנתונים החיים רחוקים
+// מהן (נמדד 14/10: הארוך ביותר — שם 24, מיקום 37, הערות 31 תווים מתוך 1225 הצעות).
+export const QUOTE_TEXT_MAX = { eventName: 120, location: 120, notes: 1000 }
+
+// הכרעת-ישי 14/10/2026 — מחיר-המדרגה לפי סך היחידות של המוצר בהצעה (`pricing.js`,
+// `repriceLinesBySkuTotal`). הכיתוב המשני בשורה שתומחרה לפי הסך.
+export function combinedTierNote(total) {
+  return `מחיר מדרגה לפי ${total} יחידות בסך הכל בהצעה`
+}
+
+const QUOTE_GUESTS_INT_MESSAGE = 'כמות האורחים חייבת להיות מספר שלם, למשל 120.'
+const QUOTE_HOSTESS_INT_MESSAGE = 'כמות הדיילות חייבת להיות מספר שלם, למשל 6.'
+const QUOTE_LINE_QTY_INT_MESSAGE = 'הכמות בשורה חייבת להיות מספר שלם, למשל 2.'
+const QUOTE_RATIO_MESSAGE = 'היחס חייב להיות מספר שלם בין 1 ל-150.'
+
 export function validateQuoteForm(form, lines, todayIso) {
   const errors = {}
 
@@ -267,16 +284,25 @@ export function validateQuoteForm(form, lines, todayIso) {
     errors.eventDate = 'תאריך האירוע כבר עבר — בחר תאריך עתידי.'
   }
 
+  // ✏️ ביקורת-ולידציה, שורות 1+2 (14/10/2026): אורחים, דיילות וכמות-שורה הם `integer` במסד
+  // וה-RPC עושה `::int` — `12.5` עבר כאן ונפל בשרת כ"שמירת ההצעה נכשלה" בלי הסבר. ולכן
+  // "גדול מ-0" נבדק קודם (ההודעה הקיימת), ו"שלם" אחריו בהודעה שאומרת איך לתקן.
   const guests = Number(form.guests)
   if (!Number.isFinite(guests) || guests <= 0) errors.guests = 'כמות אורחים חייבת להיות גדולה מ-0.'
+  else if (!isValidPositiveInt(form.guests)) errors.guests = QUOTE_GUESTS_INT_MESSAGE
 
-  const ratio = Number(form.ratio)
-  if (!Number.isFinite(ratio) || ratio <= 0) errors.ratio = 'יחס אורחים לדיילת חייב להיות גדול מ-0.'
+  // שורה 2: היחס נבדק **באותו כלל בדיוק** כמו במסך ההגדרות (שלם 1–150, `PARAM_REGISTRY`) —
+  // לא העתק של הטווח, כדי ששני המסכים לא יוכלו להיפרד.
+  if (!validateParamValue(getParamEntry('יחס_אורחים_לדיילת'), form.ratio).ok) {
+    errors.ratio = QUOTE_RATIO_MESSAGE
+  }
 
   // CHECK quotes_recommended_hostess_count_check דורש > 0. מאז שהשדה נערך ידנית, משתמש
   // יכול לרוקן אותו — וריק היה מגיע לשרת כ-NULL ומפיל את ה-INSERT בשגיאה לא-קריאה.
   if (!isPositiveQty(form.hostessCount)) {
     errors.hostessCount = 'כמות הדיילות חייבת להיות גדולה מ-0.'
+  } else if (!isValidPositiveInt(form.hostessCount)) {
+    errors.hostessCount = QUOTE_HOSTESS_INT_MESSAGE
   }
 
   // ⚠️ הבחנה שנתפסה בבדיקה 29/07/2026 ושווה להסביר, כי היא נראית כמו סתירה למלכודת
@@ -299,6 +325,8 @@ export function validateQuoteForm(form, lines, todayIso) {
     // תקינוּת המספר נבדקת במפורש לפני ההשוואה.
   } else if (lines.some((line) => !line.sku || !isPositiveQty(line.qty))) {
     errors.lines = 'לכל פריט חייבים להיות מוצר וכמות גדולה מ-0.'
+  } else if (lines.some((line) => !isValidPositiveInt(line.qty))) {
+    errors.lines = QUOTE_LINE_QTY_INT_MESSAGE
   } else if (sumHostessQty(lines) <= 0) {
     // §7.53: אין אירוע בלי דיילות. ה-RPC של האישור חוסם את זה ממילא — חסימה כבר כאן
     // מונעת הצעה שנשמרת ואז מסרבת להפוך לפרויקט, בלי שהמשתמש מבין למה.
@@ -473,6 +501,9 @@ export function computeEventHours(startTime, endTime) {
 // שהוא ה-SSOT למחרוזת הזו — שכפולה היה מאפשר לשתי העתקות להתפצל בשקט בהקלדה.
 export const QUOTE_SCREEN_PARAM_NAMES = {
   vatPercent: PRICING_PARAM_NAMES.VAT_PERCENT,
+  // 🆕 14/10/2026 — סף ההערה "סך ההנחות גבוה מהרגיל" (`discountNotice`). חסר במסד ⇒ 30 בקוד:
+  // הסף רק מודיע, ולכן אינו נכנס לאזהרת "פרמטר חסר" של המסך.
+  discountWarningPercent: 'סף_אזהרת_הנחה_אחוז',
   validityDays: 'ימי_תוקף_הצעה',
   eventWarningDays: 'ימי_אזהרה_קדם_אירוע',
   // 🆕 מודול 9 (צעד 2.3) — הסף של "פג בקרוב", שעד אז היה קבוע מיוצא בקובץ הזה.
@@ -506,6 +537,32 @@ function paramNumber(value) {
   if (value === null || value === undefined || value === '') return null
   const n = Number(value)
   return Number.isFinite(n) ? n : null
+}
+
+// ── הנחה גבוהה — התראה רכה (ביקורת-ולידציה שורה 4 + כלל-ההנחה של ישי, 14/10/2026) ──
+// סך ההנחות (קבועה + נוספת) **מעל הסף ⇒ הערה, לא חסימה**: כלי CPQ מקובלים מעבירים הנחה גדולה
+// לאישור ולא אוסרים אותה; חסימה הייתה עוצרת עסקה לגיטימית. ‏100% בדיוק ⇒ הנוסח של הצעה על 0 ₪.
+// מעל 100 ⇒ '' — זו כבר שגיאה חוסמת ב-`validateQuoteForm`.
+// הסף מ-`סף_אזהרת_הנחה_אחוז`; חסר / מחוץ לטווח-המרשם (5–90) ⇒ 30.
+const DEFAULT_DISCOUNT_WARNING_PERCENT = 30
+
+export function discountWarningThreshold(rawParamValue) {
+  const n = paramNumber(rawParamValue)
+  const entry = getParamEntry('סף_אזהרת_הנחה_אחוז')
+  if (n === null || n < entry.min || n > entry.max) return DEFAULT_DISCOUNT_WARNING_PERCENT
+  return n
+}
+
+export function discountNotice(appliedDiscount, manualDiscount, thresholdParam) {
+  const applied = paramNumber(appliedDiscount) ?? 0
+  const manual = paramNumber(manualDiscount) ?? 0
+  // במאיות-שלמות, כמו ב-`computeQuoteTotals`: 33.33+66.67 הוא 100 בדיוק.
+  const totalHundredths = Math.round(applied * 100) + Math.round(manual * 100)
+  if (totalHundredths > 10000) return ''
+  if (totalHundredths === 10000) return 'סך ההנחות הוא 100% — ההצעה תהיה על 0 ₪.'
+  const total = totalHundredths / 100
+  if (total <= discountWarningThreshold(thresholdParam)) return ''
+  return `סך ההנחות ${total}% — גבוה מהרגיל. כדאי לוודא שזו ההנחה הנכונה.`
 }
 
 // שורת-האזהרה שמסך-ההצעות מציג כששורת-פרמטר תמחור חסרה מ-`params` (הכרעת-ישי 31/07/2026).

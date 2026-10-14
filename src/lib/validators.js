@@ -46,6 +46,30 @@ export function isValidPositivePrice(value) {
   return Number.isFinite(n) && n > 0
 }
 
+// ✏️ ביקורת-ולידציה שורה 28 (14/10/2026): תקרה אחידה לשדות סיבה/הערה בדיאלוגים (דחיית הצעה ·
+// ביטול פרויקט · שינוי תכולה · סגירה בלי תשלום · הערת דמי-ביטול). עד כאן — בלי תקרה בכלל.
+export const FREE_TEXT_REASON_MAX = 500
+
+// קישור https תקין (עבר לכאן מ-`paramsRegistry.js` 14/10/2026 — צרכן שני: קישור-התמונה במוצר).
+// ריק ⇒ false; המסך מחליט אם ריק מותר.
+export function isValidHttpsUrl(value) {
+  if (isBlank(value)) return false
+  try {
+    return new URL(String(value).trim()).protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+// ✏️ ביקורת-ולידציה שורה 13 (14/10/2026): פסיק עשרוני ⇒ נקודה, בשדות **שעות** בלבד. בטלפון
+// ובמקלדת עברית `6,5` טבעי לגמרי, ו-`Number('6,5')` הוא NaN ⇒ "חובה להזין שעות — מספר בין 0.5
+// ל-24", הודעה שמבלבלת כי 6,5 בטווח. רק פסיק **אחד בין ספרות** מתורגם; כל קלט אחר חוזר כמו שהוא.
+// ⚠️ לא לשדות כמות/אורחים: שם `1,200` הוא מפריד-אלפים, ותרגומו ל-1.2 היה שגיאה שקטה.
+export function normalizeDecimalComma(value) {
+  if (typeof value !== 'string') return value
+  return /^\s*\d+,\d+\s*$/.test(value) ? value.replace(',', '.') : value
+}
+
 // price_tiers.min_qty/max_qty — מספר-שלם חיובי-ממש.
 export function isValidPositiveInt(value) {
   const n = Number(value)

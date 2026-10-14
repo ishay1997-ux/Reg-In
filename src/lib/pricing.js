@@ -94,6 +94,41 @@ export function resolveUnitPrice(product, tiers, qty) {
   return toFiniteNumber(winner.special_price) ?? basePrice
 }
 
+// ── מדרגה לפי הכמות הכוללת בהצעה (הכרעת-ישי 14/10/2026) ───────────────────
+// *"זה טריקי כי ישאלו על זה מה מקובל בדרך כלל? אי אפשר לסדר את זה?"* — **מחיר-המדרגה נקבע
+// לפי סך היחידות של אותו מוצר בכל שורות ההצעה**, לא לפי כל שורה לחוד: 50 תגים אדומים + 50
+// כחולים מתומחרים שניהם במדרגת ה-100. זה תמחור-הכמות המקובל ("mix and match": הנחות-כמות
+// שמצרפות וריאנטים של אותו מוצר ב-Shopify/WooCommerce, ונוהג ענף מוצרי-הקידום).
+// לפני כן 3+3 דיילות (בלי מדרגה) תומחרו אחרת מ-6 בשורה אחת — הפרש מחיר שקט.
+//
+// הסכום סופר רק כמויות חיוביות-סופיות: שורה שעוד מוקלדת (ריק / NaN) אינה מזיזה את המדרגה
+// של אחיותיה. שורה בלי מק"ט אינה נספרת.
+export function totalQtyBySku(lines) {
+  const totals = new Map()
+  for (const line of lines ?? []) {
+    const q = toFiniteNumber(line?.qty)
+    if (!line?.sku || q === null || q <= 0) continue
+    totals.set(line.sku, (totals.get(line.sku) ?? 0) + q)
+  }
+  return totals
+}
+
+// תמחור-מחדש של **כל** שורות המק"טים שנגעו בהם (`skus`), כל אחת לפי סך-הכמות של המק"ט שלה.
+// שורות של מק"טים אחרים **אינן נוגעות** — מחיר שנטען מהמסד נשאר כפי שנשמר עד שנוגעים במוצר
+// שלו (אותה התנהגות כמו קודם, רק ברמת-המוצר במקום ברמת-השורה). מוצר שלא נמצא בקטלוג ⇒ השורה
+// נשארת כפי שהיא (⛔ לא 0 ₪ — ר' `repriceLine` ב-QuoteLineEditor). מחזיר מערך חדש.
+export function repriceLinesBySkuTotal(lines, products, tiers, skus) {
+  const touched = new Set((skus ?? []).filter(Boolean))
+  if (touched.size === 0) return lines
+  const totals = totalQtyBySku(lines)
+  return lines.map((line) => {
+    if (!touched.has(line.sku)) return line
+    const product = (products ?? []).find((p) => p.sku === line.sku)
+    if (!product) return line
+    return { ...line, unitPrice: resolveUnitPrice(product, tiers, totals.get(line.sku) ?? 0) }
+  })
+}
+
 // סך-שורה בשקלים, מדויק לאגורה. כמות/מחיר לא-תקינים ⇒ 0 (שורה חצי-מלאה במסך-הבנייה
 // לא אמורה להפיל את הסיכום החי בזמן שהמשתמש עדיין מקליד).
 export function computeLineTotal(qty, unitPrice) {
@@ -154,6 +189,25 @@ export function formatShekelWhole(amount) {
   return `${Math.round(n).toLocaleString('he-IL')} ₪`
 }
 
+// 🔴 **בידוד-כיווניות לסכום שיושב בתוך משפט עברי — המופע השביעי של אותה משפחה.**
+// ‏`Money` פותר את זה במסך דרך `dir="ltr"` + `unicode-bidi:isolate`, **ולמחרוזת שטוחה
+// אין מקבילה כזו** — היא נשלפת מכאן ומוצגת כטקסט. בלי בידוד, אלגוריתם ה-bidi מעביר את
+// ה-₪ אל **שמאל** הספרות, ואותו סכום מופיע במסך אחד משני צדדים שונים.
+// 🔬 **נמדד בדפדפן אמיתי (09/08/2026), לא הונח:** מיקום הגליף `₪` היה **שמאלה** מהספרות
+// בשתי המחרוזות של המסך — בעוד `Money` באותו מסך מציג `45 ₪`. ישי הצביע על החשד; המדידה
+// אישרה אותו. ⇒ `U+2066` (LRI) … `U+2069` (PDI) עוטפים את הסכום ומבודדים אותו, בדיוק
+// כפי ש-`isolate` עושה ב-CSS. **תווים אלה בלתי-נראים בכוונה ואינם משנים את הנוסח.**
+// ⚠️ ולכן הם **מרוכזים בפונקציה אחת עם שם**, ולא מודבקים בתוך מחרוזות — הריפו כבר נכווה
+// מ-`U+200F` נסתר שאיש לא ידע שהוא שם ושיבש ספירה.
+const LTR_ISOLATE = '⁦'
+const POP_ISOLATE = '⁩'
+
+// ✏️ 14/10/2026: עברה לכאן מ-`src/lib/hostesses.js` ומיוצאת — נדרשה למחרוזות נוספות (אזהרות-הולידציה
+// של המחירון, הכספים והדיילות), כפי שההערה שם חזתה ("כשתידרש למחרוזת נוספת — אז מייצאים").
+export function isolatedShekels(amount) {
+  return `${LTR_ISOLATE}${amount} ₪${POP_ISOLATE}`
+}
+
 // מחיר-קטלוג באגורות מלאות. why-first: F18 מעגל **סכומי-הצעה** לשקל שלם כדי שסכום השורות
 // יתחבר לסה"כ — אבל מסך תחזוקת-המחירים מציג את **המחיר עצמו**, ושם עיגול הוא שקר: עלות של
 // 2.50 ₪ שמוצגת "3 ₪" מסתירה בדיוק את הנתון שהמנכ"ל בא לבדוק. אפסים מיותרים נחתכים (6 ₪,
@@ -211,11 +265,16 @@ export function computeMarginPercent(basePrice, cost) {
 // מבנה-ההחזרה מפריד **שגיאה מאזהרה** במכוון: שגיאה חוסמת שמירה (המסד ידחה ממילא),
 // אזהרה לא (מחיר מתחת לעלות עשוי להיות מכוון — מבצע, חיסול מלאי). ר' §7.27: ‏max_qty אינו
 // משתתף בבחירת-המדרגה, ולכן חפיפה בין טווחים אינה שגיאה — רק min_qty כפול היא.
+function tierAboveBaseWarning(price, basePrice) {
+  return `מחיר המדרגה (${isolatedShekels(price)}) גבוה ממחיר הבסיס (${isolatedShekels(basePrice)}) — בכמות גדולה המחיר אמור לרדת.`
+}
+
 export function validateTierRows(rows, product = {}) {
   const list = rows ?? []
   const rowErrors = list.map(() => ({}))
   const warnings = list.map(() => ({}))
   const cost = toFiniteNumber(product?.cost)
+  const basePrice = toFiniteNumber(product?.base_price)
 
   // ספירת-הופעות מראש: min_qty כפול מסמן את **כל** השורות שמשתתפות בו, כי המשתמש
   // לא יכול לדעת איזו מהן "המקורית" — סימון אחת בלבד היה נראה שרירותי.
@@ -255,6 +314,10 @@ export function validateTierRows(rows, product = {}) {
       rowErrors[i].special_price = 'מחיר גדול מ-0'
     } else if (cost !== null && price < cost) {
       warnings[i].special_price = `מתחת לעלות (${cost} ₪)`
+    } else if (basePrice !== null && price > basePrice) {
+      // ✏️ ביקורת-ולידציה שורה 11 (14/10/2026): מדרגת "כמות גדולה" יקרה ממחיר-הבסיס עברה בשקט,
+      // והמסמך ללקוח חייב יותר על כמות גדולה. התראה רכה — לא חוסמת.
+      warnings[i].special_price = tierAboveBaseWarning(price, basePrice)
     }
   })
 

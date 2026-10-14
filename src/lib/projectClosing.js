@@ -154,7 +154,8 @@ export function closingValidationSummary(draft) {
   }
 
   const eventGuests = toFiniteNumber(draft?.actualGuests)
-  if (eventGuests === null || eventGuests < 0) {
+  // שורה 12 בביקורת-הוולידציה: גם שבר אינו תקין — הפרמטר בשרת `integer`.
+  if (eventGuests === null || eventGuests < 0 || !Number.isInteger(eventGuests)) {
     missing.push('כמות אורחים בפועל')
   }
 

@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/select'
 import {
   CUSTOMER_TYPE_LABELS,
+  companyNumberCheckDigitWarning,
   NO_PRIMARY_MSG,
   primaryContact,
   validateContactSet,
@@ -77,6 +78,16 @@ function FieldError({ name, message }) {
 // ⚠️ הקומפוננטה מאותחלת מ-editingCustomer ב-useState בלבד (בלי effect-סנכרון) — עמוד-האב חייב
 // לרנדר אותה עם key שמשתנה בכל פתיחה/החלפת-לקוח (remount = איפוס-טופס). זה הדפוס הקנוני של
 // react-hooks/set-state-in-effect לטפסים שנפתחים מחדש.
+// התראה רכה מתחת לשדה (ענבר, לא חוסמת) — ביקורת-ולידציה שורה 25.
+function SoftNotice({ text, testId }) {
+  if (!text) return null
+  return (
+    <p className="text-sm text-amber-700" role="status" data-testid={testId}>
+      {text}
+    </p>
+  )
+}
+
 export default function CustomerFormDialog({
   open,
   onOpenChange,
@@ -374,6 +385,16 @@ export default function CustomerFormDialog({
               data-testid="customer-form-company-number"
             />
             <FieldError name="company_number" message={fieldErrors.company_number} />
+            <SoftNotice
+              text={
+                // בעריכה השדה נעול — אזהרה שאי-אפשר לפעול לפיה היא רעש (54 מתוך 63 הלקוחות
+                // החיים אינם עוברים את ספרת-הביקורת — נתוני-דמו; נמדד 14/10). רק בהקמת לקוח.
+                isEdit || fieldErrors.company_number
+                  ? ''
+                  : companyNumberCheckDigitWarning(form.company_number)
+              }
+              testId="customer-company-number-warning"
+            />
           </div>
 
           {/* §7.11: זרימת-הכפילות הידידותית — פעיל=עריכת הקיים · ארכיון=הצעת שחזור */}

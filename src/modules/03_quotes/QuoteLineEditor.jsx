@@ -6,8 +6,13 @@
 // והמסך רק **מציג** אותו; אין כאן חישוב-מחיר עצמאי (כלל 14).
 
 import { Lock, Plus, Trash2 } from 'lucide-react'
-import { computeLineTotal, findMatchingTier, resolveUnitPrice } from '@/lib/pricing'
-import { isColorApplicable } from '@/lib/quotes'
+import {
+  computeLineTotal,
+  findMatchingTier,
+  repriceLinesBySkuTotal,
+  totalQtyBySku,
+} from '@/lib/pricing'
+import { combinedTierNote, isColorApplicable } from '@/lib/quotes'
 import { LINE_COLORS, NO_COLOR_LABEL, PRODUCT_CATEGORY_LABELS } from '@/lib/catalog'
 import Money from '@/components/Money'
 import { Button } from '@/components/ui/button'
@@ -31,6 +36,39 @@ const COLOR_SWATCH = {
   אפור: '#64748B',
   טורקיז: '#0D9488',
   כחול: '#1D4ED8',
+}
+
+// כיתוב-המדרגה מתחת למחיר-היחידה. מוצג **רק כשהמדרגה הוזילה בפועל** (הכרעת-ישי 29/07): במדרגה
+// הראשונה המחיר זהה למחיר-הבסיס והכיתוב הוא רעש; כשהכמות הורידה את המחיר, בלעדיו המשתמש רואה
+// מספר שאינו תואם למחירון וחושב שיש תקלה. טווח-המספרים ב-<span dir="ltr"> נפרד מהמילה העברית.
+// הכרעת-ישי 14/10/2026: כשלמוצר כמה שורות, המדרגה נקבעת לפי הסך — והכיתוב אומר זאת, אחרת "50
+// יחידות במחיר של 100" נראה כטעות. ⚠️ הכיתוב המשולב מוצג רק כשהמחיר בשורה **באמת** מחיר המדרגה
+// של הסך: הצעה ישנה שנשמרה לפני הכלל ועוד לא נגעו בה — לא נטען עליה דבר שאינו נכון.
+function TierCaption({ line, product, tiers, skuTotal }) {
+  if (!product) return null
+  const pricedByTotal = skuTotal != null && skuTotal !== Number(line.qty)
+  const tier = findMatchingTier(product, tiers, skuTotal ?? line.qty)
+  const discounted = Number(line.unitPrice) < Number(product.base_price)
+  if (!tier || !discounted) return null
+  if (pricedByTotal) {
+    if (Number(line.unitPrice) !== Number(tier.special_price)) return null
+    return (
+      <span
+        className="block text-xs text-slate-500"
+        data-testid={`quote-line-combined-tier-${line.key}`}
+      >
+        {combinedTierNote(skuTotal)}
+      </span>
+    )
+  }
+  return (
+    <span className="block whitespace-nowrap text-xs text-slate-400">
+      מדרגה{' '}
+      <span dir="ltr">
+        {tier.min_qty}–{tier.max_qty ?? '∞'}
+      </span>
+    </span>
+  )
 }
 
 export default function QuoteLineEditor({ lines, products, tiers, onChange, disabled, error }) {
@@ -58,6 +96,13 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
     onChange(lines.map((line) => (line.key === key ? { ...line, ...patch } : line)))
   }
 
+  // הכרעת-ישי 14/10/2026: המדרגה לפי **סך** היחידות של המוצר בהצעה (`repriceLinesBySkuTotal`).
+  // שינוי כמות/מוצר/מחיקה בשורה אחת מתמחר-מחדש את **כל** שורות אותו מוצר — וגם את שורות
+  // המוצר הקודם כשמחליפים מוצר, כי הסך שלו ירד.
+  function commitRepriced(nextLines, skus) {
+    onChange(repriceLinesBySkuTotal(nextLines, products, tiers, skus))
+  }
+
   // בחירת מוצר / שינוי כמות מחייבים תמחור-מחדש: המדרגה נקבעת לפי הכמות, ולכן 200→201
   // יחידות משנה את המחיר. המחיר מגיע תמיד מ-pricing.js, לעולם לא מחושב כאן.
   //
@@ -69,7 +114,6 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
   // הנפילה-לאחור: שומרים על ערכי-השורה הקיימים. ⛔ לא להחזיר `: 0`.
   function repriceLine(line, patch) {
     const nextSku = patch.sku ?? line.sku
-    const nextQty = patch.qty ?? line.qty
     const product = products.find((p) => p.sku === nextSku)
     if (!product) {
       return { ...patch, itemName: line.itemName ?? '', category: line.category ?? null }
@@ -82,11 +126,13 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
       // אין שורה ב-`product_costs`, ואיפוסו כאן היה מציג רווחיות של 100%. null נשאר null
       // ופאנל-הרווחיות מציג מקפים (הכרעת-ישי 01/08/2026).
       unitCost: product.cost === null || product.cost === undefined ? null : Number(product.cost),
-      unitPrice: resolveUnitPrice(product, tiers, nextQty),
+      // המחיר עצמו נקבע אחרי העדכון, לפי סך-המוצר בכל ההצעה (`commitRepriced`).
       // מוצר שאין לו צבע (דיילות/אתר) — מנקים צבע שנבחר קודם, אחרת הוא היה נשמר בשקט.
       color: isColorApplicable(product) ? (patch.color ?? line.color) : '',
     }
   }
+
+  const skuTotals = totalQtyBySku(lines)
 
   function addLine() {
     onChange([
@@ -104,7 +150,16 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
   }
 
   function removeLine(key) {
-    onChange(lines.filter((line) => line.key !== key))
+    const removed = lines.find((line) => line.key === key)
+    commitRepriced(
+      lines.filter((line) => line.key !== key),
+      [removed?.sku],
+    )
+  }
+
+  function changeLine(line, patch) {
+    const next = lines.map((l) => (l.key === line.key ? { ...l, ...repriceLine(line, patch) } : l))
+    commitRepriced(next, [line.sku, patch.sku ?? line.sku])
   }
 
   return (
@@ -134,7 +189,6 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
           <tbody>
             {lines.map((line) => {
               const product = products.find((p) => p.sku === line.sku)
-              const tier = product ? findMatchingTier(product, tiers, line.qty) : null
               const colorAllowed = isColorApplicable(product)
               // ⚠️ תג-ההשבתה **נקשר לבורר ב-`aria-describedby`** ולא רק מוצג לידו: בלי זה
               // מי שמשתמש בקורא-מסך שומע "שירותי דיילת (4 שעות)" ולא יודע כלל שהמוצר הושבת —
@@ -152,7 +206,7 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                       // נפרע 27/08/2026 — חצי (ב) של `🚧 מ10 ← מ3` ברשם-החובות.
                       value={line.sku || ''}
                       disabled={disabled}
-                      onValueChange={(sku) => updateLine(line.key, repriceLine(line, { sku }))}
+                      onValueChange={(sku) => changeLine(line, { sku })}
                     >
                       <SelectTrigger
                         dir="rtl"
@@ -244,9 +298,7 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                       min="1"
                       value={line.qty}
                       disabled={disabled}
-                      onChange={(e) =>
-                        updateLine(line.key, repriceLine(line, { qty: Number(e.target.value) }))
-                      }
+                      onChange={(e) => changeLine(line, { qty: Number(e.target.value) })}
                       // ר' ההסבר ב-LtrFieldGroup: השדה נטען עם 1, ובלי בחירה-בכניסה כל
                       // הקלדה מחייבת קודם מחיקה ידנית.
                       onFocus={(e) => e.target.select()}
@@ -272,18 +324,12 @@ export default function QuoteLineEditor({ lines, products, tiers, onChange, disa
                       />
                       <Money amount={line.unitPrice} exact />
                     </span>
-                    {/* המדרגה מוצגת **רק כשהיא הוזילה בפועל** את המחיר (הכרעת-ישי 29/07):
-                        במדרגה הראשונה המחיר זהה למחיר-הבסיס והכיתוב הוא רעש; כשהכמות הורידה
-                        את המחיר, בלעדיו המשתמש רואה מספר שאינו תואם למחירון וחושב שיש תקלה.
-                        טווח-המספרים ב-<span dir="ltr"> נפרד מהמילה העברית, אחרת הוא מתהפך. */}
-                    {tier && Number(line.unitPrice) < Number(product?.base_price) && (
-                      <span className="block whitespace-nowrap text-xs text-slate-400">
-                        מדרגה{' '}
-                        <span dir="ltr">
-                          {tier.min_qty}–{tier.max_qty ?? '∞'}
-                        </span>
-                      </span>
-                    )}
+                    <TierCaption
+                      line={line}
+                      product={product}
+                      tiers={tiers}
+                      skuTotal={skuTotals.get(line.sku)}
+                    />
                   </td>
 
                   <td className="py-2 pl-2 text-left font-semibold text-slate-800">

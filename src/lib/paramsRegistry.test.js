@@ -40,6 +40,8 @@ const LIVE_SEED_PARAM_NAMES = {
   ],
   control_alerts: [
     'אחוז_פיצוי_ביטול_חלקי',
+    // 🆕 14/10/2026 — סף ההנחה, מיגרציה 20261016000200 (טרם הוחלה).
+    'סף_אזהרת_הנחה_אחוז',
     'ימי_אזהרה_קדם_אירוע',
     'סף_לקוח_רדום_ימים',
     'שעות_פיצוי_ביטול_חלקי',
@@ -91,10 +93,10 @@ const LIVE_SEED_PARAM_NAMES = {
 
 const LIVE_SEED_NAMES_FLAT = Object.values(LIVE_SEED_PARAM_NAMES).flat()
 
-describe('PARAM_REGISTRY — 49 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
-  it('49 שורות בדיוק', () => {
-    expect(PARAM_REGISTRY).toHaveLength(49)
-    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(49)
+describe('PARAM_REGISTRY — 50 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
+  it('50 שורות בדיוק', () => {
+    expect(PARAM_REGISTRY).toHaveLength(50)
+    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(50)
   })
 
   it('כל שם במרשם קיים בזרע החי (כיוון א׳ — לא נשאר שם-רפאים במרשם)', () => {

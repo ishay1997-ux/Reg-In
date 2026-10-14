@@ -43,6 +43,8 @@ import {
   pendingQuotesLabel,
   missingPricingParamsMessage,
   quoteServerErrorMessage,
+  discountNotice,
+  discountWarningThreshold,
 } from '@/lib/quotes'
 
 // תרחיש-האפיון המחייב (C5 §5.5.4) — אותו תרחיש שמאמת את מנוע-הכסף, כאן בצורת-המסך.
@@ -335,6 +337,30 @@ describe('validateQuoteForm', () => {
     expect(validateQuoteForm({ ...VALID_FORM, ratio: 0 }, WORKED_LINES, TODAY)).toHaveProperty(
       'ratio',
     )
+  })
+
+  // ביקורת-ולידציה, שורות 1+2 (14/10/2026): השדות האלה `integer` במסד.
+  it('שבר באורחים / בדיילות / בכמות-שורה ⇒ נחסם בהודעה שאומרת איך לתקן', () => {
+    expect(validateQuoteForm({ ...VALID_FORM, guests: '12.5' }, WORKED_LINES, TODAY).guests).toBe(
+      'כמות האורחים חייבת להיות מספר שלם, למשל 120.',
+    )
+    expect(
+      validateQuoteForm({ ...VALID_FORM, hostessCount: '2.5' }, WORKED_LINES, TODAY).hostessCount,
+    ).toBe('כמות הדיילות חייבת להיות מספר שלם, למשל 6.')
+    const fractionalLines = WORKED_LINES.map((line, i) => (i === 0 ? { ...line, qty: 1.5 } : line))
+    expect(validateQuoteForm(VALID_FORM, fractionalLines, TODAY).lines).toBe(
+      'הכמות בשורה חייבת להיות מספר שלם, למשל 2.',
+    )
+  })
+
+  it('יחס אורחים לדיילת — אותו כלל כמו במסך ההגדרות: שלם 1–150', () => {
+    const ratioError = (ratio) =>
+      validateQuoteForm({ ...VALID_FORM, ratio }, WORKED_LINES, TODAY).ratio
+    expect(ratioError(0.0001)).toBe('היחס חייב להיות מספר שלם בין 1 ל-150.')
+    expect(ratioError(5000)).toBe('היחס חייב להיות מספר שלם בין 1 ל-150.')
+    expect(ratioError('')).toBe('היחס חייב להיות מספר שלם בין 1 ל-150.')
+    expect(ratioError(1)).toBeUndefined()
+    expect(ratioError('150')).toBeUndefined()
   })
 })
 
@@ -1463,5 +1489,27 @@ describe('hasQuoteChanged — עדכון בלי שינוי', () => {
     ['שדה שרוקן', () => hasQuoteChanged({ ...FORM, manualDiscount: '' }, LINES, FORM, LINES)],
   ])('בספק — %s ⇒ true (לעולם לא בולעים עריכה)', (_label, run) => {
     expect(run()).toBe(true)
+  })
+})
+
+// ביקורת-ולידציה שורה 4 + כלל-ההנחה של ישי (14/10/2026): התראה רכה מעל הסף (ברירת-מחדל 30).
+describe('discountNotice — הנחה גבוהה מודיעה, לא חוסמת', () => {
+  it('מעל 30% ⇒ הנוסח המאושר; 30% בדיוק ⇒ בלי', () => {
+    expect(discountNotice(10, 25, undefined)).toBe(
+      'סך ההנחות 35% — גבוה מהרגיל. כדאי לוודא שזו ההנחה הנכונה.',
+    )
+    expect(discountNotice(10, 20, undefined)).toBe('')
+  })
+  it('100% בדיוק ⇒ נוסח ההצעה על 0 ₪ (גם 33.33 + 66.67); מעל 100 ⇒ ריק (השגיאה החוסמת מטפלת)', () => {
+    expect(discountNotice(33.33, 66.67, '30')).toBe('סך ההנחות הוא 100% — ההצעה תהיה על 0 ₪.')
+    expect(discountNotice(50, 60, '30')).toBe('')
+  })
+  it('הסף מהפרמטר; חסר או מחוץ ל-5–90 ⇒ 30', () => {
+    expect(discountNotice(0, 35, '40')).toBe('')
+    expect(discountNotice(0, 45, '40')).toContain('45%')
+    expect(discountWarningThreshold(null)).toBe(30)
+    expect(discountWarningThreshold('2')).toBe(30)
+    expect(discountWarningThreshold('95')).toBe(30)
+    expect(discountWarningThreshold('20')).toBe(20)
   })
 })

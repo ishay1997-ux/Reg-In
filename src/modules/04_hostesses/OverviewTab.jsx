@@ -52,7 +52,7 @@ const OVERVIEW_PARAM_NAMES = [
 // הנוסח עצמו לא זז; רק המספר בתוכו נגזר.
 const filterLabels = (urgentHours) => ({
   all: 'הכול',
-  missing: 'הציגי חסרים בלבד',
+  missing: 'הצג חסרים בלבד',
   urgent: `דחוף (עד ${urgentHours} שעות)`,
 })
 

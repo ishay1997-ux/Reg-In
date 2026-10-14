@@ -243,6 +243,8 @@ describe('closingValidationSummary — משפט-החסימה היחיד ליד "
     expect(closingValidationSummary({ ...base, actualGuests: null })).toContain('כמות אורחים בפועל')
     expect(closingValidationSummary({ ...base, actualGuests: -1 })).toContain('כמות אורחים בפועל')
     expect(closingValidationSummary({ ...base, actualGuests: 0 })).toBeNull()
+    // שורה 12 בביקורת-הוולידציה: שבר נתפס גם כאן (הפרמטר בשרת `integer`).
+    expect(closingValidationSummary({ ...base, actualGuests: 95.5 })).toContain('כמות אורחים בפועל')
   })
 
   it('נוכחות חסרה בשורה ⇒ נספרת בנפרד מאיכות', () => {

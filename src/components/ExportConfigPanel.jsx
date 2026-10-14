@@ -12,6 +12,7 @@
 import { ChevronDown, ChevronUp, ChevronsUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import DateRangeNotice from '@/components/DateRangeNotice'
 import { distinctValues, isCategorical, operatorsFor } from '@/lib/exportFilters'
 
 const FIELD = 'w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs'
@@ -288,6 +289,8 @@ export default function ExportConfigPanel({
           />
         </label>
       </div>
+      {/* ביקורת-ולידציה שורה 26: "מתאריך" אחרי "עד תאריך" ⇒ הסבר מתחת לשדות. */}
+      <DateRangeNotice from={from} to={to} testId="export-date-range-notice" />
 
       {customers.length > 0 && (
         <label className="block text-xs text-slate-600">

@@ -60,11 +60,14 @@ import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
-import { toAgorot, toShekels } from '@/lib/pricing'
+import { isolatedShekels, toAgorot, toShekels } from '@/lib/pricing'
 import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { EMAIL_SEND_RESULT, sendResultMessage } from '@/lib/email'
 import { compensationReason } from '@/lib/projectCancellation'
-import { assertFinanceShape, scoreTag, scoreTagText } from '@/lib/projectFinance'
+import { assertFinanceShape, paymentDateIssues, scoreTag, scoreTagText } from '@/lib/projectFinance'
+import { todayIsoInJerusalem } from '@/lib/projectChanges'
+import CharCounter from '@/components/CharCounter'
+import { FREE_TEXT_REASON_MAX } from '@/lib/validators'
 // ⛔ ייבוא חוצה-מודולים במכוון ולא העתקה: הכלל "ציון מתחת לסף ⇒ טעון בירור" חייב
 // להיות אותו כלל בדיוק במסך-הלקוחות (מ2) ובמסך-הכספים, אחרת הם יסטו ביום שהסף ישתנה.
 import { needsSatisfactionAttention } from '@/lib/customers'
@@ -266,6 +269,20 @@ export function feeSaveGateNote({ amount }) {
   if (amount == null || !Number.isFinite(amount)) return FEE_SAVE_EMPTY_GATE
   if (amount <= 0) return FEE_SAVE_ZERO_GATE
   return null
+}
+
+// ✏️ ביקורת-ולידציה, שורה 6 (14/10/2026): הסכום הסופי נבדק רק `> 0` (גם בשרת), והוא **קפוא אחרי
+// השמירה** — אפשר היה לחתום על סכום גבוה מההצעה בלי מילה. **התראה רכה, לא שער**: המנהלת רשאית
+// לחייב יותר (ההצעה היא הצעה), אבל רואה את זה לפני הלחיצה. ‏`proposed` = התת-סכום, או התת-סכום
+// עם השורה הידנית כשהיא קיימת. אין הצעה (סיווג "אחר") ⇒ אין מה להשוות.
+// eslint-disable-next-line react-refresh/only-export-components -- כנ"ל: פונקציה טהורה שנועלת נוסח
+export function feeAboveProposedNote({ amount, proposed }) {
+  const proposedNumber = proposed == null ? null : Number(proposed)
+  if (amount == null || !Number.isFinite(amount) || proposedNumber == null) return null
+  if (!Number.isFinite(proposedNumber) || toAgorot(amount) <= toAgorot(proposedNumber)) return null
+  // הסכום מבודד-כיווניות (`isolatedShekels`): בלי זה ה-₪ נופל משמאל לספרות בתוך משפט עברי.
+  const shekel = (n) => isolatedShekels(n.toLocaleString('he-IL', { maximumFractionDigits: 2 }))
+  return `הסכום שהוזן (${shekel(amount)}) גבוה מהמוצע (${shekel(proposedNumber)}). אחרי השמירה הסכום קפוא — כדאי לוודא.`
 }
 
 // שער "ויתור על החוב" — ה28/P1: ויתור = סכום 0 **+ הערת-חובה**, ולכן הערה ריקה חוסמת.
@@ -757,11 +774,13 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
             id="closing-fee-note"
             type="text"
             value={note}
+            maxLength={FREE_TEXT_REASON_MAX}
             placeholder="חופשי — יישמר לצד הסכום הסופי"
             data-testid="closing-fee-note"
             onChange={(event) => onNote(event.target.value)}
             className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-800"
           />
+          <CharCounter value={note} max={FREE_TEXT_REASON_MAX} testId="closing-fee-note-counter" />
         </div>
       </div>
       {/* ✂️ שלב 5 — FEE_STORAGE_NOTE נמחקה מהבסיס (מדריך-הסגנון §4, דוגמה 2 — הכרעה סגורה):
@@ -835,7 +854,7 @@ function FeeActions({ busy, actions }) {
   )
 }
 
-function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, actions }) {
+function FeeProposalBlock({ proposal, cancelType, form, withManual, feeNotice, busy, actions }) {
   return (
     <div data-testid="closing-fee-block">
       {/* P1 · ה24 / ה23 */}
@@ -891,6 +910,15 @@ function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, action
         onAmount={form.setFeeAmount}
         onNote={form.setFeeNote}
       />
+      {feeNotice ? (
+        <p
+          className="mt-2 text-sm font-semibold text-amber-700"
+          role="status"
+          data-testid="closing-fee-above-proposed"
+        >
+          {feeNotice}
+        </p>
+      ) : null}
 
       <FeeActions busy={busy} actions={actions} />
     </div>
@@ -1042,7 +1070,18 @@ function InvoiceUploadBlock({
 // של ה-UI בלבד, ולא נובע מאף הכרעה רשומה (המוקאפ המאושר אינו מצייר את הבלוק כלל).
 // ⚠️ **החריג נשמר במפורש: בפרויקט מבוטל רישום-התשלום הוא גם רגע הקפאת-הרווח (Q-4)**,
 // והתיק ננעל מיד — שם הבלוק אכן נעלם, וזה נגזר מ-`phase.locked`, לא מכאן.
-function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, busy }) {
+function PaymentBlock({
+  value,
+  alreadyPaid,
+  invoiceSentAt,
+  onChange,
+  onSave,
+  onOpenWriteOff,
+  busy,
+}) {
+  // שורה 7 בביקורת-הוולידציה: "היום" נלכד פעם אחת (לא שעון בגוף ה-render — `react-hooks/purity`).
+  const [today] = useState(() => new Date())
+  const { error, notice } = paymentDateIssues(value, invoiceSentAt, today)
   return (
     <div data-testid="closing-payment-block">
       <SectionTitle>תשלום</SectionTitle>
@@ -1056,6 +1095,8 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
             type="date"
             dir="ltr"
             value={value}
+            max={todayIsoInJerusalem(today)}
+            aria-invalid={error ? true : undefined}
             data-testid="closing-payment-date"
             onChange={(event) => onChange(event.target.value)}
             className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-800"
@@ -1063,7 +1104,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
         </div>
         <Button
           type="button"
-          disabled={value === '' || busy !== ''}
+          disabled={value === '' || busy !== '' || Boolean(error)}
           data-testid="closing-save-payment"
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={onSave}
@@ -1081,7 +1122,21 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           סגור ללא תשלום
         </Button>
       </div>
+      <PaymentDateMessage error={error} notice={notice} />
     </div>
+  )
+}
+
+function PaymentDateMessage({ error, notice }) {
+  if (!error && !notice) return null
+  return (
+    <p
+      className={`mt-1 text-sm font-semibold ${error ? 'text-red-600' : 'text-amber-700'}`}
+      role={error ? 'alert' : 'status'}
+      data-testid="closing-payment-date-message"
+    >
+      {error ?? notice}
+    </p>
   )
 }
 
@@ -1099,11 +1154,13 @@ function WriteOffForm({ reason, onReason, onConfirm, onCancel, busy }) {
         id="closing-write-off-reason"
         rows={2}
         value={reason}
+        maxLength={FREE_TEXT_REASON_MAX}
         data-testid="closing-write-off-reason"
         placeholder="לדוגמה: הלקוח נכנס לפירוק; הגבייה מוצתה"
         onChange={(event) => onReason(event.target.value)}
         className="mt-1 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-right text-sm outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
       />
+      <CharCounter value={reason} max={FREE_TEXT_REASON_MAX} testId="closing-write-off-counter" />
       <div className="mt-2 flex flex-wrap gap-2">
         <Button
           type="button"
@@ -1645,6 +1702,8 @@ function derivedView({ detail, proposal, billing, phase, form, satisfactionThres
   const manualAgorot = form.manualAmount.trim() === '' ? 0 : toAgorot(form.manualAmount)
   const proposedAgorot = proposal?.proposed_fee == null ? null : toAgorot(proposal.proposed_fee)
   const feeAmountNumber = form.feeAmount.trim() === '' ? null : Number(form.feeAmount)
+  const withManual =
+    proposedAgorot != null && manualAgorot > 0 ? toShekels(proposedAgorot + manualAgorot) : null
 
   return {
     statusLabel: PROJECT_STATUS_LABELS[detail.project_status] ?? detail.project_status,
@@ -1657,9 +1716,12 @@ function derivedView({ detail, proposal, billing, phase, form, satisfactionThres
     // קראנו את הכרטיס. שניהם חוסמים את השליחה.
     billingUnknown: billing === undefined,
     billingEmailMissing: billing !== undefined && !billing?.email,
-    withManual:
-      proposedAgorot != null && manualAgorot > 0 ? toShekels(proposedAgorot + manualAgorot) : null,
+    withManual,
     feeAmountNumber,
+    feeAboveProposed: feeAboveProposedNote({
+      amount: feeAmountNumber,
+      proposed: withManual ?? proposal?.proposed_fee,
+    }),
     // שני השערים חיים כמשפט ולא כבוליאני, ומצב-הכפתור נגזר מ-`!= null` — בדיוק כמו
     // הארכוב ו"שמור סטטוס" בפוטר. כך אי-אפשר לכבות כפתור בלי שהסיבה תגיע איתו למסך.
     feeSaveGate: feeSaveGateNote({ amount: feeAmountNumber }),
@@ -1984,6 +2046,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
           cancelType={detail.cancel_type}
           form={feeForm}
           withManual={view.withManual}
+          feeNotice={view.feeAboveProposed}
           busy={busy}
           actions={feeActions}
         />
@@ -2011,6 +2074,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
         <PaymentBlock
           value={paymentDate}
           alreadyPaid={phase.paid}
+          invoiceSentAt={detail.invoice_sent_at}
           onChange={setPaymentDate}
           busy={busy}
           onSave={() =>

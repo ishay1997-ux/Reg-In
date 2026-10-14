@@ -13,6 +13,7 @@ import {
   isValidVatPercent,
   isValidGuestsRatio,
   isValidIsraeliId,
+  normalizeDecimalComma,
 } from './validators'
 
 describe('EMAIL_REGEX', () => {
@@ -192,5 +193,16 @@ describe('isValidIsraeliId — ספרת-ביקורת, לא "9 ספרות"', () =
   it('מקבל מספר עם רווחים או מקפים בקצוות/באמצע — המשתמשת מדביקה מהטלפון', () => {
     expect(isValidIsraeliId(' 123456782 ')).toBe(true)
     expect(isValidIsraeliId('123-456-782')).toBe(true)
+  })
+})
+
+// ביקורת-ולידציה שורה 13 (14/10/2026): פסיק עשרוני בשדות שעות.
+describe('normalizeDecimalComma', () => {
+  it('6,5 ⇒ 6.5; כל השאר כמו שהוא', () => {
+    expect(normalizeDecimalComma('6,5')).toBe('6.5')
+    expect(normalizeDecimalComma('6.5')).toBe('6.5')
+    expect(normalizeDecimalComma('6,')).toBe('6,')
+    expect(normalizeDecimalComma('1,2,3')).toBe('1,2,3')
+    expect(normalizeDecimalComma(null)).toBeNull()
   })
 })

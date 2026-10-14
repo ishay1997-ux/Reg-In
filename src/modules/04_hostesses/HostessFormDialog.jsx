@@ -34,6 +34,9 @@ import {
   HOSTESS_PARAM_NAMES,
   HOSTESS_STATUS_LABELS,
   minWageError,
+  highWageWarning,
+  hostessContactErrors,
+  unavailabilityDraftError,
   duplicateEmailWarning,
   unavailabilityLabel,
   optionalNumber,
@@ -161,6 +164,9 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
       found.id_number = 'מספר תעודת זהות אינו תקין'
     }
 
+    // 🔴 אימייל וטלפון — פורמט, **חוסם** (ביקורת-ולידציה שורות 21+22).
+    Object.assign(found, hostessContactErrors(form))
+
     // 🔴 שכר מתחת למינימום — **חוסם**, והרף מגיע מ-`params` ולעולם אינו מוקלד בקוד.
     if (String(form.hourly_rate ?? '').trim() !== '') {
       const wageError = minWageError(form.hourly_rate, params[HOSTESS_PARAM_NAMES.minHourlyWage])
@@ -173,6 +179,8 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
   // 🟡 אימייל כפול — **מזהיר ולא חוסם** (§7.65): תיבה משפחתית משותפת היא מקרה לגיטימי,
   // ואת כפילות-האדם מונעת הת"ז ממילא. 🚫 אין UNIQUE על העמודה במסד, במכוון.
   const emailWarning = duplicateEmailWarning(form.email, peers, isEdit ? hostessId : null)
+  // 🟡 שכר גבוה פי 2.5 מהמינימום — **מזהיר ולא חוסם** (ביקורת-ולידציה, שורה 8). מעל פי 10 — שגיאה למעלה.
+  const wageWarning = highWageWarning(form.hourly_rate, params[HOSTESS_PARAM_NAMES.minHourlyWage])
 
   // 🔴 שער-המרחק של Smart Match (`שער_מרחק_קמ`) הוא `params`, לא קבוע — ר' ההערה ליד
   // ההינט של "יש רכב?" למטה. `null` כל עוד `params` עדיין נטען (ADD פותח מיד, לפני הטעינה).
@@ -183,9 +191,10 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
   const blocked = Object.keys(errors).length > 0
 
   function addRange() {
-    if (!draftRange.start_date || !draftRange.end_date) return
-    if (draftRange.end_date < draftRange.start_date) {
-      toast.error('תאריך הסיום מוקדם מתאריך ההתחלה.')
+    // שורה 24 בביקורת-הוולידציה: גם תאריך חסר אומר למה (קודם — לחיצה שקטה שלא עשתה כלום).
+    const draftError = unavailabilityDraftError(draftRange)
+    if (draftError) {
+      toast.error(draftError)
       return
     }
     // 🔴 **נצבר בזיכרון-הטופס בלבד ונכתב רק עם "שמור שינויים"** — אותו דפוס בדיוק כמו
@@ -372,6 +381,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               <Field
                 label="שכר שעתי (₪)"
                 error={showError('hourly_rate')}
+                warning={wageWarning}
                 // 🔴 הסכום עובר דרך `Money` ולא נכתב ידנית בתוך המשפט. **נמדד בדפדפן
                 // 09/08/2026:** הנוסח הידני הציג את ה-₪ **משמאל** לספרות, בעוד `Money`
                 // באותו מסך מציג `45 ₪` — אותו סכום משני צדדים, המופע השביעי של המשפחה.

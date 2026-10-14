@@ -24,6 +24,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
+import { normalizeDecimalComma } from '@/lib/validators'
 import { formatDate, formatTimeRange, formatTimestampFull } from '@/lib/dates'
 import {
   ATTENDANCE_OPTIONS,
@@ -47,13 +48,15 @@ import {
   draftForValidation,
   buildPayloadRows,
   EVENT_HOURS_ERROR,
-  EVENT_GUESTS_ERROR,
   attendanceMissingError,
   qualityMissingError,
   NEGATIVE_REASON_ERROR,
   rowHoursError,
   eventHoursInvalid,
   eventGuestsInvalid,
+  eventHoursPlannedNotice,
+  eventGuestsError,
+  eventGuestsPlannedNotice,
   rowHoursOutOfRange,
   fileSizeText,
   changeLineText,
@@ -105,6 +108,16 @@ const SCOPE_COMMITS_NOW_NOTE =
 // שמות המיילים כפי שהם נקראים על המסך בכשל — "המסך אומר בשם איזה מייל נכשל".
 const REPORT_MAIL_NAME = 'מייל דוח-הסיכום'
 const SURVEY_MAIL_NAME = 'מייל הסקר'
+
+// התראה רכה מתחת לשדה (ענבר, לא חוסמת — "המערכת מודיעה ולא מחליטה", ⑯). ריק ⇒ כלום.
+function SoftNotice({ text, testId }) {
+  if (!text) return null
+  return (
+    <span className="text-xs font-semibold text-amber-700" role="status" data-testid={testId}>
+      {text}
+    </span>
+  )
+}
 
 function parseNumber(text) {
   if (text === '' || text === null || text === undefined) return null
@@ -274,6 +287,13 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
   )
 
   // הגבולות עצמם חיים ב-closingDraft (כלל 14) — כאן רק קוראים לפרדיקטים.
+  // שורה 5 בביקורת-הוולידציה: התראה רכה כששעות-הביצוע רחוקות מהמתוכנן (לא חוסמת).
+  const hoursNotice = eventHoursPlannedNotice(
+    eventHoursNum,
+    project?.final_start_time,
+    project?.final_end_time,
+  )
+  const guestsNotice = eventGuestsPlannedNotice(eventGuestsNum, quoteMeta?.estimated_guests)
   const hoursInvalid = eventHoursInvalid(eventHoursNum)
   const guestsInvalid = eventGuestsInvalid(eventGuestsNum)
   const fieldsOk = !hoursInvalid && !guestsInvalid
@@ -537,7 +557,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 disabled={!canAct}
                 className="h-9 w-28 rounded-lg border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-50"
                 value={hoursText}
-                onChange={(e) => setHoursText(e.target.value)}
+                onChange={(e) => setHoursText(normalizeDecimalComma(e.target.value))}
                 onBlur={() => setHoursTouched(true)}
                 onFocus={(e) => e.target.select()}
               />
@@ -557,6 +577,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 {EVENT_HOURS_ERROR}
               </span>
             )}
+            <SoftNotice text={hoursNotice} testId="closing-hours-notice" />
           </div>
 
           <div className="flex flex-col gap-1">
@@ -596,9 +617,10 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 className="text-xs font-semibold text-red-600"
                 data-testid="closing-guests-error"
               >
-                {EVENT_GUESTS_ERROR}
+                {eventGuestsError(eventGuestsNum)}
               </span>
             )}
+            <SoftNotice text={guestsNotice} testId="closing-guests-notice" />
           </div>
 
           <div className="flex flex-col gap-1">
