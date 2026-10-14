@@ -187,9 +187,10 @@ export function reportPeriodLabel(period: unknown, supplementSeq: number | null)
 }
 
 // תאריך האירוע `YYYY-MM-DD` ⇒ `DD/MM/YYYY` (כמו `formatDate` ב-`src/lib/dates.js`) — כמחרוזת, כדי
-// שאקסל לא יפרש אותו לפי הגדרות-אזור של המחשב הפותח. תאריך חסר/פגום ⇒ null ⇒ `—` בקובץ.
-// (שורות ישנות קפואות אינן נושאות תאריך; בהפקה הסופית `pipeline.ts` דורש תאריך לכל שורה.)
-function displayDate(value: unknown): string | null {
+// שאקסל לא יפרש אותו לפי הגדרות-אזור של המחשב הפותח. כמו בדפדפן: השורה שומרת את הערך הגולמי
+// (`eventDate`), והתא מציג `—` כשהוא חסר או פגום. (שורות ישנות קפואות אינן נושאות תאריך; בהפקה
+// הסופית `pipeline.ts` דורש תאריך תקין לכל שורה מוצגת.)
+export function displayDate(value: unknown): string | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(textOrNull(value) ?? '')
   return match ? `${match[3]}/${match[2]}/${match[1]}` : null
 }
@@ -258,7 +259,7 @@ function shapeLine(row: Row, index: number): SalaryLine {
       `שורת-שכר ${position} (${hostessName}) חסרה סכום.`,
     ),
     bankDetails: bankDetailsOf(row),
-    eventDate: displayDate(row?.event_date),
+    eventDate: textOrNull(row?.event_date),
     showInFile:
       typeof row?.show_in_file === 'boolean'
         ? row.show_in_file
@@ -323,7 +324,7 @@ function sheetLineRow(line: SalaryLine): SheetRow {
     textCell(line.idNumber),
     textCell(line.hostessName),
     line.bankDetails ? textCell(line.bankDetails) : dashCell(),
-    line.eventDate ? textCell(line.eventDate) : dashCell(),
+    line.eventDate ? textCell(displayDate(line.eventDate) ?? NOT_APPLICABLE) : dashCell(),
     moneyCell(line.rate),
     { value: line.hours, type: Number, format: HOURS_FORMAT },
     line.bonus === null ? dashCell() : moneyCell(line.bonus),

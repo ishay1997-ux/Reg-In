@@ -13,6 +13,7 @@
 
 import {
   buildSalaryReportDocument,
+  displayDate,
   reportPeriodLabel,
   SalaryReportError,
   type SalaryDocument,
@@ -347,7 +348,7 @@ async function prepareArtifact(deps: PayrollDeps, operationId: string): Promise<
   }
   // F12: הרו"ח מחשב שעות נוספות לפי יום, ולכן בקובץ הסופי לכל שורה מוצגת חייב להיות תאריך.
   // (בונה המסמך מציג `—` לתאריך חסר — זה נכון לשחזור של דוח ישן, לא לדוח שמופק עכשיו.)
-  if (doc.lines.some((line) => line.showInFile && !line.eventDate)) {
+  if (doc.lines.some((line) => line.showInFile && !displayDate(line.eventDate))) {
     return failOperation(
       deps,
       operationId,

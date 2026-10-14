@@ -4,18 +4,8 @@
 // String/Number, פורמט, הדגשה, יישור), שם קובץ, סכומים, חסרי-בנק וקוד-שגיאה.
 // ועוד: הרחבת דוח-ההשלמה, שאין לה מקבילה בדפדפן.
 import { describe, it, expect } from 'vitest'
-import {
-  buildSalaryReportDocument as browserBuild,
-  SALARY_REPORT_COLUMNS as BROWSER_COLUMNS,
-} from '@/lib/salaryReport'
+import { buildSalaryReportDocument as browserBuild } from '@/lib/salaryReport'
 import { buildSalaryReportDocument as edgeBuild, reportPeriodLabel } from './document.ts'
-
-// 🚧 F12 (14.10 00:30) שינה את עמודות הקובץ. הצד של השרת כבר לפי F12; בונה D מעדכן את
-// `src/lib/salaryReport.js` באותו פורמט. **עד שהקומיט שלו ממוזג לכאן**, השוואת הגיליון המלא
-// אינה אפשרית — משווים את כל השאר (כותרת, שם קובץ, תווית, סכומים, חסרי-בנק, קודי שגיאה),
-// וגוף הגיליון נבדק מול צורה מפורשת בבלוק "F12" למטה. כשהעמודה `תאריך` מופיעה אצל D —
-// ההשוואה המלאה חוזרת לפעול מעצמה, ואת הענף הזה מוחקים באותו קומיט.
-const BROWSER_HAS_F12 = BROWSER_COLUMNS.includes('תאריך')
 
 const GENERATED_AT = '2026-08-03T21:30:00Z'
 
@@ -126,26 +116,9 @@ const INVALID = {
   'תקופה פסולה': payload([line()], { period: '2026-13-01' }),
 }
 
-const HEADER_ROWS = 3
-
 function run(build, input, options) {
   try {
     const doc = build(input, options)
-    if (!BROWSER_HAS_F12) {
-      const { lineCount, fileLineCount, total, bonusTotal, travelTotal } = doc.totals
-      return {
-        header: doc.sheet.slice(0, HEADER_ROWS),
-        fileName: doc.fileName,
-        periodLabel: doc.periodLabel,
-        totals: { lineCount, fileLineCount, total, bonusTotal, travelTotal },
-        linesMissingBankDetails: doc.linesMissingBankDetails,
-        lines: doc.lines.map((l) => {
-          const rest = { ...l }
-          delete rest.eventDate
-          return rest
-        }),
-      }
-    }
     return {
       sheet: doc.sheet,
       fileName: doc.fileName,
@@ -344,9 +317,12 @@ describe('F12 — מבנה הקובץ לרו"ח (שעות ורכיבים, בלי
     ['null', null],
     ['פורמט אחר', '03/08/2026'],
     ['חותמת-זמן', '2026-08-03T10:00:00Z'],
-  ])('תאריך חסר/לא תקין (%s) ⇒ "—" בבונה המסמך', (_name, value) => {
-    const doc = edgeBuild(payload([line({ event_date: value })]), { generatedAt: GENERATED_AT })
-    expect(doc.sheet[5][3]).toEqual(dash)
-    expect(doc.lines[0].eventDate).toBeNull()
+  ])('תאריך חסר/לא תקין (%s) ⇒ "—" בתא, זהה לדפדפן', (_name, value) => {
+    const input = payload([line({ event_date: value })])
+    const doc = edgeBuild(input, { generatedAt: GENERATED_AT })
+    expect(doc.sheet[5][3].value).toBe('—')
+    expect(run(edgeBuild, input, { generatedAt: GENERATED_AT })).toEqual(
+      run(browserBuild, input, { generatedAt: GENERATED_AT }),
+    )
   })
 })
