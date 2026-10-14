@@ -14,6 +14,7 @@
 // בכל פעם שהקליטה נפלה.
 
 import { supabase } from '@/supabaseClient'
+import { normalizeDecimalComma } from '@/lib/validators'
 
 // קריאה בלבד. 🔑 פתיחת הקישור **לא משנה כלום** — סורק מיילים שפותח את הקישור לא מאשר דבר.
 export async function fetchPayrollReview(token) {
@@ -78,7 +79,8 @@ export const OBJECTION_FIELD_MESSAGES = {
 function parseSuggested(raw) {
   const text = String(raw ?? '').trim()
   if (text === '') return { present: false, value: null }
-  const value = Number(text)
+  // ביקורת-ולידציה שורה 13: `6,5` מהטלפון ⇒ 6.5 (`normalizeDecimalComma`).
+  const value = Number(normalizeDecimalComma(text))
   return { present: true, value }
 }
 

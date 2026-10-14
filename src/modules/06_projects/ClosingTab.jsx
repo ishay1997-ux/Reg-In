@@ -24,6 +24,7 @@ import LoadingOrError from '@/components/LoadingOrError'
 import PermissionAwareEmpty from '@/components/PermissionAwareEmpty'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
+import { normalizeDecimalComma } from '@/lib/validators'
 import { formatDate, formatTimeRange, formatTimestampFull } from '@/lib/dates'
 import {
   ATTENDANCE_OPTIONS,
@@ -556,7 +557,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 disabled={!canAct}
                 className="h-9 w-28 rounded-lg border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-50"
                 value={hoursText}
-                onChange={(e) => setHoursText(e.target.value)}
+                onChange={(e) => setHoursText(normalizeDecimalComma(e.target.value))}
                 onBlur={() => setHoursTouched(true)}
                 onFocus={(e) => e.target.select()}
               />

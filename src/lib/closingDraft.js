@@ -17,6 +17,7 @@ import {
   hostessActualCost,
 } from '@/lib/projectClosing'
 import { minutesBetweenTimes } from '@/lib/projectCard'
+import { normalizeDecimalComma } from '@/lib/validators'
 import { finalAssignmentRows } from '@/lib/hostesses'
 
 // ⚠️ Number('') ו-Number(null) מחזירים 0, לא NaN (המלכודת של projectClosing.js) — ריק
@@ -109,7 +110,8 @@ export function applyQualityReason(rows, key, qualityReason) {
 export function applyRowHours(rows, key, value) {
   return updateRow(rows, key, (row) => ({
     ...row,
-    manualHours: value === '' || value === null ? null : value,
+    // שורה 13: `6,5` נשמר כ-`6.5` (פסיק עשרוני) — ר' `normalizeDecimalComma`.
+    manualHours: value === '' || value === null ? null : normalizeDecimalComma(value),
     hoursOverridden: true,
   }))
 }

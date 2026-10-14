@@ -468,3 +468,15 @@ describe('אורחים בפועל — שלם, והשוואה להצעה', () => 
     expect(eventGuestsPlannedNotice(950, null)).toBe('')
   })
 })
+
+// ביקורת-ולידציה שורה 13 (14/10/2026): שעות-שורה עם פסיק עשרוני נשמרות כנקודה.
+describe('applyRowHours — פסיק עשרוני', () => {
+  it('6,5 ⇒ 6.5, ותקין בטווח', () => {
+    const rows = [
+      { hostessId: 'h', assignmentNumber: 1, hoursOverridden: false, manualHours: null },
+    ]
+    const [row] = applyRowHours(rows, 'h|1', '6,5')
+    expect(row.manualHours).toBe('6.5')
+    expect(rowHoursOutOfRange(row, 6)).toBe(false)
+  })
+})
