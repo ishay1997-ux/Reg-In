@@ -165,13 +165,13 @@ describe('ChartCard — סדרה מעורבת (series[].kind · series[].axis)',
   // 🌱 שלוש הסדרות של מ3, מילה-במילה מהמטען החי (`report_m03_trends`, 16/09/2026).
   const MIXED = {
     type: 'bar',
-    title: 'הכנסה ושולי-רווח לפי שנה',
+    title: 'הכנסה ושולי רווח לפי שנה',
     xKey: 'year',
     unit: 'money',
     series: [
       { key: 'revenue', label: 'הכנסה', kind: 'bar', axis: 'left', format: 'money' },
       { key: 'revenue_prev', label: 'הכנסה אשתקד', kind: 'bar', axis: 'left', format: 'money' },
-      { key: 'margin', label: 'שולי-רווח', kind: 'line', axis: 'right', format: 'percent' },
+      { key: 'margin', label: 'שולי רווח', kind: 'line', axis: 'right', format: 'percent' },
     ],
     data: [
       { year: 2024, revenue: 1385815, revenue_prev: 1100000, margin: 55.9 },
