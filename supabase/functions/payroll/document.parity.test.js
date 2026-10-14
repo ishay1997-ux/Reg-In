@@ -43,6 +43,40 @@ function payload(lines, overrides = {}) {
   }
 }
 
+// גיליון 2: נועה ראשונה בקלט, אפרת עם שתי משמרות (אחת פיצוי), שורת אפס של נועה, בתיה בלי בנק.
+const SUMMARY_PAYLOAD = payload([
+  line({
+    hostess_id: 903,
+    hostess_name: 'נועה לוי',
+    id_number: '000000018',
+    hours: 6,
+    rate: 45,
+    travel: 0,
+    line_total: 270,
+  }),
+  line(),
+  line({ line_basis: 'cancellation_compensation', hours: 4, travel: null, line_total: 200 }),
+  line({
+    hostess_id: 903,
+    hostess_name: 'נועה לוי',
+    id_number: '000000018',
+    hours: 0,
+    travel: null,
+    line_total: 0,
+    show_in_file: false,
+  }),
+  line({
+    hostess_id: 907,
+    hostess_name: 'בתיה כץ',
+    id_number: '301234567',
+    hours: 2.25,
+    rate: 40,
+    travel: 0,
+    line_total: 90,
+    bank_account: null,
+  }),
+])
+
 // עשרה מטענים תקינים (חוזה §6: שורות אפס, פיצוי, בנק חסר, שעות עם 3 ספרות, ת"ז עם אפס מוביל).
 const VALID = {
   'שורה אחת מלאה': payload([line()]),
@@ -92,6 +126,7 @@ const VALID = {
   'רשימה ריקה': payload([]),
   'תקופה בפורמט YYYY-MM': payload([line()], { period: '2026-02' }),
   'בלי תאריך משמרת (שורה ישנה)': payload([line({ event_date: null })]),
+  'סיכום לפי דיילת: שלוש דיילות, כמה משמרות, פיצוי, אפס, בלי בנק': SUMMARY_PAYLOAD,
 }
 
 // מטענים פגומים — שני הצדדים חייבים לזרוק את אותו קוד.
@@ -121,6 +156,7 @@ function run(build, input, options) {
     const doc = build(input, options)
     return {
       sheet: doc.sheet,
+      summarySheet: doc.summarySheet,
       fileName: doc.fileName,
       periodLabel: doc.periodLabel,
       totals: doc.totals,
@@ -325,5 +361,73 @@ describe('F12 — מבנה הקובץ לרו"ח (שעות ורכיבים, בלי
     expect(run(edgeBuild, input, { generatedAt: GENERATED_AT })).toEqual(
       run(browserBuild, input, { generatedAt: GENERATED_AT }),
     )
+  })
+})
+
+describe('גיליון 2 — "סיכום לפי דיילת" (כרטיס תיקונים 14/10)', () => {
+  const bold = (value) => ({ value, type: String, fontWeight: 'bold' })
+  const text = (value) => ({ value, type: String })
+  const dash = { value: '—', type: String, align: 'center' }
+  const count = (value) => ({ value, type: Number })
+  const hours = (value) => ({ value, type: Number, format: '0.00' })
+
+  it('תא-תא: כותרת גיליון 1, עמודות, דיילת לשורה לפי שם, בלי שורות אפס, ושורת סה"כ', () => {
+    const doc = edgeBuild(SUMMARY_PAYLOAD, { generatedAt: GENERATED_AT })
+    expect(doc.summarySheet).toEqual([
+      [bold('דוח שכר דיילות — אוגוסט 2026')],
+      [null],
+      ['ת"ז', 'שם', 'פרטי-בנק', 'משמרות', 'סה"כ שעות'].map(bold),
+      [text('203456789'), text('אפרת דהן'), text('הפועלים 601-2047199'), count(2), hours(9)],
+      [text('301234567'), text('בתיה כץ'), dash, count(1), hours(2.25)],
+      [text('000000018'), text('נועה לוי'), text('הפועלים 601-2047199'), count(1), hours(6)],
+      [
+        bold('סה"כ'),
+        null,
+        null,
+        { ...count(4), fontWeight: 'bold' },
+        { ...hours(17.25), fontWeight: 'bold' },
+      ],
+    ])
+    // הסיכום שווה לגיליון 1: אותן משמרות ואותו סה"כ שעות.
+    expect(doc.totals.hoursTotal).toBe(17.25)
+    expect(doc.totals.fileLineCount).toBe(4)
+  })
+
+  it('זהה לדפדפן בכל המטענים התקינים, כולל דוח השלמה', () => {
+    const supplement = {
+      ...SUMMARY_PAYLOAD,
+      report_id: 41,
+      kind: 'supplement',
+      original_report_id: 15,
+      supplement_seq: 1,
+    }
+    const edge = edgeBuild(supplement, { generatedAt: GENERATED_AT })
+    expect(edge.summarySheet[0]).toEqual([bold('דוח שכר דיילות — אוגוסט 2026 — השלמה 1')])
+    expect(edge.summarySheet.slice(1)).toEqual(
+      edgeBuild(SUMMARY_PAYLOAD, { generatedAt: GENERATED_AT }).summarySheet.slice(1),
+    )
+  })
+
+  it('אין בגיליון 2 שום סכום ₪', () => {
+    const doc = edgeBuild(SUMMARY_PAYLOAD, { generatedAt: GENERATED_AT })
+    const values = doc.summarySheet
+      .flat()
+      .filter(Boolean)
+      .map((cell) => cell.value)
+    for (const amount of [270, 272.6, 200, 90, 832.6]) expect(values).not.toContain(amount)
+    expect(doc.summarySheet.flat().some((cell) => cell?.format === '#,##0.00')).toBe(false)
+  })
+
+  it('רשימה ריקה ⇒ כותרות ושורת סה"כ אפס', () => {
+    const doc = edgeBuild(VALID['רשימה ריקה'], { generatedAt: GENERATED_AT })
+    expect(doc.summarySheet.slice(3)).toEqual([
+      [
+        bold('סה"כ'),
+        null,
+        null,
+        { ...count(0), fontWeight: 'bold' },
+        { ...hours(0), fontWeight: 'bold' },
+      ],
+    ])
   })
 })

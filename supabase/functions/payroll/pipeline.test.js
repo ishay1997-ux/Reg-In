@@ -1020,7 +1020,9 @@ describe('distribute', () => {
     expect(sent.to).toBe('ishay1997@gmail.com')
     expect(sent.subject).toBe('סיכום שעות לבדיקה — יולי 2026')
     expect(sent.body).not.toMatch(/הודעת בדיקה|הופנה|hostess1@example/)
-    expect(sent.body).toContain(`${ORIGIN}/payroll-review/tok_1_abcdefghijklmnopqrstuvwxyz0123`)
+    expect(sent.body).toContain(
+      `<a href="${ORIGIN}/payroll-review/tok_1_abcdefghijklmnopqrstuvwxyz0123">`,
+    )
     expect(sent.body).toContain('שלום דיילת 1,')
     expect(sent.body).toContain('נבקש להשיב עד 20/10/2026 18:00.')
     expect(sent.filename).toBe('')

@@ -97,6 +97,26 @@ function medianResponseHours(rows, minSamples) {
   return hours.length % 2 === 1 ? hours[middle] : (hours[middle - 1] + hours[middle]) / 2
 }
 
+// שורת-המשנה בכרטיס המועמדת: "עונה בדרך כלל תוך 6 שעות" (ישי 14/10 — זמן התגובה של כל דיילת).
+// למה: כשהאירוע קרוב, המנהלת מחליטה את מי להזמין, ו"תענה הכי מהר" ממיין לפי המספר הזה בלי
+// להראות אותו. עיגול: פחות משעה ⇒ "פחות משעה" · עד 48 שעות ⇒ שעות שלמות · מעל ⇒ ימים שלמים.
+// `null` (פחות תשובות מהסף) ⇒ null — אין שורה, לא "0".
+export function responseTimeLabel(medianHours) {
+  if (medianHours === null || medianHours === undefined) return null
+  const hours = Number(medianHours)
+  if (!Number.isFinite(hours) || hours < 0) return null
+  const prefix = 'עונה בדרך כלל תוך'
+  if (hours < 1) return `${prefix} פחות משעה`
+  if (hours <= 48) {
+    const rounded = Math.round(hours)
+    if (rounded === 1) return `${prefix} שעה`
+    if (rounded === 2) return `${prefix} שעתיים`
+    return `${prefix} ${rounded} שעות`
+  }
+  const days = Math.round(hours / 24)
+  return days === 2 ? `${prefix} יומיים` : `${prefix} ${days} ימים`
+}
+
 // כמה אירועים **שכבר עברו** עבדה הדיילת אצל לקוח האירוע הזה.
 // 🔴 ארבעה תנאים, וכל אחד מהם הוא הכרעה (הנחה 11 בבלופרינט): **אותו לקוח** ·
 // **`אושרה סופית`** בשורה הקובעת · **תאריך-אירוע שכבר עבר** — "עבדה אצל" בלשון עבר ·

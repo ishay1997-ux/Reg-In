@@ -1,6 +1,6 @@
 // מצב מרחב דוח השכר חי בכתובת (CLAUDE.md §4.2) — רענון, "חזור" וקישור ששותף מחזירים בדיוק
 // לאותו חודש, לשונית, מסנן, חיפוש ועמוד. מפתחות (חוזה §4.1): period · kind · original · view ·
-// filter · q · page · case · report · op.
+// filter · q · page · case · report · op · sheet (מתג התצוגה בטבלת הטיוטה).
 //
 // 🔴 **ה-setter מקבל גם פונקציה** (`update(prev => patch)`) — המוקש של CustomersPage
 // (30/07): סטר שקיבל פונקציה כתב את גוף-הפונקציה כמחרוזת לכתובת, בשקט.
@@ -11,13 +11,14 @@ import { useSearchParams } from 'react-router-dom'
 import {
   FILTERS,
   KINDS,
+  SHEETS,
   VIEWS,
   parseChoice,
   parsePeriodParam,
   parsePositiveInt,
 } from './payrollModel'
 
-const REPLACE_KEYS = new Set(['filter', 'q', 'page'])
+const REPLACE_KEYS = new Set(['filter', 'q', 'page', 'sheet'])
 
 function readState(params) {
   return {
@@ -31,6 +32,7 @@ function readState(params) {
     caseId: parsePositiveInt(params.get('case')),
     reportId: parsePositiveInt(params.get('report')),
     opId: params.get('op') || null,
+    sheet: parseChoice(params.get('sheet'), SHEETS, 'shift'),
   }
 }
 
@@ -45,6 +47,7 @@ const PARAM_OF = {
   caseId: 'case',
   reportId: 'report',
   opId: 'op',
+  sheet: 'sheet',
 }
 
 export function usePayrollUrl() {

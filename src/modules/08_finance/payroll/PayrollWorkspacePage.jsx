@@ -395,6 +395,8 @@ function SectionFor({ view, url, update, data, canEdit }) {
       canEdit={canEdit}
       page={url.page}
       onPage={(page) => update({ page })}
+      sheet={url.sheet}
+      onSheet={(sheet, page = null) => update({ sheet: sheet === 'shift' ? null : sheet, page })}
       startingReview={data.startingReview}
       onStartReview={() => data.startReview(() => update({ view: 'review', page: null }))}
       onOpenReport={(reportId) => update({ view: 'history', reportId })}

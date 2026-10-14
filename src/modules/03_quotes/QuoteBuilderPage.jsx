@@ -31,7 +31,6 @@ import {
   buildQuoteLines,
   computeEventHours,
   computeLinesCost,
-  crossesMidnight,
   deriveProfitability,
   hasQuoteChanged,
   linesMissingCost,
@@ -43,6 +42,8 @@ import {
   validateQuoteForm,
   QUOTE_SCREEN_PARAM_NAMES,
 } from '@/lib/quotes'
+import { eventTimeNotices } from '@/lib/eventTimeChecks'
+import EventTimeNotices from '@/components/EventTimeNotices'
 // N2: הראשי הוא שורת customer_contacts עם is_primary — primaryContact היא נקודת-הבחירה היחידה.
 import { primaryContact } from '@/lib/customers'
 import { listCustomers } from '@/modules/02_customers/api'
@@ -373,6 +374,12 @@ export default function QuoteBuilderPage() {
   const recommendedHostesses = recommendHostessCount(form.guests, form.ratio)
   const actualHostesses = sumHostessQty(lines)
   const eventHours = computeEventHours(form.startTime, form.endTime)
+  // הערות רכות מתחת למשך: חוצה חצות · משך מעל הסף שבהגדרות (חסר ⇒ 10) · סיום = התחלה.
+  const timeNotices = eventTimeNotices(
+    form.startTime,
+    form.endTime,
+    screenParams[QUOTE_SCREEN_PARAM_NAMES.eventDurationWarningHours],
+  )
 
   function updateForm(patch) {
     setForm((prev) => ({ ...prev, ...patch }))
@@ -684,15 +691,18 @@ export default function QuoteBuilderPage() {
                 )}
               </div>
 
-              <Field id="quote-hours" label="משך האירוע" className="md:col-span-2">
-                <output
-                  id="quote-hours"
-                  className="flex h-9 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100 text-sm text-slate-600"
-                  data-testid="quote-hours"
-                >
-                  {eventHours === null ? '—' : `${eventHours} שעות`}
-                </output>
-              </Field>
+              <div className="md:col-span-2">
+                <Field id="quote-hours" label="משך האירוע">
+                  <output
+                    id="quote-hours"
+                    className="flex h-9 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-100 text-sm text-slate-600"
+                    data-testid="quote-hours"
+                  >
+                    {eventHours === null ? '—' : `${eventHours} שעות`}
+                  </output>
+                </Field>
+                <EventTimeNotices notices={timeNotices} testId="quote-time-notices" />
+              </div>
 
               {/* כוח אדם כנוסחה: 300 ÷ 50 = 6. שלוש משבצות קטנות בקבוצה אחת במקום שלושה
                   שדות רחבים למספרים דו-ספרתיים (הכרעת-ישי 29/07). */}
@@ -776,13 +786,6 @@ export default function QuoteBuilderPage() {
                   הנחה קבועה {Number(form.appliedDiscount)}%
                 </span>
               </div>
-            )}
-
-            {/* רמזים רכים — מופיעים רק כשיש מה לומר, לא כאישור על מצב תקין. */}
-            {crossesMidnight(form.startTime, form.endTime) && (
-              <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                האירוע נמשך אל תוך הלילה.
-              </p>
             )}
           </section>
 
