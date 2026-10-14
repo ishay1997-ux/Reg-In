@@ -8,6 +8,8 @@
 // יחד עם זו של מודולים 2 ו-3 — בית שלישי לוולידטורים היה חריג שאין לו הצדקה.
 // כאן יושבים **כללים עסקיים**: מה חוסם, מה מזהיר, ומה נגזר בזמן-תצוגה.
 
+import { isolatedShekels } from '@/lib/pricing'
+
 const MS_PER_HOUR = 3_600_000
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem'
 
@@ -123,24 +125,15 @@ export function eventStartInstant(eventDate, startTime) {
 // המטרה כאן היא שהמשתמשת תראה את זה מיד ולא אחרי סיבוב לשרת — ו**באותו נוסח**.
 // 🚫 פרמטר חסר אינו "אין מגבלה": המסד היה חוסם בכל מקרה, ולכן מסך שמתיר שמירה
 // כשהפרמטר נמחק מבטיח שמירה שתיכשל.
-// 🔴 **בידוד-כיווניות לסכום שיושב בתוך משפט עברי — המופע השביעי של אותה משפחה.**
-// ‏`Money` פותר את זה במסך דרך `dir="ltr"` + `unicode-bidi:isolate`, **ולמחרוזת שטוחה
-// אין מקבילה כזו** — היא נשלפת מכאן ומוצגת כטקסט. בלי בידוד, אלגוריתם ה-bidi מעביר את
-// ה-₪ אל **שמאל** הספרות, ואותו סכום מופיע במסך אחד משני צדדים שונים.
-// 🔬 **נמדד בדפדפן אמיתי (09/08/2026), לא הונח:** מיקום הגליף `₪` היה **שמאלה** מהספרות
-// בשתי המחרוזות של המסך — בעוד `Money` באותו מסך מציג `45 ₪`. ישי הצביע על החשד; המדידה
-// אישרה אותו. ⇒ `U+2066` (LRI) … `U+2069` (PDI) עוטפים את הסכום ומבודדים אותו, בדיוק
-// כפי ש-`isolate` עושה ב-CSS. **תווים אלה בלתי-נראים בכוונה ואינם משנים את הנוסח.**
-// ⚠️ ולכן הם **מרוכזים בפונקציה אחת עם שם**, ולא מודבקים בתוך מחרוזות — הריפו כבר נכווה
-// מ-`U+200F` נסתר שאיש לא ידע שהוא שם ושיבש ספירה.
-const LTR_ISOLATE = '⁦'
-const POP_ISOLATE = '⁩'
+// 🔴 בידוד-כיווניות לסכום שבתוך משפט עברי — `isolatedShekels`, עבר ל-`src/lib/pricing.js`
+// (14/10/2026: נדרש למחרוזת נוספת — אזהרות-הולידציה של מחירון וכספים — ולכן יוצא לבית המשותף
+// של עיצוב-הכסף, כפי שההערה כאן חזתה).
 
-// 🚫 **לא מיוצאת** — ‏knip תפס את הייצוא הספקולטיבי ובצדק: אין לה צרכן מחוץ לקובץ.
-// כשתידרש למחרוזת נוספת (תבניות-המייל של מ8/מ11 נושאות את אותה חולשה) — אז מייצאים.
-function isolatedShekels(amount) {
-  return `${LTR_ISOLATE}${amount} ₪${POP_ISOLATE}`
-}
+// ✏️ ביקורת-ולידציה, שורה 8 (14/10/2026, הספים אושרו ע"י ישי): לשכר היה רצפה ולא תקרה —
+// `3500` במקום `35` עבר, וכל שעה בשכר ×100. **מעל פי 10 מהמינימום ⇒ חסימה** (אין דיילת כזו);
+// **מעל פי 2.5 ⇒ התראה רכה** (`highWageWarning`) — תעריף גבוה אמיתי אפשרי, ספרה שנוספה סבירה יותר.
+export const WAGE_BLOCK_FACTOR = 10
+export const WAGE_WARN_FACTOR = 2.5
 
 export function minWageError(hourlyRate, minWageParamValue) {
   const min = optionalNumber(minWageParamValue)
@@ -149,7 +142,18 @@ export function minWageError(hourlyRate, minWageParamValue) {
   const rate = optionalNumber(hourlyRate)
   if (rate === null) return 'יש להזין שכר שעתי.'
 
-  return rate < min ? `השכר השעתי חייב להיות לפחות ${isolatedShekels(min)} (שכר מינימום).` : null
+  if (rate < min) return `השכר השעתי חייב להיות לפחות ${isolatedShekels(min)} (שכר מינימום).`
+  return rate > min * WAGE_BLOCK_FACTOR ? 'השכר השעתי חורג מכל טווח סביר — יש לתקן.' : null
+}
+
+// התראה רכה (לא חוסמת) — בין פי 2.5 לפי 10 מהמינימום. מעל פי 10 זו כבר שגיאה (`minWageError`).
+export function highWageWarning(hourlyRate, minWageParamValue) {
+  const min = optionalNumber(minWageParamValue)
+  const rate = optionalNumber(hourlyRate)
+  if (min === null || min <= 0 || rate === null) return null
+  if (rate <= min * WAGE_WARN_FACTOR || rate > min * WAGE_BLOCK_FACTOR) return null
+  const factor = Math.round((rate / min) * 10) / 10
+  return `השכר השעתי ${isolatedShekels(rate)} גבוה פי ${factor} משכר המינימום (${isolatedShekels(min)}). כדאי לוודא שלא נוספה ספרה.`
 }
 
 // אימייל כפול — **מזהיר ולא חוסם** (§7.65, הכרעת-ישי 31/07): תיבה משפחתית משותפת היא

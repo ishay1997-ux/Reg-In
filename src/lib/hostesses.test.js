@@ -7,6 +7,7 @@ import {
   COMPLETED_ASSIGNMENT_LABEL,
   eventStartInstant,
   minWageError,
+  highWageWarning,
   duplicateEmailWarning,
   isUnavailableOn,
   approvedButUnavailable,
@@ -83,6 +84,22 @@ describe('שמות שלושת ספי-הזימון ב-params — זהים-ביי�
     expect(HOSTESS_PARAM_NAMES.inviteValidityHours).toBe('שעות_תוקף_זימון')
     expect(HOSTESS_PARAM_NAMES.inviteCutoffHours).toBe('שעות_סף_זימון_לפני_אירוע')
     expect(HOSTESS_PARAM_NAMES.urgentEventHours).toBe('שעות_אירוע_דחוף')
+  })
+})
+
+// ── תקרת-שכר (ביקורת-ולידציה שורה 8, 14/10/2026 — הספים אושרו ע"י ישי) ──────────
+describe('שכר שעתי גבוה — מעל פי 2.5 מזהיר, מעל פי 10 חוסם', () => {
+  it('3500 במקום 35 (פי 100) ⇒ חסימה', () => {
+    expect(minWageError(3500, '35.4')).toBe('השכר השעתי חורג מכל טווח סביר — יש לתקן.')
+    expect(minWageError(354, '35.4')).toBeNull()
+  })
+  it('פי 2.5–10 ⇒ אזהרה בנוסח, עם סכומים מבודדים; עד פי 2.5 או מעל פי 10 ⇒ null', () => {
+    expect(highWageWarning(100, '35.4')).toBe(
+      'השכר השעתי ⁦100 ₪⁩ גבוה פי 2.8 משכר המינימום (⁦35.4 ₪⁩). כדאי לוודא שלא נוספה ספרה.',
+    )
+    expect(highWageWarning(88.5, '35.4')).toBeNull()
+    expect(highWageWarning(3500, '35.4')).toBeNull()
+    expect(highWageWarning(100, '')).toBeNull()
   })
 })
 

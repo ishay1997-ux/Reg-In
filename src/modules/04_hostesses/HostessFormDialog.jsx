@@ -34,6 +34,7 @@ import {
   HOSTESS_PARAM_NAMES,
   HOSTESS_STATUS_LABELS,
   minWageError,
+  highWageWarning,
   duplicateEmailWarning,
   unavailabilityLabel,
   optionalNumber,
@@ -173,6 +174,8 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
   // 🟡 אימייל כפול — **מזהיר ולא חוסם** (§7.65): תיבה משפחתית משותפת היא מקרה לגיטימי,
   // ואת כפילות-האדם מונעת הת"ז ממילא. 🚫 אין UNIQUE על העמודה במסד, במכוון.
   const emailWarning = duplicateEmailWarning(form.email, peers, isEdit ? hostessId : null)
+  // 🟡 שכר גבוה פי 2.5 מהמינימום — **מזהיר ולא חוסם** (ביקורת-ולידציה, שורה 8). מעל פי 10 — שגיאה למעלה.
+  const wageWarning = highWageWarning(form.hourly_rate, params[HOSTESS_PARAM_NAMES.minHourlyWage])
 
   // 🔴 שער-המרחק של Smart Match (`שער_מרחק_קמ`) הוא `params`, לא קבוע — ר' ההערה ליד
   // ההינט של "יש רכב?" למטה. `null` כל עוד `params` עדיין נטען (ADD פותח מיד, לפני הטעינה).
@@ -372,6 +375,7 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
               <Field
                 label="שכר שעתי (₪)"
                 error={showError('hourly_rate')}
+                warning={wageWarning}
                 // 🔴 הסכום עובר דרך `Money` ולא נכתב ידנית בתוך המשפט. **נמדד בדפדפן
                 // 09/08/2026:** הנוסח הידני הציג את ה-₪ **משמאל** לספרות, בעוד `Money`
                 // באותו מסך מציג `45 ₪` — אותו סכום משני צדדים, המופע השביעי של המשפחה.
