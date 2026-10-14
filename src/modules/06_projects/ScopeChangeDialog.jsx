@@ -53,6 +53,8 @@ import {
 } from '@/lib/projects'
 import { computeQuoteTotals, findMatchingTier, resolveUnitPrice } from '@/lib/pricing'
 import { formatDate, formatTimeRange, formatTimestamp } from '@/lib/dates'
+import CharCounter from '@/components/CharCounter'
+import { FREE_TEXT_REASON_MAX } from '@/lib/validators'
 
 // 🔒 מחרוזות-הסירוב זהות-בייט לשרת — הדיאלוג חוסם **לפני** השליחה באותו משפט בדיוק
 // שה-RPC היה זורק (as-built ② של צעד 3.6: "verify they are identical, not merely similar").
@@ -1107,6 +1109,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           id="scope-change-reason"
           rows={2}
           value={reason}
+          maxLength={FREE_TEXT_REASON_MAX}
           disabled={submitting}
           data-testid="scope-reason"
           placeholder="לדוגמה: רון גל הודיע ב-12/08 שיגיעו עוד 80 אורחים וביקש להוסיף 2 דיילות"
@@ -1115,6 +1118,7 @@ function ScopeChangeBody({ project, onOpenChange, onSaved, now }) {
           }`}
           onChange={(e) => setReason(e.target.value)}
         />
+        <CharCounter value={reason} max={FREE_TEXT_REASON_MAX} testId="scope-reason-counter" />
         {reasonEmpty && changedCount > 0 ? (
           <span
             className="text-xs font-semibold text-red-600"

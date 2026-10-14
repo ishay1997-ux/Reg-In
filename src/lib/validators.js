@@ -46,6 +46,10 @@ export function isValidPositivePrice(value) {
   return Number.isFinite(n) && n > 0
 }
 
+// ✏️ ביקורת-ולידציה שורה 28 (14/10/2026): תקרה אחידה לשדות סיבה/הערה בדיאלוגים (דחיית הצעה ·
+// ביטול פרויקט · שינוי תכולה · סגירה בלי תשלום · הערת דמי-ביטול). עד כאן — בלי תקרה בכלל.
+export const FREE_TEXT_REASON_MAX = 500
+
 // קישור https תקין (עבר לכאן מ-`paramsRegistry.js` 14/10/2026 — צרכן שני: קישור-התמונה במוצר).
 // ריק ⇒ false; המסך מחליט אם ריק מותר.
 export function isValidHttpsUrl(value) {

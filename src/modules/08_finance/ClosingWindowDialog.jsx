@@ -66,6 +66,8 @@ import { EMAIL_SEND_RESULT, sendResultMessage } from '@/lib/email'
 import { compensationReason } from '@/lib/projectCancellation'
 import { assertFinanceShape, paymentDateIssues, scoreTag, scoreTagText } from '@/lib/projectFinance'
 import { todayIsoInJerusalem } from '@/lib/projectChanges'
+import CharCounter from '@/components/CharCounter'
+import { FREE_TEXT_REASON_MAX } from '@/lib/validators'
 // ⛔ ייבוא חוצה-מודולים במכוון ולא העתקה: הכלל "ציון מתחת לסף ⇒ טעון בירור" חייב
 // להיות אותו כלל בדיוק במסך-הלקוחות (מ2) ובמסך-הכספים, אחרת הם יסטו ביום שהסף ישתנה.
 import { needsSatisfactionAttention } from '@/lib/customers'
@@ -772,11 +774,13 @@ function FeeAmountFields({ amount, note, cancelType, onAmount, onNote }) {
             id="closing-fee-note"
             type="text"
             value={note}
+            maxLength={FREE_TEXT_REASON_MAX}
             placeholder="חופשי — יישמר לצד הסכום הסופי"
             data-testid="closing-fee-note"
             onChange={(event) => onNote(event.target.value)}
             className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-800"
           />
+          <CharCounter value={note} max={FREE_TEXT_REASON_MAX} testId="closing-fee-note-counter" />
         </div>
       </div>
       {/* ✂️ שלב 5 — FEE_STORAGE_NOTE נמחקה מהבסיס (מדריך-הסגנון §4, דוגמה 2 — הכרעה סגורה):
@@ -1150,11 +1154,13 @@ function WriteOffForm({ reason, onReason, onConfirm, onCancel, busy }) {
         id="closing-write-off-reason"
         rows={2}
         value={reason}
+        maxLength={FREE_TEXT_REASON_MAX}
         data-testid="closing-write-off-reason"
         placeholder="לדוגמה: הלקוח נכנס לפירוק; הגבייה מוצתה"
         onChange={(event) => onReason(event.target.value)}
         className="mt-1 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-right text-sm outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
       />
+      <CharCounter value={reason} max={FREE_TEXT_REASON_MAX} testId="closing-write-off-counter" />
       <div className="mt-2 flex flex-wrap gap-2">
         <Button
           type="button"
