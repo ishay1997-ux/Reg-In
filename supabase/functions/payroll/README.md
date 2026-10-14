@@ -6,9 +6,11 @@ link per hostess). Contract: `docs/specs/module_08_finance/payroll-contract.md` 
 deputy's fixes in `contract-fixes.md` (F1, F2, F7, F9 touch this function).
 
 🔒 **Every mail goes through `guard.ts`.** An address that is not `ishay1997@gmail.com` (or its
-`+tag`) is delivered to `ishay1997@gmail.com`, with a notice line at the top of the body and
-`[הופנה: <intended>]` in the subject. Owner ruling, 13.10.2026: *"שליחת מיילים אמיתית לכתובת
-ishay1997@gmail.com בלבד"*. There is no environment switch; lifting the guard is a code change.
+`+tag`) is delivered to `ishay1997@gmail.com`. Owner ruling, 13.10.2026: *"שליחת מיילים אמיתית
+לכתובת ishay1997@gmail.com בלבד"*. There is no environment switch; lifting the guard is a code
+change. **The redirect is invisible in the mail (F13, 14.10):** subject and body are exactly what
+the original recipient would get; only `To` changes. Who it was meant for and where it went are
+recorded only in the database (`intended_recipient`, `delivered_recipient`, `redirected`).
 `send-email/guard.ts` is a byte-identical copy (a unit test fails if they drift).
 
 ## Files
@@ -75,14 +77,18 @@ the database re-checks 'כספים' edit for that actor.
 1. `OPTIONS` → 200; `POST` without a JWT → 401.
 2. A finance-view user: `{action:'distribute', …}` → 403 `PERMISSION_DENIED`, and no attempt row.
 3. `{action:'distribute', app_origin:'https://evil.example', …}` → `ORIGIN_NOT_ALLOWED`, no rows.
-4. Acceptance P4 (July, 3 hostesses): 3 mails reach `ishay1997@gmail.com`, each with the notice
-   line and `[הופנה: …]`; `payroll_mail_attempts` and `email_log` hold both the intended and the
-   delivered address; the link opens `/payroll-review/<token>`.
+4. Acceptance P4 (July, 3 hostesses): 3 mails reach `ishay1997@gmail.com` and look exactly like
+   the real hostess mail (no test notice, no subject tag); `payroll_mail_attempts` and `email_log`
+   hold both the intended and the delivered address; the link opens `/payroll-review/<token>`.
 5. Acceptance P8: the downloaded artifact's sha256 equals `salary_reports.artifact_sha256`; the
-   accountant mail is redirected; history shows `נשלח`.
+   accountant mail reaches `ishay1997@gmail.com` looking like the real accountant mail, and the
+   attempt row records the accountant address as intended; history shows `נשלח`.
 6. Function logs contain no webhook URL and no token (`error_detail` is URL-stripped).
 
 ## Known limits
+
+- Resume and retry always send the attempt id the database returns (the newest attempt for the
+  report); an older attempt that is no longer claimable never blocks it.
 
 - No local Supabase (contract §9.1): the pipeline is proven against fakes shaped like the
   contract's return values, not against A's and B's real functions. Integration is checked in
