@@ -624,3 +624,44 @@ export function buildSalaryReportReconstructionDocument(report, lines, { reconst
     ),
   }
 }
+
+// ── תצוגה מקדימה של הקובץ על המסך (הכרעת ישי 14/10 09:15) ──────────────────────────
+// *"למה שהטיוטה לא תציג את הטיוטה שתשלח לרואה חשבון והיא תהיה התצוגה המקדימה"* — טבלת הטיוטה
+// במסך היא הקובץ אחד-לאחד: אותן עמודות (`SALARY_REPORT_COLUMNS`), אותן שורות (N-4: רק מה
+// שנכנס לקובץ), ואותו פורמט ערכים. כאן הפורמט של כל תא, מאותם כללים שהקובץ משתמש בהם, כדי
+// שהמסך והקובץ לא יוכלו לסטות זה מזה.
+const fileNumber = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+// שורת תצוגה מקדימה (צורת `payroll_preview.lines`) ⇒ שמונה ערכי-תא כטקסט, בסדר הקובץ.
+// לא זורקת: שורה חסומה מוצגת עם `—` במקום הערך החסר, והחסימה עצמה מוסברת מחוץ לטבלה.
+export function salaryFilePreviewCells(row) {
+  const isActual = row?.line_basis === SALARY_LINE_BASIS.ACTUAL
+  const number = (value) => {
+    const n = toFiniteNumber(value)
+    return n === null ? NOT_APPLICABLE : fileNumber.format(n)
+  }
+  return [
+    textOrNull(row?.id_number) ?? NOT_APPLICABLE,
+    textOrNull(row?.hostess_name) ?? NOT_APPLICABLE,
+    bankDetailsOf(row) ?? NOT_APPLICABLE,
+    formatDate(row?.event_date, NOT_APPLICABLE),
+    number(row?.rate),
+    toFiniteNumber(row?.hours) === null ? NOT_APPLICABLE : toFiniteNumber(row.hours).toFixed(2),
+    isActual ? number(row?.bonus ?? 0) : NOT_APPLICABLE,
+    isActual ? number(row?.travel ?? 0) : NOT_APPLICABLE,
+  ]
+}
+
+// "סה"כ שעות" של שורות הקובץ, באותו פורמט כמו בקובץ (`0.00`). חסר ערך ⇒ `—`, לא 0.
+export function salaryFileHoursTotal(rows) {
+  let hundredths = 0
+  for (const row of rows ?? []) {
+    const n = toFiniteNumber(row?.hours)
+    if (n === null) return NOT_APPLICABLE
+    hundredths += Math.round(n * 100)
+  }
+  return (hundredths / 100).toFixed(2)
+}

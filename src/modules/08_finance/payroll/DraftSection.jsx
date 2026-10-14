@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import Disclosure from '@/components/Disclosure'
 import LoadingOrError from '@/components/LoadingOrError'
 import Ltr from '@/components/Ltr'
-import Money from '@/components/Money'
 import StatTile from '@/components/StatTile'
 import { Pager } from '@/components/ListWindow'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
@@ -14,6 +13,11 @@ import { paginate } from '@/lib/listWindow'
 import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { Banner, Card, NotApplicable, Td, Th } from './payrollUi'
 import { useDraftDownload } from './useDraftDownload'
+import {
+  SALARY_REPORT_COLUMNS,
+  salaryFileHoursTotal,
+  salaryFilePreviewCells,
+} from '@/lib/salaryReport'
 import {
   countPhrase,
   formatHours,
@@ -101,8 +105,10 @@ export default function DraftSection({
   const zeroDurationCount = lines.filter((l) =>
     (l.warnings ?? []).includes('COMP_DURATION_ZERO'),
   ).length
-  const firstBlockedIndex = lines.findIndex((l) => (l.defects ?? []).length > 0)
-  const paged = paginate(lines, page)
+  // הטבלה היא הקובץ לרו"ח (הכרעת ישי 14/10): רק השורות שנכנסות לקובץ (N-4).
+  const fileLines = lines.filter((l) => l.show_in_file !== false)
+  const firstBlockedIndex = fileLines.findIndex((l) => (l.defects ?? []).length > 0)
+  const paged = paginate(fileLines, page)
 
   // החסימה מוסברת פעם אחת, בהודעה שמעל (מדריך UX D4). מתחת לכפתור — רק סיבת החודש (D11).
   const startDisabledReason = canEdit && !monthEnded ? monthNotEndedMessage(preview.period) : null
@@ -257,7 +263,17 @@ export default function DraftSection({
           </div>
         ) : (
           <>
-            <DraftTable rows={paged.pageRows} offset={paged.from - 1} />
+            <h3
+              className="mb-2 text-sm font-semibold text-slate-800"
+              data-testid="payroll-file-preview-title"
+            >
+              כך ייראה הקובץ לרואה החשבון
+            </h3>
+            <DraftTable
+              rows={paged.pageRows}
+              offset={paged.from - 1}
+              hoursTotal={salaryFileHoursTotal(fileLines)}
+            />
             <Pager {...paged} onPage={onPage} testId="payroll-draft-pager" />
           </>
         )}
@@ -313,23 +329,24 @@ function DraftDetails({ preview, missingBank, zeroDurationCount }) {
   )
 }
 
-function DraftTable({ rows, offset }) {
+// תצוגה מקדימה של הקובץ, אחד-לאחד: עמודות `SALARY_REPORT_COLUMNS`, ערכים מ-`salaryFilePreviewCells`
+// (אותם כללי פורמט כמו בקובץ), ושורת "סה"כ שעות". מה שאינו חלק מהקובץ — חסימה, בנק חסר,
+// פיצוי ביטול — מוצג כתג קטן בתוך התא, לא כעמודה.
+function DraftTable({ rows, offset, hoursTotal }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[760px] text-sm" data-testid="payroll-draft-table">
+      <table className="w-full min-w-[860px] text-sm" data-testid="payroll-draft-table">
         <thead>
           <tr>
-            <Th className="w-[26%]">דיילת</Th>
-            <Th>שעות</Th>
-            <Th>תעריף</Th>
-            <Th>בונוס</Th>
-            <Th>נסיעות</Th>
+            {SALARY_REPORT_COLUMNS.map((label) => (
+              <Th key={label}>{label}</Th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((line, i) => {
             const defects = line.defects ?? []
-            const isComp = line.line_basis === 'cancellation_compensation'
+            const cells = salaryFilePreviewCells(line)
             return (
               <tr
                 key={`${line.project_id}-${line.hostess_id}-${line.assignment_number}-${line.line_basis}`}
@@ -338,53 +355,54 @@ function DraftTable({ rows, offset }) {
                 data-testid="payroll-draft-row"
               >
                 <Td>
-                  <div className="font-semibold text-slate-800">{line.hostess_name || '—'}</div>
-                  <div className="mt-0.5 text-xs text-slate-600">
-                    {line.event_name} · <Ltr>{formatDate(line.event_date, '—')}</Ltr> ·{' '}
-                    {BASIS_LABELS[line.line_basis] ?? line.line_basis}
-                  </div>
+                  <Ltr>{cells[0]}</Ltr>
+                </Td>
+                <Td>
+                  <div className="font-semibold text-slate-800">{cells[1]}</div>
+                  {line.line_basis === 'cancellation_compensation' && (
+                    <div className="text-xs text-slate-600">{BASIS_LABELS[line.line_basis]}</div>
+                  )}
                   {defects.length > 0 && (
                     <div className="mt-1 text-xs font-semibold text-red-700" role="note">
                       {defects.map((d) => DEFECT_LABELS[d] ?? payrollErrorMessage(d)).join(' · ')}
                     </div>
                   )}
-                  {line.show_in_file && !line.bank_account && (
-                    <span
-                      className="mt-1 inline-block rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-900"
-                      data-testid="payroll-missing-bank-tag"
-                    >
-                      חסרים פרטי בנק
-                    </span>
-                  )}
-                  {!line.show_in_file && defects.length === 0 && (
-                    <div className="mt-1 text-xs text-slate-600">
-                      באפס — לא נכנסת לקובץ לרואה החשבון
-                    </div>
-                  )}
                 </Td>
                 <Td>
-                  {line.hours == null ? <NotApplicable /> : <Ltr>{formatHours(line.hours)}</Ltr>}
-                </Td>
-                <Td>
-                  {line.rate == null ? <NotApplicable /> : <Money amount={line.rate} exact />}
-                </Td>
-                <Td>
-                  {isComp || line.bonus == null ? (
-                    <NotApplicable />
+                  {line.bank_account ? (
+                    <Ltr>{cells[2]}</Ltr>
                   ) : (
-                    <Money amount={line.bonus} cents />
+                    <>
+                      <NotApplicable />{' '}
+                      <span
+                        className="mr-1 inline-block rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-900"
+                        data-testid="payroll-missing-bank-tag"
+                      >
+                        חסרים פרטי בנק
+                      </span>
+                    </>
                   )}
                 </Td>
-                <Td>
-                  {isComp || line.travel == null ? (
-                    <NotApplicable />
-                  ) : (
-                    <Money amount={line.travel} cents />
-                  )}
-                </Td>
+                {cells.slice(3).map((value, c) => (
+                  <Td key={SALARY_REPORT_COLUMNS[c + 3]}>
+                    {value === '—' ? <NotApplicable /> : <Ltr>{value}</Ltr>}
+                  </Td>
+                ))}
               </tr>
             )
           })}
+          <tr className="bg-slate-50" data-testid="payroll-draft-hours-total">
+            <Td className="border-t-2 border-slate-300 font-bold">סה"כ שעות</Td>
+            <Td className="border-t-2 border-slate-300" />
+            <Td className="border-t-2 border-slate-300" />
+            <Td className="border-t-2 border-slate-300" />
+            <Td className="border-t-2 border-slate-300" />
+            <Td className="border-t-2 border-slate-300 font-bold">
+              <Ltr>{hoursTotal}</Ltr>
+            </Td>
+            <Td className="border-t-2 border-slate-300" />
+            <Td className="border-t-2 border-slate-300" />
+          </tr>
         </tbody>
       </table>
     </div>
