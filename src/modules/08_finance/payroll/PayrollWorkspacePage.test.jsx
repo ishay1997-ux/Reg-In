@@ -254,6 +254,60 @@ describe('מצב: טיוטה מוכנה', () => {
   })
 })
 
+describe('טיוטה: מתג "לפי משמרת | סיכום לפי דיילת" = גיליון 2 של הקובץ (כרטיס 14/10)', () => {
+  const twoShiftsForNoa = () =>
+    makePreview({
+      lines: [
+        previewLine(),
+        compensationLine(),
+        previewLine({ project_id: 900102, assignment_number: 2, hours: 2.5, line_total: 135.1 }),
+        previewLine({
+          hostess_id: 900009,
+          hours: 0,
+          travel: 0,
+          line_total: 0,
+          show_in_file: false,
+        }),
+      ],
+    })
+
+  it('מעבר לסיכום: עמודות גיליון 2, דיילת לשורה לפי שם, סה"כ משמרות ושעות; המצב בכתובת', async () => {
+    api.getPayrollPreview.mockResolvedValue(twoShiftsForNoa())
+    renderPage()
+    const shift = await screen.findByTestId('payroll-sheet-shift')
+    expect(shift).toHaveTextContent('לפי משמרת')
+    expect(shift).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByTestId('payroll-sheet-hostess'))
+    expect(searchParams().get('sheet')).toBe('hostess')
+    const table = await screen.findByTestId('payroll-hostess-summary-table')
+    expect(screen.queryByTestId('payroll-draft-table')).toBeNull()
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['ת"ז', 'שם', 'פרטי-בנק', 'משמרות', 'סה"כ שעות'])
+    const rows = screen.getAllByTestId('payroll-hostess-summary-row').map((row) =>
+      within(row)
+        .getAllByRole('cell')
+        .map((c) => c.textContent),
+    )
+    expect(rows).toEqual([
+      ['204455667', 'מאיה כהן', '— חסרים פרטי בנק', '1', '4.00'],
+      ['012345678', 'נועה לוי', 'הפועלים 601-2047199', '2', '8.50'],
+    ])
+    expect(screen.getByTestId('payroll-hostess-summary-total')).toHaveTextContent('סה"כ312.50')
+    fireEvent.click(screen.getByTestId('payroll-sheet-shift'))
+    expect(searchParams().get('sheet')).toBeNull()
+    expect(await screen.findByTestId('payroll-draft-table')).toBeInTheDocument()
+  })
+
+  it('כתובת עם sheet=hostess נפתחת ישר על הסיכום', async () => {
+    renderPage('?period=2026-07&sheet=hostess')
+    expect(await screen.findByTestId('payroll-hostess-summary-table')).toBeInTheDocument()
+    expect(screen.getByTestId('payroll-sheet-hostess')).toHaveAttribute('aria-pressed', 'true')
+  })
+})
+
 describe('פוליש 14/10: האריחים מסכמים את הקובץ (פריט 1)', () => {
   it('שורת אפס לא נספרת באריחים; שורה משנית אומרת שהיא לא בקובץ', async () => {
     const zero = compensationLine({

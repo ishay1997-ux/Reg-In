@@ -10,6 +10,9 @@ import { formatDate, formatTimestampFull } from '@/lib/dates'
 export const VIEWS = ['draft', 'review', 'final', 'history']
 export const FILTERS = ['action', 'noreply', 'approved', 'all']
 export const KINDS = ['regular', 'supplement']
+// מתג התצוגה בטבלת הטיוטה — שני הגיליונות של הקובץ לרואה החשבון (F15 + כרטיס 14/10).
+export const SHEETS = ['shift', 'hostess']
+export const SHEET_LABELS = { shift: 'לפי משמרת', hostess: 'סיכום לפי דיילת' }
 
 export const VIEW_LABELS = {
   draft: 'טיוטה',

@@ -388,6 +388,7 @@ function groupByHostess(items, pick) {
   for (const item of items) {
     const p = pick(item)
     const group = groups.get(p.key) ?? {
+      key: p.key,
       idNumber: p.idNumber,
       hostessName: p.hostessName,
       bankDetails: p.bankDetails,
@@ -756,6 +757,43 @@ export function salaryFilePreviewCells(row) {
     isActual ? number(row?.bonus ?? 0) : NOT_APPLICABLE,
     isActual ? number(row?.travel ?? 0) : NOT_APPLICABLE,
   ]
+}
+
+// גיליון 2 על המסך (מתג "סיכום לפי דיילת" בטיוטה): אותו קיבוץ ואותו מיון כמו בקובץ
+// (`groupByHostess`), על שורות התצוגה המקדימה שבקובץ. כל ערך כטקסט, באותו פורמט כמו בקובץ.
+// לא זורקת: שעה חסרה (שורה חסומה) ⇒ `—` לדיילת ולסה"כ, לא 0.
+export function salaryFileHostessSummary(rows) {
+  const fileRows = (rows ?? []).filter((row) => row?.show_in_file !== false)
+  const groups = groupByHostess(fileRows, (row) => {
+    const idNumber = textOrNull(row?.id_number)
+    return {
+      key: row?.hostess_id ?? `id:${idNumber}`,
+      idNumber: idNumber ?? NOT_APPLICABLE,
+      hostessName: textOrNull(row?.hostess_name) ?? NOT_APPLICABLE,
+      bankDetails: bankDetailsOf(row),
+      hours: toFiniteNumber(row?.hours),
+    }
+  })
+  const hoursText = (hundredths) =>
+    hundredths === null ? NOT_APPLICABLE : (hundredths / 100).toFixed(2)
+  const anyMissing = groups.some((g) => g.hundredths === null)
+  return {
+    rows: groups.map((g) => ({
+      key: String(g.key),
+      bankMissing: !g.bankDetails,
+      cells: [
+        g.idNumber,
+        g.hostessName,
+        g.bankDetails ?? NOT_APPLICABLE,
+        String(g.shifts),
+        hoursText(g.hundredths),
+      ],
+    })),
+    totalShifts: String(fileRows.length),
+    totalHours: anyMissing
+      ? NOT_APPLICABLE
+      : hoursText(groups.reduce((sum, g) => sum + g.hundredths, 0)),
+  }
 }
 
 // "סה"כ שעות" של שורות הקובץ, באותו פורמט כמו בקובץ (`0.00`). חסר ערך ⇒ `—`, לא 0.

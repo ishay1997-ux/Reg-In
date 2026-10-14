@@ -14,11 +14,16 @@ import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { Banner, Card, NotApplicable, Td, Th } from './payrollUi'
 import { useDraftDownload } from './useDraftDownload'
 import {
+  HOSTESS_SUMMARY_COLUMNS,
+  HOSTESS_SUMMARY_TOTAL_LABEL,
   SALARY_REPORT_COLUMNS,
+  salaryFileHostessSummary,
   salaryFileHoursTotal,
   salaryFilePreviewCells,
 } from '@/lib/salaryReport'
 import {
+  SHEETS,
+  SHEET_LABELS,
   countPhrase,
   formatHours,
   hoursSum,
@@ -46,6 +51,8 @@ export default function DraftSection({
   canEdit,
   page,
   onPage,
+  sheet = 'shift',
+  onSheet,
   onStartReview,
   onOpenReport,
   startingReview,
@@ -110,7 +117,9 @@ export default function DraftSection({
     (l.warnings ?? []).includes('COMP_DURATION_ZERO'),
   ).length
   const firstBlockedIndex = fileLines.findIndex((l) => (l.defects ?? []).length > 0)
-  const paged = paginate(fileLines, page)
+  // שני הגיליונות של הקובץ, ומתג ביניהם (מצב בכתובת, CLAUDE.md §4.2). העימוד לפי הגיליון המוצג.
+  const summary = sheet === 'hostess' ? salaryFileHostessSummary(fileLines) : null
+  const paged = paginate(summary ? summary.rows : fileLines, page)
 
   // החסימה מוסברת פעם אחת, בהודעה שמעל (מדריך UX D4). מתחת לכפתור — רק סיבת החודש (D11).
   const startDisabledReason = canEdit && !monthEnded ? monthNotEndedMessage(preview.period) : null
@@ -179,7 +188,7 @@ export default function DraftSection({
               type="button"
               variant="link"
               className="h-auto p-0 text-red-800 underline"
-              onClick={() => onPage(Math.floor(firstBlockedIndex / 50) + 1)}
+              onClick={() => onSheet('shift', Math.floor(firstBlockedIndex / 50) + 1)}
               data-testid="payroll-blockers-goto"
             >
               מעבר לשורה החסומה
@@ -278,15 +287,111 @@ export default function DraftSection({
             >
               כך ייראה הקובץ לרואה החשבון
             </h3>
-            <DraftTable
-              rows={paged.pageRows}
-              offset={paged.from - 1}
-              hoursTotal={salaryFileHoursTotal(fileLines)}
-            />
+            <SheetSwitch sheet={sheet} onSheet={onSheet} />
+            {summary ? (
+              <HostessSummaryTable summary={summary} rows={paged.pageRows} />
+            ) : (
+              <DraftTable
+                rows={paged.pageRows}
+                offset={paged.from - 1}
+                hoursTotal={salaryFileHoursTotal(fileLines)}
+              />
+            )}
             <Pager {...paged} onPage={onPage} testId="payroll-draft-pager" />
           </>
         )}
       </Card>
+    </div>
+  )
+}
+
+// "לפי משמרת | סיכום לפי דיילת" — שני הגיליונות שבקובץ. כפתורים עם aria-pressed, כמו מסנני המעקב.
+function SheetSwitch({ sheet, onSheet }) {
+  return (
+    <div
+      className="mb-3 inline-flex rounded-lg border border-slate-300 p-0.5"
+      role="group"
+      aria-label="תצוגת הקובץ"
+      data-testid="payroll-sheet-switch"
+    >
+      {SHEETS.map((key) => (
+        <button
+          key={key}
+          type="button"
+          aria-pressed={sheet === key}
+          onClick={() => onSheet(key)}
+          className={`min-h-9 rounded-md px-3 py-1.5 text-sm font-semibold ${
+            sheet === key ? 'bg-teal-700 text-white' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+          data-testid={`payroll-sheet-${key}`}
+        >
+          {SHEET_LABELS[key]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function MissingBankTag() {
+  return (
+    <span
+      className="mr-1 inline-block rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-900"
+      data-testid="payroll-missing-bank-tag"
+    >
+      חסרים פרטי בנק
+    </span>
+  )
+}
+
+// גיליון 2 של הקובץ על המסך, אחד-לאחד: עמודות `HOSTESS_SUMMARY_COLUMNS`, שורה לדיילת לפי שם,
+// ושורת סה"כ של משמרות ושעות (`salaryFileHostessSummary` — אותו קיבוץ כמו בקובץ).
+function HostessSummaryTable({ summary, rows }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm" data-testid="payroll-hostess-summary-table">
+        <thead>
+          <tr>
+            {HOSTESS_SUMMARY_COLUMNS.map((label) => (
+              <Th key={label}>{label}</Th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.key} data-testid="payroll-hostess-summary-row">
+              <Td>
+                <Ltr>{row.cells[0]}</Ltr>
+              </Td>
+              <Td className="font-semibold text-slate-800">{row.cells[1]}</Td>
+              <Td>
+                {row.bankMissing ? (
+                  <>
+                    <NotApplicable /> <MissingBankTag />
+                  </>
+                ) : (
+                  <Ltr>{row.cells[2]}</Ltr>
+                )}
+              </Td>
+              {row.cells.slice(3).map((value, c) => (
+                <Td key={HOSTESS_SUMMARY_COLUMNS[c + 3]}>
+                  {value === '—' ? <NotApplicable /> : <Ltr>{value}</Ltr>}
+                </Td>
+              ))}
+            </tr>
+          ))}
+          <tr className="bg-slate-50" data-testid="payroll-hostess-summary-total">
+            <Td className="border-t-2 border-slate-300 font-bold">{HOSTESS_SUMMARY_TOTAL_LABEL}</Td>
+            <Td className="border-t-2 border-slate-300" />
+            <Td className="border-t-2 border-slate-300" />
+            <Td className="border-t-2 border-slate-300 font-bold">
+              <Ltr>{summary.totalShifts}</Ltr>
+            </Td>
+            <Td className="border-t-2 border-slate-300 font-bold">
+              {summary.totalHours === '—' ? <NotApplicable /> : <Ltr>{summary.totalHours}</Ltr>}
+            </Td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -371,13 +476,7 @@ function DraftTable({ rows, offset, hoursTotal }) {
                     <Ltr>{cells[2]}</Ltr>
                   ) : (
                     <>
-                      <NotApplicable />{' '}
-                      <span
-                        className="mr-1 inline-block rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-900"
-                        data-testid="payroll-missing-bank-tag"
-                      >
-                        חסרים פרטי בנק
-                      </span>
+                      <NotApplicable /> <MissingBankTag />
                     </>
                   )}
                 </Td>

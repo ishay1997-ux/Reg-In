@@ -12,6 +12,7 @@ import {
   NOT_APPLICABLE,
   buildSalaryReportDraftDocument,
   buildSalaryReportReconstructionDocument,
+  salaryFileHostessSummary,
   salaryFileHoursTotal,
   salaryFilePreviewCells,
   salaryReportDraftFileName,
@@ -319,5 +320,34 @@ describe('גיליון 2 "סיכום לפי דיילת" — הלוך ושוב ד
       ['012345678', 'נועה לוי', 'לאומי 800-1234', 1, 6],
       ['סה"כ', null, null, 1, 6],
     ])
+  })
+})
+
+describe('salaryFileHostessSummary — המסך מול גיליון 2, תא מול תא', () => {
+  const asText = (cell) =>
+    cell.type === Number && cell.format === '0.00' ? cell.value.toFixed(2) : String(cell.value)
+
+  it('כל שורה ושורת הסה"כ שוות לגיליון 2 של קובץ הטיוטה', () => {
+    const preview = makePreview({
+      lines: [
+        previewLine(),
+        compensationLine(),
+        previewLine({ project_id: 900102, assignment_number: 2, hours: 2.5, line_total: 135.1 }),
+      ],
+    })
+    const doc = buildSalaryReportDraftDocument(preview)
+    const screenSummary = salaryFileHostessSummary(preview.lines)
+    const body = doc.summarySheet.slice(3, -1)
+    expect(screenSummary.rows.map((r) => r.cells)).toEqual(body.map((row) => row.map(asText)))
+    const footer = doc.summarySheet.at(-1)
+    expect(screenSummary.totalShifts).toBe(String(footer[3].value))
+    expect(screenSummary.totalHours).toBe(footer[4].value.toFixed(2))
+  })
+
+  it('שעה חסרה (שורה חסומה) ⇒ "—" לדיילת ולסה"כ, לא 0', () => {
+    const summary = salaryFileHostessSummary([previewLine({ hours: null }), compensationLine()])
+    expect(summary.rows.find((r) => r.cells[1] === 'נועה לוי').cells[4]).toBe(NOT_APPLICABLE)
+    expect(summary.totalHours).toBe(NOT_APPLICABLE)
+    expect(summary.totalShifts).toBe('2')
   })
 })

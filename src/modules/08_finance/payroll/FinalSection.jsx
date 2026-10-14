@@ -358,8 +358,8 @@ function FileToBeSent({ preview, stale, onStale }) {
         </Button>
       )}
       <p className="text-xs text-slate-600">
-        תצוגה מקדימה של הקובץ לרואה החשבון, כולל ת"ז ופרטי בנק. הקובץ הסופי ייבנה מאותם נתונים בדיוק
-        ברגע ההפקה.
+        תצוגה מקדימה של הקובץ לרואה החשבון, כולל ת"ז ופרטי בנק, בשני גיליונות: לפי משמרת וסיכום לפי
+        דיילת. הקובץ הסופי ייבנה מאותם נתונים בדיוק ברגע ההפקה.
       </p>
       {draft.error && (
         <Banner tone="error" testId="payroll-file-to-send-error">
