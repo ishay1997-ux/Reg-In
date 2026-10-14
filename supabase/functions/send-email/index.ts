@@ -16,6 +16,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2.112.0'
 import { guardRecipient, type GuardResult } from './guard.ts'
 import { legacyPayrollSendRefusal } from './payrollGate.ts'
+import { sanitizeDetail } from './sanitize.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -223,7 +224,8 @@ Deno.serve(async (req) => {
     ok = res.ok
     if (!ok) errorMessage = `Make responded ${res.status}`
   } catch (err) {
-    errorMessage = err instanceof Error ? err.message : 'network error'
+    // 🔒 הודעת-רשת עלולה לכלול את כתובת ה-webhook (סוד) — מנוקה לפני התשובה ולפני היומן.
+    errorMessage = sanitizeDetail(err instanceof Error ? err.message : 'network error')
   }
 
   // ── היומן ──────────────────────────────────────────────────────────────────
