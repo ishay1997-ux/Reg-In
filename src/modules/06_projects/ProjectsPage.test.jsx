@@ -10,11 +10,12 @@ import { render, screen, fireEvent, within, waitFor } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 import ProjectsPage from './ProjectsPage'
 import { listProjectsOverview } from './api'
+import { getParamValues } from '@/api/params'
 
 vi.mock('./api', () => ({ listProjectsOverview: vi.fn() }))
 // חלון-ההתרעה של מסך הבית (קבוצה 3, 14/10/2026) — אותו ערך כמו במסד.
 vi.mock('@/api/params', () => ({
-  getParamValues: vi.fn(() => Promise.resolve({ event_warning_days: '14' })),
+  getParamValues: vi.fn(() => Promise.resolve({ ימי_אזהרה_קדם_אירוע: '14' })),
 }))
 
 // ⚠️ שלב 9 (Hint) — הוספת `<Hint id="projects.sort" />` מייבאת `@/contexts/AuthContext`,
@@ -423,5 +424,19 @@ describe('ProjectsPage — חיפוש פרויקטים (?q=)', () => {
     fireEvent.click(screen.getByTestId('projects-clear-search'))
     expect(await screen.findByTestId('projects-table')).toBeInTheDocument()
     expect(rowOrder()).toHaveLength(8)
+  })
+})
+
+// 🔴 14/10/2026: המסך החי נשאר כולו אדום כי נקרא שם-המפתח של ה-RPC (`event_warning_days`) במקום
+// שם-השורה בטבלת params. המוק מחזיר כל מפתח שמבקשים ממנו — ולכן הבדיקה נועלת את **השם** שנשלח.
+describe('ProjectsPage — חלון ההתרעה נקרא בשם העברי של הפרמטר', () => {
+  it('getParamValues נקרא עם ימי_אזהרה_קדם_אירוע', async () => {
+    listProjectsOverview.mockResolvedValue([])
+    render(
+      <MemoryRouter>
+        <ProjectsPage />
+      </MemoryRouter>,
+    )
+    await waitFor(() => expect(getParamValues).toHaveBeenCalledWith(['ימי_אזהרה_קדם_אירוע']))
   })
 })

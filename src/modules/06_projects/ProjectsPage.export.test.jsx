@@ -15,7 +15,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 const listProjectsOverview = vi.fn()
 vi.mock('./api', () => ({ listProjectsOverview: (...a) => listProjectsOverview(...a) }))
 vi.mock('@/api/params', () => ({
-  getParamValues: () => Promise.resolve({ event_warning_days: '14' }),
+  getParamValues: () => Promise.resolve({ ימי_אזהרה_קדם_אירוע: '14' }),
 }))
 
 import ProjectsPage from './ProjectsPage'
