@@ -2,7 +2,7 @@
 // המוקאפ (משפט-הפתיחה, שני העזרים, ה-placeholders, סדר-הפוטר), את שלושת נוסחי-החובה
 // הזהים-בייט לשרת, את באנר-㉑ על שתי גרסאותיו, את שני המודיעים-שאינם-חוסמים (S-17),
 // ואת חוזה-המיילים: אחרי הצלחת ה-RPC בלבד, עם דיווח פר-נמען.
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ToastProvider } from '@/components/ToastProvider'
 import EditProjectDetailsDialog from './EditProjectDetailsDialog'
@@ -177,6 +177,33 @@ describe('EditProjectDetailsDialog — פורמט שעה (ביקורת וליד�
     fireEvent.change(screen.getByTestId('edit-project-start-input'), { target: { value: '09:30' } })
     fireEvent.click(screen.getByTestId('edit-project-save'))
     await waitFor(() => expect(updateProjectDetails).toHaveBeenCalledTimes(1))
+  })
+})
+
+describe('EditProjectDetailsDialog — "היום" בשעון ישראל (ביקורת ולידציות, שורה 18)', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('15/10 01:30 בישראל (14/10 22:30 UTC): תאריך 14/10 הוא כבר עבר', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-14T22:30:00Z'))
+    renderDialog({ project: project({ final_event_date: '2026-10-20' }) })
+    fireEvent.change(await screen.findByTestId('edit-project-date-input'), {
+      target: { value: '14/10/2026' },
+    })
+    expect(await screen.findByTestId('edit-project-past-date')).toBeInTheDocument()
+  })
+
+  it('באותו רגע, תאריך 15/10 (היום בישראל) אינו עבר', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-14T22:30:00Z'))
+    renderDialog({ project: project({ final_event_date: '2026-10-20' }) })
+    fireEvent.change(await screen.findByTestId('edit-project-date-input'), {
+      target: { value: '15/10/2026' },
+    })
+    await screen.findByDisplayValue('15/10/2026')
+    expect(screen.queryByTestId('edit-project-past-date')).not.toBeInTheDocument()
   })
 })
 

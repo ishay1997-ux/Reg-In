@@ -27,6 +27,7 @@ import { getParamValues } from '@/api/params'
 import { EVENT_DURATION_WARNING_PARAM, eventTimeNotices } from '@/lib/eventTimeChecks'
 import { finalAssignmentRows } from '@/lib/hostesses'
 import { eventDaysFromToday } from '@/lib/projects'
+import { todayIsoInJerusalem } from '@/lib/projectChanges'
 import {
   validateDetailsForm,
   parseDmyToIso,
@@ -77,7 +78,9 @@ export default function EditProjectDetailsDialog({
   const [serverError, setServerError] = useState('')
   const [saving, setSaving] = useState(false)
   // "היום" מחושב פעם אחת ב-mount (react-hooks/purity אוסר שעון ברינדור) — הדיאלוג חי דקות.
-  const [todayIso] = useState(() => new Date().toISOString().slice(0, 10))
+  // ✏️ 14/10/2026 (ביקורת ולידציות, שורה 18): בשעון ישראל, לא UTC — בין 00:00 ל-03:00 תאריך UTC
+  // הוא עוד אתמול, ותאריך האירוע של "אתמול" לא סומן כעבר. אותו עזר כמו השיבוץ החכם.
+  const [todayIso] = useState(() => todayIsoInJerusalem(new Date()))
   // שמות המאושרות-סופית לבאנר ㉑ — נטענים רק כשיש הרשאת 'דיילות'; בלעדיה הבאנר מונה
   // בלי שמות (as-built ⑤ — נוסח-המונה, לעולם לא undefined ליד פסיק).
   const [approvedNames, setApprovedNames] = useState(null)
