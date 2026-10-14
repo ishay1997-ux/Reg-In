@@ -106,14 +106,15 @@ begin
   assert test.err(format($q$select public.payroll_review_case_detail(%s)$q$, test.cid(900002))) = 'SQLSTATE:42501';
 end $$;
 
--- test: resolve_case guards — revision, reason length, illegal transition, accept_corrected without a correction
+-- test: resolve_case guards — revision, reason length, illegal transition, removed outcome
 do $$ begin
   perform test.act_as('fin@test.local');
   assert test.err(format($q$select public.payroll_review_resolve_case(%s,9,'reject','סיבה ארוכה',null)$q$, test.cid(900002))) = 'STALE_VERSION';
   assert test.err(format($q$select public.payroll_review_resolve_case(%s,1,'reject','קצר',null)$q$, test.cid(900002))) = 'REASON_REQUIRED';
   assert test.err(format($q$select public.payroll_review_resolve_case(%s,1,'reopen','סיבה ארוכה',null)$q$, test.cid(900002))) = 'INVALID_TRANSITION';
   assert test.err(format($q$select public.payroll_review_resolve_case(%s,1,'close','סיבה ארוכה',null)$q$, test.cid(900002))) = 'INVALID_TRANSITION';
-  assert test.err(format($q$select public.payroll_review_resolve_case(%s,1,'accept_corrected','סיבה ארוכה',null)$q$, test.cid(900002))) = 'CORRECTION_REQUIRED';
+  -- accept_corrected הוסר (בודק 2): פנייה עם תיקון נסגרת בתוך התיקון עצמו
+  assert test.err(format($q$select public.payroll_review_resolve_case(%s,1,'accept_corrected','סיבה ארוכה',null)$q$, test.cid(900002))) = 'INVALID_TRANSITION';
   assert test.err(format($q$select public.payroll_review_resolve_case(%s,1,'accept_noted','טופל בחוץ',null)$q$, test.cid(900002))) = 'REASON_REQUIRED';
 end $$;
 

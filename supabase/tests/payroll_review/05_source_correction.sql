@@ -144,3 +144,56 @@ begin
   raise exception 'undo' using errcode = 'UNDO1';
 exception when sqlstate 'UNDO1' then null;
 end $$;
+
+-- test: (בודק 2, p1) a correction that does not change the digest releases the recipient — no dead end
+do $$
+declare v_rev bigint := (select review_id from public.payroll_reviews); v_case bigint; res jsonb;
+begin
+  -- פנייה חדשה של מאיה על 900101; הנמענת במצב "פנייה פתוחה"
+  insert into public.payroll_review_cases (review_id, recipient_id, hostess_id, phase, category, affected_rows, description)
+  select r.review_id, r.recipient_id, r.hostess_id, 'pre_issue', 'other',
+         '[{"key":"r1","project_id":900101,"assignment_number":1}]', 'חסר לי בונוס'
+    from public.payroll_review_recipients r where r.hostess_id = 900002 and r.is_current
+  returning case_id into v_case;
+  update public.payroll_review_recipients set state = 'objection_open' where hostess_id = 900002 and is_current;
+
+  -- תיקון בונוס בידי בעלת הרשאת פרויקטים, דרך הפנייה — התקציר לא משתנה (F11)
+  perform test.act_as('pm@test.local');
+  perform public.correct_unclaimed_assignment(900101, 900002, 1, 'personal_bonus', 0, 100, 'בונוס שחסר בדוח', v_case);
+  perform test.act_as_owner();
+  assert (select status from public.payroll_review_cases where case_id = v_case) = 'resolved_accepted';
+  assert (select state = 'manager_resolved' and decided_kind = 'manager' and decision_reason = 'בונוס שחסר בדוח'
+            from public.payroll_review_recipients where hostess_id = 900002 and is_current),
+         (select state from public.payroll_review_recipients where hostess_id = 900002 and is_current);
+  -- ומאיה כבר לא חוסמת את ההפקה
+  res := public._payroll_review_readiness_of((select v from public.payroll_reviews v), null, null);
+  assert not ((res -> 'blockers') @> '[{"code":"OBJECTION_OPEN","hostess_ids":[900002]}]'::jsonb), res::text;
+  assert not coalesce((select (b -> 'hostess_ids') @> '[900002]'::jsonb from jsonb_array_elements(res -> 'blockers') b
+                        where b ->> 'code' = 'DECISIONS_MISSING'), false), res::text;
+end $$;
+
+-- test: (בודק 2) an hours correction changes the digest — refresh replaces the row with a fresh 'awaiting' one
+do $$
+declare v_rev bigint := (select review_id from public.payroll_reviews); res jsonb; v_rv int;
+begin
+  -- נועה: התיקון בבדיקה קודמת שינה את השעות (6 ⇒ 7.5); הנמענת עדיין objection_open עם תקציר ישן
+  update public.payroll_review_recipients set state = 'objection_open' where hostess_id = 900001 and is_current;
+  select revision into v_rv from public.payroll_reviews;
+  perform test.act_as('fin@test.local');
+  res := public.payroll_review_refresh(v_rev, v_rv);
+  perform test.act_as_owner();
+  assert res -> 'changed_hostess_ids' @> '[900001]'::jsonb, res::text;
+  assert (select state from public.payroll_review_recipients where hostess_id = 900001 and is_current) = 'awaiting';
+end $$;
+
+-- test: (בודק 2) refresh releases a recipient left in objection_open whose cases are closed and digest unchanged
+do $$
+declare v_rev bigint := (select review_id from public.payroll_reviews); v_rv int;
+begin
+  update public.payroll_review_recipients set state = 'objection_open' where hostess_id = 900002 and is_current;
+  select revision into v_rv from public.payroll_reviews;
+  perform test.act_as('fin@test.local');
+  perform public.payroll_review_refresh(v_rev, v_rv);
+  perform test.act_as_owner();
+  assert (select state from public.payroll_review_recipients where hostess_id = 900002 and is_current) = 'manager_resolved';
+end $$;

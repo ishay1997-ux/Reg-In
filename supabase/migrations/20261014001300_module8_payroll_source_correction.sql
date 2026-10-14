@@ -164,6 +164,10 @@ begin
        set status = 'resolved_accepted', revision = revision + 1, resolution_reason = v_reason,
            resolved_by = v_actor, resolved_at = now()
      where case_id = c.case_id;
+    -- הפנייה יצאה ממצב פתוח ⇒ מצב הנמענת מחושב מחדש (בודק 2, 14.10). תיקון שלא שינה את התקציר
+    -- (למשל בונוס) ⇒ manager_resolved; תיקון שעות ⇒ התקציר השתנה, והרענון ייצור שורה חדשה.
+    perform public._payroll_review_mark_resolved(
+      (select rv from public.payroll_reviews rv where rv.review_id = c.review_id), p_hostess_id, v_actor, v_reason);
   end if;
 
   -- סבבים פתוחים שהסיכום הנוכחי של הדיילת בהם כולל את השיבוץ — יצטרכו רענון.
