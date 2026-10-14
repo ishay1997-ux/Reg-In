@@ -1204,6 +1204,103 @@ describe('מעקב: כפתור השליחה בשורה שהנתונים שלה �
   })
 })
 
+describe('מעקב: "אשר לפי תיעוד" לכל מי שלא השיבו (הסגן 14/10, כנס עם 40 דיילות)', () => {
+  const people = () => [
+    recipient({ recipient_id: 701, hostess_name: 'נועה לוי', digest: 'd:701' }),
+    recipient({ recipient_id: 702, hostess_name: 'מאיה כהן', digest: 'd:702', delivery: null }),
+    recipient({ recipient_id: 703, hostess_name: 'דנה ישראלי', digest: 'd:703' }),
+    recipient({ recipient_id: 704, hostess_name: 'רות אמסלם', state: 'hostess_approved' }),
+    recipient({ recipient_id: 705, hostess_name: 'שיר טל', open_case_id: 9 }),
+  ]
+
+  async function fillAndSubmit() {
+    fireEvent.change(screen.getByTestId('payroll-bulk-no-response-dialog-reason'), {
+      target: { value: 'לא השיבו עד המועד' },
+    })
+    fireEvent.change(screen.getByTestId('payroll-bulk-no-response-dialog-evidence'), {
+      target: { value: 'דוחות שעות חתומים מהאירועים' },
+    })
+    fireEvent.change(screen.getByTestId('payroll-bulk-no-response-dialog-contactNote'), {
+      target: { value: 'שיחת טלפון עם מאיה' },
+    })
+    fireEvent.click(screen.getByTestId('payroll-bulk-no-response-dialog-submit'))
+  }
+
+  it('דיאלוג אחד עם המספר והשמות; קריאה לכל דיילת בתורה; כשל אחת לא עוצר; השם שנכשל ברשימה', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ review: { deadline_passed: true }, recipients: people() }),
+    )
+    let inFlight = 0
+    let maxInFlight = 0
+    api.approvePayrollNoResponse.mockImplementation(async ({ recipientId }) => {
+      inFlight += 1
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      inFlight -= 1
+      if (recipientId === 703) throw new PayrollError('STALE_VERSION')
+      return { ok: true }
+    })
+    renderPage('?period=2026-07&view=review&filter=all')
+    const open = await screen.findByTestId('payroll-bulk-no-response-open')
+    expect(open).toHaveTextContent('אשר לפי תיעוד את כל מי שלא השיבו (3)')
+    expect(open).toBeEnabled()
+    fireEvent.click(open)
+    const dialog = await screen.findByTestId('payroll-bulk-no-response-dialog')
+    expect(dialog).toHaveTextContent('3 דיילות לא השיבו עד המועד: נועה לוי, מאיה כהן, דנה ישראלי')
+    expect(dialog).not.toHaveTextContent('רות אמסלם')
+    expect(dialog).not.toHaveTextContent('שיר טל')
+    const loadsBefore = api.findPayrollReview.mock.calls.length
+    await fillAndSubmit()
+    expect(await screen.findByText('אושרו 2 מתוך 3. דיילת אחת לא אושרה')).toBeInTheDocument()
+    expect(maxInFlight).toBe(1)
+    expect(api.approvePayrollNoResponse.mock.calls.map(([args]) => args)).toEqual([
+      expect.objectContaining({ recipientId: 701, expectedDigest: 'd:701', contactNote: null }),
+      expect.objectContaining({ recipientId: 702, contactNote: 'שיחת טלפון עם מאיה' }),
+      expect.objectContaining({ recipientId: 703, reason: 'לא השיבו עד המועד' }),
+    ])
+    expect(screen.getByTestId('payroll-bulk-no-response-failed')).toHaveTextContent(
+      'דנה ישראלי — הנתונים השתנו. יש לרענן לפני אישור',
+    )
+    await waitFor(() =>
+      expect(api.findPayrollReview.mock.calls.length).toBeGreaterThan(loadsBefore),
+    )
+  })
+
+  it('כולן הצליחו ⇒ טוסט עם המספר', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ review: { deadline_passed: true }, recipients: people() }),
+    )
+    api.approvePayrollNoResponse.mockResolvedValue({ ok: true })
+    renderPage('?period=2026-07&view=review&filter=all')
+    fireEvent.click(await screen.findByTestId('payroll-bulk-no-response-open'))
+    await screen.findByTestId('payroll-bulk-no-response-dialog')
+    await fillAndSubmit()
+    expect(await screen.findByText('אושרו לפי תיעוד: 3 דיילות')).toBeInTheDocument()
+    expect(screen.queryByTestId('payroll-bulk-no-response-failed')).toBeNull()
+  })
+
+  it('לפני המועד: הכפתור מושבת עם הסבר', async () => {
+    api.findPayrollReview.mockResolvedValue(makeReview({ recipients: people() }))
+    renderPage('?period=2026-07&view=review&filter=all')
+    expect(await screen.findByTestId('payroll-bulk-no-response-open')).toBeDisabled()
+    expect(screen.getByTestId('payroll-bulk-no-response')).toHaveTextContent(
+      'אפשר אחרי המועד האחרון לתגובה',
+    )
+  })
+
+  it('כולן השיבו ⇒ אין פעולה מרוכזת', async () => {
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({
+        review: { deadline_passed: true },
+        recipients: [recipient({ state: 'hostess_approved' })],
+      }),
+    )
+    renderPage('?period=2026-07&view=review&filter=all')
+    await screen.findByTestId('payroll-review-table')
+    expect(screen.queryByTestId('payroll-bulk-no-response')).toBeNull()
+  })
+})
+
 describe('מעקב: פעולות שורה', () => {
   it('"אשר לפי תיעוד" רק אחרי המועד; דורש סיבה וראיה; נשמר כ"אושר לפי תיעוד"', async () => {
     api.findPayrollReview.mockResolvedValue(

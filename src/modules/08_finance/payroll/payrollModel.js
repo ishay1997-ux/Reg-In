@@ -284,6 +284,21 @@ export function isDecided(recipient) {
   )
 }
 
+// מי אפשר "לאשר לפי תיעוד" — דלת אחת לשורה ולפעולה המרוכזת: ממתינה, בלי פנייה פתוחה, על סיכום
+// עדכני. המועד האחרון נבדק בנפרד (לפניו הפעולה מושבתת), וגם השרת בודק את כל אלה מחדש.
+export function isNoResponseCandidate(recipient) {
+  return (
+    recipient?.state === 'awaiting' &&
+    !recipient?.open_case_id &&
+    recipient?.digest_current !== false
+  )
+}
+
+// הסיכום לא הגיע אליה במייל ⇒ חובה לתעד איך נוצר קשר (השרת: CONTACT_EVIDENCE_REQUIRED).
+export function needsContactNote(recipient) {
+  return recipient?.delivery?.state !== 'sent'
+}
+
 const DECISION_LABELS = {
   hostess_approved: 'הדיילת אישרה',
   manager_approved_no_response: 'אושר לפי תיעוד',
