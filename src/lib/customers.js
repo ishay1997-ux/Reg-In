@@ -2,7 +2,12 @@
 // וה-UI (Phase 3) וה-api רק מייבאים. גם בוחר-הלקוח של מודול 3 (הצעות מחיר) מייבא מכאן את
 // חיפוש-הלקוח הסלחני (§7.11) — כדי שלא תיווצר לוגיקת-חיפוש כפולה שתסטה.
 
-import { COMPANY_ID_REGEX, EMAIL_REGEX, isValidDiscountPercent } from '@/lib/validators'
+import {
+  COMPANY_ID_REGEX,
+  EMAIL_REGEX,
+  isValidDiscountPercent,
+  isValidIsraeliId,
+} from '@/lib/validators'
 // חישוב סכום-הצעה מגיע מ-SSOT של מודול 3 ולעולם לא משוכפל כאן (PROJECT_MASTER §6 מורה זאת
 // במפורש: "דרך ה-SSOT של התמחור — לא לשכפל נוסחה"). deriveQuoteAmount כבר עוטף את
 // computeQuoteTotals ומטפל במע"מ הקפוא מול החי, ולכן זו נקודת-הכניסה הנכונה.
@@ -242,6 +247,16 @@ export function sortCustomers(customers, key, dir = 'asc') {
 // המדויק, אבל C5 ירד לרשימת-כיסוי בלבד — 03/09/2026, docs/CLAUDE.md — ואינו קובע ניסוח יותר).
 // התבנית האחידה: חוזרת על מילת-התווית ("ח\"פ", כמו "ח\"פ (9 ספרות)" בטופס) בלי "שגיאה:" בראש.
 const COMPANY_ID_ERROR = 'מספר ח"פ חייב להכיל 9 ספרות בדיוק'
+
+// ✏️ ביקורת-ולידציה שורה 25 (14/10/2026): ח"פ נבדק רק כ"9 ספרות", אבל ספרת-הביקורת שלו היא אותו
+// אלגוריתם של ת"ז (`isValidIsraeliId`). **התראה רכה, לא חסימה** — יש לקוחות היסטוריים, ובמקרה של
+// מספר אמיתי שלא עובר את הבדיקה המשתמשת חייבת להיות מסוגלת לשמור. מחזיר '' כשאין מה לומר
+// (ריק, לא 9 ספרות — שם השגיאה החוסמת מדברת — או ספרת-ביקורת תקינה).
+export function companyNumberCheckDigitWarning(value) {
+  const v = String(value ?? '').trim()
+  if (!COMPANY_ID_REGEX.test(v) || isValidIsraeliId(v)) return ''
+  return 'ספרת הביקורת של מספר החברה אינה תואמת — כדאי לבדוק שהוקלד נכון.'
+}
 
 // ולידציה פר-שדה. שם-שדה לא-מוכר מחזיר '' (תקין) — זה מה שמאפשר ל-validateCustomerForm לעבור
 // על כל מפתחות הטופס בלי להחזיק רשימת-שדות נפרדת שתסטה מהטופס בשקט.

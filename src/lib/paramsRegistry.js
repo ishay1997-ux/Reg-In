@@ -10,6 +10,7 @@
 // קיימים בשום מקום ולכן נכתבים כאן, לא משוכפלים ממקום אחר.
 
 import {
+  isValidHttpsUrl,
   isValidVatPercent,
   isValidPositiveInt,
   isValidNonNegativePrice,
@@ -74,14 +75,8 @@ function paramBoolean(value) {
 // קישור https תקין. אף שורה חיה מבין ה-47 אינה מסוג `url` נכון לרגע זה (הפרמטר היחיד
 // שהיה זקוק לו, `קישור_בסיס_סקר_לקוחות`, נמחק ב-Q-2) — אבל §2.8 דורש את הפרדיקט כחלק
 // מהחוזה (שורת-URL עתידית לא תדרוש קובץ שני), ולכן הוא מחובר ב-KIND_RULES למטה.
-function isValidHttpsUrl(value) {
-  if (isBlank(value)) return false
-  try {
-    return new URL(String(value).trim()).protocol === 'https:'
-  } catch {
-    return false
-  }
-}
+// ✏️ 14/10/2026: הפרדיקט עצמו עבר ל-`src/lib/validators.js` (`isValidHttpsUrl`) — צרכן שני:
+// קישור-התמונה בטופס המוצר (ביקורת-ולידציה שורה 20).
 
 // ── ולידציה לפי קינד — ההודעה תמיד אומרת מה כן תקין (§2.8) ─────────────────
 //
@@ -275,7 +270,7 @@ export function parseForDisplay(entry, rawText) {
   }
 }
 
-// ── המרשם עצמו — 49 שורות (43 + ארבע של מודול 11 + תבנית סיכום השעות + סף משך האירוע) ──
+// ── המרשם עצמו — 50 שורות (43 + ארבע של מודול 11 + תבנית סיכום השעות + סף משך האירוע + סף ההנחה) ──
 // כל שורה: { name, label, hint, kind, unit?, min?, max?, decimals?, group, affects?, layerHint?, note? }.
 // `layerHint` (25/09/2026): מפתח ב-`onboardingCopy.js` — ה"למה" של השורה, מוצג רק במצב-ההטמעה (`ParamRow`).
 // `group` הוא ה-`type` (מפתח ל-PARAM_GROUPS), לא התווית — מקור-אמת יחיד לתווית.
@@ -397,6 +392,23 @@ export const PARAM_REGISTRY = [
     max: 100,
     decimals: 2,
     group: 'control_alerts',
+  },
+  // 🆕 14/10/2026 — ביקורת-ולידציה שורה 4 + כלל-ההנחה של ישי (*"לא נגביל להנחת לקוח נגיד 30
+  // אחוז? מקסימאלית מה מקובל תעשה ולידציות הגיוניות"*). נולדת במיגרציה
+  // `20261016000200_discount_warning_param.sql` (טרם הוחלה). הקוד נופל ל-30 כשהשורה חסרה
+  // (`discountWarningThreshold`), כי הסף רק מודיע — הנחה גדולה עוברת לבדיקה, לא נאסרת.
+  {
+    name: 'סף_אזהרת_הנחה_אחוז',
+    label: 'סף אזהרה לסך ההנחות',
+    hint: 'מעל כמה אחוזי הנחה (קבועה + נוספת) מוצגת הערה "גבוה מהרגיל" בבניית הצעת מחיר — ההערה אינה חוסמת שמירה',
+    kind: 'percent',
+    unit: '%',
+    // 🏷️ הנחתי (כרטיס הסגן): 5–90. מתחת ל-5 כמעט כל הנחה הייתה "גבוהה"; מעל 90 ההערה כמעט לא תופיע.
+    min: 5,
+    max: 90,
+    decimals: 0,
+    group: 'control_alerts',
+    affects: 'משנה מתי מופיעה ההערה על הנחה גבוהה בבניית הצעת מחיר',
   },
   {
     name: 'ימי_אזהרה_קדם_אירוע',

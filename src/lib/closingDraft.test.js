@@ -35,6 +35,9 @@ import {
   RESEND_STATE_SENTENCE,
   attendanceLabelFromColumns,
   qualityLabelFromValue,
+  eventHoursPlannedNotice,
+  eventGuestsError,
+  eventGuestsPlannedNotice,
 } from '@/lib/closingDraft'
 
 // שורות-שיבוץ גולמיות כתוצאת getProjectAssignments — כולל דיילת עם שתי שורות (סירבה-
@@ -425,5 +428,55 @@ describe('שחזור תוויות למצב-הנעול — שלוש עמודות 
     expect(qualityLabelFromValue('לא_לשלוח')).toBe('לא לשלוח שוב')
     expect(qualityLabelFromValue('מצוינת')).toBe('מצוינת')
     expect(qualityLabelFromValue(undefined)).toBeNull()
+  })
+})
+
+// ביקורת-ולידציה, שורה 5 (14/10/2026): התראה רכה כשההפרש ≥ 50% **וגם** ≥ 2 שעות.
+describe('eventHoursPlannedNotice — שעות-ביצוע מול המתוכנן', () => {
+  it('14 במקום 4 ⇒ התראה בנוסח המאושר', () => {
+    expect(eventHoursPlannedNotice(14, '18:00:00', '22:00:00')).toBe(
+      'הוזנו 14 שעות, ובהצעה תוכננו 4. השעות האלה הן שיגיעו לשכר — כדאי לוודא.',
+    )
+  })
+  it('שני התנאים יחד: 3 במקום 2 (50% אבל שעה) ⇒ בלי; 12 במקום 9 (3 שעות אבל 33%) ⇒ בלי', () => {
+    expect(eventHoursPlannedNotice(3, '18:00', '20:00')).toBe('')
+    expect(eventHoursPlannedNotice(12, '09:00', '18:00')).toBe('')
+  })
+  it('גם כלפי מטה: 2 במקום 8 ⇒ התראה', () => {
+    expect(eventHoursPlannedNotice(2, '10:00', '18:00')).not.toBe('')
+  })
+  it('אין שעות-תכנון, או ערך לא-תקין ⇒ אין התראה (לא ממציאים 24)', () => {
+    expect(eventHoursPlannedNotice(14, null, null)).toBe('')
+    expect(eventHoursPlannedNotice('', '18:00', '22:00')).toBe('')
+    expect(eventHoursPlannedNotice(30, '18:00', '22:00')).toBe('')
+  })
+})
+
+// ביקורת-ולידציה, שורה 12 (14/10/2026): אורחים בפועל — שלם בלבד (חסימה) + התראה מעל פי 3.
+describe('אורחים בפועל — שלם, והשוואה להצעה', () => {
+  it('שבר ⇒ הודעה שאומרת איך לתקן; ריק ⇒ הנוסח המאושר; שלם ⇒ ריק', () => {
+    expect(eventGuestsError(95.5)).toBe('כמות האורחים חייבת להיות מספר שלם, למשל 95.')
+    expect(eventGuestsError(null)).toBe('חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזן 0.')
+    expect(eventGuestsError(0)).toBe('')
+    expect(eventGuestsError(95)).toBe('')
+  })
+  it('950 במקום 95 ⇒ התראה; פי 3 בדיוק ⇒ בלי; אין מתוכנן ⇒ בלי', () => {
+    expect(eventGuestsPlannedNotice(950, 95)).toBe(
+      'הוזנו 950 אורחים, ובהצעה תוכננו 95 — כדאי לוודא.',
+    )
+    expect(eventGuestsPlannedNotice(285, 95)).toBe('')
+    expect(eventGuestsPlannedNotice(950, null)).toBe('')
+  })
+})
+
+// ביקורת-ולידציה שורה 13 (14/10/2026): שעות-שורה עם פסיק עשרוני נשמרות כנקודה.
+describe('applyRowHours — פסיק עשרוני', () => {
+  it('6,5 ⇒ 6.5, ותקין בטווח', () => {
+    const rows = [
+      { hostessId: 'h', assignmentNumber: 1, hoursOverridden: false, manualHours: null },
+    ]
+    const [row] = applyRowHours(rows, 'h|1', '6,5')
+    expect(row.manualHours).toBe('6.5')
+    expect(rowHoursOutOfRange(row, 6)).toBe(false)
   })
 })

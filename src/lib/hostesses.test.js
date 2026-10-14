@@ -7,6 +7,9 @@ import {
   COMPLETED_ASSIGNMENT_LABEL,
   eventStartInstant,
   minWageError,
+  highWageWarning,
+  hostessContactErrors,
+  unavailabilityDraftError,
   duplicateEmailWarning,
   isUnavailableOn,
   approvedButUnavailable,
@@ -83,6 +86,22 @@ describe('שמות שלושת ספי-הזימון ב-params — זהים-ביי�
     expect(HOSTESS_PARAM_NAMES.inviteValidityHours).toBe('שעות_תוקף_זימון')
     expect(HOSTESS_PARAM_NAMES.inviteCutoffHours).toBe('שעות_סף_זימון_לפני_אירוע')
     expect(HOSTESS_PARAM_NAMES.urgentEventHours).toBe('שעות_אירוע_דחוף')
+  })
+})
+
+// ── תקרת-שכר (ביקורת-ולידציה שורה 8, 14/10/2026 — הספים אושרו ע"י ישי) ──────────
+describe('שכר שעתי גבוה — מעל פי 2.5 מזהיר, מעל פי 10 חוסם', () => {
+  it('3500 במקום 35 (פי 100) ⇒ חסימה', () => {
+    expect(minWageError(3500, '35.4')).toBe('השכר השעתי חורג מכל טווח סביר — יש לתקן.')
+    expect(minWageError(354, '35.4')).toBeNull()
+  })
+  it('פי 2.5–10 ⇒ אזהרה בנוסח, עם סכומים מבודדים; עד פי 2.5 או מעל פי 10 ⇒ null', () => {
+    expect(highWageWarning(100, '35.4')).toBe(
+      'השכר השעתי ⁦100 ₪⁩ גבוה פי 2.8 משכר המינימום (⁦35.4 ₪⁩). כדאי לוודא שלא נוספה ספרה.',
+    )
+    expect(highWageWarning(88.5, '35.4')).toBeNull()
+    expect(highWageWarning(3500, '35.4')).toBeNull()
+    expect(highWageWarning(100, '')).toBeNull()
   })
 })
 
@@ -1019,5 +1038,40 @@ describe('futureActiveAssignments — הקלט לחלון-האישור של §א
       row(2, 'finally_approved', '2026-08-15', 'קרוב'),
     ]
     expect(futureActiveAssignments(rows, TODAY).map((r) => r.eventName)).toEqual(['קרוב', 'רחוק'])
+  })
+})
+
+// ביקורת-ולידציה שורות 21+22 (14/10/2026): פורמט אימייל וטלפון נייד — חוסם.
+describe('hostessContactErrors', () => {
+  it('אימייל שבור ⇒ שגיאה; תקין ⇒ בלי', () => {
+    expect(hostessContactErrors({ email: 'dana-at-site', phone: '' }).email).toBe(
+      'כתובת האימייל אינה תקינה — לדוגמה: name@example.com',
+    )
+    expect(hostessContactErrors({ email: 'dana@site.co.il' })).toEqual({})
+  })
+  it('טלפון שאינו נייד 05X ⇒ שגיאה; 050-1234567 / 0501234567 ⇒ תקין', () => {
+    expect(hostessContactErrors({ phone: '03-1234567' }).phone).toBe(
+      'מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).',
+    )
+    expect(hostessContactErrors({ phone: '050-1234567' })).toEqual({})
+    expect(hostessContactErrors({ phone: '0501234567' })).toEqual({})
+  })
+  it('ריק ⇒ אין שגיאת-פורמט (החובה נבדקת בנפרד)', () => {
+    expect(hostessContactErrors({ email: ' ', phone: '' })).toEqual({})
+  })
+})
+
+// ביקורת-ולידציה שורה 24 (14/10/2026): "+ טווח חדש" עם תאריך חסר אומר למה.
+describe('unavailabilityDraftError', () => {
+  it('תאריך חסר ⇒ הודעה; סיום לפני התחלה ⇒ ההודעה הקיימת; תקין ⇒ null', () => {
+    expect(unavailabilityDraftError({ start_date: '2026-10-20', end_date: '' })).toBe(
+      'יש לבחור גם תאריך התחלה וגם תאריך סיום.',
+    )
+    expect(unavailabilityDraftError({ start_date: '2026-10-20', end_date: '2026-10-19' })).toBe(
+      'תאריך הסיום מוקדם מתאריך ההתחלה.',
+    )
+    expect(
+      unavailabilityDraftError({ start_date: '2026-10-20', end_date: '2026-10-20' }),
+    ).toBeNull()
   })
 })

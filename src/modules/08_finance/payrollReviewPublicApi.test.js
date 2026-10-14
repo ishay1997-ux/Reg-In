@@ -59,6 +59,13 @@ describe('קריאות הרשת', () => {
 describe('validateObjection', () => {
   const valid = { ...EMPTY_OBJECTION, rowKeys: ['r1'], category: 'hours', description: 'x' }
 
+  // ביקורת-ולידציה שורה 13: `6,5` מהטלפון אינו "לא מספר".
+  it('שעות עם פסיק עשרוני (6,5) ⇒ תקין, ונשלח כ-6.5', () => {
+    const form = { ...valid, suggestedValue: '6,5' }
+    expect(validateObjection(form)).toEqual({})
+    expect(buildCasePayload(form).suggested_value).toBe(6.5)
+  })
+
   it('טופס תקין ⇒ אין שגיאות', () => {
     expect(validateObjection(valid)).toEqual({})
   })

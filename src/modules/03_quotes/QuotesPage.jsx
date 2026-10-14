@@ -22,6 +22,7 @@ import { WindowChips, Pager } from '@/components/ListWindow'
 import Money from '@/components/Money'
 import RowAction from '@/components/RowAction'
 import StatTile from '@/components/StatTile'
+import DateRangeNotice from '@/components/DateRangeNotice'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -679,50 +680,57 @@ export default function QuotesPage() {
         </div>
 
         {showDateFilter && (
-          // הטווח מוצג כפקד אחד בכיוון LTR — התחלה משמאל וסיום מימין — ולא כשני שדות
-          // ש-RTL הופך את סדרם ומייצר על המסך טווח הפוך ממה שהוקלד (src/CLAUDE.md).
-          <div
-            dir="ltr"
-            className="flex items-center gap-2 mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 w-fit"
-          >
-            <input
-              type="date"
-              value={eventDateFrom}
-              onChange={(e) => {
-                setEventDateFrom(e.target.value)
-                resetPage()
-              }}
-              aria-label="תאריך אירוע מ-"
-              className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
-              data-testid="quotes-event-from"
-            />
-            <span className="text-slate-400 text-xs">–</span>
-            <input
-              type="date"
-              value={eventDateTo}
-              onChange={(e) => {
-                setEventDateTo(e.target.value)
-                resetPage()
-              }}
-              aria-label="תאריך אירוע עד"
-              className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
-              data-testid="quotes-event-to"
-            />
-            {(eventDateFrom || eventDateTo) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEventDateFrom('')
-                  setEventDateTo('')
+          <>
+            // הטווח מוצג כפקד אחד בכיוון LTR — התחלה משמאל וסיום מימין — ולא כשני שדות // ש-RTL
+            הופך את סדרם ומייצר על המסך טווח הפוך ממה שהוקלד (src/CLAUDE.md).
+            <div
+              dir="ltr"
+              className="flex items-center gap-2 mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 w-fit"
+            >
+              <input
+                type="date"
+                value={eventDateFrom}
+                onChange={(e) => {
+                  setEventDateFrom(e.target.value)
                   resetPage()
                 }}
-                className="text-xs text-slate-500 underline"
-                data-testid="quotes-date-clear"
-              >
-                נקה תאריכים
-              </button>
-            )}
-          </div>
+                aria-label="תאריך אירוע מ-"
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
+                data-testid="quotes-event-from"
+              />
+              <span className="text-slate-400 text-xs">–</span>
+              <input
+                type="date"
+                value={eventDateTo}
+                onChange={(e) => {
+                  setEventDateTo(e.target.value)
+                  resetPage()
+                }}
+                aria-label="תאריך אירוע עד"
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
+                data-testid="quotes-event-to"
+              />
+              {(eventDateFrom || eventDateTo) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEventDateFrom('')
+                    setEventDateTo('')
+                    resetPage()
+                  }}
+                  className="text-xs text-slate-500 underline"
+                  data-testid="quotes-date-clear"
+                >
+                  נקה תאריכים
+                </button>
+              )}
+            </div>
+            <DateRangeNotice
+              from={eventDateFrom}
+              to={eventDateTo}
+              testId="quotes-date-range-notice"
+            />
+          </>
         )}
 
         {rejectionBreakdown.length > 0 && (

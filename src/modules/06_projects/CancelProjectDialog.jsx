@@ -49,6 +49,8 @@ import { mailOutcomeMessage } from '@/lib/projectCard'
 import { eventDaysFromToday } from '@/lib/projects'
 import { PROJECT_TEMPLATE_NAMES, buildProjectCancellationPayload } from '@/lib/shiftEmails'
 import { sendEmail } from '@/api/email'
+import CharCounter from '@/components/CharCounter'
+import { FREE_TEXT_REASON_MAX } from '@/lib/validators'
 
 // 🔒 נעול ב-§3.7 של מדריך-המיקרו, וזהה-בייט למה שה-RPC זורק (מיגרציה 20260814142440,
 // גוף cancel_project) — הדיאלוג והשרת אומרים את אותו משפט.
@@ -472,6 +474,7 @@ function CancelProjectBody({ project, onOpenChange, onCancelled, now }) {
           id="cancel-reason"
           rows={2}
           value={reason}
+          maxLength={FREE_TEXT_REASON_MAX}
           disabled={submitting}
           data-testid="cancel-reason"
           placeholder="לדוגמה: הלקוח דחה את האירוע לרבעון הבא"
@@ -480,6 +483,7 @@ function CancelProjectBody({ project, onOpenChange, onCancelled, now }) {
           }`}
           onChange={(e) => setReason(e.target.value)}
         />
+        <CharCounter value={reason} max={FREE_TEXT_REASON_MAX} testId="cancel-reason-counter" />
         {reasonEmpty && cancelType ? (
           <span
             className="text-xs font-semibold text-red-600"

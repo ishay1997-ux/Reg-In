@@ -4,7 +4,7 @@
 // ⚠️ ה-PDF אינו מופק כאן (`03_quotes/CLAUDE.md`: PDF תחת vitest אינו ראיה) — ההפקה ממוקמת כנכשלת,
 // והשורה אינה תלויה בה.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ToastProvider } from '@/components/ToastProvider'
 import { ConfirmProvider } from '@/components/ConfirmDialog'
 import QuoteDocumentDialog from './QuoteDocumentDialog'
@@ -125,5 +125,23 @@ describe('חלון-המסמך — שורת "נסחי מייל מעקב"', () => 
     } finally {
       aiSwitch.on = true
     }
+  })
+})
+
+// ביקורת-ולידציה, שורה 15 (14/10/2026): הסיבה שהכפתור מושבת חייבת להיראות **מתחת לשדה**,
+// לא רק ב-title (ריחוף-עכבר, שאינו קיים בטלפון ובמקלדת).
+describe('חלון-המסמך — שורת-שגיאה גלויה בשדה "נמען"', () => {
+  it('כתובת פגומה שהוקלדה ⇒ שורת שגיאה עם role=alert, והשדה מסומן לא-תקין', async () => {
+    getLastSuccessfulSend.mockResolvedValue(null)
+    renderDocument(quote())
+    const input = screen.getByTestId('quote-recipient-email-input')
+    expect(screen.queryByTestId('quote-recipient-email-error')).not.toBeInTheDocument()
+    fireEvent.change(input, { target: { value: 'abc' } })
+    const err = screen.getByTestId('quote-recipient-email-error')
+    expect(err).toHaveTextContent('כתובת המייל אינה תקינה — לדוגמה: name@company.co.il')
+    expect(err).toHaveAttribute('role', 'alert')
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    fireEvent.change(input, { target: { value: 'dana@company.co.il' } })
+    expect(screen.queryByTestId('quote-recipient-email-error')).not.toBeInTheDocument()
   })
 })

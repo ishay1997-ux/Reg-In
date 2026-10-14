@@ -10,6 +10,8 @@
 
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
+import CharCounter from '@/components/CharCounter'
+import { FREE_TEXT_REASON_MAX } from '@/lib/validators'
 import { MANUAL_REJECTION_REASONS } from '@/lib/quotes'
 import { cn } from '@/lib/utils'
 import QuoteActionDialog from '@/modules/03_quotes/QuoteActionDialog'
@@ -82,6 +84,7 @@ export default function RejectQuoteDialog({ open, onOpenChange, quote, onConfirm
               <Input
                 id="rejection-notes"
                 value={notes}
+                maxLength={FREE_TEXT_REASON_MAX}
                 onChange={(e) => {
                   setNotes(e.target.value)
                   clearError()
@@ -90,6 +93,7 @@ export default function RejectQuoteDialog({ open, onOpenChange, quote, onConfirm
                 className="h-auto py-2 px-3 text-right rounded-lg border-slate-300"
                 data-testid="reject-notes"
               />
+              <CharCounter value={notes} max={FREE_TEXT_REASON_MAX} testId="reject-notes-counter" />
             </div>
           )}
         </>

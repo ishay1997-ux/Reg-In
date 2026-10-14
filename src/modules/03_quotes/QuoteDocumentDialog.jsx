@@ -51,6 +51,7 @@ import {
   classifySendError,
   emailSendDisabledReason,
   isAttachmentTooLarge,
+  recipientEmailError,
   sendResultMessage,
 } from '@/lib/email'
 import {
@@ -73,6 +74,41 @@ function blobToBase64(blob) {
     reader.onerror = () => reject(reader.error)
     reader.readAsDataURL(blob)
   })
+}
+
+// שדה "נמען למשלוח" + שורת-השגיאה שלו (ביקורת-ולידציה, שורה 15). רכיב נפרד כדי שהשגיאה
+// והשדה ייוולדו יחד — `aria-describedby` מצביע על אותה שורה שמוצגת, ולא על טקסט שבמקום אחר.
+function RecipientField({ value, onChange, error }) {
+  return (
+    <div className="pt-2">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold text-slate-700 shrink-0">נמען למשלוח:</span>
+        <Input
+          type="email"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="כתובת מייל של הנמען"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'quote-recipient-email-error' : undefined}
+          className={cn(
+            'h-8 text-xs max-w-sm rounded-lg border-slate-300',
+            error && 'border-red-500',
+          )}
+          data-testid="quote-recipient-email-input"
+        />
+      </div>
+      {error && (
+        <p
+          id="quote-recipient-email-error"
+          className="mt-1 text-xs text-red-600"
+          role="alert"
+          data-testid="quote-recipient-email-error"
+        >
+          {error}
+        </p>
+      )}
+    </div>
+  )
 }
 
 export default function QuoteDocumentDialog({
@@ -191,6 +227,10 @@ export default function QuoteDocumentDialog({
   // נגזר פעם אחת ונקרא בשני מקומות (חסימת-השליחה למטה, ואישור "נשלח ל-" בגוף החלון) —
   // שתי קריאות נפרדות ל-primaryContact היו יכולות להיפרד בעריכה עתידית.
   const customerEmail = recipientEmail.trim() || primaryContact(quote?.customers)?.email || ''
+  // שורה 15: כתובת "הוקלדה" = המשתמש נגע בשדה והשאיר בו טקסט. השגיאה מוצגת **גלויה מתחת
+  // לשדה** — עד כאן היא חיה רק ב-title של הכפתור, שלא נראה בטלפון ולא במקלדת.
+  const typedRecipient = (userEmail?.trim() ?? '') !== ''
+  const recipientError = recipientEmailError(recipientEmail, { typedByUser: typedRecipient })
 
   const vatBlocked = error === MISSING_VAT_MESSAGE
   const disabledReason = vatBlocked
@@ -203,6 +243,7 @@ export default function QuoteDocumentDialog({
           // הנוסח הספציפי להצעות-מחיר עבר ל-`src/lib/quotes.js` (פזה 0 של מודול 4):
           // המנוע משרת גם זימון-משמרת וחשבונית, ו"לשלוח הצעות" היה שקרי שם.
           noPermissionReason: QUOTE_SEND_NO_PERMISSION_REASON,
+          typedByUser: typedRecipient,
         })
       : ''
 
@@ -368,17 +409,7 @@ export default function QuoteDocumentDialog({
         )}
 
         {canSend && (
-          <div className="flex items-center gap-2 pt-2">
-            <span className="text-xs font-semibold text-slate-700 shrink-0">נמען למשלוח:</span>
-            <Input
-              type="email"
-              value={recipientEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-              placeholder="כתובת מייל של הנמען"
-              className="h-8 text-xs max-w-sm rounded-lg border-slate-300"
-              data-testid="quote-recipient-email-input"
-            />
-          </div>
+          <RecipientField value={recipientEmail} onChange={setUserEmail} error={recipientError} />
         )}
 
         {/* חיווי "נשלח כבר" מהמסד — מוצג **גם בפתיחה ראשונה אחרי רענון-דף**, כלומר הוא

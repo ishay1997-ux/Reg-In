@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { formatDate, formatTimeRange, formatTimestamp, weekdayOf } from './dates'
+import {
+  formatDate,
+  formatTimeRange,
+  formatTimestamp,
+  invertedDateRangeMessage,
+  weekdayOf,
+} from './dates'
 
 describe('formatDate — dd/mm/yyyy, והריק אינו "Invalid Date"', () => {
   it('ISO ⇒ dd/mm/yyyy', () => {
@@ -83,5 +89,17 @@ describe('weekdayOf — יום-בשבוע בעברית, ללא "יום " בהת�
   it('קלט לא-תקין ⇒ מחרוזת ריקה, לא קריסה', () => {
     expect(weekdayOf(null)).toBe('')
     expect(weekdayOf('לא-תאריך')).toBe('')
+  })
+})
+
+// ביקורת-ולידציה שורה 26 (14/10/2026): טווח הפוך ⇒ הסבר (הצעות · כספים · ייצוא).
+describe('invertedDateRangeMessage', () => {
+  it('"מ" אחרי "עד" ⇒ הנוסח; תקין / שווה / צד ריק ⇒ ריק', () => {
+    expect(invertedDateRangeMessage('2026-10-20', '2026-10-01')).toBe(
+      'תאריך ההתחלה מאוחר מתאריך הסיום — אין תוצאות בטווח הזה.',
+    )
+    expect(invertedDateRangeMessage('2026-10-01', '2026-10-20')).toBe('')
+    expect(invertedDateRangeMessage('2026-10-01', '2026-10-01')).toBe('')
+    expect(invertedDateRangeMessage('2026-10-20', '')).toBe('')
   })
 })

@@ -182,7 +182,7 @@ describe('המסנן בכתובת — ?filter=missing', () => {
     listStaffingOverview.mockResolvedValue([staffedProject(701, 30), projectInHours(702, 50)])
   })
 
-  it('כתובת עם ?filter=missing ⇒ "הציגי חסרים בלבד" דלוק, והשורה המאוישת לא מוצגת', async () => {
+  it('כתובת עם ?filter=missing ⇒ "הצג חסרים בלבד" דלוק, והשורה המאוישת לא מוצגת', async () => {
     renderTab('/hostesses?filter=missing')
     await screen.findByTestId('overview-table')
 

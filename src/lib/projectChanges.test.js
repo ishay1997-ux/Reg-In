@@ -10,6 +10,7 @@ import {
   projectTotalAfterChange,
   staffingConsequence,
   tierCrossingNotice,
+  qtyJumpNotice,
 } from './projectChanges'
 
 // מדרגות-המחיר האמיתיות של B-REG-TAG (מיגרציה 20260723112000, אותו נתון כמו pricing.test.js) —
@@ -333,5 +334,20 @@ describe('isLateChange — הגבולות המדויקים: בדיוק-24 שעו
     expect(isLateChange({ target: 'logistics', deltaQty: 50 }, '2026-08-20', '10:00', now)).toBe(
       false,
     )
+  })
+})
+
+// ביקורת-ולידציה שורה 14 (14/10/2026): קפיצה חריגה בכמות ⇒ התראה רכה.
+describe('qtyJumpNotice — קפיצה חריגה בשינוי תכולה', () => {
+  it('10 ⇒ 1000 ⇒ התראה בנוסח המאושר', () => {
+    expect(qtyJumpNotice(10, 1000)).toBe(
+      'הכמות עולה מ-10 ל-1000 (פי 100) — כדאי לוודא שזו הכמות הנכונה.',
+    )
+  })
+  it('פי 3 אבל תוספת קטנה מ-20 (2 ⇒ 6) / תוספת גדולה אבל פחות מפי 3 (100 ⇒ 250) ⇒ בלי', () => {
+    expect(qtyJumpNotice(2, 6)).toBeNull()
+    expect(qtyJumpNotice(100, 250)).toBeNull()
+    expect(qtyJumpNotice(0, 100)).toBeNull()
+    expect(qtyJumpNotice(10, null)).toBeNull()
   })
 })

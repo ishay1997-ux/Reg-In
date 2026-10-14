@@ -398,3 +398,15 @@ describe('CancelProjectDialog — האישור, המיילים והסירובי�
     expect(errorText).not.toContain('לא נמצאה כתובת מייל.')
   })
 })
+
+// ביקורת-ולידציה שורה 28 (14/10/2026): תקרת 500 תווים + מונה בשדות סיבה/הערה.
+describe('CancelProjectDialog — תקרת-אורך לסיבה', () => {
+  it('השדה מוגבל ל-500, והמונה מופיע מ-400 תווים', async () => {
+    await renderDialog()
+    const reason = screen.getByTestId('cancel-reason')
+    expect(reason).toHaveAttribute('maxLength', '500')
+    expect(screen.queryByTestId('cancel-reason-counter')).not.toBeInTheDocument()
+    fireEvent.change(reason, { target: { value: 'א'.repeat(400) } })
+    expect(screen.getByTestId('cancel-reason-counter')).toHaveTextContent('400/500')
+  })
+})
