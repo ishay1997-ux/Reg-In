@@ -11,6 +11,7 @@ import {
   DATE_REQUIRED_MSG,
   LOCATION_REQUIRED_MSG,
   HOURS_BOTH_OR_NEITHER_MSG,
+  TIME_FORMAT_MSG,
   parseDmyToIso,
   isoToDmy,
   feedbackCell,
@@ -86,6 +87,21 @@ describe('validateDetailsForm — זהה-בייט לשרת', () => {
     expect(validateDetailsForm({ ...valid, endTime: '' }).hours).toBe(HOURS_BOTH_OR_NEITHER_MSG)
     expect(validateDetailsForm({ ...valid, startTime: '' }).hours).toBe(HOURS_BOTH_OR_NEITHER_MSG)
     expect(validateDetailsForm({ ...valid, startTime: '', endTime: '' }).hours).toBeUndefined()
+  })
+
+  // ביקורת ולידציות שורה 17 (14/10): השדה הוא טקסט חופשי, והשרת החזיר רק "העדכון נכשל".
+  it.each(['25:99', '930', '18.30', '9:30', '24:00', '18:60', 'ערב'])(
+    'שעה לא בפורמט 24 שעות (%s) — חוסם, עם דוגמה',
+    (bad) => {
+      expect(validateDetailsForm({ ...valid, startTime: bad }).hours).toBe(TIME_FORMAT_MSG)
+      expect(validateDetailsForm({ ...valid, endTime: bad }).hours).toBe(TIME_FORMAT_MSG)
+    },
+  )
+
+  it('נוסח הודעת הפורמט, וקצוות תקינים 00:00 ו-23:59', () => {
+    expect(TIME_FORMAT_MSG).toBe('שעה צריכה להיות בפורמט 24 שעות, למשל 18:30.')
+    expect(validateDetailsForm({ ...valid, startTime: '00:00', endTime: '23:59' })).toEqual({})
+    expect(validateDetailsForm({ ...valid, startTime: ' 18:00 ', endTime: '22:00' })).toEqual({})
   })
 
   it('תאריך ריק או שבור — חובה למלא', () => {

@@ -28,6 +28,7 @@ import {
   countPhrase,
   formatHours,
   hoursSum,
+  isIssuedElsewhereCode,
   isStaleCode,
   kindLabel,
   monthNotEndedMessage,
@@ -49,6 +50,10 @@ export default function FinalSection({
   onIssued,
 }) {
   const activeOpId = opId ?? preview?.active_operation?.operation_id ?? null
+  // הפקה שיצאה מהלשונית הזו ועוד לא קיבלה תשובה: בזמן הזה "ההפקה לא נמצאה" הוא צפוי (המזהה
+  // נכתב לכתובת לפני שהשרת יצר אותה), ולכן אסור לפרש אותו כ"הופק במקום אחר".
+  const [issueInFlight, setIssueInFlight] = useState(false)
+  const issued = review?.review.status === 'issued'
   if (!review) {
     return (
       <Card testId="payroll-final-no-review">
@@ -81,12 +86,31 @@ export default function FinalSection({
           opId={activeOpId}
           update={update}
           canEdit={canEdit}
-          reviewIssued={review.review.status === 'issued'}
+          reviewIssued={issued}
           onIssued={onIssued}
+          issueInFlight={issueInFlight}
+          onGone={() => {
+            update({ opId: null })
+            onIssued?.()
+          }}
           key={activeOpId}
         />
       )}
-      {review.review.status !== 'issued' && (
+      {issued && !activeOpId && (
+        <Banner tone="ok" testId="payroll-final-issued">
+          <p>הדוח לחודש הזה הופק. אפשר לצפות בו בהיסטוריה.</p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-2 h-auto px-4 py-2"
+            onClick={() => update({ view: 'history', reportId: review.review.report_id ?? null })}
+            data-testid="payroll-final-issued-report"
+          >
+            לפרטי הדוח והורדה
+          </Button>
+        </Banner>
+      )}
+      {!issued && (
         <Readiness
           review={review}
           preview={preview}
@@ -94,6 +118,7 @@ export default function FinalSection({
           canEdit={canEdit}
           onStale={onStale}
           onIssued={onIssued}
+          onIssuingChange={setIssueInFlight}
           busyOp={Boolean(activeOpId)}
         />
       )}
@@ -101,7 +126,16 @@ export default function FinalSection({
   )
 }
 
-function Readiness({ review, preview, update, canEdit, onStale, onIssued, busyOp }) {
+function Readiness({
+  review,
+  preview,
+  update,
+  canEdit,
+  onStale,
+  onIssued,
+  onIssuingChange,
+  busyOp,
+}) {
   const info = review.review
   const confirm = useConfirm()
   const [readiness, setReadiness] = useState(null)
@@ -188,6 +222,7 @@ function Readiness({ review, preview, update, canEdit, onStale, onIssued, busyOp
     })
     if (!ok) return
     const operationId = globalThis.crypto.randomUUID()
+    onIssuingChange?.(true)
     update({ opId: operationId })
     setIssuing(true)
     setIssueError(null)
@@ -208,8 +243,15 @@ function Readiness({ review, preview, update, canEdit, onStale, onIssued, busyOp
       setIssueError(err)
       if (isStaleCode(err?.code)) onStale()
       if (err?.code === 'REVIEW_NOT_READY') setTick((t) => t + 1)
+      // הדוח כבר הופק במקום אחר ⇒ אין הפקה לחכות לה: מנקים את המזהה מהכתובת ומרעננים,
+      // והמסך מציג "הופק" במקום "מוכן להפקה".
+      if (isIssuedElsewhereCode(err?.code)) {
+        update({ opId: null })
+        await onIssued?.()
+      }
     } finally {
       setIssuing(false)
+      onIssuingChange?.(false)
     }
   }
 
@@ -316,8 +358,8 @@ function FileToBeSent({ preview, stale, onStale }) {
         </Button>
       )}
       <p className="text-xs text-slate-600">
-        תצוגה מקדימה של הקובץ לרואה החשבון, כולל ת"ז ופרטי בנק. הקובץ הסופי ייבנה מאותם נתונים בדיוק
-        ברגע ההפקה.
+        תצוגה מקדימה של הקובץ לרואה החשבון, כולל ת"ז ופרטי בנק, בשני גיליונות: לפי משמרת וסיכום לפי
+        דיילת. הקובץ הסופי ייבנה מאותם נתונים בדיוק ברגע ההפקה.
       </p>
       {draft.error && (
         <Banner tone="error" testId="payroll-file-to-send-error">
@@ -329,22 +371,36 @@ function FileToBeSent({ preview, stale, onStale }) {
 }
 
 // מצב ההפקה השמור, נשאל מהשרת כל 2 שניות כל עוד הוא באמצע. יציאה מהמסך לא מבטלת דבר.
-function OperationProgress({ opId, update, canEdit, reviewIssued, onIssued }) {
+function OperationProgress({
+  opId,
+  update,
+  canEdit,
+  reviewIssued,
+  onIssued,
+  issueInFlight,
+  onGone,
+}) {
   const toast = useToast()
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
   const [actionBusy, setActionBusy] = useState(false)
   const lastStage = useRef(null)
+  const inFlight = useRef(issueInFlight)
+  const gone = useRef(onGone)
+  useEffect(() => {
+    inFlight.current = issueInFlight
+    gone.current = onGone
+  })
 
   const load = useCallback(async () => {
     try {
       const data = await getPayrollOperationStatus(opId)
       setStatus(data)
       setError(null)
-      return data
+      return { data }
     } catch (err) {
       setError(err)
-      return null
+      return { error: err }
     }
   }, [opId])
 
@@ -354,8 +410,14 @@ function OperationProgress({ opId, update, canEdit, reviewIssued, onIssued }) {
     let timer
     let cancelled = false
     async function tickLoop() {
-      const data = await load()
+      const { data, error: failure } = await load()
       if (cancelled) return
+      // התשובה אומרת שאין כאן הפקה לחכות לה (הופקה בלשונית אחרת, או שלא נוצרה) ⇒ מפסיקים
+      // לשאול ומרעננים את הנתונים. בזמן הפקה מהלשונית הזו "לא נמצאה" צפוי — ממשיכים לחכות.
+      if (failure && isIssuedElsewhereCode(failure.code) && !inFlight.current) {
+        gone.current?.()
+        return
+      }
       if (!data || operationStage(data)?.busy) timer = setTimeout(tickLoop, POLL_MS)
     }
     tickLoop()

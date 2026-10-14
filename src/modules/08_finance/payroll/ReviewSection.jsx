@@ -25,6 +25,7 @@ import {
 } from '../payrollApi'
 import { Banner, Card } from './payrollUi'
 import ReasonDialog from './ReasonDialog'
+import BulkNoResponse from './BulkNoResponse'
 import ReviewTable from './ReviewTable'
 import {
   FILTERS,
@@ -162,6 +163,13 @@ function ReviewBody({
       )}
 
       <Card>
+        {canEdit && !issued && distributed && (
+          <BulkNoResponse
+            recipients={review.recipients}
+            deadlinePassed={deadlinePassed}
+            onReload={onReload}
+          />
+        )}
         <div className="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="סינון">
           {/* לפני השליחה אף אחת לא קיבלה סיכום — אין מה לספור ב"לא השיבו" (סקירת UX, פריט 5). */}
           {FILTERS.filter((key) => distributed || key !== 'noreply').map((key) => (

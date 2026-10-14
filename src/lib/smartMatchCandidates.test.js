@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSmartMatchCandidates } from './smartMatchCandidates'
+import { buildSmartMatchCandidates, responseTimeLabel } from './smartMatchCandidates'
 import { fairnessLeverage } from './smartMatch'
 
 // ── שכבת-ההרכבה: שורות-מסד ⇒ הקלט ש-`rankCandidates` דורש ────────────────────
@@ -572,5 +572,28 @@ describe('buildSmartMatchCandidates — "עבדה" למנוף נמדד נכון 
     const c = build([past(), cancelled])
     expect(c.weeksSinceWorked).toBe(11)
     expect(fairnessLeverage(c.weeksSinceWorked, 0.02, 8)).toBeCloseTo(1.16, 10)
+  })
+})
+
+describe('responseTimeLabel — שורת זמן התגובה בכרטיס המועמדת (ישי 14/10)', () => {
+  it.each([
+    [0.2, 'עונה בדרך כלל תוך פחות משעה'],
+    [0.99, 'עונה בדרך כלל תוך פחות משעה'],
+    [1, 'עונה בדרך כלל תוך שעה'],
+    [1.4, 'עונה בדרך כלל תוך שעה'],
+    [2.2, 'עונה בדרך כלל תוך שעתיים'],
+    [6.4, 'עונה בדרך כלל תוך 6 שעות'],
+    [48, 'עונה בדרך כלל תוך 48 שעות'],
+    [48.5, 'עונה בדרך כלל תוך יומיים'],
+    [80, 'עונה בדרך כלל תוך 3 ימים'],
+  ])('%s שעות ⇒ "%s"', (hours, label) => {
+    expect(responseTimeLabel(hours)).toBe(label)
+  })
+
+  it('null (פחות תשובות מהסף) או ערך פסול ⇒ null — אין שורה, לא "0"', () => {
+    expect(responseTimeLabel(null)).toBeNull()
+    expect(responseTimeLabel(undefined)).toBeNull()
+    expect(responseTimeLabel(Number.NaN)).toBeNull()
+    expect(responseTimeLabel(-1)).toBeNull()
   })
 })

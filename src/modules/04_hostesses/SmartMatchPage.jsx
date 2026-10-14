@@ -31,7 +31,7 @@ import {
   activeWeights,
   componentAvailability,
 } from '@/lib/smartMatch'
-import { buildSmartMatchCandidates } from '@/lib/smartMatchCandidates'
+import { buildSmartMatchCandidates, responseTimeLabel } from '@/lib/smartMatchCandidates'
 import { todayIsoInJerusalem } from '@/lib/projectChanges'
 import { SORT_ANGLES, sortByAngle, isAngleAvailable, defaultSortAngle } from '@/lib/sortAngles'
 import {
@@ -979,6 +979,7 @@ function CandidateCard({
   onToggle,
 }) {
   const streak = unansweredStreakTag(candidate.assignmentRows, unansweredN)
+  const responseTime = responseTimeLabel(candidate.medianResponseHours)
   const weeksCap = params?.fairnessWeeksCap
   // ✏️ **`weeksSinceWorkedToday` ולא `weeksSinceWorked`** (25/09/2026): השני הוא קלט המנוף ונמדד עד
   // תאריך-האירוע; הצ'יפ אומר "לפני N שבועות" — עובדה על היום (אודיט השיבוץ-החכם, פער 4).
@@ -1019,6 +1020,15 @@ function CandidateCard({
           </span>
           {candidate.city ? ` · ${candidate.city}` : ''}
         </div>
+        {/* זמן התגובה הרגיל (חציון) — רק כשיש מספיק תשובות; אחרת אין שורה בכלל. */}
+        {responseTime && (
+          <div
+            className="mt-0.5 text-xs text-slate-600"
+            data-testid={`sm-response-time-${candidate.hostess_id}`}
+          >
+            {responseTime}
+          </div>
+        )}
 
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {candidate.workedForCustomerCount > 0 && (
