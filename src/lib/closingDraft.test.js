@@ -36,6 +36,8 @@ import {
   attendanceLabelFromColumns,
   qualityLabelFromValue,
   eventHoursPlannedNotice,
+  eventGuestsError,
+  eventGuestsPlannedNotice,
 } from '@/lib/closingDraft'
 
 // שורות-שיבוץ גולמיות כתוצאת getProjectAssignments — כולל דיילת עם שתי שורות (סירבה-
@@ -447,5 +449,22 @@ describe('eventHoursPlannedNotice — שעות-ביצוע מול המתוכנן'
     expect(eventHoursPlannedNotice(14, null, null)).toBe('')
     expect(eventHoursPlannedNotice('', '18:00', '22:00')).toBe('')
     expect(eventHoursPlannedNotice(30, '18:00', '22:00')).toBe('')
+  })
+})
+
+// ביקורת-ולידציה, שורה 12 (14/10/2026): אורחים בפועל — שלם בלבד (חסימה) + התראה מעל פי 3.
+describe('אורחים בפועל — שלם, והשוואה להצעה', () => {
+  it('שבר ⇒ הודעה שאומרת איך לתקן; ריק ⇒ הנוסח המאושר; שלם ⇒ ריק', () => {
+    expect(eventGuestsError(95.5)).toBe('כמות האורחים חייבת להיות מספר שלם, למשל 95.')
+    expect(eventGuestsError(null)).toBe('חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזן 0.')
+    expect(eventGuestsError(0)).toBe('')
+    expect(eventGuestsError(95)).toBe('')
+  })
+  it('950 במקום 95 ⇒ התראה; פי 3 בדיוק ⇒ בלי; אין מתוכנן ⇒ בלי', () => {
+    expect(eventGuestsPlannedNotice(950, 95)).toBe(
+      'הוזנו 950 אורחים, ובהצעה תוכננו 95 — כדאי לוודא.',
+    )
+    expect(eventGuestsPlannedNotice(285, 95)).toBe('')
+    expect(eventGuestsPlannedNotice(950, null)).toBe('')
   })
 })

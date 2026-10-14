@@ -125,9 +125,30 @@ export function eventHoursInvalid(value) {
   return n === null || n < 0.5 || n > 24
 }
 
+// ✏️ ביקורת-ולידציה, שורה 12 (14/10/2026): הפרמטר ב-RPC הוא `integer` — `95.5` עבר כאן ונפל
+// בשמירה בלי הסבר. ולכן גם "שלם" הוא חלק מהתקינות, עם הודעה משלו (`eventGuestsError`).
 export function eventGuestsInvalid(value) {
   const n = toNumberOrNull(value)
-  return n === null || n < 0
+  return n === null || n < 0 || !Number.isInteger(n)
+}
+
+// ההודעה לשדה-האורחים: חסר/שלילי ⇒ הנוסח המאושר; שבר ⇒ איך לתקן. תקין ⇒ ''.
+export function eventGuestsError(value) {
+  if (!eventGuestsInvalid(value)) return ''
+  const n = toNumberOrNull(value)
+  return n !== null && n >= 0 ? EVENT_GUESTS_INT_ERROR : EVENT_GUESTS_ERROR
+}
+
+// התראה רכה (לא חסימה): יותר מפי 3 מהמתוכנן בהצעה — 950 במקום 95. המספר הזה לא משנה חיוב,
+// רק דוחות, ולכן רק "כדאי לוודא". אין מתוכנן ⇒ אין השוואה.
+export const GUESTS_NOTICE_FACTOR = 3
+
+export function eventGuestsPlannedNotice(actualGuests, plannedGuests) {
+  const actual = toNumberOrNull(actualGuests)
+  const planned = toNumberOrNull(plannedGuests)
+  if (actual === null || planned === null || planned <= 0 || eventGuestsInvalid(actual)) return ''
+  if (actual <= planned * GUESTS_NOTICE_FACTOR) return ''
+  return `הוזנו ${actual} אורחים, ובהצעה תוכננו ${planned} — כדאי לוודא.`
 }
 
 // ✏️ ביקורת-ולידציה, שורה 5 (14/10/2026): שעות-הביצוע הן ברירת-המחדל של כל דיילת ⇒ הן שעות
@@ -249,6 +270,8 @@ export function buildPayloadRows(rows, eventHours) {
 
 export const EVENT_HOURS_ERROR = 'חובה להזין שעות ביצוע — מספר בין 0.5 ל-24.'
 export const EVENT_GUESTS_ERROR = 'חובה להזין כמות אורחים בפועל. אם לא הגיע איש — הזן 0.'
+// ביקורת-ולידציה, שורה 12 (14/10/2026) — לא מהכרטיס המקורי; מקור: `validation-audit.md`.
+export const EVENT_GUESTS_INT_ERROR = 'כמות האורחים חייבת להיות מספר שלם, למשל 95.'
 
 export function reportFileErrorText(maxBytes) {
   const mb = maxBytes / 1024 / 1024

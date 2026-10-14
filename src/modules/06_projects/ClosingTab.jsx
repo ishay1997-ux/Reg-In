@@ -47,7 +47,6 @@ import {
   draftForValidation,
   buildPayloadRows,
   EVENT_HOURS_ERROR,
-  EVENT_GUESTS_ERROR,
   attendanceMissingError,
   qualityMissingError,
   NEGATIVE_REASON_ERROR,
@@ -55,6 +54,8 @@ import {
   eventHoursInvalid,
   eventGuestsInvalid,
   eventHoursPlannedNotice,
+  eventGuestsError,
+  eventGuestsPlannedNotice,
   rowHoursOutOfRange,
   fileSizeText,
   changeLineText,
@@ -291,6 +292,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
     project?.final_start_time,
     project?.final_end_time,
   )
+  const guestsNotice = eventGuestsPlannedNotice(eventGuestsNum, quoteMeta?.estimated_guests)
   const hoursInvalid = eventHoursInvalid(eventHoursNum)
   const guestsInvalid = eventGuestsInvalid(eventGuestsNum)
   const fieldsOk = !hoursInvalid && !guestsInvalid
@@ -614,9 +616,10 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 className="text-xs font-semibold text-red-600"
                 data-testid="closing-guests-error"
               >
-                {EVENT_GUESTS_ERROR}
+                {eventGuestsError(eventGuestsNum)}
               </span>
             )}
+            <SoftNotice text={guestsNotice} testId="closing-guests-notice" />
           </div>
 
           <div className="flex flex-col gap-1">
