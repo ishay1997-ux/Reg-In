@@ -1122,7 +1122,7 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
                 onClick={onOpen}
                 data-testid="closing-change-link"
               >
-                רשמי שינוי שהתגלה באירוע
+                רישום שינוי שהתגלה באירוע
               </button>
             </div>
           )}
@@ -1151,7 +1151,7 @@ function ScopeChangesSection({ changes, canAct, onOpen }) {
                 onClick={onOpen}
                 data-testid="closing-change-link"
               >
-                רשמי שינוי שהתגלה באירוע
+                רישום שינוי שהתגלה באירוע
               </button>
             </div>
           )}

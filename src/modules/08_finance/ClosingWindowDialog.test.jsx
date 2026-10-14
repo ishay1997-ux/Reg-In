@@ -485,7 +485,7 @@ describe('תצוגה א׳ — ממתין לחשבונית', () => {
   it('אזור-ההעלאה נושא את משפט-הגרירה המצויר, וגרירת קובץ מצרפת אותו כמו בורר-הקבצים', async () => {
     await renderLoaded()
     const zone = screen.getByTestId('closing-dropzone')
-    expect(zone).toHaveTextContent('גררי קובץ-חשבונית לכאן, או')
+    expect(zone).toHaveTextContent('גרירת קובץ חשבונית לכאן, או')
 
     const file = new File(['x'], 'Invoice_4127.pdf', { type: 'application/pdf' })
     fireEvent.drop(zone, { dataTransfer: { files: [file] } })
