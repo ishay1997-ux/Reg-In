@@ -123,7 +123,7 @@ export default function CorrectionForm({ theCase, rows, onDirty, onSaved }) {
       className="flex flex-col gap-3 rounded-lg border border-slate-200 p-3"
       data-testid="payroll-correction-form"
     >
-      <h3 className="font-semibold text-slate-700">תיקון במקור</h3>
+      <h3 className="font-semibold text-slate-700">תיקון שעות או בונוס</h3>
       {errorList.length > 0 && (
         <div
           ref={summaryRef}

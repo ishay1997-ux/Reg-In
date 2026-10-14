@@ -205,7 +205,7 @@ export default function DraftSection({
 
       {allZero && (
         <Banner tone="info" testId="payroll-all-zero">
-          כל השורות בחודש הזה באפס. הן יירשמו בדוח אבל לא ייכנסו לגוף הקובץ.
+          כל השורות בחודש הזה באפס. הן יישמרו בדוח, אבל לא ייכנסו לקובץ לרואה החשבון.
         </Banner>
       )}
 
@@ -326,7 +326,7 @@ function DraftDetails({ preview, missingBank, zeroDurationCount }) {
         <p data-testid="payroll-zero-lines">
           {zeroLines === 0
             ? 'אין שורות באפס'
-            : `${countPhrase(zeroLines, 'שורה אחת באפס', 'שורות באפס')} — נרשמות בדוח ולא נכנסות לגוף הקובץ`}
+            : `${countPhrase(zeroLines, 'שורה אחת באפס', 'שורות באפס')} — נשמרות בדוח ולא נכנסות לקובץ לרואה החשבון`}
         </p>
         <p data-testid="payroll-missing-bank">
           {missingBank.length === 0
@@ -338,7 +338,7 @@ function DraftDetails({ preview, missingBank, zeroDurationCount }) {
         {zeroDurationCount > 0 && (
           <p>
             {countPhrase(zeroDurationCount, 'שורת פיצוי אחת', 'שורות פיצוי')} עם שעת התחלה זהה לשעת
-            הסיום — הפיצוי עליהן 0
+            הסיום — נרשמות עם 0 שעות
           </p>
         )}
         <p>בונוס ונסיעות בשורות פיצוי ביטול מוצגים כקו (—) ולא כאפס: הם אינם חלק מהפיצוי.</p>
@@ -386,7 +386,9 @@ function DraftTable({ rows, offset }) {
                     </div>
                   )}
                   {!line.show_in_file && defects.length === 0 && (
-                    <div className="mt-1 text-xs text-slate-600">באפס — לא נכנסת לגוף הקובץ</div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      באפס — לא נכנסת לקובץ לרואה החשבון
+                    </div>
                   )}
                 </Td>
                 <Td>{line.id_number ? <Ltr>{line.id_number}</Ltr> : <NotApplicable />}</Td>
