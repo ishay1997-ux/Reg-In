@@ -133,7 +133,7 @@ const m2Payload = () =>
     tiles: [
       {
         key: 'revenue',
-        label: 'הכנסות מתחילת השנה',
+        label: 'הכנסות',
         value: 1962981.47,
         format: 'money',
         sub: null,
@@ -505,7 +505,7 @@ describe('מ2 · מבט-על הנהלה', () => {
     callReport.mockResolvedValueOnce(m2Payload())
     renderTab('מ2')
 
-    expect(await screen.findByText('הכנסות מתחילת השנה')).toBeInTheDocument()
+    expect(await screen.findByText('הכנסות')).toBeInTheDocument()
     for (const label of ['שולי-רווח גולמי', 'אירועים שהסתיימו', 'נתח 5 הלקוחות הגדולים']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }

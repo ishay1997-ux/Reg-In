@@ -204,7 +204,7 @@ export const REPORT_TABS = Object.freeze([
         slug: 'satisfaction',
         rpc: 'report_m20_satisfaction',
         name: 'שביעות רצון',
-        question: 'מה משמח ומה מכעיס לקוחות?',
+        question: 'מה הלקוחות משבחים, ועל מה הם מתלוננים?',
         drill: false,
       },
       {

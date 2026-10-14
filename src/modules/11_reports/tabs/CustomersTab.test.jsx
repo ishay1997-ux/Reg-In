@@ -256,7 +256,7 @@ const satisfactionPayload = () =>
     ],
     chart: [
       chartOf('התפלגות הציונים', { xKey: 'score', filter_key: false, data: [{ score: 2, n: 3 }] }),
-      chartOf('מה משמח', { layout: 'horizontal', filter_key: false }),
+      chartOf('מה הלקוחות משבחים', { layout: 'horizontal', filter_key: false }),
     ],
     columns: [
       { key: 'company_name', label: 'לקוח', format: 'text', align: 'start' },
@@ -636,7 +636,7 @@ describe('מ20 · שביעות רצון', () => {
   it('מצייר את שני הגרפים שנשארו', async () => {
     callReport.mockResolvedValue(satisfactionPayload())
     renderTab(SURFACES.מ20)
-    for (const title of ['התפלגות הציונים', 'מה משמח']) {
+    for (const title of ['התפלגות הציונים', 'מה הלקוחות משבחים']) {
       expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
     }
     expect(screen.queryByRole('heading', { name: 'מה מכעיס' })).toBeNull()
