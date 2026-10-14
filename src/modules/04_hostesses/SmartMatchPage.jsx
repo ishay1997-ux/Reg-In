@@ -71,7 +71,7 @@ const VISIBLE_CANDIDATES = 8
 // "על מה הציון מבוסס כרגע" — רק המרכיבים שמשקלם בפועל גדול מ-0, כל אחוז צמוד למילה שלו
 // (ר' הערת-ה-bidi בבאנר: צמד `62% / 38%` מתהפך). נגזר מ-`activeWeights`, לא ממספר קשיח.
 const BASIS_LABELS = [
-  ['responsiveness', 'שיעור-היענות'],
+  ['responsiveness', 'שיעור היענות'],
   ['reliability', 'אמינות'],
   ['proximity', 'קרבה'],
 ]
@@ -264,7 +264,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
   function reportMail({ sent, unknown, failed }, verb) {
     const parts = []
     if (sent > 0) parts.push(`${sent} ${verb}`)
-    if (unknown > 0) parts.push(`${unknown} — לא ידוע אם יצאו (ייתכן שכן; אל תשלחי שוב מיד)`)
+    if (unknown > 0) parts.push(`${unknown} — לא ידוע אם יצאו (ייתכן שכן; אל תשלח שוב מיד)`)
     if (failed > 0) parts.push(`${failed} נכשלו`)
     if (parts.length === 0) return
     if (unknown > 0 || failed > 0) toast.error(parts.join(' · '))
@@ -280,7 +280,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
       return
     }
     if (unknown > 0) {
-      toast.error(`${who} שוחררה — לא ידוע אם ההודעה יצאה (ייתכן שכן; אל תשלחי שוב מיד).`)
+      toast.error(`${who} שוחררה — לא ידוע אם ההודעה יצאה (ייתכן שכן; אל תשלח שוב מיד).`)
       return
     }
     toast.success(`${who} שוחררה, והודעה נשלחה אליה`)
@@ -351,7 +351,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
     })
     if (
       notice &&
-      !(await confirm({ title: notice.title, message: notice.note, confirmLabel: 'אשרי בכל זאת' }))
+      !(await confirm({ title: notice.title, message: notice.note, confirmLabel: 'אשר בכל זאת' }))
     )
       return
 
@@ -367,7 +367,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
       !(await confirm({
         title: `המכסה תיסגר — ${releasing.length} דיילות שאישרו זמינות ישוחררו`,
         message: `${releasing.map((r) => r.hostesses?.full_name).join(' · ')} — כל אחת מהן תקבל הודעה שהמשרה אוישה.`,
-        confirmLabel: 'אשרי ושחררי',
+        confirmLabel: 'אשר ושחרר',
       }))
     ) {
       return
@@ -421,7 +421,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
           title: `לשחרר את ${name} מהאירוע?`,
           message:
             'היא תקבל הודעה שהמשרה אוישה. שחרור אינו נספר לרעתה בשום צד של הדירוג — הוא פעולת מערכת.',
-          confirmLabel: 'שחררי',
+          confirmLabel: 'שחרר',
         }))
       ) {
         return
@@ -480,7 +480,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
         !(await confirm({
           title: notice.title,
           message: notice.note,
-          confirmLabel: 'אשרי בכל זאת',
+          confirmLabel: 'אשר בכל זאת',
         }))
       )
         return
@@ -531,7 +531,7 @@ export default function SmartMatchPage({ projectId, onBack }) {
         className="mb-2 h-auto p-0 text-sm font-semibold text-teal-700"
         data-testid="smart-match-back"
       >
-        ← חזרה למבט-על
+        ← חזרה למבט על
       </Button>
 
       <div className="mb-3">

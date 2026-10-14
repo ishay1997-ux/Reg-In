@@ -283,7 +283,7 @@ describe('DashboardPage — רצועת ה-KPI', () => {
     expect(screen.getByTestId('kpi-profit').textContent).toBe(
       'רווח משוער · ספטמבר 2026לא זמין בתפקידך',
     )
-    expect(screen.getByTestId('kpi-quotes').textContent).toBe('הצעות ממתינותלא זמין בתפקידך')
+    expect(screen.getByTestId('kpi-quotes').textContent).toBe('הצעות פתוחותלא זמין בתפקידך')
   })
 })
 

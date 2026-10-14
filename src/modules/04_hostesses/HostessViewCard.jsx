@@ -326,17 +326,17 @@ function CardBody({
         <div className="mb-3 flex flex-wrap gap-2">
           <StatTile label="התרשמות המנהלת" value={<RatingStars value={hostess.rating} />} />
           <StatTile
-            label="שיעור-היענות"
+            label="שיעור היענות"
             // 🔴 `null` ולא `0 מ-0`: לדיילת חדשה אין רקורד, ו"0" נקרא כשיפוט שלילי
             // על מי שפשוט טרם קיבלה זימון. אותו כלל בדיוק כמו `טרם נצבר מידע` בציון.
             value={
               derived.counts.answered > 0
-                ? `${derived.counts.confirmed} מ-${derived.counts.answered}`
+                ? `${derived.counts.confirmed} מתוך ${derived.counts.answered}`
                 : null
             }
             emptyText="טרם נצבר מידע"
           />
-          <StatTile label="יש רכב" value={hostess.has_car ? 'כן' : 'לא'} />
+          <StatTile label="רכב" value={hostess.has_car ? 'יש' : 'אין'} />
           <StatTile label="אירועים ברבעון האחרון" value={String(derived.quarterEvents)} />
         </div>
 
@@ -476,7 +476,7 @@ function CardBody({
                 />
               </div>
               {pagedHistory.total === 0 ? (
-                <Muted>אין שיבוצים בחלון הזמן הנבחר</Muted>
+                <Muted>אין שיבוצים בתקופה שנבחרה</Muted>
               ) : (
                 <>
                   <AssignmentTable

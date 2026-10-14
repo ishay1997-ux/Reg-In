@@ -440,7 +440,7 @@ const h2Payload = (extra = {}) =>
       { band: '10%+', group: 'לקוחות ישירים', close_rate: 58.1, score: 4.31 },
       { band: '10%+', group: 'חברות הפקה', close_rate: 67.8, score: 4.15 },
     ],
-    so_what: `לא לתת מעל ${isolateLtr('10%')} הנחה כדי לסגור — הסגירה בה ${isolateLtr('58.1%')} מול ${isolateLtr('74.0%')} בלי הנחה.`,
+    so_what: `הנחה מעל ${isolateLtr('10%')} לא משתלמת: נסגרות ${isolateLtr('58.1%')} מההצעות (${isolateLtr('74.0%')} בלי הנחה).`,
     definitions: 'הנחה = ההנחה הקבועה של הלקוח ועוד ההנחה הידנית',
     meta: { measured_at: null, missing_params: [], notes: [], row_total: 8, run: null },
     ...extra,
@@ -458,12 +458,12 @@ const h3Payload = (extra = {}) =>
     tiles: [
       {
         key: 'score_no_lead',
-        label: 'ציון בלי ראש-משמרת',
+        label: 'ציון בלי אחראית משמרת',
         value: 2.07,
         format: 'ratio',
         sub: `${isolateLtr('27')} אירועים`,
         window: 'ממוצע',
-        compare: { value: 4.18, label: 'עם ראש-משמרת', format: 'ratio', direction: 'down' },
+        compare: { value: 4.18, label: 'עם אחראית משמרת', format: 'ratio', direction: 'down' },
         target: null,
       },
       {
@@ -484,7 +484,7 @@ const h3Payload = (extra = {}) =>
         { key: 'with_avg', label: 'כשהגורם קיים', kind: 'bar', axis: 'left', format: 'ratio' },
         { key: 'without_avg', label: 'בלעדיו', kind: 'bar', axis: 'left', format: 'ratio' },
       ],
-      data: [{ factor: 'בלי ראש-משמרת', with_avg: 2.07, without_avg: 4.18, n: 27 }],
+      data: [{ factor: 'בלי אחראית משמרת', with_avg: 2.07, without_avg: 4.18, n: 27 }],
       xKey: 'factor',
       filter_key: false,
       domain: [0, 5],
@@ -504,7 +504,7 @@ const h3Payload = (extra = {}) =>
         drill_key: { kind: 'project', id: 1597 },
       },
     ],
-    so_what: `לשבץ ראש-משמרת בכל אירוע — בלעדיה הציון ${isolateLtr('2.1')} מול ${isolateLtr('4.2')}.`,
+    so_what: `לשבץ אחראית משמרת בכל אירוע — בלעדיה הציון ${isolateLtr('2.1')} מול ${isolateLtr('4.2')}.`,
     definitions: 'ציון משוב = ממוצע הציונים (1–5) במשובים שהושלמו',
     meta: { measured_at: null, missing_params: [], notes: [], row_total: 1, run: null },
     ...extra,
@@ -715,7 +715,7 @@ describe('ה2 · הנחה מול סגירה', () => {
     callReport.mockResolvedValueOnce(h2Payload())
     renderTab('מ4')
 
-    expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לא לתת מעל')
+    expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לא משתלמת')
     expect(screen.getByTestId('report-tile-close_deep')).toHaveTextContent('בלי הנחה')
     expect(screen.getByTestId('report-tile-margin_deep')).toHaveTextContent('אין מספיק נתונים')
     expect(screen.queryByTestId('discount-tier-chips')).toBeNull()
@@ -740,8 +740,8 @@ describe('ה3 · איכות אירועים', () => {
     callReport.mockResolvedValueOnce(h3Payload())
     const { onDrill } = renderTab('מ6')
 
-    expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לשבץ ראש-משמרת')
-    expect(screen.getByTestId('report-tile-score_no_lead')).toHaveTextContent('עם ראש-משמרת')
+    expect(await screen.findByTestId('report-so-what')).toHaveTextContent('לשבץ אחראית משמרת')
+    expect(screen.getByTestId('report-tile-score_no_lead')).toHaveTextContent('עם אחראית משמרת')
     fireEvent.click(screen.getAllByTestId('report-row-drillable')[0])
     expect(firstDrillArg(onDrill)).toEqual({ kind: 'project', id: 1597 })
   })

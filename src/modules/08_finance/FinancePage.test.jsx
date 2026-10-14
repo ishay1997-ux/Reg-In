@@ -335,7 +335,7 @@ describe('S1 — לשונית "ממתין לחשבונית" (#12 · #14)', () =>
     expect(row).toHaveTextContent('כנס משקיעים שנתי')
     expect(row).toHaveTextContent('נדרש בירור טלפוני')
     expect(row).toHaveTextContent('21/08/2026')
-    expect(row).toHaveTextContent('נסגר תפעולית')
+    expect(row).toHaveTextContent('האירוע נסגר')
     expect(row).toHaveTextContent('500.00 ₪')
     expect(row).toHaveTextContent('590.00 ₪ כולל מע"מ')
     expect(row.className).toContain('bg-amber-50')
@@ -357,9 +357,9 @@ describe('S1 — לשונית "ממתין לחשבונית" (#12 · #14)', () =>
     // 🔴 ההצעה התלת-רכיבית אינה בטבלת-ההחזרה של get_finance_overview ⇒ אין כאן מספר
     // לקרוא, וההכנסה **לא** נכתבת במקומו.
     expect(row).not.toHaveTextContent('4,200.00 ₪')
-    expect(row).toHaveTextContent('דמי-ביטול — טרם נפתרו')
+    expect(row).toHaveTextContent('דמי ביטול — טרם נקבעו')
     expect(row).toHaveTextContent('בוטל')
-    expect(screen.getByTestId('finance-fee-tag-14')).toHaveTextContent('דמי-ביטול')
+    expect(screen.getByTestId('finance-fee-tag-14')).toHaveTextContent('דמי ביטול')
     expect(row.className).toContain('bg-amber-50')
   })
 
@@ -611,14 +611,14 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
     expect(open).toHaveTextContent('3 תיקים בטיפול')
     // ✏️ 25/09/2026 (מעבר-העיניים #8): ההיקף בתווית, ו"הסכום" — התיק כן נספר ב"N תיקים", רק הסכום בלעדיו.
     expect(open).toHaveTextContent('כל הזמנים')
-    expect(open).toHaveTextContent('הסכום לא כולל דמי-ביטול אחד שטרם נקבעו')
+    expect(open).toHaveTextContent('הסכום לא כולל דמי ביטול אחד שטרם נקבעו')
 
     // "באיחור-תשלום" = תת-קבוצה של הפתוח: רק #15 (5 ימי-איחור, נעול בבדיקה למעלה); #12
     // אינו יכול להיות באיחור כי חשבונית טרם נשלחה לו (`daysOverdue===null`).
     const overdue = screen.getByTestId('finance-summary-overdue')
-    expect(overdue).toHaveTextContent('מתוכו באיחור-תשלום')
+    expect(overdue).toHaveTextContent('מתוכו באיחור תשלום')
     expect(overdue).toHaveTextContent('5,985 ₪')
-    expect(overdue).toHaveTextContent('תיק אחד באיחור-תשלום')
+    expect(overdue).toHaveTextContent('תיק אחד באיחור תשלום')
   })
 
   // 🔤 **יחיד/רבים — נתפס בצילום-מסך על דאטה אמיתית, לא בבדיקה.** האריח הציג *"1 תיקים
@@ -683,9 +683,9 @@ describe('S1 — רצועת-הסיכום ("ממתין לגבייה" / "באיח�
     render(<FinancePage />, { wrapper: MemoryRouter })
     await screen.findByTestId('finance-empty-tab')
     const open = screen.getByTestId('finance-summary-open')
-    expect(open).toHaveTextContent('לא ידוע — דמי-ביטול טרם נקבעו')
+    expect(open).toHaveTextContent('לא ידוע — דמי ביטול טרם נקבעו')
     expect(open).not.toHaveTextContent('0 ₪')
-    expect(open).toHaveTextContent('לא כולל דמי-ביטול אחד שטרם נקבעו')
+    expect(open).toHaveTextContent('לא כולל דמי ביטול אחד שטרם נקבעו')
   })
 
   // שלוש הבדיקות הבאות מפורדות (ולא רצף-render יחיד) כי `render` של testing-library אינו
@@ -942,7 +942,7 @@ describe('S1 — חלון-זמן (04/09/2026)', () => {
     await renderPage()
     expect(screen.queryByTestId('finance-row-51')).not.toBeInTheDocument()
     expect(screen.getByTestId('finance-row-15')).toBeInTheDocument()
-    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לחלון')
+    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לתקופה')
 
     fireEvent.click(screen.getByTestId('list-window-all'))
     expect(await screen.findByTestId('finance-row-51')).toBeInTheDocument()

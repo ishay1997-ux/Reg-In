@@ -145,7 +145,7 @@ const FEEDBACK_REASONS = FEEDBACK_NEGATIVE_REASONS
 // עצמו לא זז (מודול-הקופי טרם קבע מונח ל"חשבונית מס" חדש), רק כיוון-הקריאה וגוף-הפועל.
 const INVOICE_BANNER_TITLE = 'המערכת אינה מפיקה חשבונית באופן אוטומטי.' // §7.38
 const INVOICE_BANNER_BODY =
-  'הכיני את החשבונית בתוכנת הנהלת-החשבונות והעלי אותה כאן — PDF או תמונה, עד 10MB.'
+  'הכן את החשבונית בתוכנת הנהלת-החשבונות והעלה אותה כאן — PDF או תמונה, עד 10MB.'
 const LOCKED_BANNER_BODY = 'הרווח-הסופי קפוא ואינו ניתן לעריכה. כל השדות שלמטה לעיון בלבד.' // P3
 const CREDIT_NOTE_LINE = 'נדרשת חשבונית זיכוי'
 // 🔄 **הסף אינו כתוב במשפט יותר** (מודול 9 · צעד 2.3): הוא נקרא מ-`params`
@@ -493,7 +493,7 @@ function MetaStrip({ project, detail, statusLabel }) {
       </span>
       {/* ‏`operationally_closed_at` אינו ב-RPC של S2 — הוא מגיע משורת-S1 והוא תצוגה בלבד. */}
       {project.operationally_closed_at ? (
-        <MetaItem label="נסגר תפעולית" value={project.operationally_closed_at} />
+        <MetaItem label="האירוע נסגר" value={project.operationally_closed_at} />
       ) : null}
       {detail.cancelled_at ? <MetaItem label="בוטל" value={detail.cancelled_at} /> : null}
       {detail.archived_at ? <MetaItem label="הועבר לארכיון" value={detail.archived_at} /> : null}
@@ -805,7 +805,7 @@ function FeeActions({ busy, actions }) {
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={actions.onSaveFee}
         >
-          {busy === 'fee' ? 'שומר…' : 'שמור דמי-ביטול'}
+          {busy === 'fee' ? 'שומר…' : 'שמור דמי ביטול'}
         </Button>
         <Button
           type="button"
@@ -932,7 +932,7 @@ function FeeSavedBlock({ detail, creditNoteFlag }) {
       data-testid="closing-fee-saved"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-sm font-semibold text-slate-700">דמי-ביטול שנקבעו</span>
+        <span className="text-sm font-semibold text-slate-700">דמי ביטול שנקבעו</span>
         <Money
           amount={detail.cancellation_fee}
           cents
@@ -1428,7 +1428,7 @@ function BalanceBlock({ detail }) {
       >
         <BalanceRow
           // ה2
-          label="הכנסות (הצעה-קפואה + שינויי-תכולה)"
+          label="הכנסות (הצעה-קפואה + שינויי תכולה)"
           amount={detail.revenue}
           testId="closing-balance-revenue"
         />

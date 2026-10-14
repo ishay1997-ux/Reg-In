@@ -24,7 +24,7 @@ import {
 
 const COLUMNS = [
   { key: 'customer', label: 'לקוח', format: 'text' },
-  { key: 'amount', label: 'יתרת-חוב פתוחה', format: 'money' },
+  { key: 'amount', label: 'יתרת חוב פתוחה', format: 'money' },
   { key: 'days', label: 'ימי איחור', format: 'days' },
   { key: 'due', label: 'מועד פירעון', format: 'date' },
 ]
@@ -156,7 +156,7 @@ describe('buildExportSheet — מיפוי שורה→תא לפי ה-format של 
   it('שורת-הכותרת מודגשת ונושאת את תוויות-העמודות', () => {
     expect(sheet[0]).toEqual([
       { value: 'לקוח', type: String, fontWeight: 'bold' },
-      { value: 'יתרת-חוב פתוחה', type: String, fontWeight: 'bold' },
+      { value: 'יתרת חוב פתוחה', type: String, fontWeight: 'bold' },
       { value: 'ימי איחור', type: String, fontWeight: 'bold' },
       { value: 'מועד פירעון', type: String, fontWeight: 'bold' },
     ])

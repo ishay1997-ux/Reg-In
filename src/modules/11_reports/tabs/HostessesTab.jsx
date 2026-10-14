@@ -83,7 +83,7 @@ const TABLE_TITLES = {
   'hostess-overview': (payload) =>
     payload.rows.length === 0
       ? 'אין דיילות מתחת לסף'
-      : `${isolateLtr(payload.rows.length)} הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך`,
+      : `${isolateLtr(payload.rows.length)} הדיילות בסיכון גבוה · מיון לפי ציון-אמינות, מהנמוך`,
   reliability: () => 'דיילות לפי ציון-אמינות · מהנמוך לגבוה',
   fairness: () => 'הדיילות לפי מספר המשמרות בחלון · מהעמוסה',
 }
@@ -200,7 +200,7 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
       return (
         <>
           <ChipRow
-            label="מסנני-דף"
+            label="מסנני דף"
             chips={reliabilityChips(chips, setChip)}
             announcement={`מוצגות ${isolateLtr(payload.rows.length)} שורות`}
             testId="reports-chips-reliability"

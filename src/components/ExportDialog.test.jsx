@@ -93,13 +93,13 @@ describe('ExportDialog — התצוגה המקדימה היא הקובץ', () =>
   // ולא את קיום הכפתור — כי התצוגה-המקדימה **היא** הקובץ.
   it('🔴 "העבירי לראש" מקפיץ עמודה לראש הקובץ בלחיצה אחת', () => {
     setup()
-    fireEvent.click(screen.getByLabelText('העבירי את ימי איחור לראש הרשימה'))
+    fireEvent.click(screen.getByLabelText('העבר את ימי איחור לראש הרשימה'))
     expect(headers()).toEqual(['ימי איחור', 'פרויקט', 'לקוח', 'סכום'])
   })
 
   it('"העבירי לראש" מנוטרל על העמודה שכבר ראשונה', () => {
     setup()
-    expect(screen.getByLabelText('העבירי את פרויקט לראש הרשימה')).toBeDisabled()
+    expect(screen.getByLabelText('העבר את פרויקט לראש הרשימה')).toBeDisabled()
   })
 })
 

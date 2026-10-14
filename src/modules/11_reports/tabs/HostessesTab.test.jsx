@@ -132,7 +132,7 @@ const m14 = () =>
       },
       {
         key: 'red_hostesses',
-        label: 'דיילות אדומות',
+        label: 'דיילות בסיכון גבוה',
         value: 6,
         format: 'int',
         window: 'חלון קפוא · 12 חודשים',
@@ -143,7 +143,7 @@ const m14 = () =>
         // ✏️ 24/09/2026 — אריח-הריכוזיות האקדמי הוחלף (הכרעת-ישי): אחוז המשמרות שהלך לרבע
         // הדיילות העמוסות, עם השוואה לאשתקד על אותו מדד. הערכים כאן — פיקסצ'ר, לא מדידה.
         key: 'top_quarter',
-        label: 'רבע הדיילות העמוסות',
+        label: 'רבע מהדיילות עשו',
         value: 55.8,
         format: 'percent',
         window: '12 החודשים האחרונים',
@@ -174,12 +174,12 @@ const m14 = () =>
     ],
     chart: {
       type: 'bar',
-      title: 'איחור ואי-הגעה לפי חודש',
+      title: 'איחור ואי הגעה לפי חודש',
       xKey: 'month',
       unit: 'percent',
       series: [
         { key: 'late', label: 'איחור' },
-        { key: 'no_show', label: 'אי-הגעה (הבריזה)' },
+        { key: 'no_show', label: 'אי הגעה (הבריזה)' },
       ],
       data: [{ month: '2025-09', late: 10.2, no_show: 1.7, n: 59 }],
       refLines: [],
@@ -217,7 +217,7 @@ const m14 = () =>
         drill_key: { kind: 'hostess', id: 533 },
       },
     ],
-    so_what: 'לא לשלוח את 6 הדיילות האדומות לאירועים הקרובים.',
+    so_what: 'לא לשלוח את 6 הדיילות בסיכון גבוה לאירועים הקרובים.',
     definitions: 'הגדרות: הגעה בזמן = …',
     meta: { missing_params: [], notes: ['החודש 09/2026 אינו בגרף'], sort: null },
   })
@@ -253,13 +253,13 @@ const m15 = (selectedDow = null) =>
     ],
     chart: {
       type: 'bar',
-      title: 'איחור ואי-הגעה לפי יום בשבוע',
+      title: 'איחור ואי הגעה לפי יום בשבוע',
       xKey: 'dow',
       unit: 'percent',
       label_source: 'WEEKDAY_NAMES_HE',
       series: [
         { key: 'late', label: 'איחור' },
-        { key: 'no_show', label: 'אי-הגעה (הבריזה)' },
+        { key: 'no_show', label: 'אי הגעה (הבריזה)' },
       ],
       data: [
         { dow: 0, late: 10.6, no_show: 3.4, n: 292 },
@@ -271,7 +271,7 @@ const m15 = (selectedDow = null) =>
       { key: 'hostess_name', label: 'דיילת', format: 'text', align: 'start' },
       { key: 'status', label: 'סטטוס', format: 'text', align: 'start' },
       { key: 'no_show_12m', label: 'הבריזה · ב-12 חודשים', format: 'int', align: 'end' },
-      { key: 'no_show_ever', label: 'אי-הגעה · אי-פעם', format: 'int', align: 'end' },
+      { key: 'no_show_ever', label: 'אי הגעה · אי-פעם', format: 'int', align: 'end' },
     ],
     rows: [
       {
@@ -302,18 +302,18 @@ const m15 = (selectedDow = null) =>
         drill_key: { kind: 'hostess', id: 551 },
       },
     ],
-    so_what: 'לא לשלוח את 6 הדיילות האדומות.',
+    so_what: 'לא לשלוח את 6 הדיילות בסיכון גבוה.',
     // ✏️ i2 (חי, נמדד 16/09 20:3X): שורת-ההגדרות נושאת עכשיו את **שני הספים במספרים**
     // ואת **משפט הכרעה 38**. מועתקת מילה-במילה מהמטען החי — זו הצורה שמבחן-המחיקה נמדד עליה.
     definitions:
-      'הגדרות: ציון אמינות = (סכום ערכי-הנוכחות + 3 × 0.9584) ÷ (מספר המשמרות + 3) — ממוצע ממותן אל ממוצע החברה · איחור נספר לפי דרגה: קל אינו מוריד מהציון, בינוני מוריד רבע, רב מוריד חצי · שתי עמודות אי-ההגעה, ואף אחת מהן אינה "הנכונה": "הבריזה · ב-12 חודשים" היא ההגדרה שהציון עצמו עובד לפיה — רק אי-הגעה בלי הודעה, ורק בחלון הקפוא · "אי-הגעה · אי-פעם" היא כל סיבות אי-ההגעה — כולל מחלה והיעדרות באישור — ועל כל ההיסטוריה. שתיהן נכונות בהגדרתן, והדוח אינו בוחר ביניהן · הבריזה = לא הגיעה ולא הודיעה — רק היא מאפסת את הציון של אותה משמרת · ביטלה אחרי אישור = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת · החלון = 12 חודשים אחורה מהיום, קפוא ואינו נגרר אחרי מסנן-התקופה · דיילת אדומה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת ענבר = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104 · הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.',
+      'הגדרות: ציון אמינות = (סכום ערכי-הנוכחות + 3 × 0.9584) ÷ (מספר המשמרות + 3) — ממוצע ממותן אל ממוצע החברה · איחור נספר לפי דרגה: קל אינו מוריד מהציון, בינוני מוריד רבע, רב מוריד חצי · שתי עמודות אי-ההגעה, ואף אחת מהן אינה "הנכונה": "הבריזה · ב-12 חודשים" היא ההגדרה שהציון עצמו עובד לפיה — רק אי הגעה בלי הודעה, ורק בחלון הקפוא · "אי הגעה · אי-פעם" היא כל סיבות אי-ההגעה — כולל מחלה והיעדרות באישור — ועל כל ההיסטוריה. שתיהן נכונות בהגדרתן, והדוח אינו בוחר ביניהן · הבריזה = לא הגיעה ולא הודיעה — רק היא מאפסת את הציון של אותה משמרת · ביטלה אחרי אישור = הודיעה שלא תגיע אחרי שכבר אושרה סופית — נספר כחצי משמרת · החלון = 12 חודשים אחורה מהיום, קפוא ואינו נגרר אחרי מסנן-התקופה · דיילת בסיכון גבוה = ציון-אמינות נמוך מ-87% ממוצע החברה (0.9584), כלומר מתחת ל-0.8338 · דיילת במעקב = מתחת ל-95% ממנו, כלומר מתחת ל-0.9104 · הציון הוא בדיוק reliabilityScore של Smart Match (הכרעה 38) — אותה נוסחה שמדרגת את הדיילות בשיבוץ, ולא מדד שנולד לדוח הזה.',
     meta: {
       missing_params: [],
       notes: ['מתחת לסף המדגם: 11 דיילות'],
       selected_dow: selectedDow,
       extra_tables: [
         {
-          title: 'אי-הגעה לפי דירוג',
+          title: 'אי הגעה לפי דירוג',
           columns: [
             { key: 'rating_label', label: 'דירוג', format: 'text', align: 'start' },
             { key: 'months12', label: '12 חודשים', format: 'percent', align: 'end' },
@@ -336,7 +336,7 @@ const m17 = () =>
     tiles: [
       {
         key: 'top_quarter',
-        label: 'רבע הדיילות העמוסות',
+        label: 'רבע מהדיילות עשו',
         value: 55.8,
         format: 'percent',
         window: '12 החודשים האחרונים',
@@ -482,8 +482,8 @@ describe('מ14 · מבט-על דיילות', () => {
     expect(await screen.findByTestId('report-tiles')).toBeInTheDocument()
     const labels = [
       'הגעה בזמן',
-      'דיילות אדומות',
-      'רבע הדיילות העמוסות',
+      'דיילות בסיכון גבוה',
+      'רבע מהדיילות עשו',
       'דיילות פעילות',
       'אירועים עם חוסר',
     ]
@@ -530,7 +530,7 @@ describe('מ14 · מבט-על דיילות', () => {
     callReport.mockResolvedValue(three)
     const { unmount } = renderTabRaw(SURFACES.m14)
     expect(await screen.findByTestId('report-table-title')).toHaveTextContent(
-      `${isolateLtr(three.rows.length)} הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך`,
+      `${isolateLtr(three.rows.length)} הדיילות בסיכון גבוה · מיון לפי ציון-אמינות, מהנמוך`,
     )
     unmount()
 
@@ -538,7 +538,7 @@ describe('מ14 · מבט-על דיילות', () => {
     callReport.mockResolvedValue(two)
     renderTabRaw(SURFACES.m14)
     expect(await screen.findByTestId('report-table-title')).toHaveTextContent(
-      `${isolateLtr(2)} הדיילות האדומות · מיון לפי ציון-אמינות, מהנמוך`,
+      `${isolateLtr(2)} הדיילות בסיכון גבוה · מיון לפי ציון-אמינות, מהנמוך`,
     )
   })
 
@@ -573,9 +573,9 @@ describe('מה ש-i2 הוסיף לשרת, ומה שהוא משנה על המסך
     const definitions = await screen.findByTestId('report-definitions')
     // 🔴 זה הליבה של הממצא שהסקירה מדדה: המילים "אדומה"/"ענבר" הופיעו על הדף שלוש פעמים
     // ומעולם לא נאמר **במספרים** מה הן, אלא ברמה 2 בלבד או משטח אחד אחורה במ14.
-    expect(definitions).toHaveTextContent('דיילת אדומה')
+    expect(definitions).toHaveTextContent('דיילת בסיכון גבוה')
     expect(definitions).toHaveTextContent('0.8338')
-    expect(definitions).toHaveTextContent('דיילת ענבר')
+    expect(definitions).toHaveTextContent('דיילת במעקב')
     expect(definitions).toHaveTextContent('0.9104')
     // הכרעה 38 — הציון הוא אותו `reliabilityScore` של Smart Match, ולא מדד שנולד לדוח.
     expect(definitions).toHaveTextContent('הכרעה 38')
@@ -651,11 +651,11 @@ describe('מ15 · אמינות והתייצבות', () => {
     callReport.mockResolvedValue(m15())
     renderTab(SURFACES.m15)
     expect(await screen.findByText('הבריזה · ב-12 חודשים')).toBeInTheDocument()
-    expect(screen.getByText('אי-הגעה · אי-פעם')).toBeInTheDocument()
+    expect(screen.getByText('אי הגעה · אי-פעם')).toBeInTheDocument()
     const extra = screen.getAllByTestId('report-extra-table')
     expect(extra).toHaveLength(1)
     // כותרת גלויה + `<caption class="sr-only">` של אותה טבלה — שתיהן, ולא יותר.
-    expect(within(extra[0]).getAllByText('אי-הגעה לפי דירוג')).toHaveLength(2)
+    expect(within(extra[0]).getAllByText('אי הגעה לפי דירוג')).toHaveLength(2)
   })
 })
 
@@ -739,7 +739,12 @@ describe('מ17 · הוגנות השיבוץ', () => {
 // שנעלמת · ייצוא שאינו מנוטרל · מצב-שגיאה שהופך ל"אין נתונים") הייתה שורדת ירוקה.
 // 🚫 **וארבעה עותקים אינם הפתרון** — ‏jscpd נופל ב-3%; הפרמטריזציה היא גם הגדר וגם הניקיון.
 const SURFACE_CASES = [
-  ['מ14 · מבט-על דיילות', SURFACES.m14, m14, ['הגעה בזמן', 'דיילות אדומות', 'אירועים עם חוסר']],
+  [
+    'מ14 · מבט-על דיילות',
+    SURFACES.m14,
+    m14,
+    ['הגעה בזמן', 'דיילות בסיכון גבוה', 'אירועים עם חוסר'],
+  ],
   ['מ15 · אמינות והתייצבות', SURFACES.m15, m15, ['הגעה בזמן', 'דיילות מסומנות']],
   [
     'מ17 · הוגנות השיבוץ',

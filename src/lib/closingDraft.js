@@ -277,7 +277,7 @@ const EVENT_GUESTS_INT_ERROR = 'כמות האורחים חייבת להיות מ
 
 export function reportFileErrorText(maxBytes) {
   const mb = maxBytes / 1024 / 1024
-  return `חובה לצרף דוח-סיכום. קבצי PDF, JPG או PNG בלבד, עד ${mb}MB.`
+  return `חובה לצרף דוח סיכום. קבצי PDF, JPG או PNG בלבד, עד ${mb}MB.`
 }
 
 export function attendanceMissingError(name) {

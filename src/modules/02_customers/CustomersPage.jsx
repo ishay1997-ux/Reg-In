@@ -1043,7 +1043,7 @@ export default function CustomersPage() {
                                 openCard(customer.customer_id)
                               }
                             }}
-                            aria-label={`פתחי כרטיס לקוח: ${customer.company_name}`}
+                            aria-label={`פתח כרטיס לקוח: ${customer.company_name}`}
                             className={cn(
                               'border-b border-slate-100 cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
                               !isActive && 'opacity-60',
@@ -1120,16 +1120,13 @@ export default function CustomersPage() {
                               />
                             </td>
                             <td className="py-3">
-                              <span
-                                className={cn(
-                                  'px-2 py-1 rounded-full text-xs font-medium',
-                                  isActive
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-slate-200 text-slate-600',
-                                )}
-                              >
-                                {isActive ? 'פעיל' : 'לא פעיל'}
-                              </span>
+                              {/* ✏️ 14/10/2026 (סיור-השופט, קבוצה 3): צבע רק למה שדורש תשומת-לב —
+                                  לקוח פעיל הוא ברירת-המחדל ואינו מקבל תג; רק "לא פעיל" מסומן. */}
+                              {!isActive && (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-200 text-slate-600">
+                                  לא פעיל
+                                </span>
+                              )}
                             </td>
                             <td className="py-3" onClick={(e) => e.stopPropagation()}>
                               {canEdit ? (

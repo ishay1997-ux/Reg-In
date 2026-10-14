@@ -81,7 +81,7 @@ const CANCEL_TYPE_NAMES = {
 // מצב-החיים של הפרויקט קודם, ורק בתוך המצבים הפעילים נשאלת שאלת-החוסר.
 // הקלט הוא שורת ה-RPC ‏list_projects_overview כפי שהיא; ‏confirmed_available הוא
 // שדה-רשות שהמסך יכול לצרף משורות-השיבוץ (ה-RPC אינו מחזיר אותו).
-export function gapSentence(project) {
+export function gapSentence(project, ctx) {
   const {
     project_status: status,
     required_hostess_count: required,
@@ -108,7 +108,7 @@ export function gapSentence(project) {
   if (status === 'event_finished') {
     return rowCount === 0
       ? 'האירוע עבר ולא נסגר — לא נשלח בו אף זימון מעולם'
-      : 'ממתין להזנת שעות בפועל, כמות אורחים ודוח-סיכום'
+      : 'חסרים: שעות, אורחים, דוח סיכום'
   }
 
   // מצבים פעילים — שאלת-החוסר עצמה.
@@ -118,7 +118,9 @@ export function gapSentence(project) {
   // ✏️ 09/09/2026 (לילה-הטקסטים, שלב 10): הזנב "— איש לא נגע בפרויקט מאז שנוצר" ירד — נושא-משפט
   // בזכר על צוות שכולו נשים (המדריך §1) ו"נגע" אינה מילה של מנהלת-פרויקטים (R10). הנוסח שנשאר
   // הוא הגדרת-"אדום" המאושרת מילה-במילה (screens-approved.md §⑥: "לא נשלח אף זימון לדיילת").
-  if (rowCount === 0) return 'לא נשלח אף זימון לדיילת'
+  if (rowCount === 0) {
+    return isUntouchedFar(project, ctx) ? 'טרם נשלחו זימונים' : 'לא נשלח אף זימון לדיילת'
+  }
 
   const gap = Math.max(required - confirmed, 0)
   // המקרה של #11: כל החוסר הוא דיילת אחת שכבר אישרה זמינות — הכדור אצל דנה, לא אצלה.
@@ -230,10 +232,23 @@ export function sortOverviewProjects(projects, todayIso) {
 // לא נגע בפרויקט (שורות לוגיסטיקה נולדות אוטומטית עם הפרויקט; שורת-שיבוץ נוצרת רק כשאדם
 // פעל). מעומעם = יצא מידיה. אדום נבחן רק על שורות שעוד דורשות טיפול — פרויקט מבוטל בלי
 // זימונים אינו קורא לפעולה, ולכן אינו אדום.
-export function overviewRowKind(project) {
+export function overviewRowKind(project, ctx) {
   if (HANDED_OFF_STATUSES.includes(project.project_status)) return 'muted'
-  if ((project.assignments_row_count ?? 0) === 0) return 'red'
+  if ((project.assignments_row_count ?? 0) === 0)
+    return isUntouchedFar(project, ctx) ? 'plain' : 'red'
   return 'plain'
+}
+
+// ✏️ 14/10/2026 (סיור-השופט, קבוצה 3 — "החומה האדומה"): "אף זימון" הוא התרעה רק בתוך חלון-ההתרעה
+// של מסך הבית (`event_warning_days` = 14, אותו פרמטר ש-`staffingShortageRows` ב-`dashboard.js` מסנן
+// בו). אירוע רחוק יותר בלי זימונים הוא עובדה רגילה — בלי צבע-שורה, ובאפור "טרם נשלחו זימונים".
+// ‏`ctx` = ‏`{ today, warningDays }`; בלי סף ידוע (`warningDays` חסר) — ההתנהגות הקודמת, אדום.
+export function isUntouchedFar(project, ctx) {
+  if ((project.assignments_row_count ?? 0) !== 0) return false
+  const warning = Number(ctx?.warningDays)
+  if (ctx?.warningDays == null || !Number.isFinite(warning)) return false
+  const days = eventDaysFromToday(project.final_event_date, ctx?.today)
+  return days !== null && days > warning
 }
 
 // "חסרה 1" / "חסרות N" — לשון-יחיד לחוסר בודד, הנוסח שהמוקאפ מצייר בעמודת הדיילות.
@@ -244,7 +259,7 @@ function gapWord(gap) {
 // עמודת "דיילות": יחס + שורת-משנה + טון. hidden ⇒ המסך מצייר '—' (מוכנות חסרת משמעות
 // אחרי מסירה/ביטול). הטון: miss (אדום) רק כשאיש לא נגע — אפס שורות שיבוץ; hint (ענבר)
 // לחוסר שיש לו מענה בדרך; done לעובדה סגורה. ‏≥ ולא = (§7.43): ‏7/6 הוא מאויש.
-export function staffingCell(project) {
+export function staffingCell(project, ctx) {
   if (project.project_status === 'cancelled') {
     return { hidden: true }
   }
@@ -268,7 +283,7 @@ export function staffingCell(project) {
   if ((project.assignments_row_count ?? 0) === 0) {
     // אחרי שהאירוע עבר, "חסרות N" כבר אינו מעשי — המוקאפ מנסח את העובדה ההיסטורית.
     const sub = project.project_status === 'event_finished' ? 'אף אחת לא שובצה' : gapWord(gap)
-    return { ratio, sub, tone: 'miss' }
+    return { ratio, sub, tone: isUntouchedFar(project, ctx) ? 'done' : 'miss' }
   }
   return { ratio, sub: gap > 0 ? gapWord(gap) : null, tone: 'hint' }
 }
@@ -307,13 +322,16 @@ export function logisticsCell(project) {
 // הטון של עמודת "מה חסר" — הענפים משקפים אחד-לאחד את ענפי gapSentence שמעל: אותו מצב
 // שמוליד את המשפט מוליד את צבעו. miss רק על "איש לא נגע" (אפס שורות); calm לעובדות
 // שאין בהן מה לעשות; השאר hint. שינוי ענף שם בלי שינוי כאן הוא באג — הבדיקות מצמידות.
-export function gapTone(project) {
+export function gapTone(project, ctx) {
   const status = project.project_status
   if (HANDED_OFF_STATUSES.includes(status)) return 'calm'
   const untouched = (project.assignments_row_count ?? 0) === 0
-  if (status === 'event_finished') return untouched ? 'miss' : 'hint'
+  // ✏️ 14/10/2026 (סיור-השופט): "חסרים: שעות, אורחים, דוח סיכום" הוא שלב-עבודה רגיל ולא התרעה ⇒
+  // אפור קריא (`done` = text-slate-500, ניגודיות AA), לא ענבר. האדום של "אף זימון" נשאר.
+  if (status === 'event_finished') return untouched ? 'miss' : 'done'
   if (!overviewHasGap(project)) return 'calm'
-  return untouched ? 'miss' : 'hint'
+  if (untouched) return isUntouchedFar(project, ctx) ? 'done' : 'miss'
+  return 'hint'
 }
 
 // שני אריחי-המדד (③): נספרים על רשימת-הפעילים של ⑫ בלבד, ולכן אינם משתנים בין הלשוניות —

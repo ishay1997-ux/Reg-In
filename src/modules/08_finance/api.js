@@ -477,7 +477,7 @@ export async function sendInvoiceAndRecord({ project, customer, file } = {}) {
   if (!payload) {
     throw toError(
       { code: 'MAIL_PAYLOAD' },
-      'לא ניתן להרכיב את מייל החשבונית — בדקי את תבנית המייל ואת פרטי הלקוח.',
+      'לא ניתן להרכיב את מייל החשבונית — בדוק את תבנית המייל ואת פרטי הלקוח.',
     )
   }
 

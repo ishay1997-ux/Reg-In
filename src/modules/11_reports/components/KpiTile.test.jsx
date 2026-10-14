@@ -19,7 +19,7 @@ import { MASKED_TEXT } from '@/lib/dashboard'
 // 🌱 אריח אמיתי מתוך מטען חי (`report_m07_finance_overview`, 16/09/2026) — לא הומצא.
 const TILE = {
   key: 'open_debt',
-  label: 'יתרת-חוב פתוחה',
+  label: 'יתרת חוב פתוחה',
   value: 236382,
   format: 'money',
   sub: 'הכל 35 חשבוניות פתוחות',
@@ -210,7 +210,7 @@ describe('KpiTile — הכרעה 33 · אריח עם target הוא דלת', () =
     const target = { tab: 'כספים', report: 'report_m09_aging', drill: null }
     render(<KpiTile tile={{ ...TILE, target }} onOpenTarget={onOpenTarget} />)
     const button = screen.getByTestId('report-tile-link-open_debt')
-    expect(button).toHaveAttribute('aria-label', 'יתרת-חוב פתוחה — פתח את הדוח')
+    expect(button).toHaveAttribute('aria-label', 'יתרת חוב פתוחה — פתח את הדוח')
     button.click()
     expect(onOpenTarget).toHaveBeenCalledWith(target)
   })

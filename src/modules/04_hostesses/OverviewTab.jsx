@@ -276,9 +276,7 @@ export default function OverviewTab({ reloadKey, onOpenSmartMatch, onResendExpir
           </FilterPill>
         ))}
 
-        <span className="mr-auto text-sm text-slate-400">
-          ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע
-        </span>
+        <span className="mr-auto text-sm text-slate-400">מיון: חסרים קודם, ואז לפי תאריך</span>
 
         {/* 🔴 מכובה כש-N=0 ולא נעלם (כרטיס §①) — ובלי חלון-אישור, במכוון: *"אפס שיקול
             דעת — הקישורים מתו, רענון לא יכול להזיק, ואי-מענה ממילא מחוץ לציון"*. */}

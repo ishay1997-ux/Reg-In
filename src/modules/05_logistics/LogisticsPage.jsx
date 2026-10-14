@@ -652,8 +652,7 @@ function ReasonLine({ reason, className }) {
 function AmberLegend() {
   return (
     <div className="mt-2.5 text-xs leading-[1.8] text-slate-500">
-      <span className="font-bold text-amber-700">⏱ שורה בענבר</span> = דורש תשומת-לב. שום דבר לא
-      ננעל.
+      <span className="font-bold text-amber-700">שורה מודגשת</span> = דורשת טיפול
     </div>
   )
 }

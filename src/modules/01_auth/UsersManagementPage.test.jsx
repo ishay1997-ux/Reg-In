@@ -316,7 +316,7 @@ describe('UsersManagementPage — עמודת "מצב הטמעה" (מנכ"ל בל
     renderPage()
     await screen.findByText('ישי כהן')
 
-    expect(screen.getByText('מצב הטמעה')).toBeInTheDocument()
+    expect(screen.getByText('רמת הסברים')).toBeInTheDocument()
     expect(listOnboardingModes).toHaveBeenCalledTimes(1)
     expect(screen.getByTestId('users-onboarding-dana@regin.co.il')).toBeChecked()
     expect(screen.getByTestId(`users-onboarding-${CEO_EMAIL}`)).not.toBeChecked()
@@ -329,7 +329,7 @@ describe('UsersManagementPage — עמודת "מצב הטמעה" (מנכ"ל בל
     renderPage()
     await screen.findByText('ישי כהן')
 
-    expect(screen.queryByText('מצב הטמעה')).not.toBeInTheDocument()
+    expect(screen.queryByText('רמת הסברים')).not.toBeInTheDocument()
     expect(screen.queryByTestId('users-onboarding-dana@regin.co.il')).not.toBeInTheDocument()
     expect(listOnboardingModes).not.toHaveBeenCalled()
   })

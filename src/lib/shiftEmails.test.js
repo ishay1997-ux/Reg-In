@@ -427,7 +427,7 @@ describe('buildProjectDetailsChangedPayload — עדכון בעוד האישור
 
 describe('projectReportSubject / feedbackSurveySubject — נושאי מיילי-הסגירה', () => {
   it('שני הנושאים נבנים משם-האירוע ושונים זה מזה', () => {
-    expect(projectReportSubject(project)).toBe('דוח-סיכום האירוע — כנס לקוחות שנתי')
+    expect(projectReportSubject(project)).toBe('דוח סיכום האירוע — כנס לקוחות שנתי')
     expect(feedbackSurveySubject(project)).toBe('סקר שביעות רצון — כנס לקוחות שנתי')
   })
 })

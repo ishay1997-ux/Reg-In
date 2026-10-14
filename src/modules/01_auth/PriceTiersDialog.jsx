@@ -201,8 +201,8 @@ export default function PriceTiersDialog({ open, onOpenChange, product, onSaved 
                   <Button
                     type="button"
                     variant="link"
-                    title="הסירי מדרגה"
-                    aria-label={`הסירי מדרגה ${i + 1}`}
+                    title="הסר מדרגה"
+                    aria-label={`הסר מדרגה ${i + 1}`}
                     onClick={() => removeRow(r._rk)}
                     className="h-auto p-0 text-red-600 hover:text-red-700"
                     data-testid="tier-remove"

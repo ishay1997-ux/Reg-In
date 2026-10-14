@@ -137,7 +137,7 @@ const overviewPayload = () =>
     tiles: [
       {
         key: 'open_debt',
-        label: 'יתרת-חוב פתוחה',
+        label: 'יתרת חוב פתוחה',
         value: 236382,
         format: 'money',
         window: 'נכון להיום',
@@ -159,7 +159,7 @@ const overviewPayload = () =>
       unit: 'money',
       xKey: 'month',
       title: 'יתרת-החוב הפתוחה בסוף כל חודש',
-      series: [{ key: 'open_amount', label: 'יתרת-חוב פתוחה' }],
+      series: [{ key: 'open_amount', label: 'יתרת חוב פתוחה' }],
       data: [
         { month: '08/2026', open_amount: 248233, is_today: false },
         { month: '09/2026', open_amount: 236382, is_today: true },
@@ -193,7 +193,7 @@ const overviewPayload = () =>
       },
     ],
     so_what: 'לגבות 46,038 ₪ שממתינים מעל 60 יום',
-    definitions: 'יתרת-חוב פתוחה = חשבונית שנשלחה, טרם שולמה ולא נמחקה כחוב-אבוד',
+    definitions: 'יתרת חוב פתוחה = חשבונית שנשלחה, טרם שולמה ולא נמחקה כחוב-אבוד',
     meta: { open_invoice_count: 35, notes: ['חובות אבודים: 2 חשבוניות'], missing_params: [] },
   })
 
@@ -265,7 +265,7 @@ const agingRootPayload = () =>
       unit: 'money',
       xKey: 'bucket',
       note: 'כל עמודה היא דלי של איחור.',
-      title: 'חוב באיחור לפי מדרג-גיול וסוג-לקוח',
+      title: 'חוב באיחור לפי מדרג גיול וסוג לקוח',
       label_source: 'CUSTOMER_TYPE_LABELS',
       series: [
         { key: 'government', label: 'government' },
@@ -305,7 +305,7 @@ const agingRootPayload = () =>
       },
     ],
     so_what: 'לגבות 46,038 ₪ מ-4 לקוחות',
-    definitions: 'מדרג-גיול נמדד מול מועד-הפירעון',
+    definitions: 'מדרג גיול נמדד מול מועד-הפירעון',
     drill: {
       level: 0,
       levels: ['מדרג', 'לקוח', 'חשבונית'],
@@ -475,7 +475,7 @@ describe('מ7 · מבט-על כספים', () => {
     renderTab({ slug: 'finance-overview' })
 
     const tile = await screen.findByTestId('report-tile-open_debt')
-    expect(plain(tile)).toContain('יתרת-חוב פתוחה')
+    expect(plain(tile)).toContain('יתרת חוב פתוחה')
     expect(plain(tile)).toContain('236,382 ₪')
     // 📐1 — חצי-ההשוואה מעוצב ככסף ולא כמספר גולמי (ר' `withCompareFormat`).
     expect(plain(tile)).toContain('206,002 ₪')
@@ -490,7 +490,7 @@ describe('מ7 · מבט-על כספים', () => {
     expect(plain(screen.getByTestId('report-scope-summary'))).toContain('35 חשבוניות פתוחות')
     expect(plain(screen.getByTestId('report-population'))).toContain('n=35')
     expect(plain(screen.getByTestId('report-so-what'))).toContain('מעל 60 יום')
-    expect(plain(screen.getByTestId('report-definitions'))).toContain('יתרת-חוב פתוחה =')
+    expect(plain(screen.getByTestId('report-definitions'))).toContain('יתרת חוב פתוחה =')
     expect(plain(screen.getByTestId('report-meta-notes'))).toContain('חובות אבודים')
     expect(screen.getAllByTestId('report-row-drillable')).toHaveLength(2)
   })
