@@ -65,18 +65,6 @@ export const EMPTY_OBJECTION = {
   suggestedValue: '',
 }
 
-// הסבר לשורה בסכום אפס — כדי שאפס לא ייראה כמו טעות במערכת.
-// בלי שום סכום (F11): ההסבר מדבר על שעות, לא על כסף.
-const ZERO_REASON_TEXT = {
-  force_majeure: 'האירוע בוטל בכוח עליון, ולכן אין שעות לתשלום',
-  cancelled_early: 'האירוע בוטל מספיק זמן מראש, ולכן אין שעות פיצוי',
-  no_hours: 'לא נרשמו שעות למשמרת הזו',
-}
-
-export function zeroReasonText(reason) {
-  return ZERO_REASON_TEXT[reason] ?? ''
-}
-
 // הודעה לכל שדה בטופס "יש טעות". מקור אחד — גם לבדיקה בדפדפן וגם לתשובת `validation`
 // מהשרת, כדי ששני המסלולים יגידו אותו דבר.
 export const OBJECTION_FIELD_MESSAGES = {

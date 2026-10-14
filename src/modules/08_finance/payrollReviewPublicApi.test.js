@@ -10,7 +10,6 @@ const {
   respondToPayrollReview,
   validateObjection,
   buildCasePayload,
-  zeroReasonText,
   newRequestId,
   EMPTY_OBJECTION,
   OBJECTION_CATEGORIES,
@@ -156,16 +155,5 @@ describe('buildCasePayload', () => {
       buildCasePayload({ ...EMPTY_OBJECTION, rowKeys: ['r2'], category: 'hours', description: 'x' })
         .suggested_value,
     ).toBeNull()
-  })
-})
-
-describe('zeroReasonText', () => {
-  it('שלוש הסיבות מוסברות, ו-null/לא מוכר ⇒ ריק', () => {
-    expect(zeroReasonText('force_majeure')).toContain('כוח עליון')
-    expect(zeroReasonText('force_majeure')).toContain('אין שעות לתשלום')
-    expect(zeroReasonText('cancelled_early')).toContain('מספיק זמן מראש')
-    expect(zeroReasonText('no_hours')).toContain('לא נרשמו שעות')
-    expect(zeroReasonText(null)).toBe('')
-    expect(zeroReasonText('x')).toBe('')
   })
 })

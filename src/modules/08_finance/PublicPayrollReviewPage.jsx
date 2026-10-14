@@ -27,7 +27,6 @@ import {
   newRequestId,
   respondToPayrollReview,
   validateObjection,
-  zeroReasonText,
 } from './payrollReviewPublicApi'
 
 // ─── נוסחים ────────────────────────────────────────────────────────────────
@@ -78,8 +77,9 @@ function hoursText(hours) {
 
 // שורת השעות בכרטיס: עבודה · פיצוי ביטול · ביטול בלי שעות (F11).
 function shiftHoursLine(row) {
+  // סקירת UX 1 (14.10): כותרת והסבר אמרו אותו דבר, ו"לתשלום" רמז על כסף — שורה אחת.
   if (row.zero_reason === 'force_majeure' || row.zero_reason === 'cancelled_early') {
-    return 'האירוע בוטל — ללא שעות לתשלום'
+    return 'בוטל — לא נספר בשעות'
   }
   if (row.line_basis === 'cancellation_compensation') {
     return `פיצוי ביטול — ${hoursText(row.hours)} שעות`
@@ -407,6 +407,8 @@ function ReviewBody({
 function DecisionLine({ decision, openCase }) {
   const text = DECISION_TEXT[decision?.state]
   if (!text) return null
+  // פנייה פתוחה: "(נשלחה <מועד>)" — מתי היא פנתה (סקירת UX 1). אחרת: "· <מועד ההחלטה>".
+  const sentAt = formatTimestampFull(openCase?.created_at)
   const at = formatTimestampFull(decision?.at)
   return (
     <p
@@ -414,17 +416,19 @@ function DecisionLine({ decision, openCase }) {
       data-testid="review-decision"
     >
       {text}
-      {at && (
+      {sentAt ? (
         <>
-          {' · '}
-          <Ltr>{at}</Ltr>
+          {' (נשלחה '}
+          <Ltr>{sentAt}</Ltr>
+          {')'}
         </>
-      )}
-      {openCase?.category && (
-        <>
-          {' · '}
-          {OBJECTION_CATEGORIES.find((option) => option.value === openCase.category)?.label}
-        </>
+      ) : (
+        at && (
+          <>
+            {' · '}
+            <Ltr>{at}</Ltr>
+          </>
+        )
       )}
     </p>
   )
@@ -457,7 +461,6 @@ function OutcomeBanner({ outcomeKey, onReload }) {
 
 // כרטיס משמרת. במצב "יש טעות" כל הכרטיס הוא כפתור בחירה (≥44px) עם `aria-pressed`.
 function ShiftCard({ row, selectable, selected, onToggle }) {
-  const zeroText = zeroReasonText(row.zero_reason)
   const content = (
     <>
       <div className="min-w-0">
@@ -473,8 +476,7 @@ function ShiftCard({ row, selectable, selected, onToggle }) {
       <p className="mt-2 text-base font-semibold text-slate-800" data-testid="review-shift-hours">
         {shiftHoursLine(row)}
       </p>
-      {zeroText && <p className="mt-1 text-sm text-slate-600">{zeroText}</p>}
-      {!zeroText && row.line_basis === 'cancellation_compensation' && (
+      {!row.zero_reason && row.line_basis === 'cancellation_compensation' && (
         <p className="mt-1 text-sm text-slate-600">{COMPENSATION_TEXT}</p>
       )}
     </>
@@ -501,7 +503,7 @@ function ShiftCard({ row, selectable, selected, onToggle }) {
       >
         {content}
         <span className="mt-2 block text-xs font-semibold text-teal-700">
-          {selected ? 'סומנה ✓' : 'לחצי לסימון'}
+          {selected ? 'סומנה ✓' : ''}
         </span>
       </button>
     </li>
@@ -570,10 +572,13 @@ const FIELD_ANCHOR = {
 // פוקוס), ההוראה, והשגיאה של סימון המשמרת — ליד הסיבה שלה (UC19), לא בתחתית הטופס.
 function ObjectionIntro({ errors }) {
   const summaryRef = useRef(null)
-  const errorFields = FIELD_ORDER.filter((field) => errors[field])
+  const rowsErrorRef = useRef(null)
+  // שגיאת סימון המשמרת מופיעה פעם אחת — כאן, ליד הבחירה — ולא חוזרת בסיכום (סקירת UX 1).
+  const errorFields = FIELD_ORDER.filter((field) => field !== 'rows' && errors[field])
 
   useEffect(() => {
     if (errorFields.length > 0) summaryRef.current?.focus()
+    else if (errors.rows) rowsErrorRef.current?.focus()
   }, [errors, errorFields.length])
 
   return (
@@ -601,7 +606,17 @@ function ObjectionIntro({ errors }) {
       <p id="review-shifts" className="text-sm font-semibold text-slate-700">
         סמני את המשמרת שיש בה טעות. משמרת שחסרה כאן? בחרי למטה "משמרת חסרה"
       </p>
-      <FieldError message={errors.rows} testId="review-error-rows" />
+      {errors.rows && (
+        <p
+          ref={rowsErrorRef}
+          tabIndex={-1}
+          role="alert"
+          className="text-sm font-semibold text-red-700"
+          data-testid="review-error-rows"
+        >
+          {errors.rows}
+        </p>
+      )}
     </div>
   )
 }
