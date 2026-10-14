@@ -547,6 +547,7 @@ protection is false until it does.
   - ⏳ `20261014000800_module8_payroll_integrity_guard_and_legacy_writer` — **needs B's 7 first** (reads `payroll_reviews`). Trigger + guarded legacy writer in one migration.
   - ⏳ `20261014000900_module8_payroll_august_claim_repair` — W0-1 passed 13.10 (83/83, 0/0/0); raises unless exactly 83 re-linked; backup `seed_snapshot.assignments_payroll_claim_20261014`. Re-run W0-1 right before applying (the 14/10 refresh script runs first).
   - ⏳ `20261014002000_module8_payroll_operations` (FKs to B's `payroll_reviews`) · ⏳ `20261014002100_module8_payroll_operation_rpcs`.
+  - ⏳ `20261014002110_module8_payroll_snapshot_event_date` — fix-forward on 15 (deputy task 14/10 03:33, contract fix F12): `payroll_operation_snapshot` lines gain `event_date` (ISO) and `assignment_number`, so the accountant file can carry the shift date. Body = 15 + two fields; ACL unchanged.
   - ⏳ `20261014003000_module8_payroll_enable_new_flow` — only at the start of production acceptance (§7 step 8).
   - ⏳ `20261016000000_module8_payroll_legacy_cutover` — see §9א row **PAY-17**.
   - B's 7, 10–13 — paragraphs come from B through the deputy.

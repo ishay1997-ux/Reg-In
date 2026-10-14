@@ -3018,6 +3018,8 @@ create policy reports_delete_by_permission on storage.objects
 --        payroll_operation_record_artifact(uuid,text,text,text,int,text,text) ·
 --        payroll_operation_fail(uuid,text,text,text) · payroll_commit(uuid,text).
 --      פנימיות: _payroll_operation_mark_failed(uuid,text,text) · _payroll_commit_locked(uuid,text).
+-- ⏳ 15b 20261014002110_module8_payroll_snapshot_event_date — payroll_operation_snapshot: כל שורה ב-lines
+--        מקבלת event_date (ISO) ו-assignment_number (תיקון F12). אותה חתימה ואותן הרשאות.
 -- ⏳ 16 20261014003000_module8_payroll_enable_new_flow — נתונים: final_issue_enabled = review_mail_enabled = true
 --        (מוחלת רק בתחילת קבלה בייצור).
 -- ⏳ 17 20261016000000_module8_payroll_legacy_cutover — נתונים: legacy_writer = 'disabled'

@@ -498,3 +498,25 @@ begin
   perform test.act_as_owner();
   assert (select state = 'failed' and failure_code = 'BLOCKERS_PRESENT' from public.payroll_operations where operation_id = v_op);
 end $$;
+
+-- test: F12 — every snapshot line carries its shift date (ISO) and assignment number, matching the source shift
+do $$
+declare v_op uuid := '00000000-0000-0000-0000-00000000f101'; s jsonb; v_rev bigint;
+begin
+  perform test.project(900640, '2026-04-09', 'finished');
+  perform test.project(900641, '2026-04-30', 'cancelled', '10:00', '16:00', 'customer', '2026-04-30 08:00+03');
+  perform test.assign(900640, 900001, 1, 'finally_approved', 4, 50, 0);
+  perform test.assign(900641, 900002, 2, 'released', 0, 50, 0, 'finally_approved');
+  v_rev := test.review('2026-04-01');
+  perform test.begin(v_op, public._payroll_preview_version('2026-04-01', 'regular', null), v_rev, '2026-04-01');
+  perform test.act_as_service();
+  s := public.payroll_operation_snapshot(v_op, 'fin@test.local');
+  assert (s ->> 'ok')::boolean and jsonb_array_length(s -> 'lines') = 2, s::text;
+  assert not exists (select 1 from jsonb_array_elements(s -> 'lines') x
+                      where x ->> 'event_date' is null or x ->> 'event_date' !~ '^\d{4}-\d{2}-\d{2}$'
+                         or x -> 'assignment_number' is null or x -> 'assignment_number' = 'null'::jsonb);
+  assert (select x ->> 'event_date' from jsonb_array_elements(s -> 'lines') x where (x ->> 'source_project_id')::int = 900640) = '2026-04-09';
+  assert (select (x ->> 'assignment_number')::int from jsonb_array_elements(s -> 'lines') x
+           where (x ->> 'source_project_id')::int = 900641) = 2;
+  assert (select x ->> 'event_date' from jsonb_array_elements(s -> 'lines') x where (x ->> 'source_project_id')::int = 900641) = '2026-04-30';
+end $$;
