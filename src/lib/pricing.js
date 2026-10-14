@@ -265,11 +265,16 @@ export function computeMarginPercent(basePrice, cost) {
 // מבנה-ההחזרה מפריד **שגיאה מאזהרה** במכוון: שגיאה חוסמת שמירה (המסד ידחה ממילא),
 // אזהרה לא (מחיר מתחת לעלות עשוי להיות מכוון — מבצע, חיסול מלאי). ר' §7.27: ‏max_qty אינו
 // משתתף בבחירת-המדרגה, ולכן חפיפה בין טווחים אינה שגיאה — רק min_qty כפול היא.
+function tierAboveBaseWarning(price, basePrice) {
+  return `מחיר המדרגה (${isolatedShekels(price)}) גבוה ממחיר הבסיס (${isolatedShekels(basePrice)}) — בכמות גדולה המחיר אמור לרדת.`
+}
+
 export function validateTierRows(rows, product = {}) {
   const list = rows ?? []
   const rowErrors = list.map(() => ({}))
   const warnings = list.map(() => ({}))
   const cost = toFiniteNumber(product?.cost)
+  const basePrice = toFiniteNumber(product?.base_price)
 
   // ספירת-הופעות מראש: min_qty כפול מסמן את **כל** השורות שמשתתפות בו, כי המשתמש
   // לא יכול לדעת איזו מהן "המקורית" — סימון אחת בלבד היה נראה שרירותי.
@@ -309,6 +314,10 @@ export function validateTierRows(rows, product = {}) {
       rowErrors[i].special_price = 'מחיר גדול מ-0'
     } else if (cost !== null && price < cost) {
       warnings[i].special_price = `מתחת לעלות (${cost} ₪)`
+    } else if (basePrice !== null && price > basePrice) {
+      // ✏️ ביקורת-ולידציה שורה 11 (14/10/2026): מדרגת "כמות גדולה" יקרה ממחיר-הבסיס עברה בשקט,
+      // והמסמך ללקוח חייב יותר על כמות גדולה. התראה רכה — לא חוסמת.
+      warnings[i].special_price = tierAboveBaseWarning(price, basePrice)
     }
   })
 

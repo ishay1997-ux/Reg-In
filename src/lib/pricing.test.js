@@ -422,3 +422,23 @@ describe('formatShekelExact — תצוגת מחיר-קטלוג באגורות (�
     expect(formatShekelExact('')).toBe('—')
   })
 })
+
+// ביקורת-ולידציה שורה 11 (14/10/2026): מדרגה יקרה ממחיר-הבסיס ⇒ אזהרה רכה (לא שגיאה).
+describe('validateTierRows — מחיר מדרגה מעל מחיר הבסיס', () => {
+  it('7 ₪ במדרגה של מוצר שמחירו 6 ₪ ⇒ אזהרה, והשמירה עדיין תקינה', () => {
+    const result = validateTierRows([{ min_qty: '51', max_qty: '', special_price: '7' }], {
+      base_price: 6,
+      cost: 1.2,
+    })
+    expect(result.isValid).toBe(true)
+    expect(result.warnings[0].special_price).toBe(
+      'מחיר המדרגה (⁦7 ₪⁩) גבוה ממחיר הבסיס (⁦6 ₪⁩) — בכמות גדולה המחיר אמור לרדת.',
+    )
+  })
+  it('מחיר שווה למחיר הבסיס ⇒ בלי אזהרה', () => {
+    const result = validateTierRows([{ min_qty: '1', max_qty: '50', special_price: '6' }], {
+      base_price: 6,
+    })
+    expect(result.warnings[0]).toEqual({})
+  })
+})
