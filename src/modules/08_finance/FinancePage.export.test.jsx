@@ -26,7 +26,6 @@ vi.mock('./api', async () => {
 vi.mock('@/modules/06_projects/closingApi', () => ({ getParamValue: vi.fn() }))
 vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
 vi.mock('./ClosingWindowDialog', () => ({ default: () => null }))
-vi.mock('./SalaryReportDialog', () => ({ default: () => null }))
 
 const NOW = new Date('2026-10-15T10:00:00Z')
 

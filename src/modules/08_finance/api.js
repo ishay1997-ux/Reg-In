@@ -40,17 +40,12 @@ import {
   EMAIL_SEND_RESULT,
 } from '@/lib/email'
 import { getEmailTemplate, sendEmail } from '@/api/email'
-import {
-  buildSalaryReportDocument,
-  salaryPeriodLabel,
-  writeSalaryReportXlsx,
-} from '@/lib/salaryReport'
 // ⚠️ ייבוא חוצה-מודולים במכוון, ולא העתקה: שתי הפונקציות האלה טהורות-לחלוטין מסמנטיקה של
 // מודול 6 (המרת Blob ל-base64 בקטעים · קריאת פרמטר בודד מ-`params`), והעתקתן לכאן הייתה
 // יוצרת שני עותקים שיתפצלו ביום שאחד מהם יתוקן. התקדים לייבוא כזה הוא מודול 6 עצמו, שמייבא
 // את `writeInviteToken` ממודול 4. 📌 **הבית הנכון שלהן הוא `src/lib/`** — ההעברה לא נעשתה כאן
 // כי `closingApi.js` אינו קובץ של הצעד הזה; נרשם כחוב-ניקיון.
-import { fileToBase64, getParamValue } from '@/modules/06_projects/closingApi'
+import { fileToBase64 } from '@/modules/06_projects/closingApi'
 
 // ---- שגיאות ----
 
@@ -124,61 +119,6 @@ export async function getCancellationFeeProposal(projectId) {
   const row = data?.[0]
   if (!row) throw toError({ code: 'FINANCE_NOT_FOUND' }, 'לא נמצא פרויקט לחישוב דמי ביטול.')
   return row
-}
-
-// היסטוריית דוחות-השכר (S3). **קריאה ישירה מהטבלה ולא RPC** — וזה מכוון: `salary_reports`
-// קיבלה policy-קריאה מגודרת 'כספים' במיגרציה B, ולכן זו הטבלה היחידה של המודול שהלקוח
-// **כן** אמור לקרוא בעצמו. אין כאן פרטי-דיילות ואין פרטי-בנק, ולכן אין מה לגדר ב-DEFINER.
-export async function listSalaryReports() {
-  const { data, error } = await supabase
-    .from('salary_reports')
-    .select('report_id, period, send_status, sent_date, report_file_url, total_amount, created_at')
-    .order('period', { ascending: false })
-  if (error) throw toError(error, 'שגיאה בטעינת היסטוריית דוחות השכר.')
-  const reports = data ?? []
-  if (reports.length === 0) return reports
-
-  // 🔴 **הנמען נשלף מהיומן ולא מהפרמטר החי — תוקן `28/08/2026`, אחרי שהפגם נצפה על המסך.**
-  // עמודת "נשלח אל" קראה עד היום את `params.מייל_משרד_רואי_חשבון` **בזמן-הצפייה**, ולכן כל
-  // שורה היסטורית טענה רטרואקטיבית שנשלחה לכתובת של היום. **נמדד חי:** דוח 13 יצא ב-08:35
-  // אל `office@cpa-firm.co.il`, הפרמטר הוחלף אחר-כך, והמסך הציג את הכתובת החדשה על שליחה
-  // שמעולם לא הלכה לשם. ⇒ **היסטוריה חייבת לזכור את מה שקרה, לא לשקף את מה שמוגדר עכשיו.**
-  // ‏`email_log` הוא פולימורפי ובלי FK (‏`db_roadmap` A-20 — במכוון), ולכן שאילתה שנייה
-  // ומיפוי בצד-הלקוח; ה-policy של מ8 מתירה למנהלת-הכספים לקרוא בדיוק את שתי השורות האלה.
-  // ⚠️ **ומה שזה עדיין אינו אומר: `sent` פירושו שמנוע-המיילים קיבל את הקריאה — לא שהדואר
-  // נמסר.** ‏Bounce חוזר לתיבת-השולח ואינו מגיע למערכת בשום צורה (נמדד 28/08: דוח 13 חזר
-  // מ-`mailer-daemon` עם `DNS Error`, והיומן ממשיך לומר `sent`). זהו חוב של מודול-המיילים.
-  const { data: logRows } = await supabase
-    .from('email_log')
-    .select('entity_id, recipient, intended_recipient, created_at')
-    .eq('entity_type', 'salary_report')
-    .order('created_at', { ascending: false })
-
-  // השורה הראשונה לכל דוח היא האחרונה בזמן (הסדר יורד) — שליחה-חוזרת גוברת על המקורית.
-  const sentTo = new Map()
-  for (const row of logRows ?? []) {
-    // ✏️ 14/10/2026 (F13): הנמען המקורי (`intended_recipient`) כשהוא קיים — כתובת הבדיקה שאליה
-    // המייל נמסר בפועל היא מנגנון בטיחות פנימי ואינה מוצגת על המסך. שורות ישנות בלי העמודה ⇒ `recipient`.
-    if (!sentTo.has(row.entity_id)) {
-      sentTo.set(row.entity_id, row.intended_recipient ?? row.recipient)
-    }
-  }
-  // ‏`undefined` ולא `null`: "היומן לא נקרא / אין שורה" אינו "נשלח לאף אחד", והמסך מציג
-  // עליו את אותו `—` שהוא מציג על כל נתון חסר (§4.3).
-  return reports.map((r) => ({ ...r, sent_to: sentTo.get(r.report_id) }))
-}
-
-// שורות דוח שהופק — ה-snapshot הקפוא (§7.68). 🔴 **אין כאן פרטי-בנק** (B-4): הם חיים רק
-// ב-`hostess_bank_details` ובקובץ ה-xlsx שבבאקט, וכפילותם לטבלה שנייה הייתה פותחת מחדש את
-// החשיפה שה19 סגר.
-export async function getSalaryReportLines(reportId) {
-  const { data, error } = await supabase
-    .from('salary_report_lines')
-    .select('*')
-    .eq('report_id', reportId)
-    .order('hostess_name')
-  if (error) throw toError(error, 'שגיאה בטעינת שורות דוח השכר.')
-  return data ?? []
 }
 
 // הנמען של מייל-החשבונית (M1) ושם-החברה ל-placeholder. **קריאה ישירה ולגיטימית**: מנהלת
@@ -350,20 +290,6 @@ export async function deleteFinanceFile(path) {
   }
 }
 
-// 🔴 הורדה-וצירוף, לעולם לא קישור-חתום בתוך מייל (§7.61). הקישור-החתום שמתחת קיים רק
-// לכפתור-הורדה **במסך**, שם הוא חי 60 שניות ואינו נשלח לאיש.
-export async function downloadFinanceFileAsBase64(path) {
-  const { data, error } = await supabase.storage.from('finance').download(path)
-  if (error || !data) throw toError(error, 'הורדת הקובץ מהאחסון נכשלה.')
-  return fileToBase64(data)
-}
-
-export async function getFinanceFileSignedUrl(path) {
-  const { data, error } = await supabase.storage.from('finance').createSignedUrl(path, 60)
-  if (error || !data?.signedUrl) throw toError(error, 'יצירת קישור להורדת הקובץ נכשלה.')
-  return data.signedUrl
-}
-
 // ---- מיילים: שמות התבניות, הנושאים והגופים ----
 
 // 🔴 זהים-בייט לשורות ה-`params` (מיגרציה `20260723112000`). שם שגוי בתו אחד מחזיר תבנית
@@ -372,9 +298,6 @@ export const FINANCE_TEMPLATE_NAMES = {
   invoice: 'תבנית_מייל_חשבונית_מס',
   salaryReport: 'תבנית_מייל_דוח_שכר',
 }
-
-// כתובת משרד רואי-החשבון — פרמטר-מערכת, לא שדה במסך (א49).
-export const ACCOUNTANT_EMAIL_PARAM = 'מייל_משרד_רואי_חשבון'
 
 // שתי שורות-הנושא — **נעולות ב-N-1** (אישור-ישי 26/08/2026, "מאשר את חמשתן/כולן"), בנוסח
 // המדויק שצויר במוקאפים המאושרים `05_mail_invoice_approved.html` ו-`06_mail_salary_approved.html`.
@@ -582,199 +505,6 @@ export async function sendInvoiceAndRecord({ project, customer, file } = {}) {
     logFailed,
     projectStatus: recorded.project_status,
   }
-}
-
-// ---- M2: דוח-השכר — הפקה, קובץ, שליחה, סגירה ----
-
-// נתיב-האחסון של קובץ-השכר. `salary_reports/` ולא תיקיית-פרויקט — הדוח חוצה פרויקטים
-// וחודשים; מזהה-הדוח בתחילית מונע התנגשות בין שתי הפקות של אותו חודש (שממילא חסומות
-// ב-UNIQUE, אבל שם-קובץ אינו מקום להסתמך על כך).
-// 🔴 **‏`contentType` מוצהר במפורש ולא מנוחש מהבלוב** — ובדיוק כאן יושב חסם מדוד: הבאקט
-// `finance` מתיר היום `application/pdf, image/jpeg, image/png` בלבד, ו-xlsx **אינו** ברשימה
-// (נמדד חי מול `storage.buckets`). 🚫 העלאה בהסוואה כ-PDF הייתה "מתקנת" את השגיאה ומייצרת
-// קובץ פגום אצל הרו"ח; לכן הסוג נאמר כמות-שהוא, והשגיאה עולה למסך.
-export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-
-async function uploadSalaryReportFile(reportId, fileName, blob) {
-  const path = `salary_reports/${reportId}_${fileName}`
-  const { error } = await supabase.storage
-    .from('finance')
-    .upload(path, blob, { upsert: false, contentType: XLSX_MIME })
-  if (error) throw toError(error, 'העלאת קובץ דוח השכר לאחסון נכשלה.')
-  return { path }
-}
-
-// 🔴 **מרגע ש-`generate_salary_report` חזרה, המסד כבר השתנה בלי דרך חזרה:** שורת-דוח נכתבה,
-// כל שיבוץ שנאסף **נחתם** (`salary_report_id`) ונחתמה עליו חותמת-נסיעות (ה14). ⇒ **אסור
-// שהפונקציה הזו תזרוק אחרי הנקודה הזו בלי לסגור את הדוח**: דוח שנשאר `pending` בלי קובץ
-// ובלי סטטוס הוא חודש-שכר תקוע — השורות כבר חתומות ולא ייאספו שוב, אבל שום מסמך לא יצא.
-// לכן כל מה שאחרי ההפקה עטוף, והסגירה (`finalize_salary_report`) קורית בכל מסלול.
-//
-// ⚠️ **והפער שהמסד אינו יודע לבטא, ומדווח ולא מוסתר:** `finalize_salary_report` מקבלת
-// `'sent'` או `'failed'` **בלבד**, בעוד למנוע-המייל שלושה מצבים ו-"לא ידוע" אינו "נכשל".
-// מה שנבנה כאן: הסטטוס שנכתב במסד הוא `'failed'` (זה הערך היחיד שאינו "נשלח"), **אך התשובה
-// למסך נושאת `sendResult: 'unknown'`** כדי שההודעה שתוצג תהיה זו של המנוע — *"בדקי בתיבת
-// 'נשלחו' לפני שליחה חוזרת"* — ולא "נכשל", שהיה מזמין מייל שני לרו"ח.
-export async function generateAndSendSalaryReport({
-  period,
-  generatedAt,
-  accountantName = null,
-} = {}) {
-  // לפני ההפקה הבלתי-הפיכה: מוודאים שיש תבנית ויש נמען. כשל כאן עדיף פי כמה על דוח חתום
-  // שאי-אפשר לשלוח.
-  const [template, recipient] = await Promise.all([
-    getEmailTemplate(FINANCE_TEMPLATE_NAMES.salaryReport),
-    getParamValue(ACCOUNTANT_EMAIL_PARAM),
-  ])
-
-  const generated = await callWriteRpc(
-    'generate_salary_report',
-    { p_period: period },
-    'הפקת דוח השכר נכשלה.',
-  )
-
-  const reportId = generated.report_id
-  let doc = null
-  let filePath = null
-  let fileError = null
-  // כל אחד משני המסלולים (הצלחה / `catch`) מציב את שניהם, ולכן אין כאן ערך-פתיחה שיכול
-  // לזלוג לתשובה — `no-useless-assignment` תופס בדיוק את זה.
-  let sendResult
-  let logFailed = false
-  // 🔴 **השגיאה עצמה נשמרת ואינה נבלעת.** ל-`catch` הזה נכנסים גם שומרי-ההרכבה של
-  // `salaryReport.js` — למשל "סכום שורות הדוח אינו תואם את הסכום שנרשם במסד" — ו"נכשל"
-  // גנרי במקומם היה מוחק בדיוק את ההודעה שנועדה לצעוק (§4.3).
-  let mailError = null
-
-  try {
-    doc = buildSalaryReportDocument(generated, { generatedAt })
-
-    // ההעלאה לבאקט היא **ראיית-מה-שנשלח** (§7.68) ואינה תנאי לשליחה: הצרופה נבנית מהבלוב
-    // שבזיכרון. כישלון-אחסון מדווח למעלה ואינו מבטל את המייל — הרו"ח צריך את הקובץ, והראיה
-    // החסרה נאמרת למסך במקום להיקבר.
-    const blob = await writeSalaryReportXlsx(doc)
-    const attachmentBase64 = await fileToBase64(blob)
-    try {
-      filePath = (await uploadSalaryReportFile(reportId, doc.fileName, blob)).path
-    } catch (uploadError) {
-      fileError = uploadError
-    }
-
-    const payload = buildSalaryReportEmailPayload({
-      template,
-      recipient,
-      periodLabel: doc.periodLabel,
-      accountantName,
-      fileName: doc.fileName,
-      attachmentBase64,
-    })
-    if (!payload) {
-      throw toError(
-        { code: 'MAIL_PAYLOAD' },
-        'לא ניתן להרכיב את מייל דוח השכר — בדקי את תבנית המייל ואת כתובת רואי החשבון.',
-      )
-    }
-
-    ;({ logFailed } = await sendEmail({
-      payload,
-      entityType: 'salary_report',
-      entityId: reportId,
-      templateName: FINANCE_TEMPLATE_NAMES.salaryReport,
-    }))
-    sendResult = EMAIL_SEND_RESULT.SENT
-  } catch (error) {
-    sendResult = classifySendError(error)
-    mailError = error
-  }
-
-  // ‏`'sent'` רק כשידוע שהמייל יצא. 'לא ידוע' נרשם `'failed'` כי אין ערך שלישי — ר' ההערה
-  // שמעל הפונקציה. הסגירה עצמה best-effort: אם גם היא נכשלת, הדוח קיים והשורות חתומות,
-  // והמסך מקבל את התמונה המלאה במקום חריגה שמסתירה אותה.
-  const sendStatus = sendResult === EMAIL_SEND_RESULT.SENT ? 'sent' : 'failed'
-  let finalizeError = null
-  try {
-    await callWriteRpc(
-      'finalize_salary_report',
-      { p_report_id: reportId, p_file_url: filePath, p_status: sendStatus },
-      'סגירת דוח השכר נכשלה.',
-    )
-  } catch (error) {
-    finalizeError = error
-  }
-
-  return {
-    reportId,
-    period: generated.period,
-    periodLabel: doc?.periodLabel ?? null,
-    fileName: doc?.fileName ?? null,
-    lines: doc?.lines ?? [],
-    totals: doc?.totals ?? null,
-    linesMissingBankDetails: doc?.linesMissingBankDetails ?? [],
-    filePath,
-    fileError,
-    sendResult,
-    sendStatus,
-    mailError,
-    logFailed,
-    finalizeError,
-  }
-}
-
-// שליחה-חוזרת מההיסטוריה (כרטיס-P4: *"המייל נכשל — הדוח נשמר, סטטוס 'נכשל' מוצג, שליחה-חוזרת
-// מההיסטוריה"*). 🔑 **אין כאן הפקה מחדש** — השורות כבר חתומות וה-`period` ייחודי; מה שנשלח
-// שוב הוא **אותו קובץ** מהבאקט, ולכן דוח בלי `report_file_url` אינו ניתן לשליחה-חוזרת ואומר
-// זאת במפורש במקום לשלוח מייל בלי צרופה.
-export async function resendSalaryReportMail({ report, accountantName = null } = {}) {
-  if (!report?.report_file_url) {
-    throw toError(
-      { code: 'NO_REPORT_FILE' },
-      'לא נשמר קובץ לדוח הזה — לא ניתן לשלוח אותו שוב מההיסטוריה.',
-    )
-  }
-
-  const [template, recipient, attachmentBase64] = await Promise.all([
-    getEmailTemplate(FINANCE_TEMPLATE_NAMES.salaryReport),
-    getParamValue(ACCOUNTANT_EMAIL_PARAM),
-    downloadFinanceFileAsBase64(report.report_file_url),
-  ])
-
-  const periodLabel = salaryPeriodLabel(report.period)
-  const payload = buildSalaryReportEmailPayload({
-    template,
-    recipient,
-    periodLabel,
-    accountantName,
-    fileName: fileNameOf(report.report_file_url),
-    attachmentBase64,
-  })
-  if (!payload) {
-    throw toError(
-      { code: 'MAIL_PAYLOAD' },
-      'לא ניתן להרכיב את מייל דוח השכר — בדקי את תבנית המייל ואת כתובת רואי החשבון.',
-    )
-  }
-
-  let sendResult = EMAIL_SEND_RESULT.SENT
-  let logFailed = false
-  try {
-    ;({ logFailed } = await sendEmail({
-      payload,
-      entityType: 'salary_report',
-      entityId: report.report_id,
-      templateName: FINANCE_TEMPLATE_NAMES.salaryReport,
-    }))
-  } catch (error) {
-    sendResult = classifySendError(error)
-  }
-
-  const sendStatus = sendResult === EMAIL_SEND_RESULT.SENT ? 'sent' : 'failed'
-  await callWriteRpc(
-    'finalize_salary_report',
-    { p_report_id: report.report_id, p_file_url: report.report_file_url, p_status: sendStatus },
-    'עדכון סטטוס השליחה של הדוח נכשל.',
-  )
-
-  return { sendResult, sendStatus, logFailed }
 }
 
 // שם-הקובץ מתוך מפתח-האחסון (`salary_reports/7_08_2026_Payroll_Report.xlsx` ⇒

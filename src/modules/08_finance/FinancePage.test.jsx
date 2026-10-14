@@ -58,10 +58,6 @@ vi.mock('./ClosingWindowDialog', () => ({
   ),
 }))
 
-vi.mock('./SalaryReportDialog', () => ({
-  default: ({ open }) => <div data-testid="salary-dialog" data-open={String(open)} />,
-}))
-
 const NOW = new Date('2026-10-15T10:00:00Z') // "היום" המשותף — data-set.md §0
 
 // שורת-בסיס עם כל 21 העמודות שטבלת-ההחזרה של `get_finance_overview` מצהירה עליהן.
@@ -736,13 +732,12 @@ describe('S1 — מסלול-הכניסה ל-S3 (הכרעת Q-2)', () => {
     expect(link).toHaveAttribute('href', '/finance/payroll')
   })
 
-  it('"הפקה בתהליך הקודם" עדיין פותח את הדיאלוג הישן', async () => {
+  // ✏️ 14/10/2026 (מעבר מלא, הכרעת ישי): החלון הישן הוסר — אין יותר כניסה אליו מהמסך.
+  it('אין כניסה לחלון הישן — "דוח שכר" הוא הכניסה היחידה', async () => {
     await renderPage()
-    const button = screen.getByTestId('finance-open-salary')
-    expect(button).toHaveTextContent('הפקה בתהליך הקודם')
-    expect(screen.getByTestId('salary-dialog')).toHaveAttribute('data-open', 'false')
-    fireEvent.click(button)
-    expect(screen.getByTestId('salary-dialog')).toHaveAttribute('data-open', 'true')
+    expect(screen.queryByTestId('finance-open-salary')).not.toBeInTheDocument()
+    expect(screen.queryByText('הפקה בתהליך הקודם')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'דוח שכר' })).toHaveLength(1)
   })
 
   // 🔴 הכרעת-ישי 28/08/2026: ההיסטוריה עברה אל תוך הדיאלוג. הבדיקה הפוכה בכוונה — היא
@@ -750,7 +745,7 @@ describe('S1 — מסלול-הכניסה ל-S3 (הכרעת Q-2)', () => {
   it('מסך-הכספים אינו מציג יותר את כרטיס-ההיסטוריה — הוא מציג פרויקטים בלבד', async () => {
     await renderPage()
     expect(screen.queryByTestId('salary-history-card')).not.toBeInTheDocument()
-    expect(screen.getByTestId('finance-open-salary')).toBeInTheDocument()
+    expect(screen.getByTestId('finance-open-payroll')).toBeInTheDocument()
   })
 })
 

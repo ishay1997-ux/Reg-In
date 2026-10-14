@@ -11,7 +11,7 @@
 //
 // בילדר-השרשרתי + תור-פר-טבלה מועתקים מ-05_logistics/api.test.js (עוגן-גריפ `makeChain` שם) -
 // לא נוסח שני. `useConfirm`/`useToast` זורקים מחוץ ל-Provider, ולכן עוטפים ב-ConfirmProvider+
-// ToastProvider האמיתיים (לא mock), כמו SalaryReportDialog.test.jsx.
+// ToastProvider האמיתיים (לא mock), כמו בבדיקות מרחב דוח השכר (`08_finance/payroll`).
 //
 // 🧨 מוקש-סביבה (jsdom), כמו ב-CustomerFormDialog.test.jsx: פתיחת ה-Select (Radix) דורכת על
 // `react-use-size` שקורא `new ResizeObserver(...)` בלי guard, ו-Radix Select קורא

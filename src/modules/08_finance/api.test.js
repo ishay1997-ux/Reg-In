@@ -43,32 +43,24 @@ vi.mock('@/api/email', () => ({
 }))
 
 import {
-  ACCOUNTANT_EMAIL_PARAM,
   CANCELLATION_FEE_ACTIONS,
   FINANCE_ALLOWED_MIME,
   FINANCE_MAX_BYTES,
   FINANCE_TEMPLATE_NAMES,
   INVOICE_FILE_REQUIRED_NOTE,
-  XLSX_MIME,
   archiveProject,
   buildInvoiceEmailPayload,
   buildSalaryReportEmailPayload,
   deleteFinanceFile,
-  downloadFinanceFileAsBase64,
   fileNameOf,
-  generateAndSendSalaryReport,
   getBillingContact,
   getCancellationFeeProposal,
   getFinanceDetail,
-  getFinanceFileSignedUrl,
-  getSalaryReportLines,
   invoiceEmailSubject,
   listFinanceOverview,
-  listSalaryReports,
   recordFeedback,
   recordPayment,
   recordWriteOff,
-  resendSalaryReportMail,
   resolveCancellationFee,
   rpcErrorMessage,
   salaryReportEmailSubject,
@@ -77,6 +69,9 @@ import {
   uploadInvoiceFile,
   validateInvoiceFile,
 } from './api'
+
+// סוג xlsx — לבדיקה שהבאקט דוחה אותו בהעלאת חשבונית (הקבוע הוסר מ-api.js עם מסלול השכר הישן).
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 // ── כלי-עזר למוק ─────────────────────────────────────────────────────────────
 
@@ -136,101 +131,6 @@ const SALARY_TEMPLATE = `שלום לצוות הנהלת חשבונות / [שם_�
 
 const CUSTOMER = { customer_id: 4, company_name: 'עיריית חדרה', email: 'ishay1997@gmail.com' }
 const PROJECT = { project_id: 13, event_name: 'פסטיבל קיץ עירוני' }
-
-// מטען-ההפקה כפי ש-`generate_salary_report` מחזירה — חמש שורות אוגוסט-2026 של
-// `data-set.md §5`, בווריאנט ה20 (נסיעות 22.60): אפרת 292.60 וסה"כ 620.60.
-function augustPayload(overrides = {}) {
-  return {
-    ok: true,
-    report_id: 7,
-    period: '2026-08-01',
-    total_amount: 620.6,
-    line_count: 5,
-    lines: [
-      {
-        hostess_id: 1,
-        hostess_name: 'אפרת דהן',
-        id_number: '301554333',
-        source_project_id: 12,
-        line_basis: 'actual',
-        hours: 6,
-        rate: 45,
-        bonus: null,
-        travel: 22.6,
-        line_total: 292.6,
-        bank_name: 'הפועלים',
-        bank_branch: '601',
-        bank_account: '2047199',
-        show_in_file: true,
-      },
-      {
-        hostess_id: 2,
-        hostess_name: 'אורלי שני',
-        id_number: '301550224',
-        source_project_id: 14,
-        line_basis: 'cancellation_compensation',
-        hours: 4,
-        rate: 43,
-        bonus: null,
-        travel: null,
-        line_total: 86,
-        bank_name: 'דיסקונט',
-        bank_branch: '045',
-        bank_account: '8732016',
-        show_in_file: true,
-      },
-      {
-        hostess_id: 3,
-        hostess_name: 'רחל לוי',
-        id_number: '301551594',
-        source_project_id: 14,
-        line_basis: 'cancellation_compensation',
-        hours: 4,
-        rate: 40,
-        bonus: null,
-        travel: null,
-        line_total: 80,
-        bank_name: 'מזרחי-טפחות',
-        bank_branch: '512',
-        bank_account: '4491067',
-        show_in_file: true,
-      },
-      {
-        hostess_id: 4,
-        hostess_name: 'ליאת פרץ',
-        id_number: '301552964',
-        source_project_id: 14,
-        line_basis: 'cancellation_compensation',
-        hours: 4,
-        rate: 39,
-        bonus: null,
-        travel: null,
-        line_total: 78,
-        bank_name: 'לאומי',
-        bank_branch: '782',
-        bank_account: '1184538',
-        show_in_file: true,
-      },
-      {
-        hostess_id: 5,
-        hostess_name: 'שרון כהן',
-        id_number: '301557070',
-        source_project_id: 14,
-        line_basis: 'cancellation_compensation',
-        hours: 4,
-        rate: 42,
-        bonus: null,
-        travel: null,
-        line_total: 84,
-        bank_name: 'מזרחי-טפחות',
-        bank_branch: '512',
-        bank_account: '44910611',
-        show_in_file: true,
-      },
-    ],
-    ...overrides,
-  }
-}
 
 // ניתוב ה-RPC לפי שם, כדי שבדיקה תוכל להצהיר רק על מה שמעניין אותה.
 // הבילדר של `rpc()` האמיתי הוא thenable **וגם** שרשרתי (`.order()`/`.range()`) — `fetchAll`
@@ -324,15 +224,6 @@ describe('אחסון — bucket finance', () => {
     removeMock.mockRejectedValue(new Error('storage down'))
     await expect(deleteFinanceFile('13/1_a.pdf')).resolves.toBeUndefined()
     await expect(deleteFinanceFile(null)).resolves.toBeUndefined()
-  })
-
-  it('downloadFinanceFileAsBase64 זורקת כשההורדה נכשלה ואינה מחזירה מחרוזת ריקה', async () => {
-    downloadMock.mockResolvedValue({ data: null, error: { message: 'not found' } })
-    await expect(downloadFinanceFileAsBase64('x')).rejects.toThrow('הורדת הקובץ מהאחסון נכשלה.')
-  })
-
-  it('getFinanceFileSignedUrl מחזירה קישור זמני לכפתור-הורדה במסך', async () => {
-    await expect(getFinanceFileSignedUrl('13/1_a.pdf')).resolves.toBe('https://x/y')
   })
 })
 
@@ -493,14 +384,6 @@ describe('קריאות S1/S2', () => {
     expect(row.goods_at_price).toBe(3180)
   })
 
-  it('getSalaryReportLines קוראת את ה-snapshot הקפוא לפי מזהה-דוח', async () => {
-    mocks.from.mockImplementation((table) => {
-      expect(table).toBe('salary_report_lines')
-      return queryStub({ data: [{ line_id: 1, hostess_name: 'אפרת דהן' }], error: null })
-    })
-    await expect(getSalaryReportLines(7)).resolves.toHaveLength(1)
-  })
-
   it('getBillingContact מחזירה null בלי מזהה-לקוח ואינה פונה למסד', async () => {
     await expect(getBillingContact(null)).resolves.toBeNull()
     expect(mocks.from).not.toHaveBeenCalled()
@@ -552,74 +435,6 @@ describe('קריאות S1/S2', () => {
     expect(select).toHaveBeenCalledWith(
       'customer_id, company_number, company_name, customer_contacts(contact_name, email, is_primary)',
     )
-  })
-
-  // 🔴 **שתי טבלאות ולא אחת, מאז 28/08/2026** — ו-`email_log` היא התוספת המכוונת: הנמען
-  // חייב להגיע מהשליחה שנרשמה, לא מהפרמטר החי (ר' ההנמקה ב-`listSalaryReports`).
-  it('listSalaryReports קוראת מהטבלאות (policy של מיגרציה B) ולא מ-RPC, ומצמידה את הנמען שנרשם', async () => {
-    const seen = []
-    mocks.from.mockImplementation((table) => {
-      seen.push(table)
-      if (table === 'salary_reports') {
-        return queryStub({
-          data: [
-            { report_id: 7, period: '2026-08-01' },
-            { report_id: 8, period: '2026-07-01' },
-          ],
-          error: null,
-        })
-      }
-      return queryStub({
-        data: [
-          // שתי שורות לדוח 7 — שליחה-חוזרת אחרי כישלון. הסדר יורד, ולכן הראשונה גוברת.
-          { entity_id: 7, recipient: 'new@example.com', created_at: '2026-09-02T00:00:00Z' },
-          { entity_id: 7, recipient: 'old@example.com', created_at: '2026-09-01T00:00:00Z' },
-        ],
-        error: null,
-      })
-    })
-
-    await expect(listSalaryReports()).resolves.toEqual([
-      { report_id: 7, period: '2026-08-01', sent_to: 'new@example.com' },
-      // דוח 8 אינו ביומן ⇒ `undefined`, לא כתובת מומצאת ולא הפרמטר החי.
-      { report_id: 8, period: '2026-07-01', sent_to: undefined },
-    ])
-    expect(seen).toEqual(['salary_reports', 'email_log'])
-    expect(mocks.rpc).not.toHaveBeenCalled()
-  })
-
-  // F13 (14/10/2026): כשהמייל הופנה לכתובת הבדיקה, החלון הישן מציג את הנמען המקורי.
-  it('listSalaryReports מעדיפה intended_recipient על recipient (F13)', async () => {
-    mocks.from.mockImplementation((table) => {
-      if (table === 'salary_reports') {
-        return queryStub({ data: [{ report_id: 9, period: '2026-07-01' }], error: null })
-      }
-      return queryStub({
-        data: [
-          {
-            entity_id: 9,
-            recipient: 'ishay1997@gmail.com',
-            intended_recipient: 'office@accountant.example',
-            created_at: '2026-10-13T00:00:00Z',
-          },
-        ],
-        error: null,
-      })
-    })
-    await expect(listSalaryReports()).resolves.toEqual([
-      { report_id: 9, period: '2026-07-01', sent_to: 'office@accountant.example' },
-    ])
-  })
-
-  // רשימה ריקה אינה מחייבת פנייה שנייה — ומדידה זולה שמונעת שאילתה מיותרת בכל טעינה.
-  it('אין דוחות ⇒ `email_log` אינה נשאלת כלל', async () => {
-    const seen = []
-    mocks.from.mockImplementation((table) => {
-      seen.push(table)
-      return queryStub({ data: [], error: null })
-    })
-    await expect(listSalaryReports()).resolves.toEqual([])
-    expect(seen).toEqual(['salary_reports'])
   })
 })
 
@@ -840,195 +655,5 @@ describe('sendInvoiceAndRecord (P1)', () => {
       file: fakeFile(),
     })
     expect(result.logFailed).toBe(true)
-  })
-})
-
-// ── M2: דוח-השכר ─────────────────────────────────────────────────────────────
-
-// `getParamValue` (מיובאת מ-`06_projects/closingApi`) קוראת `params` דרך אותו מוק.
-function routeParams(value = 'office@cpa-firm.co.il') {
-  mocks.from.mockImplementation((table) => {
-    if (table === 'params') return queryStub({ data: { param_value: value }, error: null })
-    throw new Error(`טבלה לא צפויה בבדיקה: ${table}`)
-  })
-}
-
-describe('generateAndSendSalaryReport (P4)', () => {
-  beforeEach(() => {
-    mocks.getEmailTemplate.mockResolvedValue(SALARY_TEMPLATE)
-    routeParams()
-  })
-
-  it('מסלול תקין: מפיקה, מרכיבה קובץ, מעלה, שולחת וסוגרת ב-sent — עם עוגני data-set §5', async () => {
-    routeRpc({
-      generate_salary_report: () => ({ data: augustPayload(), error: null }),
-      finalize_salary_report: { data: { ok: true, send_status: 'sent' }, error: null },
-    })
-
-    const result = await generateAndSendSalaryReport({
-      period: '2026-08-01',
-      generatedAt: '2026-09-01T09:00:00Z',
-      accountantName: 'רו"ח דורון אשכנזי',
-    })
-
-    // העוגנים מוקלדים מהרגיסטר, לא מחושבים מהקוד.
-    expect(result.totals.total).toBe(620.6)
-    expect(result.lines[0].lineTotal).toBe(292.6)
-    expect(result.fileName).toBe('08_2026_Payroll_Report.xlsx')
-    expect(result.periodLabel).toBe('אוגוסט 2026')
-
-    expect(uploadMock).toHaveBeenCalledTimes(1)
-    const [path, , options] = uploadMock.mock.calls[0]
-    expect(path).toBe('salary_reports/7_08_2026_Payroll_Report.xlsx')
-    expect(options.contentType).toBe(XLSX_MIME)
-
-    expect(mocks.sendEmail.mock.calls[0][0]).toMatchObject({
-      entityType: 'salary_report',
-      entityId: 7,
-    })
-    expect(mocks.rpc).toHaveBeenCalledWith('finalize_salary_report', {
-      p_report_id: 7,
-      p_file_url: 'salary_reports/7_08_2026_Payroll_Report.xlsx',
-      p_status: 'sent',
-    })
-    expect(result.sendResult).toBe('sent')
-  })
-
-  it('🔴 כשל-מייל: הדוח **נסגר ב-failed ואינו אובד**, ושליחה-חוזרת אפשרית מההיסטוריה', async () => {
-    routeRpc({
-      generate_salary_report: () => ({ data: augustPayload(), error: null }),
-      finalize_salary_report: { data: { ok: true, send_status: 'failed' }, error: null },
-    })
-    mocks.sendEmail.mockRejectedValue(new Error('boom'))
-
-    const result = await generateAndSendSalaryReport({
-      period: '2026-08-01',
-      generatedAt: '2026-09-01T09:00:00Z',
-    })
-
-    expect(result.sendResult).toBe('failed')
-    expect(result.sendStatus).toBe('failed')
-    expect(result.reportId).toBe(7)
-    expect(mocks.rpc).toHaveBeenCalledWith(
-      'finalize_salary_report',
-      expect.objectContaining({ p_status: 'failed' }),
-    )
-  })
-
-  it('🔴 פסק-זמן: המסד נרשם failed (אין ערך שלישי) אך התשובה למסך היא "לא ידוע"', async () => {
-    routeRpc({
-      generate_salary_report: () => ({ data: augustPayload(), error: null }),
-      finalize_salary_report: { data: { ok: true, send_status: 'failed' }, error: null },
-    })
-    mocks.sendEmail.mockRejectedValue(new Error('TIMEOUT'))
-
-    const result = await generateAndSendSalaryReport({
-      period: '2026-08-01',
-      generatedAt: '2026-09-01T09:00:00Z',
-    })
-
-    expect(result.sendResult).toBe('unknown')
-    expect(result.sendStatus).toBe('failed')
-  })
-
-  it('🔴 כשל-העלאה אינו מבטל את המייל — הרו"ח מקבל את הקובץ, וחוסר-הראיה מדווח למסך', async () => {
-    routeRpc({
-      generate_salary_report: () => ({ data: augustPayload(), error: null }),
-      finalize_salary_report: { data: { ok: true }, error: null },
-    })
-    uploadMock.mockResolvedValue({ error: { message: 'mime type not supported' } })
-
-    const result = await generateAndSendSalaryReport({
-      period: '2026-08-01',
-      generatedAt: '2026-09-01T09:00:00Z',
-    })
-
-    expect(result.sendResult).toBe('sent')
-    expect(result.filePath).toBeNull()
-    expect(result.fileError).toBeInstanceOf(Error)
-    expect(mocks.sendEmail).toHaveBeenCalledTimes(1)
-    expect(mocks.rpc).toHaveBeenCalledWith(
-      'finalize_salary_report',
-      expect.objectContaining({ p_file_url: null, p_status: 'sent' }),
-    )
-  })
-
-  it('🔴 שומר-הרכבה שנפל אינו נבלע כ"נכשל" גנרי — הודעתו מגיעה למסך, והדוח נסגר', async () => {
-    // הסכום שהמסד רשם אינו סכום השורות ⇒ `buildSalaryReportDocument` זורק
-    // `SALARY_TOTAL_MISMATCH`. ההודעה הזאת נכתבה כדי להיאמר, ולכן היא נבדקת.
-    routeRpc({
-      generate_salary_report: () => ({ data: augustPayload({ total_amount: 999 }), error: null }),
-      finalize_salary_report: { data: { ok: true }, error: null },
-    })
-
-    const result = await generateAndSendSalaryReport({
-      period: '2026-08-01',
-      generatedAt: '2026-09-01T09:00:00Z',
-    })
-
-    expect(result.sendResult).toBe('failed')
-    expect(result.mailError.message).toBe(
-      'סכום שורות הדוח אינו תואם את הסכום שנרשם במסד — הדוח לא הורכב.',
-    )
-    expect(mocks.sendEmail).not.toHaveBeenCalled()
-    expect(mocks.rpc).toHaveBeenCalledWith(
-      'finalize_salary_report',
-      expect.objectContaining({ p_report_id: 7, p_file_url: null, p_status: 'failed' }),
-    )
-  })
-
-  it('חוסר-תבנית או חוסר-נמען עוצר **לפני** ההפקה הבלתי-הפיכה', async () => {
-    mocks.getEmailTemplate.mockRejectedValue(new Error('תבנית המייל חסרה בהגדרות.'))
-    routeRpc({})
-    await expect(
-      generateAndSendSalaryReport({ period: '2026-08-01', generatedAt: '2026-09-01T09:00:00Z' }),
-    ).rejects.toThrow()
-    expect(mocks.rpc).not.toHaveBeenCalled()
-  })
-
-  it('שם-הפרמטר לכתובת רואי-החשבון נקרא כפי שנזרע', () => {
-    expect(ACCOUNTANT_EMAIL_PARAM).toBe('מייל_משרד_רואי_חשבון')
-    expect(FINANCE_TEMPLATE_NAMES.salaryReport).toBe('תבנית_מייל_דוח_שכר')
-    expect(FINANCE_TEMPLATE_NAMES.invoice).toBe('תבנית_מייל_חשבונית_מס')
-  })
-})
-
-describe('resendSalaryReportMail (P4 — שליחה חוזרת)', () => {
-  beforeEach(() => {
-    mocks.getEmailTemplate.mockResolvedValue(SALARY_TEMPLATE)
-    routeParams()
-  })
-
-  it('דוח בלי קובץ שמור אינו נשלח שוב — ואינו יוצא כמייל בלי צרופה', async () => {
-    await expect(
-      resendSalaryReportMail({ report: { report_id: 7, period: '2026-08-01' } }),
-    ).rejects.toThrow('לא נשמר קובץ לדוח הזה — לא ניתן לשלוח אותו שוב מההיסטוריה.')
-    expect(mocks.sendEmail).not.toHaveBeenCalled()
-  })
-
-  it('שולחת את אותו קובץ מהבאקט ומעדכנת את סטטוס-השליחה — בלי הפקה חוזרת', async () => {
-    downloadMock.mockResolvedValue({
-      data: { arrayBuffer: () => Promise.resolve(new Uint8Array([9, 9]).buffer) },
-      error: null,
-    })
-    routeRpc({ finalize_salary_report: { data: { ok: true }, error: null } })
-
-    const result = await resendSalaryReportMail({
-      report: {
-        report_id: 7,
-        period: '2026-08-01',
-        report_file_url: 'salary_reports/7_08_2026_Payroll_Report.xlsx',
-      },
-    })
-
-    expect(mocks.sendEmail.mock.calls[0][0].payload.filename).toBe('08_2026_Payroll_Report.xlsx')
-    expect(mocks.sendEmail.mock.calls[0][0].payload.subject).toBe('דוח שכר דיילות — אוגוסט 2026')
-    expect(mocks.rpc).not.toHaveBeenCalledWith('generate_salary_report', expect.anything())
-    expect(mocks.rpc).toHaveBeenCalledWith('finalize_salary_report', {
-      p_report_id: 7,
-      p_file_url: 'salary_reports/7_08_2026_Payroll_Report.xlsx',
-      p_status: 'sent',
-    })
-    expect(result.sendResult).toBe('sent')
   })
 })
