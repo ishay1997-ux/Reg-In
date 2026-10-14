@@ -110,3 +110,12 @@ export function weekdayOf(isoDate) {
   const index = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
   return WEEKDAY_NAMES_HE[index] ?? ''
 }
+
+// ✏️ ביקורת-ולידציה שורה 26 (14/10/2026): "מ" מאוחר מ-"עד" ⇒ רשימה ריקה בלי הסבר, שנראית כמו
+// "אין נתונים". אותו פער חי בשלושה מסכים (הצעות · כספים · ייצוא) — הכלל והנוסח כאן, פעם אחת.
+// **הסבר ולא תיקון:** לא מחליפים את התאריכים ולא מסננים אחרת — המשתמשת מחליטה.
+// השוואת מחרוזות `YYYY-MM-DD` נכונה לקסיקוגרפית; אחד הצדדים ריק ⇒ אין טווח ⇒ ''.
+export function invertedDateRangeMessage(from, to) {
+  if (!from || !to || from <= to) return ''
+  return 'תאריך ההתחלה מאוחר מתאריך הסיום — אין תוצאות בטווח הזה.'
+}

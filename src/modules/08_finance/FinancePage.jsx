@@ -33,6 +33,7 @@ import StatusTag from '@/components/StatusTag'
 import ScoreCell from '@/components/ScoreCell'
 import Money from '@/components/Money'
 import Ltr from '@/components/Ltr'
+import DateRangeNotice from '@/components/DateRangeNotice'
 import { WindowChips, Pager } from '@/components/ListWindow'
 import {
   DEFAULT_WINDOW,
@@ -1091,6 +1092,13 @@ function FilterBar({ filters, onChange, onClear }) {
         onChange={(e) => set({ to: e.target.value })}
         className="h-8 w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
         data-testid="finance-filter-to"
+      />
+      {/* ביקורת-ולידציה שורה 26: "מ" אחרי "עד" ⇒ הסבר, לא רשימה ריקה שקטה. שורה משלה בשורת-הסינון. */}
+      <DateRangeNotice
+        from={filters.from}
+        to={filters.to}
+        testId="finance-date-range-notice"
+        className="order-last basis-full"
       />
       <input
         type="text"
