@@ -254,6 +254,35 @@ describe('מצב: טיוטה מוכנה', () => {
   })
 })
 
+describe('פוליש 14/10: האריחים מסכמים את הקובץ (פריט 1)', () => {
+  it('שורת אפס לא נספרת באריחים; שורה משנית אומרת שהיא לא בקובץ', async () => {
+    const zero = compensationLine({
+      hostess_id: 900009,
+      hostess_name: 'פיצוי אפס',
+      hours: 4,
+      hours_raw: 4,
+      line_total: 0,
+      show_in_file: false,
+    })
+    api.getPayrollPreview.mockResolvedValue(
+      makePreview({ lines: [previewLine(), compensationLine(), zero] }),
+    )
+    renderPage()
+    const tile = await screen.findByTestId('payroll-tile-lines')
+    expect(tile).toHaveTextContent('2')
+    expect(tile).toHaveTextContent('משמרת אחת ללא תשלום אינה נכללת בקובץ')
+    expect(screen.getAllByTestId('payroll-draft-row')).toHaveLength(2)
+    expect(screen.getByTestId('payroll-tile-hours')).toHaveTextContent('10')
+    expect(screen.getByTestId('payroll-tile-hostesses')).toHaveTextContent('2')
+  })
+
+  it('בלי שורות אפס ⇒ אין שורה משנית', async () => {
+    renderPage()
+    const tile = await screen.findByTestId('payroll-tile-lines')
+    expect(tile).not.toHaveTextContent('ללא תשלום')
+  })
+})
+
 describe('מצב: חסימה', () => {
   const blocked = () =>
     makePreview({
@@ -375,7 +404,38 @@ describe('מצב: החודש הנוכחי', () => {
     api.getPayrollReviewReadiness.mockResolvedValue(makeReadiness({ ready: true, blockers: [] }))
     renderPage('?period=2026-10&view=final')
     expect(await screen.findByTestId('payroll-issue')).toBeDisabled()
-    expect(screen.getByTestId('payroll-final-month')).toHaveTextContent('01/11/2026')
+    expect(screen.getByTestId('payroll-final-blockers')).toHaveTextContent('01/11/2026')
+  })
+})
+
+describe('פוליש 14/10: חודש פתוח הוא החוסם הראשון באישור הסופי (פריט 2)', () => {
+  it('בלי בדיקה: קודם "הפקה ושליחה יתאפשרו מ-01/11/2026", ורק אחר כך שליחת סיכומים', async () => {
+    api.getPayrollPreview.mockResolvedValue(
+      makePreview({ period: '2026-10-01', month_state: 'current' }),
+    )
+    renderPage('?period=2026-10&view=final')
+    const card = await screen.findByTestId('payroll-final-no-review')
+    const month = within(card).getByTestId('payroll-final-month')
+    expect(month).toHaveTextContent('הפקה ושליחה יתאפשרו מ-01/11/2026, אחרי סוף החודש')
+    expect(card.textContent.indexOf('01/11/2026')).toBeLessThan(
+      card.textContent.indexOf('לפני הפקה יש לשלוח סיכומים'),
+    )
+  })
+
+  it('עם בדיקה: החודש ראשון ברשימת החוסמים, והשאר מתחתיו', async () => {
+    api.getPayrollPreview.mockResolvedValue(
+      makePreview({ period: '2026-10-01', month_state: 'current' }),
+    )
+    api.findPayrollReview.mockResolvedValue(makeReview({ review: { period: '2026-10-01' } }))
+    api.getPayrollReviewReadiness.mockResolvedValue(
+      makeReadiness({ blockers: [{ code: 'DECISIONS_MISSING', count: 1 }] }),
+    )
+    renderPage('?period=2026-10&view=final')
+    const items = within(await screen.findByTestId('payroll-final-blockers')).getAllByRole(
+      'listitem',
+    )
+    expect(items[0]).toHaveTextContent('הפקה ושליחה יתאפשרו מ-01/11/2026')
+    expect(items[1]).toHaveTextContent('דיילת אחת עוד בלי אישור')
   })
 })
 
@@ -1334,6 +1394,44 @@ describe('היסטוריה', () => {
     expect(await screen.findByTestId('payroll-download-file-error')).toHaveTextContent(
       'אין לך הרשאה להוריד את הקובץ',
     )
+  })
+
+  it('דוח מהתהליך הקודם: מועד שליחה ומועד הפקה בלי שעה שלא נשמרה (פוליש 14/10, פריט 3)', async () => {
+    api.listPayrollReports.mockResolvedValue([
+      reportItem({
+        report_id: 15,
+        period: '2026-08-01',
+        legacy: true,
+        last_attempt: {
+          state: 'sent',
+          intended_recipient: 'office@accountant.example',
+          completed_at: '2026-09-02T10:00:00+00:00',
+        },
+      }),
+    ])
+    renderPage('?view=history')
+    const row = await screen.findByTestId('payroll-history-row-15')
+    expect(row).toHaveTextContent('02/09/2026')
+    expect(row.textContent).not.toMatch(/\d{2}:\d{2}/)
+
+    api.getPayrollReportDetail.mockResolvedValue(
+      reportDetail({
+        report: {
+          report_id: 15,
+          period: '2026-08-01',
+          legacy: true,
+          sent_date: '2026-09-02',
+          issued_at: '2026-09-09T20:59:24+00:00',
+        },
+        attempts: [],
+        artifact: { key: null, reference_missing: true },
+      }),
+    )
+    fireEvent.click(screen.getByTestId('payroll-history-open-15'))
+    expect(await screen.findByTestId('payroll-detail-sent-date')).toHaveTextContent('02/09/2026')
+    const header = screen.getByTestId('payroll-detail-header')
+    expect(header).toHaveTextContent('09/09/2026')
+    expect(header.textContent).not.toMatch(/\d{2}:\d{2}/)
   })
 
   it('דוח ישן בלי קובץ ⇒ ההסבר + "הורד שחזור" שבונה מהשורות הקפואות', async () => {

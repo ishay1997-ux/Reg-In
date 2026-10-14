@@ -7,13 +7,18 @@ import { Button } from '@/components/ui/button'
 import LoadingOrError from '@/components/LoadingOrError'
 import Ltr from '@/components/Ltr'
 import StatusTag from '@/components/StatusTag'
-import { formatTimestampFull } from '@/lib/dates'
 import { salaryPeriodLabel } from '@/lib/salaryReport'
 import { cn } from '@/lib/utils'
 import { listPayrollReports } from '../payrollApi'
 import ReportDetail from './ReportDetail'
 import { Card, Td, Th } from './payrollUi'
-import { accountantDeliveryTag, groupReports, kindLabel, payrollErrorMessage } from './payrollModel'
+import {
+  accountantDeliveryTag,
+  formatStoredMoment,
+  groupReports,
+  kindLabel,
+  payrollErrorMessage,
+} from './payrollModel'
 
 export default function HistorySection({ reportId, update, canEdit, page }) {
   if (reportId) {
@@ -113,7 +118,11 @@ function ReportList({ update }) {
                     <StatusTag label={delivery.label} tone={delivery.tone} />
                     {report.last_attempt?.completed_at && (
                       <div className="mt-1 text-xs text-slate-600">
-                        <Ltr>{formatTimestampFull(report.last_attempt.completed_at)}</Ltr>
+                        <Ltr>
+                          {formatStoredMoment(report.last_attempt.completed_at, {
+                            dateOnly: report.legacy,
+                          })}
+                        </Ltr>
                       </div>
                     )}
                   </Td>

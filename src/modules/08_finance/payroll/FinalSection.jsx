@@ -53,6 +53,12 @@ export default function FinalSection({
     return (
       <Card testId="payroll-final-no-review">
         <div className="flex flex-col items-center gap-2 py-8 text-center">
+          {/* פוליש 14/10, פריט 2: חודש פתוח קודם לכל — אחרת המסך מבקש לשלוח סיכומים שאי אפשר עוד. */}
+          {preview && preview.month_state !== 'ended' && (
+            <p className="text-sm font-semibold text-slate-800" data-testid="payroll-final-month">
+              {monthNotEndedMessage(preview.period)}
+            </p>
+          )}
           <p className="text-sm font-medium text-slate-700">
             לפני הפקה יש לשלוח סיכומים לדיילות ולקבל אישורים
           </p>
@@ -134,19 +140,24 @@ function Readiness({ review, preview, update, canEdit, onStale, onIssued, busyOp
   }
 
   const counts = readiness.counts ?? {}
-  const totals = preview?.totals ?? {}
   const periodLabel = salaryPeriodLabel(info.period)
   const kind = kindLabel(info.kind, preview?.supplement_seq_next)
   const monthEnded = preview?.month_state === 'ended'
   const recipient = preview?.accountant?.recipient
   const pendingCount = preview?.pending_closure?.assignment_count ?? 0
-  const blockers = readiness.blockers ?? []
-  // F12: הסיכום בשעות ולא בש"ח — "64 משמרות · 412 שעות · 32 דיילות".
-  const hoursTotal = totals.hours_total ?? hoursSum(preview?.lines)
+  // פוליש 14/10, פריט 2: חודש שעוד לא נגמר הוא הסיבה הראשונה — לפני כל חוסם אחר, עם התאריך.
+  const serverBlockers = readiness.blockers ?? []
+  const blockers =
+    preview && !monthEnded
+      ? [{ code: 'MONTH_NOT_ENDED' }, ...serverBlockers.filter((b) => b.code !== 'MONTH_NOT_ENDED')]
+      : serverBlockers
+  // F12 + F15: הסיכום בשעות, ועל השורות שבקובץ — כמו הטבלה והקובץ ("64 משמרות · 412 שעות · 32 דיילות").
+  const fileLines = (preview?.lines ?? []).filter((l) => l.show_in_file !== false)
+  const hoursTotal = hoursSum(fileLines)
   const hoursSummary = [
-    countPhrase(totals.line_count ?? 0, 'משמרת אחת', 'משמרות'),
+    countPhrase(fileLines.length, 'משמרת אחת', 'משמרות'),
     hoursTotal === null ? null : `${formatHours(hoursTotal)} שעות`,
-    countPhrase(totals.hostess_count ?? 0, 'דיילת אחת', 'דיילות'),
+    countPhrase(new Set(fileLines.map((l) => l.hostess_id)).size, 'דיילת אחת', 'דיילות'),
   ]
     .filter(Boolean)
     .join(' · ')
@@ -233,11 +244,6 @@ function Readiness({ review, preview, update, canEdit, onStale, onIssued, busyOp
         <FileToBeSent preview={preview} stale={info.version_current === false} onStale={onStale} />
       )}
 
-      {!monthEnded && preview && (
-        <p className="mt-2 text-sm text-slate-700" data-testid="payroll-final-month">
-          {monthNotEndedMessage(info.period)}
-        </p>
-      )}
       {blockers.length > 0 && (
         <p className="mt-3 text-sm font-semibold text-slate-800">אי אפשר להפיק עד שאלה יטופלו:</p>
       )}
