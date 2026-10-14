@@ -25,6 +25,7 @@ import ClosingWindowDialog, {
   archiveGateNote,
   closingPhase,
   feeSaveGateNote,
+  feeAboveProposedNote,
   feedbackGateNote,
   formatHoursBeforeEvent,
   waiveGateNote,
@@ -1380,5 +1381,18 @@ describe('בחירה מרובה של סיבות משוב (Multi-Select Chips)', 
     await renderLoaded()
     const posElem = screen.getByTestId('closing-feedback-positive-reason')
     expect(posElem).toHaveTextContent('עמידה בזמנים, שירות מעולה')
+  })
+})
+
+// ביקורת-ולידציה, שורה 6 (14/10/2026): סכום סופי מעל המוצע ⇒ התראה רכה לפני השמירה.
+describe('feeAboveProposedNote — דמי-ביטול מעל המוצע', () => {
+  it('מעל המוצע ⇒ הנוסח המאושר; שווה או מתחת ⇒ null; אין הצעה ⇒ null', () => {
+    expect(feeAboveProposedNote({ amount: 5000, proposed: 3508 })).toBe(
+      `הסכום שהוזן (₪${(5000).toLocaleString('he-IL')}) גבוה מהמוצע (₪${(3508).toLocaleString('he-IL')}). אחרי השמירה הסכום קפוא — כדאי לוודא.`,
+    )
+    expect(feeAboveProposedNote({ amount: 3508, proposed: '3508.00' })).toBeNull()
+    expect(feeAboveProposedNote({ amount: 1000, proposed: 3508 })).toBeNull()
+    expect(feeAboveProposedNote({ amount: 5000, proposed: null })).toBeNull()
+    expect(feeAboveProposedNote({ amount: null, proposed: 3508 })).toBeNull()
   })
 })

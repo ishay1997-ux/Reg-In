@@ -268,6 +268,19 @@ export function feeSaveGateNote({ amount }) {
   return null
 }
 
+// ✏️ ביקורת-ולידציה, שורה 6 (14/10/2026): הסכום הסופי נבדק רק `> 0` (גם בשרת), והוא **קפוא אחרי
+// השמירה** — אפשר היה לחתום על סכום גבוה מההצעה בלי מילה. **התראה רכה, לא שער**: המנהלת רשאית
+// לחייב יותר (ההצעה היא הצעה), אבל רואה את זה לפני הלחיצה. ‏`proposed` = התת-סכום, או התת-סכום
+// עם השורה הידנית כשהיא קיימת. אין הצעה (סיווג "אחר") ⇒ אין מה להשוות.
+// eslint-disable-next-line react-refresh/only-export-components -- כנ"ל: פונקציה טהורה שנועלת נוסח
+export function feeAboveProposedNote({ amount, proposed }) {
+  const proposedNumber = proposed == null ? null : Number(proposed)
+  if (amount == null || !Number.isFinite(amount) || proposedNumber == null) return null
+  if (!Number.isFinite(proposedNumber) || toAgorot(amount) <= toAgorot(proposedNumber)) return null
+  const shekel = (n) => `₪${n.toLocaleString('he-IL', { maximumFractionDigits: 2 })}`
+  return `הסכום שהוזן (${shekel(amount)}) גבוה מהמוצע (${shekel(proposedNumber)}). אחרי השמירה הסכום קפוא — כדאי לוודא.`
+}
+
 // שער "ויתור על החוב" — ה28/P1: ויתור = סכום 0 **+ הערת-חובה**, ולכן הערה ריקה חוסמת.
 // eslint-disable-next-line react-refresh/only-export-components -- כנ"ל: פונקציה טהורה שנועלת נוסח-שער
 export function waiveGateNote({ note }) {
@@ -835,7 +848,7 @@ function FeeActions({ busy, actions }) {
   )
 }
 
-function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, actions }) {
+function FeeProposalBlock({ proposal, cancelType, form, withManual, feeNotice, busy, actions }) {
   return (
     <div data-testid="closing-fee-block">
       {/* P1 · ה24 / ה23 */}
@@ -891,6 +904,15 @@ function FeeProposalBlock({ proposal, cancelType, form, withManual, busy, action
         onAmount={form.setFeeAmount}
         onNote={form.setFeeNote}
       />
+      {feeNotice ? (
+        <p
+          className="mt-2 text-sm font-semibold text-amber-700"
+          role="status"
+          data-testid="closing-fee-above-proposed"
+        >
+          {feeNotice}
+        </p>
+      ) : null}
 
       <FeeActions busy={busy} actions={actions} />
     </div>
@@ -1645,6 +1667,8 @@ function derivedView({ detail, proposal, billing, phase, form, satisfactionThres
   const manualAgorot = form.manualAmount.trim() === '' ? 0 : toAgorot(form.manualAmount)
   const proposedAgorot = proposal?.proposed_fee == null ? null : toAgorot(proposal.proposed_fee)
   const feeAmountNumber = form.feeAmount.trim() === '' ? null : Number(form.feeAmount)
+  const withManual =
+    proposedAgorot != null && manualAgorot > 0 ? toShekels(proposedAgorot + manualAgorot) : null
 
   return {
     statusLabel: PROJECT_STATUS_LABELS[detail.project_status] ?? detail.project_status,
@@ -1657,9 +1681,12 @@ function derivedView({ detail, proposal, billing, phase, form, satisfactionThres
     // קראנו את הכרטיס. שניהם חוסמים את השליחה.
     billingUnknown: billing === undefined,
     billingEmailMissing: billing !== undefined && !billing?.email,
-    withManual:
-      proposedAgorot != null && manualAgorot > 0 ? toShekels(proposedAgorot + manualAgorot) : null,
+    withManual,
     feeAmountNumber,
+    feeAboveProposed: feeAboveProposedNote({
+      amount: feeAmountNumber,
+      proposed: withManual ?? proposal?.proposed_fee,
+    }),
     // שני השערים חיים כמשפט ולא כבוליאני, ומצב-הכפתור נגזר מ-`!= null` — בדיוק כמו
     // הארכוב ו"שמור סטטוס" בפוטר. כך אי-אפשר לכבות כפתור בלי שהסיבה תגיע איתו למסך.
     feeSaveGate: feeSaveGateNote({ amount: feeAmountNumber }),
@@ -1984,6 +2011,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
           cancelType={detail.cancel_type}
           form={feeForm}
           withManual={view.withManual}
+          feeNotice={view.feeAboveProposed}
           busy={busy}
           actions={feeActions}
         />
