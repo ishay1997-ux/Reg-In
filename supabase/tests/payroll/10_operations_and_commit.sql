@@ -382,9 +382,10 @@ begin
   assert (select state = 'queued' and prior_attempt_id = a and created_by = 'fin@test.local'
             from public.payroll_mail_attempts where attempt_id = (r ->> 'attempt_id')::bigint);
   assert (select delivery_state from public.salary_reports where report_id = v_id) = 'queued';
-  -- a queued attempt is not retryable; nor is a sent one
+  -- a queued attempt is returned as-is (idempotent, checker 2); a sent one is not retryable (below)
   perform test.act_as('fin@test.local');
-  assert test.err(format($q$select public.payroll_accountant_retry_reserve(%s, %s, 'accountant@example.test', true)$q$, v_id, r ->> 'attempt_id')) = 'NOT_RETRYABLE';
+  assert public.payroll_accountant_retry_reserve(v_id, (r ->> 'attempt_id')::bigint, 'accountant@example.test', true) ->> 'attempt_id'
+         = r ->> 'attempt_id';
   perform test.act_as_service();
   perform public.payroll_attempt_claim((r ->> 'attempt_id')::bigint, 'fin@test.local');
   perform public.payroll_attempt_complete((r ->> 'attempt_id')::bigint, 'fin@test.local', 'failed', 'ishay1997@gmail.com', true,
@@ -519,4 +520,33 @@ begin
   assert (select (x ->> 'assignment_number')::int from jsonb_array_elements(s -> 'lines') x
            where (x ->> 'source_project_id')::int = 900641) = 2;
   assert (select x ->> 'event_date' from jsonb_array_elements(s -> 'lines') x where (x ->> 'source_project_id')::int = 900641) = '2026-04-30';
+end $$;
+
+-- test: checker 2 — a resend that is still queued is what resume, status and a repeated retry all see
+do $$
+declare v_id int := test.id('report')::int; v_old bigint; r jsonb; r2 jsonb; c jsonb; st jsonb;
+begin
+  -- stage: the newest accountant attempt ended as a known failure
+  select max(attempt_id) into v_old from public.payroll_mail_attempts where kind = 'accountant' and report_id = v_id;
+  update public.payroll_mail_attempts set state = 'failed' where attempt_id = v_old;
+  perform test.act_as('fin@test.local');
+  r := public.payroll_accountant_retry_reserve(v_id, v_old, 'accountant@example.test');
+  assert (r ->> 'ok')::boolean and not coalesce((r ->> 'existing')::boolean, false);
+  -- (b) status: the newest attempt is queued ⇒ resume, and accountant_attempt is that attempt
+  st := public.payroll_operation_status('00000000-0000-0000-0000-00000000b001');
+  assert st ->> 'next_action' = 'resume' and (st -> 'accountant_attempt' ->> 'attempt_id')::bigint = (r ->> 'attempt_id')::bigint, st::text;
+  assert st -> 'accountant_attempt' ->> 'state' = 'queued';
+  -- (c) a repeated retry — with the same prior, or with the id it got — returns the same queued attempt
+  r2 := public.payroll_accountant_retry_reserve(v_id, v_old, 'accountant@example.test');
+  assert (r2 ->> 'existing')::boolean and r2 ->> 'attempt_id' = r ->> 'attempt_id';
+  r2 := public.payroll_accountant_retry_reserve(v_id, (r ->> 'attempt_id')::bigint, 'accountant@example.test');
+  assert (r2 ->> 'existing')::boolean and r2 ->> 'attempt_id' = r ->> 'attempt_id';
+  perform test.act_as_owner();
+  assert (select count(*) from public.payroll_mail_attempts where report_id = v_id and state = 'queued') = 1;
+  -- (a) commit called again returns the newest attempt, not the first one
+  perform test.act_as_service();
+  c := public.payroll_commit('00000000-0000-0000-0000-00000000b001', 'fin@test.local');
+  assert (c ->> 'existing')::boolean and c ->> 'attempt_id' = r ->> 'attempt_id', c::text;
+  assert (c ->> 'attempt_id')::bigint <> (select accountant_attempt_id from public.payroll_operations
+                                             where operation_id = '00000000-0000-0000-0000-00000000b001');
 end $$;

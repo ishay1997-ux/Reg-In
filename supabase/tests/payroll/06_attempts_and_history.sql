@@ -309,3 +309,20 @@ begin
   v := public.payroll_report_detail(900001);
   assert v -> 'lines' -> 0 ->> 'event_date' = '2026-07-10' and v -> 'lines' -> 0 ? 'event_date';
 end $$;
+
+-- test: checker 2 — detail carries line counts; post-issue case text is for finance edit only (view gets null)
+do $$
+declare v jsonb;
+begin
+  perform test.act_as('fin@test.local');
+  v := public.payroll_report_detail(900001);
+  assert (v ->> 'line_count')::int = 1 and (v ->> 'file_line_count')::int = 1;
+  assert jsonb_array_length(v -> 'post_issue_cases') = 2;
+  perform test.act_as('view@test.local');
+  v := public.payroll_report_detail(900001);
+  assert v ? 'post_issue_cases' and v -> 'post_issue_cases' = 'null'::jsonb;
+  assert v::text not like '%חסרה שעה%';
+  assert (v ->> 'line_count')::int = 1;
+  v := public.payroll_report_detail(900003);
+  assert (v ->> 'line_count')::int = 0 and (v ->> 'file_line_count')::int = 0;
+end $$;
