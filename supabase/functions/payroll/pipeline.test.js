@@ -4,6 +4,7 @@
 // תיקוני F1–F9); הם אינם מוכיחים את התנהגות המסד עצמו — זה של A ו-B.
 import { describe, it, expect, vi } from 'vitest'
 import {
+  DEFAULT_ALLOWED_ORIGINS,
   DISTRIBUTE_BATCH,
   WALL_BUDGET_MS,
   failureBody,
@@ -11,6 +12,7 @@ import {
   normalizeRpc,
   originAllowed,
   parseRequest,
+  resolveAllowedOrigins,
   sanitizeDetail,
 } from './pipeline.ts'
 
@@ -249,6 +251,27 @@ describe('originAllowed', () => {
   it('בלי הגדרה — שום מקור אינו מותר (נעילה)', () => {
     expect(originAllowed(ORIGIN, undefined)).toBeNull()
     expect(originAllowed(ORIGIN, '')).toBeNull()
+  })
+})
+
+describe('resolveAllowedOrigins', () => {
+  it('בלי הגדרה בסביבה — האתר בייצור ושרת הפיתוח בלבד', () => {
+    for (const env of [undefined, '', '   ']) {
+      const csv = resolveAllowedOrigins(env)
+      expect(csv).toBe(DEFAULT_ALLOWED_ORIGINS)
+      expect(originAllowed('https://reg-in-umber.vercel.app', csv)).toBe(
+        'https://reg-in-umber.vercel.app',
+      )
+      expect(originAllowed('http://localhost:5173', csv)).toBe('http://localhost:5173')
+      expect(originAllowed('https://evil.example', csv)).toBeNull()
+    }
+  })
+
+  it('הגדרה בסביבה גוברת', () => {
+    expect(resolveAllowedOrigins(ORIGIN)).toBe(ORIGIN)
+    expect(
+      originAllowed('https://reg-in-umber.vercel.app', resolveAllowedOrigins(ORIGIN)),
+    ).toBeNull()
   })
 })
 

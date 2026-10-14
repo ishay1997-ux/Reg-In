@@ -7,7 +7,13 @@
 // 🔒 כל מייל עובר את `guard.ts` — כל כתובת שאינה של ישי נמסרת לכתובת שלו (הכרעת-ישי 13.10.2026).
 
 import { createClient } from 'jsr:@supabase/supabase-js@2.112.0'
-import { failureBody, handleRequest, type Failure, type PayrollDeps } from './pipeline.ts'
+import {
+  failureBody,
+  handleRequest,
+  resolveAllowedOrigins,
+  type Failure,
+  type PayrollDeps,
+} from './pipeline.ts'
 import { sendToMake } from './transport.ts'
 import { writeSalaryReportXlsx } from './xlsx.ts'
 
@@ -112,7 +118,7 @@ Deno.serve(async (req) => {
 
   try {
     const result = await handleRequest(deps, body, {
-      allowedOrigins: Deno.env.get('PAYROLL_ALLOWED_ORIGINS'),
+      allowedOrigins: resolveAllowedOrigins(Deno.env.get('PAYROLL_ALLOWED_ORIGINS')),
     })
     if (result.ok === false) {
       const { status, body: failure } = failureBody(result as Failure)

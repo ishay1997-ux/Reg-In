@@ -286,6 +286,15 @@ export function parseRequest(body: unknown): PayrollRequest | null {
 // `app_origin` מגיע מהדפדפן, ולכן הוא נבדק מול רשימה סגורה מההגדרות (`PAYROLL_ALLOWED_ORIGINS`).
 // בלי הבדיקה, מי שמחזיק הרשאת-כספים היה יכול לשלוח לדיילות קישור לאתר זר. רשימה ריקה = אין
 // קישורים כלל (נעילה, לא פתיחה).
+// ברירת המחדל כשאין הגדרה בסביבה: כתובת האתר בייצור ושרת הפיתוח המקומי. מקודד בקוד, כמו שומר
+// הנמענים — רשימה סגורה, בלי צעד ידני בלוח הבקרה (הסגן, 14.10: ישי ביקש לא להעמיס עליו צעד ידיים).
+// הגדרה בסביבה, כשקיימת ואינה ריקה, גוברת.
+export const DEFAULT_ALLOWED_ORIGINS = 'https://reg-in-umber.vercel.app,http://localhost:5173'
+
+export function resolveAllowedOrigins(fromEnv: string | undefined): string {
+  return fromEnv && fromEnv.trim() ? fromEnv : DEFAULT_ALLOWED_ORIGINS
+}
+
 export function originAllowed(origin: unknown, allowedCsv: string | undefined): string | null {
   if (typeof origin !== 'string') return null
   const normalized = origin.trim().replace(/\/+$/, '')
