@@ -251,6 +251,11 @@ function isPositiveQty(value) {
   return Number.isFinite(n) && n > 0
 }
 
+// ✏️ ביקורת-ולידציה שורה 19 (14/10/2026): תקרות-אורך לשדות הטקסט שנכנסים ל-PDF ולמייל ללקוח
+// (עמודות `text` בלי תקרה). 120 לשם ולמיקום, 1000 להערות — הצעת-הביקורת; הנתונים החיים רחוקים
+// מהן (נמדד 14/10: הארוך ביותר — שם 24, מיקום 37, הערות 31 תווים מתוך 1225 הצעות).
+export const QUOTE_TEXT_MAX = { eventName: 120, location: 120, notes: 1000 }
+
 // הכרעת-ישי 14/10/2026 — מחיר-המדרגה לפי סך היחידות של המוצר בהצעה (`pricing.js`,
 // `repriceLinesBySkuTotal`). הכיתוב המשני בשורה שתומחרה לפי הסך.
 export function combinedTierNote(total) {

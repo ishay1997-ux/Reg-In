@@ -58,6 +58,8 @@ import CustomerPicker from '@/modules/03_quotes/CustomerPicker'
 import QuoteDocumentDialog from '@/modules/03_quotes/QuoteDocumentDialog'
 import QuoteLineEditor from '@/modules/03_quotes/QuoteLineEditor'
 import DiscountNotice from '@/modules/03_quotes/DiscountNotice'
+import CharCounter from '@/components/CharCounter'
+import { QUOTE_TEXT_MAX } from '@/lib/quotes'
 import QuoteSummaryPanel from '@/modules/03_quotes/QuoteSummaryPanel'
 
 const EMPTY_FORM = {
@@ -176,7 +178,7 @@ function resolveInitialQuoteState({
 // בשמונה אתרי-קריאה, כי אתר-קריאה שיישכח חוזר בשקט למצב הקודם.
 // ‏`aria-invalid` הוא גם מה שמפעיל את הגבול האדום המובנה של `Input` (`ui/input.jsx:13`) —
 // אין כאן צבע חדש (כלל 8), ובורר-התכונה גובר בספציפיות על `border-slate-300` שבאתר-הקריאה.
-function Field({ id, label, error, children, className, helper }) {
+function Field({ id, label, error, children, className, helper, counter }) {
   const errorId = `${id}-error`
   const markedChild =
     error && isValidElement(children)
@@ -188,6 +190,7 @@ function Field({ id, label, error, children, className, helper }) {
         {label}
       </label>
       {markedChild}
+      {counter}
       {/* R4/R26: עובדה שרוב המשתמשות צריכות לפני שהן כותבות כאן (המסמך יוצא ללקוח) —
           לא מאחורי מתג, אבל גם לא בתווית עצמה (R1: תווית = 1–3 מילים). */}
       {helper && !error && <p className="mt-1 text-xs text-slate-500">{helper}</p>}
@@ -607,10 +610,12 @@ export default function QuoteBuilderPage() {
                 label="שם האירוע"
                 error={errors.eventName}
                 className="md:col-span-4"
+                counter={<CharCounter value={form.eventName} max={QUOTE_TEXT_MAX.eventName} />}
               >
                 <Input
                   id="quote-event-name"
                   value={form.eventName}
+                  maxLength={QUOTE_TEXT_MAX.eventName}
                   onChange={(e) => updateForm({ eventName: e.target.value })}
                   className="h-9 rounded-lg border-slate-300 text-right"
                   data-testid="quote-event-name"
@@ -638,10 +643,12 @@ export default function QuoteBuilderPage() {
                 label="מיקום"
                 error={errors.location}
                 className="md:col-span-3"
+                counter={<CharCounter value={form.location} max={QUOTE_TEXT_MAX.location} />}
               >
                 <Input
                   id="quote-location"
                   value={form.location}
+                  maxLength={QUOTE_TEXT_MAX.location}
                   onChange={(e) => updateForm({ location: e.target.value })}
                   className="h-9 rounded-lg border-slate-300 text-right"
                   data-testid="quote-location"
@@ -863,10 +870,12 @@ export default function QuoteBuilderPage() {
                 label="הערות (לא חובה)"
                 helper="מופיעות במסמך שנשלח ללקוח"
                 className="md:col-span-8"
+                counter={<CharCounter value={form.notes} max={QUOTE_TEXT_MAX.notes} />}
               >
                 <textarea
                   id="quote-notes"
                   value={form.notes}
+                  maxLength={QUOTE_TEXT_MAX.notes}
                   onChange={(e) => updateForm({ notes: e.target.value })}
                   rows={2}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-right text-sm outline-none focus-visible:ring-3 focus-visible:ring-teal-500/50"
