@@ -120,6 +120,21 @@ describe('טעינה ומצבי קישור', () => {
     expect(card.textContent).not.toContain('₪')
   })
 
+  it('משמרת שסומנה "לא הגיעה" (0 שעות) ⇒ אומרת לה שסומנה כך, ולא "לא נרשמו שעות"', async () => {
+    await openReady({
+      ...SUMMARY,
+      rows: [
+        SUMMARY.rows[0],
+        { ...SUMMARY.rows[1], line_basis: 'actual', hours: 0, zero_reason: 'no_hours' },
+      ],
+    })
+    const card = screen.getAllByTestId('review-shift')[1]
+    expect(within(card).getByTestId('review-shift-hours')).toHaveTextContent(
+      'סומן שלא הגעת לאירוע — 0 שעות',
+    )
+    expect(card.textContent).not.toContain('לא נרשמו שעות')
+  })
+
   it('פיצוי ביטול עם שעות ⇒ "פיצוי ביטול — X שעות" עם הסבר; שעות הפיצוי נספרות בנפרד', async () => {
     await openReady({
       ...SUMMARY,
