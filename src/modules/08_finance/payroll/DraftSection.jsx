@@ -2,7 +2,6 @@
 // קריאה בלבד: שום דבר כאן לא חותם שיבוצים, לא יוצר דוח ולא שולח מייל. ההורדה בונה קובץ
 // טיוטה בדפדפן מכל השורות של התצוגה המקדימה — לא מהעמוד המוצג.
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import Disclosure from '@/components/Disclosure'
 import LoadingOrError from '@/components/LoadingOrError'
@@ -10,12 +9,11 @@ import Ltr from '@/components/Ltr'
 import Money from '@/components/Money'
 import StatTile from '@/components/StatTile'
 import { Pager } from '@/components/ListWindow'
-import { useToast } from '@/components/ToastProvider'
 import { formatDate, formatTimestampFull } from '@/lib/dates'
 import { paginate } from '@/lib/listWindow'
 import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { Banner, Card, NotApplicable, Td, Th } from './payrollUi'
-import { downloadDraft } from './payrollFiles'
+import { useDraftDownload } from './useDraftDownload'
 import {
   countPhrase,
   formatHours,
@@ -49,9 +47,7 @@ export default function DraftSection({
   onOpenReport,
   startingReview,
 }) {
-  const toast = useToast()
-  const [downloading, setDownloading] = useState(false)
-  const [downloadError, setDownloadError] = useState('')
+  const draft = useDraftDownload(preview)
 
   if (previewError) {
     const existingReportId = previewError.hint?.report_id ?? previewError.data?.report_id
@@ -107,19 +103,6 @@ export default function DraftSection({
   ).length
   const firstBlockedIndex = lines.findIndex((l) => (l.defects ?? []).length > 0)
   const paged = paginate(lines, page)
-
-  async function handleDownload() {
-    setDownloading(true)
-    setDownloadError('')
-    try {
-      await downloadDraft(preview)
-      toast.success('הטיוטה מוכנה להורדה')
-    } catch (error) {
-      setDownloadError(error?.message || 'הורדת הטיוטה נכשלה. נסה שוב')
-    } finally {
-      setDownloading(false)
-    }
-  }
 
   // החסימה מוסברת פעם אחת, בהודעה שמעל (מדריך UX D4). מתחת לכפתור — רק סיבת החודש (D11).
   const startDisabledReason = canEdit && !monthEnded ? monthNotEndedMessage(preview.period) : null
@@ -226,11 +209,11 @@ export default function DraftSection({
               type="button"
               variant="outline"
               className="h-auto px-4 py-2"
-              disabled={hasBlockers || downloading}
-              onClick={handleDownload}
+              disabled={hasBlockers || draft.downloading}
+              onClick={draft.download}
               data-testid="payroll-download-draft"
             >
-              {downloading ? 'מכין טיוטה…' : 'הורד טיוטה'}
+              {draft.downloading ? 'מכין טיוטה…' : 'הורד טיוטה'}
             </Button>
           )}
           <Button
@@ -248,9 +231,9 @@ export default function DraftSection({
             {startDisabledReason}
           </p>
         )}
-        {downloadError && (
+        {draft.error && (
           <Banner tone="error" className="mb-2" testId="payroll-download-error">
-            {downloadError}
+            {draft.error}
           </Banner>
         )}
 

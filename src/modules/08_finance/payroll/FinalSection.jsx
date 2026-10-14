@@ -21,6 +21,7 @@ import {
   resumePayrollOperation,
 } from '../payrollApi'
 import AccountantResend from './AccountantResend'
+import { useDraftDownload } from './useDraftDownload'
 import { Banner, Card } from './payrollUi'
 import {
   blockerText,
@@ -209,6 +210,9 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
           {issuing ? 'מפיק…' : 'הפק ושלח לרואה החשבון'}
         </Button>
       )}
+      {canEdit && preview && (
+        <FileToBeSent preview={preview} stale={info.version_current === false} onStale={onStale} />
+      )}
 
       {!monthEnded && preview && (
         <p className="mt-2 text-sm text-slate-700" data-testid="payroll-final-month">
@@ -252,6 +256,49 @@ function Readiness({ review, preview, update, canEdit, onStale, busyOp }) {
         </Banner>
       )}
     </Card>
+  )
+}
+
+// "הורד את הקובץ שיישלח" — אותו handler של "הורד טיוטה" (`useDraftDownload`): אותו בונה ואותה
+// גרסת תצוגה מקדימה. נתונים ישנים ⇒ מבקשים לרענן קודם, כמו בכל פעולה אחרת.
+function FileToBeSent({ preview, stale, onStale }) {
+  const draft = useDraftDownload(preview)
+  return (
+    <div className="mt-3 flex flex-col gap-1" data-testid="payroll-file-to-send">
+      {stale ? (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
+          <span>הנתונים השתנו. יש לרענן לפני אישור</span>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto px-4 py-2"
+            onClick={onStale}
+            data-testid="payroll-file-to-send-refresh"
+          >
+            רענן
+          </Button>
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-auto w-fit px-4 py-2"
+          disabled={draft.downloading}
+          onClick={draft.download}
+          data-testid="payroll-download-file-to-send"
+        >
+          {draft.downloading ? 'מכין קובץ…' : 'הורד את הקובץ שיישלח'}
+        </Button>
+      )}
+      <p className="text-xs text-slate-600">
+        זהו הקובץ שיישלח, כולל ת"ז ופרטי בנק. הקובץ הסופי ייבנה מאותם נתונים בדיוק ברגע ההפקה.
+      </p>
+      {draft.error && (
+        <Banner tone="error" testId="payroll-file-to-send-error">
+          {draft.error}
+        </Banner>
+      )}
+    </div>
   )
 }
 

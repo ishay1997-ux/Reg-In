@@ -376,6 +376,29 @@ describe('מצב: מוכן להפקה + אישור', () => {
     await waitFor(() => expect(searchParams().get('op')).toBe('from-server'))
   })
 
+  it('"הורד את הקובץ שיישלח": אותו בונה טיוטה ואותה גרסת תצוגה מקדימה, עם הסבר מתחת', async () => {
+    renderPage('?period=2026-07&view=final')
+    fireEvent.click(await screen.findByTestId('payroll-download-file-to-send'))
+    expect(await screen.findByText('הטיוטה מוכנה להורדה')).toBeInTheDocument()
+    expect(downloadDraft).toHaveBeenCalledWith(expect.objectContaining({ version: 'v1:abc' }))
+    expect(screen.getByTestId('payroll-file-to-send')).toHaveTextContent(
+      'זהו הקובץ שיישלח, כולל ת"ז ופרטי בנק',
+    )
+  })
+
+  it('נתונים ישנים ⇒ במקום הורדה מבקשים לרענן', async () => {
+    const ready = makeReadiness({ ready: true, blockers: [] })
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ review: { version_current: false }, readiness: ready }),
+    )
+    renderPage('?period=2026-07&view=final')
+    expect(await screen.findByTestId('payroll-file-to-send-refresh')).toBeInTheDocument()
+    expect(screen.queryByTestId('payroll-download-file-to-send')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('payroll-file-to-send-refresh'))
+    await waitFor(() => expect(api.getPayrollPreview).toHaveBeenCalledTimes(2))
+    expect(downloadDraft).not.toHaveBeenCalled()
+  })
+
   it('ביטול באישור ⇒ אין הפקה', async () => {
     renderPage('?period=2026-07&view=final')
     fireEvent.click(await screen.findByTestId('payroll-issue'))
