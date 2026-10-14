@@ -37,6 +37,7 @@
 // מאתרי-הקריאה של S1/S2 בשלב-3. **נכון להיום אין לו ולו אתר-קריאה אחד בייצור.**
 
 import { toAgorot, toShekels } from '@/lib/pricing'
+import { formatDate } from '@/lib/dates'
 
 // שגיאה מוטיפסת (R4-F9) כדי שאתר-הקריאה יוכל להבדיל בין "המסד ענה משהו מוזר" לבין
 // שגיאת-רשת רגילה, ולהציג את מסך-התקלה במקום להמשיך עם סכום חלקי.
@@ -156,6 +157,33 @@ export function deriveDaysOverdue(invoiceSentAt, termsDays, today) {
   if (due === null || now === null) return null
   const diff = dayNumber(now) - dayNumber(israelCalendarDate(due))
   return diff > 0 ? diff : 0
+}
+
+// ── תאריך קבלת תשלום (ביקורת-ולידציה שורה 7, 14/10/2026) ──────────────────────
+// שדה התאריך היה בלי `max`, ועתיד נדחה רק בשרת; שנה שגויה (2025) עברה בשקט. ולכן:
+// **עתיד ⇒ חסימה** (`error`) · **לפני שליחת החשבונית ⇒ התראה רכה** (`notice`) — תשלום מראש
+// קורה, אבל הקלדת חודש/שנה שגויים סבירה יותר. "היום" ותאריך-השליחה — שניהם כיום-לוח בישראל.
+// ‏`invoiceSentAt` כאן הוא ערך-תצוגה ולא גזירת-כסף ⇒ `undefined` מתנהג כ-`null` (קטגוריה (ב)).
+export const PAYMENT_DATE_FUTURE_ERROR = 'תאריך התשלום לא יכול להיות בעתיד.'
+
+function isoOf(calendarDate) {
+  return calendarDate === null ? null : dayNumberToIso(dayNumber(calendarDate))
+}
+
+export function paymentDateIssues(paymentDate, invoiceSentAt, today) {
+  const date = isoOf(israelCalendarDate(paymentDate))
+  const todayIso = isoOf(israelCalendarDate(today))
+  if (date === null) return { error: null, notice: null }
+  if (todayIso !== null && date > todayIso)
+    return { error: PAYMENT_DATE_FUTURE_ERROR, notice: null }
+  const sentIso = isoOf(israelCalendarDate(invoiceSentAt ?? null))
+  if (sentIso !== null && date < sentIso) {
+    return {
+      error: null,
+      notice: `התשלום מתועד לפני שליחת החשבונית (${formatDate(sentIso)}) — כדאי לוודא את התאריך.`,
+    }
+  }
+  return { error: null, notice: null }
 }
 
 // ── רווח-צפוי (ה27) ──────────────────────────────────────────────────────────

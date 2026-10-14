@@ -24,6 +24,7 @@ import {
   scoreTag,
   scoreTagText,
   toFinanceNumber,
+  paymentDateIssues,
 } from '@/lib/projectFinance'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -279,5 +280,32 @@ describe('שומרי-הצורה (R4-F9) — undefined הוא דריפט, null ה
     expect(() => assertFinanceShape({}, ['revenue', 'gross_profit'])).toThrow(
       /revenue, gross_profit/,
     )
+  })
+})
+
+// ביקורת-ולידציה שורה 7 (14/10/2026): עתיד חוסם; לפני שליחת החשבונית מזהיר.
+describe('paymentDateIssues — תאריך קבלת תשלום', () => {
+  const TODAY = new Date('2026-10-14T09:00:00Z')
+  it('תאריך עתידי ⇒ שגיאה חוסמת', () => {
+    expect(paymentDateIssues('2026-10-15', null, TODAY)).toEqual({
+      error: 'תאריך התשלום לא יכול להיות בעתיד.',
+      notice: null,
+    })
+    expect(paymentDateIssues('2026-10-14', null, TODAY).error).toBeNull()
+  })
+  it('לפני יום שליחת החשבונית (שעון ישראל) ⇒ התראה עם התאריך; באותו יום ⇒ בלי', () => {
+    // 21:30Z ב-30/09 הוא כבר 01/10 בישראל.
+    expect(paymentDateIssues('2025-10-01', '2026-09-30T21:30:00Z', TODAY)).toEqual({
+      error: null,
+      notice: 'התשלום מתועד לפני שליחת החשבונית (01/10/2026) — כדאי לוודא את התאריך.',
+    })
+    expect(paymentDateIssues('2026-10-01', '2026-09-30T21:30:00Z', TODAY).notice).toBeNull()
+  })
+  it('ריק / אין חשבונית ⇒ אין הודעה', () => {
+    expect(paymentDateIssues('', '2026-09-30T21:30:00Z', TODAY)).toEqual({
+      error: null,
+      notice: null,
+    })
+    expect(paymentDateIssues('2026-01-01', undefined, TODAY)).toEqual({ error: null, notice: null })
   })
 })

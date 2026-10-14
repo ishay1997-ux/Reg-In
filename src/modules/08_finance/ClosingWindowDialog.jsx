@@ -64,7 +64,8 @@ import { isolatedShekels, toAgorot, toShekels } from '@/lib/pricing'
 import { PROJECT_STATUS_LABELS } from '@/lib/projects'
 import { EMAIL_SEND_RESULT, sendResultMessage } from '@/lib/email'
 import { compensationReason } from '@/lib/projectCancellation'
-import { assertFinanceShape, scoreTag, scoreTagText } from '@/lib/projectFinance'
+import { assertFinanceShape, paymentDateIssues, scoreTag, scoreTagText } from '@/lib/projectFinance'
+import { todayIsoInJerusalem } from '@/lib/projectChanges'
 // ⛔ ייבוא חוצה-מודולים במכוון ולא העתקה: הכלל "ציון מתחת לסף ⇒ טעון בירור" חייב
 // להיות אותו כלל בדיוק במסך-הלקוחות (מ2) ובמסך-הכספים, אחרת הם יסטו ביום שהסף ישתנה.
 import { needsSatisfactionAttention } from '@/lib/customers'
@@ -1065,7 +1066,18 @@ function InvoiceUploadBlock({
 // של ה-UI בלבד, ולא נובע מאף הכרעה רשומה (המוקאפ המאושר אינו מצייר את הבלוק כלל).
 // ⚠️ **החריג נשמר במפורש: בפרויקט מבוטל רישום-התשלום הוא גם רגע הקפאת-הרווח (Q-4)**,
 // והתיק ננעל מיד — שם הבלוק אכן נעלם, וזה נגזר מ-`phase.locked`, לא מכאן.
-function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, busy }) {
+function PaymentBlock({
+  value,
+  alreadyPaid,
+  invoiceSentAt,
+  onChange,
+  onSave,
+  onOpenWriteOff,
+  busy,
+}) {
+  // שורה 7 בביקורת-הוולידציה: "היום" נלכד פעם אחת (לא שעון בגוף ה-render — `react-hooks/purity`).
+  const [today] = useState(() => new Date())
+  const { error, notice } = paymentDateIssues(value, invoiceSentAt, today)
   return (
     <div data-testid="closing-payment-block">
       <SectionTitle>תשלום</SectionTitle>
@@ -1079,6 +1091,8 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
             type="date"
             dir="ltr"
             value={value}
+            max={todayIsoInJerusalem(today)}
+            aria-invalid={error ? true : undefined}
             data-testid="closing-payment-date"
             onChange={(event) => onChange(event.target.value)}
             className="h-8 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-800"
@@ -1086,7 +1100,7 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
         </div>
         <Button
           type="button"
-          disabled={value === '' || busy !== ''}
+          disabled={value === '' || busy !== '' || Boolean(error)}
           data-testid="closing-save-payment"
           className="h-auto rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white hover:bg-teal-800"
           onClick={onSave}
@@ -1104,7 +1118,21 @@ function PaymentBlock({ value, alreadyPaid, onChange, onSave, onOpenWriteOff, bu
           סגור ללא תשלום
         </Button>
       </div>
+      <PaymentDateMessage error={error} notice={notice} />
     </div>
+  )
+}
+
+function PaymentDateMessage({ error, notice }) {
+  if (!error && !notice) return null
+  return (
+    <p
+      className={`mt-1 text-sm font-semibold ${error ? 'text-red-600' : 'text-amber-700'}`}
+      role={error ? 'alert' : 'status'}
+      data-testid="closing-payment-date-message"
+    >
+      {error ?? notice}
+    </p>
   )
 }
 
@@ -2040,6 +2068,7 @@ function ClosingWindowBody({ project, onOpenChange, onChanged, satisfactionThres
         <PaymentBlock
           value={paymentDate}
           alreadyPaid={phase.paid}
+          invoiceSentAt={detail.invoice_sent_at}
           onChange={setPaymentDate}
           busy={busy}
           onSave={() =>
