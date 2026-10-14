@@ -450,7 +450,7 @@ export default function UsersManagementPage() {
                         disabled={isSelf}
                         title={isSelf ? 'לא ניתן להשבית את החשבון שלך' : 'השבת משתמש'}
                         onClick={() => handleToggleStatus(targetUser)}
-                        className="h-auto p-0 text-red-600 hover:text-red-700"
+                        className="h-auto p-0 text-slate-500 hover:text-red-600"
                       >
                         <UserX className="size-4" />
                       </Button>

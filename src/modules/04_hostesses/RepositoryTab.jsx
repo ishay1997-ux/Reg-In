@@ -456,11 +456,15 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     </Td>
                   )}
                   <Td>
-                    <StatusTag
-                      label={state.label}
-                      tone={state.tone}
-                      testId={`repository-state-${hostess.hostess_id}`}
-                    />
+                    {/* ✏️ 14/10/2026 (סיור-השופט, קבוצה 3): "פעילה" (tone ok) היא ברירת-המחדל ואינה
+                        מקבלת תג — רק מושבתת / לא-זמינה מסומנות. */}
+                    {state.tone !== 'ok' && (
+                      <StatusTag
+                        label={state.label}
+                        tone={state.tone}
+                        testId={`repository-state-${hostess.hostess_id}`}
+                      />
+                    )}
                     {state.note && (
                       <span className="block text-xs text-slate-500">הערה: {state.note}</span>
                     )}
