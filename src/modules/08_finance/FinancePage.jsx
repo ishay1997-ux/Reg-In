@@ -2,7 +2,7 @@
 //
 // 🔴 **ההחלטה האחת שהמסך משרת** (כרטיס-S1 §②): *"לאיזה פרויקט לפנות עכשיו, ובאיזה שלב-טיפול
 // הוא נמצא"*. ⇒ **המסך עצמו אינו כותב דבר.** אין כאן ולו קריאת-RPC כותבת אחת: כל כתיבה קורית
-// אחרי הקליק, בתוך `ClosingWindowDialog` (S2) או `SalaryReportDialog` (S3). זו הסיבה שאין כאן
+// אחרי הקליק, בתוך `ClosingWindowDialog` (S2) או בעמוד דוח השכר (`/finance/payroll`). זו הסיבה שאין כאן
 // גם `useToast` — אין פעולה שיש לה תוצאה שצריך לדווח עליה.
 //
 // 🔴 **אפס נוסחאות בקובץ הזה** (כלל ברזל 14). כל מספר מגיע כ**עובדה** מ-`get_finance_overview`
@@ -71,7 +71,6 @@ import { getParamValues } from '@/api/params'
 import { listFinanceOverview } from './api'
 import { getParamValue } from '@/modules/06_projects/closingApi'
 import ClosingWindowDialog from './ClosingWindowDialog'
-import SalaryReportDialog from './SalaryReportDialog'
 
 // ── מחרוזות המשטח ────────────────────────────────────────────────────────────
 // 🔤 מועתקות מהמוקאפ המאושר `01_finance_overview_approved.html` ומ-§3.7 של מדריך-המיקרו,
@@ -82,7 +81,6 @@ const PAGE_SUBTITLE = 'בקרת גבייה, סגירת-תיקים ודו"ח-שכ
 // ✏️ 13/10/2026 (חוזה דוח השכר §4.1, D13): הכפתור הראשי מוביל למרחב העבודה החדש
 // `/finance/payroll`; הדיאלוג הישן נשאר כפעולה משנית עד המעבר המלא (אחרי הכנס).
 const SALARY_BUTTON_LABEL = 'דוח שכר'
-const LEGACY_SALARY_LABEL = 'הפקה בתהליך הקודם'
 const NO_PERMISSION_SENTENCE = 'אין לך הרשאה לצפות בנתוני הכספים.'
 const FILTERED_EMPTY_TITLE = 'אין פרויקט התואם למסנן שבחרת.'
 const CLEAR_FILTER_LABEL = 'נקה סינון'
@@ -660,15 +658,12 @@ export default function FinancePage() {
   // `operationally_closed_at` · `credit_note_flag`), והוא ממילא שולף את נתוני-הכסף שלו מחדש
   // בפתיחה ואינו נשען על מה שהשורה נשאה.
   const [openProject, setOpenProject] = useState(null)
-  const [salaryOpen, setSalaryOpen] = useState(false)
   // חלון-הייצוא (23/09/2026). 🔴 שיעור-המע"מ נטען ב-effect נפרד, ו-`null` שלו הוא גם "בדרך"
   // וגם "נכשל" — אותה מלכודת שנמדדה במסך-הלקוחות (קובץ שירד עם עמודה ריקה ובלי שגיאה).
   // ⇒ `vatState` תלת-ערכי: `'loading'` מחזיק את החלון בטעינה · `'failed'` חוסם אותו עם סיבה ·
   // `'ready'` משחרר. `הכרעתי, הפיך` — מנגנון, לא מוצר.
   const [exportOpen, setExportOpen] = useState(false)
   const [vatState, setVatState] = useState('loading')
-  // מונה-פתיחות ל-`key` של S3 — ר' ההערה באתר-הרינדור.
-  const [salaryMountKey, setSalaryMountKey] = useState(0)
 
   const refresh = useCallback(() => {
     setVatState('loading')
@@ -801,11 +796,6 @@ export default function FinancePage() {
     setPage(1)
   }
 
-  const openSalary = useCallback(() => {
-    setSalaryMountKey((k) => k + 1)
-    setSalaryOpen(true)
-  }, [])
-
   // תיאור-העמודות מתחלף עם הלשונית ⇒ החלון מאפס סדר/בחירה/תנאים בעצמו (מפתח-העמודות משתנה).
   const exportColumns = useMemo(() => financeExportColumns(tab), [tab])
   const exportFileName = useMemo(
@@ -817,7 +807,7 @@ export default function FinancePage() {
     [tab],
   )
 
-  const header = <PageHeader onOpenSalary={openSalary} />
+  const header = <PageHeader />
 
   if (loading) {
     return (
@@ -958,9 +948,7 @@ export default function FinancePage() {
         )}
       </Card>
 
-      {/* 🔴 **היסטוריית-דוחות-השכר אינה כאן יותר — הכרעת-ישי `28/08/2026`.** היא עברה
-          לתוך `SalaryReportDialog`, וההנמקה המלאה יושבת שם ליד ה-state שמרענן אותה.
-          **מה שהמסך הזה מרוויח:** הוא חוזר להציג ישות אחת בלבד — פרויקטים. */}
+      {/* היסטוריית דוחות השכר אינה כאן — היא בלשונית "היסטוריה" של `/finance/payroll`. */}
 
       {/* S2 הוא דיאלוג ואינו ראוט (B-2) — הרשימה נשארת גלויה מאחור. הרכבה-מותנית ולא `key`
           על `open`: ‏`ClosingWindowDialog` כבר מרכיב את גופו מחדש בכל פתיחה מבפנים
@@ -976,12 +964,6 @@ export default function FinancePage() {
           satisfactionThreshold={satisfactionThreshold}
         />
       )}
-
-      {/* ⚠️ ‏`key` על **מונה-פתיחות** ולא על `open`: מפתח שנגזר מהבוליאני משתנה גם בסגירה
-          והורג את אנימציית-היציאה של Radix (`src/CLAUDE.md`, מלכודת א'). המונה עולה רק
-          בפתיחה ⇒ הרכבה טרייה בכל פתיחה, ויציאה חלקה. ‏S3 מחזיק תוצאת-הפקה ב-state, ובלי
-          זה פתיחה שנייה הייתה נפתחת על מסך-התוצאה של ההפקה הקודמת. */}
-      <SalaryReportDialog key={salaryMountKey} open={salaryOpen} onOpenChange={setSalaryOpen} />
     </div>
   )
 }
@@ -992,7 +974,8 @@ export default function FinancePage() {
 // הפעולה של S1 היא פתיחת שורה, וכפתור טורקיז-מלא בכותרת היה מתחרה בה. המוקאפ המאושר צויר
 // **בלי** כפתור-כותרת כלל (§⑧-6), ו-Q-2 הוא מה שהוסיף אותו — כי בלעדיו אין שום מסלול-ניווט
 // ל-S3, והפקת דוח-השכר לא הייתה נגישה מאף מסך.
-function PageHeader({ onOpenSalary }) {
+// ✏️ 14/10/2026 (מעבר מלא, הכרעת ישי): החלון הישן הוסר — "דוח שכר" מוביל רק לעמוד החדש.
+function PageHeader() {
   return (
     <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
       <div>
@@ -1009,15 +992,6 @@ function PageHeader({ onOpenSalary }) {
         >
           {SALARY_BUTTON_LABEL}
         </Link>
-        <Button
-          type="button"
-          variant="link"
-          onClick={onOpenSalary}
-          className="h-auto p-0 text-xs text-slate-600 underline"
-          data-testid="finance-open-salary"
-        >
-          {LEGACY_SALARY_LABEL}
-        </Button>
       </div>
     </div>
   )
