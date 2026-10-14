@@ -36,6 +36,7 @@ import {
   minWageError,
   highWageWarning,
   hostessContactErrors,
+  unavailabilityDraftError,
   duplicateEmailWarning,
   unavailabilityLabel,
   optionalNumber,
@@ -190,9 +191,10 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
   const blocked = Object.keys(errors).length > 0
 
   function addRange() {
-    if (!draftRange.start_date || !draftRange.end_date) return
-    if (draftRange.end_date < draftRange.start_date) {
-      toast.error('תאריך הסיום מוקדם מתאריך ההתחלה.')
+    // שורה 24 בביקורת-הוולידציה: גם תאריך חסר אומר למה (קודם — לחיצה שקטה שלא עשתה כלום).
+    const draftError = unavailabilityDraftError(draftRange)
+    if (draftError) {
+      toast.error(draftError)
       return
     }
     // 🔴 **נצבר בזיכרון-הטופס בלבד ונכתב רק עם "שמור שינויים"** — אותו דפוס בדיוק כמו

@@ -9,6 +9,7 @@ import {
   minWageError,
   highWageWarning,
   hostessContactErrors,
+  unavailabilityDraftError,
   duplicateEmailWarning,
   isUnavailableOn,
   approvedButUnavailable,
@@ -1057,5 +1058,20 @@ describe('hostessContactErrors', () => {
   })
   it('ריק ⇒ אין שגיאת-פורמט (החובה נבדקת בנפרד)', () => {
     expect(hostessContactErrors({ email: ' ', phone: '' })).toEqual({})
+  })
+})
+
+// ביקורת-ולידציה שורה 24 (14/10/2026): "+ טווח חדש" עם תאריך חסר אומר למה.
+describe('unavailabilityDraftError', () => {
+  it('תאריך חסר ⇒ הודעה; סיום לפני התחלה ⇒ ההודעה הקיימת; תקין ⇒ null', () => {
+    expect(unavailabilityDraftError({ start_date: '2026-10-20', end_date: '' })).toBe(
+      'יש לבחור גם תאריך התחלה וגם תאריך סיום.',
+    )
+    expect(unavailabilityDraftError({ start_date: '2026-10-20', end_date: '2026-10-19' })).toBe(
+      'תאריך הסיום מוקדם מתאריך ההתחלה.',
+    )
+    expect(
+      unavailabilityDraftError({ start_date: '2026-10-20', end_date: '2026-10-20' }),
+    ).toBeNull()
   })
 })
