@@ -3023,6 +3023,8 @@ create policy reports_delete_by_permission on storage.objects
 -- ⏳ 15c 20261014002120_module8_payroll_checker2_fixes — payroll_commit (ניסיון חדש ביותר בקריאה חוזרת;
 --        deadlock ⇒ PAYROLL_BUSY) · payroll_accountant_retry_reserve (אידמפוטנטי על ניסיון בתור) ·
 --        payroll_report_detail (line_count, file_line_count; post_issue_cases רק ל-edit). אותן חתימות והרשאות.
+-- ⏳ 15d 20261014002130_module8_payroll_recipient_current_and_case_basis — payroll_report_detail ו-payroll_operation_status:
+--        accountant_recipient_current · payroll_review_case_detail (של B): current_rows[].line_basis. אחרי 11 של B.
 -- ⏳ 16 20261014003000_module8_payroll_enable_new_flow — נתונים: final_issue_enabled = review_mail_enabled = true
 --        (מוחלת רק בתחילת קבלה בייצור).
 -- ⏳ 17 20261016000000_module8_payroll_legacy_cutover — נתונים: legacy_writer = 'disabled'

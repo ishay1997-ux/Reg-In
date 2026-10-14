@@ -326,3 +326,13 @@ begin
   v := public.payroll_report_detail(900003);
   assert (v ->> 'line_count')::int = 0 and (v ->> 'file_line_count')::int = 0;
 end $$;
+
+-- test: detail carries the accountant address configured now, for edit and view
+do $$ begin
+  perform test.act_as('fin@test.local');
+  assert public.payroll_report_detail(900001) ->> 'accountant_recipient_current' = 'accountant@example.test';
+  perform test.act_as_owner();
+  update public.params set param_value = 'new-office@example.test' where param_name = 'מייל_משרד_רואי_חשבון';
+  perform test.act_as('view@test.local');
+  assert public.payroll_report_detail(900001) ->> 'accountant_recipient_current' = 'new-office@example.test';
+end $$;
