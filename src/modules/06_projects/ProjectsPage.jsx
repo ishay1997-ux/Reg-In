@@ -187,7 +187,8 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [today, setToday] = useState(todayIso)
-  // חלון-ההתרעה של מסך הבית (`event_warning_days`) — "אף זימון" נצבע אדום רק בתוכו (קבוצה 3,
+  // חלון-ההתרעה של מסך הבית (הפרמטר `ימי_אזהרה_קדם_אירוע`; ב-RPC של הבית הוא נקרא `event_warning_days`,
+  // אבל בטבלת params השם עברי — תוקן 14/10 21:0x אחרי שהמסך החי נשאר כולו אדום) — "אף זימון" נצבע אדום רק בתוכו (קבוצה 3,
   // 14/10/2026). `null` = טרם נטען/נכשל ⇒ ההתנהגות הקודמת (אדום לכל "אף זימון"): כשל כאן מחמיר
   // את ההתרעה ולא מעלים אותה, ולכן אינו מפיל את המסך כולו.
   const [warningDays, setWarningDays] = useState(null)
@@ -227,9 +228,9 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     let cancelled = false
-    getParamValues(['event_warning_days'])
+    getParamValues(['ימי_אזהרה_קדם_אירוע'])
       .then((values) => {
-        if (!cancelled) setWarningDays(values.event_warning_days)
+        if (!cancelled) setWarningDays(values['ימי_אזהרה_קדם_אירוע'])
       })
       .catch((err) => {
         if (!cancelled) console.error('projects warning-days param load failed:', err)
