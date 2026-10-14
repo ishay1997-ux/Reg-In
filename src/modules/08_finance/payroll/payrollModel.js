@@ -213,6 +213,15 @@ export function payrollErrorMessage(codeOrError) {
   return 'הפעולה נכשלה. נסה שוב'
 }
 
+// תשובות שאומרות שההפקה שהמסך מחכה לה כבר לא רלוונטית כאן: הדוח הופק בלשונית או במכשיר
+// אחר, או שההפקה שבכתובת לא קיימת. המסך מרענן את הנתונים ומפסיק לשאול על מצבה — בלי זה
+// הלשונית השנייה נשארה על "מוכן להפקה" ושאלה שוב ושוב (קבלה בייצור על יולי, 14/10).
+const ISSUED_ELSEWHERE_CODES = new Set(['REVIEW_NOT_OPEN', 'PERIOD_EXISTS', 'OPERATION_NOT_FOUND'])
+
+export function isIssuedElsewhereCode(code) {
+  return ISSUED_ELSEWHERE_CODES.has(code)
+}
+
 export function isStaleCode(code) {
   return code === 'PREVIEW_CHANGED' || code === 'STALE_VERSION' || code === 'STALE_ATTEMPT'
 }

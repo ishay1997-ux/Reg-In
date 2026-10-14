@@ -510,6 +510,52 @@ describe('מצב: מוכן להפקה + אישור', () => {
     expect(api.findPayrollReview.mock.calls.length).toBeGreaterThan(1)
   })
 
+  it('לשונית שנייה: הדוח כבר הופק במקום אחר ⇒ רענון, "הופק", המזהה יוצא מהכתובת ואין שאילתות חוזרות', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    api.issuePayrollReport.mockRejectedValue(new PayrollError('REVIEW_NOT_OPEN'))
+    api.getPayrollOperationStatus.mockRejectedValue(new PayrollError('OPERATION_NOT_FOUND'))
+    renderPage('?period=2026-07&view=final')
+    fireEvent.click(await screen.findByTestId('payroll-issue'))
+    api.findPayrollReview.mockResolvedValue(
+      makeReview({ review: { status: 'issued', report_id: 31 } }),
+    )
+    await confirmDialog()
+    expect(await screen.findByTestId('payroll-final-issued')).toHaveTextContent(
+      'הדוח לחודש הזה הופק',
+    )
+    expect(searchParams().get('op')).toBeNull()
+    expect(screen.queryByTestId('payroll-issue')).toBeNull()
+    const polls = api.getPayrollOperationStatus.mock.calls.length
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000)
+    })
+    expect(api.getPayrollOperationStatus.mock.calls.length).toBe(polls)
+    fireEvent.click(screen.getByTestId('payroll-final-issued-report'))
+    expect(searchParams().get('view')).toBe('history')
+    expect(searchParams().get('report')).toBe('31')
+  })
+
+  it('בזמן הפקה מהלשונית הזו "ההפקה לא נמצאה" צפוי ⇒ ממשיכים לחכות, לא מנקים את המזהה', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    let finish
+    api.issuePayrollReport.mockReturnValue(new Promise((resolve) => (finish = resolve)))
+    api.getPayrollOperationStatus
+      .mockRejectedValueOnce(new PayrollError('OPERATION_NOT_FOUND'))
+      .mockResolvedValue(opStatus())
+    renderPage('?period=2026-07&view=final')
+    fireEvent.click(await screen.findByTestId('payroll-issue'))
+    await confirmDialog()
+    await waitFor(() => expect(api.getPayrollOperationStatus).toHaveBeenCalledTimes(1))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2100)
+    })
+    expect(searchParams().get('op')).not.toBeNull()
+    await act(async () => {
+      finish({ ok: true, operation_id: api.issuePayrollReport.mock.calls[0][0].operationId })
+    })
+    expect(await screen.findAllByText('הדוח נשמר ונשלח לרואה החשבון')).not.toHaveLength(0)
+  })
+
   it('ביטול באישור ⇒ אין הפקה', async () => {
     renderPage('?period=2026-07&view=final')
     fireEvent.click(await screen.findByTestId('payroll-issue'))
@@ -571,6 +617,21 @@ describe('מצב: מוכן להפקה + אישור', () => {
 
 describe('מצבי ההפקה השמורה (op= בכתובת)', () => {
   const OP = '?period=2026-07&view=final&op=11111111-1111-4111-8111-111111111111'
+
+  it('הפקה שבכתובת לא נמצאה ⇒ שאילתה אחת, רענון הנתונים, והמזהה יוצא מהכתובת', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    api.findPayrollReview.mockResolvedValue(makeReview())
+    api.getPayrollOperationStatus.mockRejectedValue(new PayrollError('OPERATION_NOT_FOUND'))
+    renderPage(OP)
+    await waitFor(() => expect(searchParams().get('op')).toBeNull())
+    const loads = api.findPayrollReview.mock.calls.length
+    expect(loads).toBeGreaterThan(1)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000)
+    })
+    expect(api.getPayrollOperationStatus).toHaveBeenCalledTimes(1)
+    expect(await screen.findByTestId('payroll-issue')).toBeInTheDocument()
+  })
 
   it.each([
     ['preparing', 'מכין ושומר את הקובץ…'],
