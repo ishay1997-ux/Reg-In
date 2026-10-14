@@ -9,6 +9,10 @@
 -- ⚠️ זהו SNAPSHOT שנוצר מתוך שאילתות על המסד החי. **מקור-אמת לשינויים = `supabase/migrations/`**
 --    (ולא הקובץ הזה). כל שינוי DB נכתב כקובץ מיגרציה חדש, מוחל, ואז הקובץ הזה נוצר מחדש.
 --
+-- ✏️ **14/10/2026 (תיעוד בלבד, אחרי ההחלה החיה): ‏23 מיגרציות הדוח-שכר (סעיף 36) + 4 מיגרציות ניסוח-דוחות (סעיף 24) + שתי שורות `params` (סעיף 12) הוחלו.**
+--    הספירות החיות שנמדדו ב-14/10/2026 (השאילתה בסעיף 24): **49 טבלאות-בסיס · 142 פונקציות · 66 מדיניות · 124 אינדקסים · 36 טריגרים.**
+--    🔴 **הפסקאות והספירות למטה (38 · 68 · 65 · 77 · 30) עדיין של 17/09 — הן לא רועננו.** סעיף 36 מתאר את תוספות השכר; סעיף 24 לא מונה אותן.
+--
 -- 📅 נוצר: 14/08/2026 · **רוענן לאחרונה: 16/09/2026 19:4X** (מודול 11, פזה 4 — **הריענון-במקום השני**,
 --    זה שצעד 1.1 הזמין לעצמו: "הסנפשוט הזה טעון ריענון-במקום נוסף אחרי שמיגרציות A–G ינחתו".
 --    **גם הפעם במקום ולא מחדש** — הקובץ הוא סנפשוט מוער, וייצור-מחדש גורף היה מוחק את ההערות.
@@ -729,6 +733,12 @@ create policy params_delete_settings_only on params
 --    `מקדם_אמינות_ענבר`=0.95 — כולן `param_type = 'control_alerts'`, `owner_role_id` = מנכ"ל.
 --    ‏`params` **43 ⇒ 47 שורות** (נמדד 16/09 19:4X).
 --    → supabase/migrations/20260916043500_module11_c_report_params.sql · `db_roadmap` M11-5
+-- 🆕 **14/10/2026 — שלוש שורות נוספות, שינוי-נתונים ולא DDL** (נמדד חי 14/10/2026: `params` = **50** שורות; ‏47 ב-16/09 ⇒ 48 ב-14/10 עם `תבנית_מייל_סיכום_שעות_דיילת` ⇒ 50):
+--    `תבנית_מייל_סיכום_שעות_דיילת` (`templates`; מיגרציה `20261014001000`, ר' סעיף 36) ·
+--    `סף_אזהרת_משך_אירוע_שעות`=10 (`control_alerts`, בעלים 'מנהלת פרויקטים'; מיגרציה `20261016000100`) ·
+--    `סף_אזהרת_הנחה_אחוז`=30 (`control_alerts`, בעלים 'מנהלת כספים ולקוחות'; מיגרציה `20261016000200`).
+--    שני הספים רכים — הקוד נופל ל-10 ול-30 כשהשורה חסרה, והתצוגה רק מודיעה ולעולם לא חוסמת. הגבולות (4–24 ו-5–90) חיים ב-`src/lib/paramsRegistry.js`.
+--    ‏`תבנית_זימון_משמרת` (הזמנת משמרת) נערכה בנתונים 14/10 — שלושה שינויי נוסח; גיבוי הנוסח הקודם: `seed_snapshot.param_invite_template_20261014`.
 -- ⚠️ **התקרה/הרצפה של פרמטר מספרי אינן כאן ואינן יכולות להיות כאן** — אין לטבלה עמודות כאלה.
 --    הן כללי-טיפוס ב-`src/lib/paramsRegistry.js`, **שהערתו שלו אומרת ש-`min`/`max`/`decimals`
 --    אינם נאכפים בשום מקום.** קוד שמניח אכיפה כאן מניח דבר שאינו קיים.
@@ -2219,6 +2229,13 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --                where n.nspname='public' and not t.tgisinternal)                    as triggers;
 --    ⇒ 16/09/2026 19:4X: 38 · 67 · 65 · 77 · 29.
 --    ⇒ **17/09/2026 10:5X (אחרי J3, הורצה מחדש ולא נגזרה): 38 · 68 · 65 · 77 · 30.**
+-- ✏️ **14/10/2026 — ארבע פונקציות-דוח שינו גוף בלבד (אותה חתימה, אותו ACL, עומס יחיד):** `report_m02_exec_overview`, `report_m03_trends`, `report_m19_customers_overview`, `report_m20_satisfaction`.
+--    נוסח: ‏'מה הלקוחות משבחים' / 'על מה הלקוחות מתלוננים' (m19, m20) · 'הכנסות' (m02) · 'שולי רווח' (m02) · תוויות-אריחים וכותרות (m03).
+--    שדות חדשים בלבד ב-JSON: ‏`bar_label` ו-`labelKey` בשני גרפי m03; גרף חדש 'על מה הלקוחות מתלוננים' ב-m20 (`filter_key: 'negative_reason'`). אף שדה קיים לא הוסר.
+--    ‏`proacl` של כל הארבע נמדד 14/10 אחרי ההחלה: `{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}` — בלי `anon`.
+--    → supabase/migrations/20261014150000_module11_reports_polish_wording.sql · 20261014151000_module11_m03_chart_counts.sql ·
+--      20261014152000_module11_m20_complaints_chart.sql · 20261014170000_module11_stage_copy.sql
+--    🔑 הספירות החיות ב-14/10/2026 (הורצה, לא נגזרה): **49 · 142 · 66 · 124 · 36** (טבלאות · פונקציות · מדיניות · אינדקסים · טריגרים).
 -- לכל 67 הפונקציות `search_path = ""` — נמדד ב-`pg_proc.proconfig` 16/09/2026 19:4X: 67 מתוך 67, ערך זהה.
 -- ♻️ **שוחזר 16/09/2026 (מודול 11 צעד 1.1):** שורת-הכותרת הזו **וכל בלוק `seed_registry` שמעליה**
 --    נמחקו בשוגג במיזוג `77a7e31b` (03/09/2026) — שתי השורות התמזגו לשורה פגומה אחת ו-34 שורות
@@ -2932,14 +2949,16 @@ create policy reports_delete_by_permission on storage.objects
 -- ============================================================
 -- 36. דוח שכר מקצה לקצה — מודול 8 (מיגרציות 20261014000100 … 20261016000000)
 -- ============================================================
--- ⏳ **טרם הוחל על המסד החי** (נכתב 14/10/2026 בענף ishay/payroll-a, בונה A). הסעיף מתאר את מה
---    שהמיגרציות **יוסיפו** — לא את המצב החי. הסגן, אחרי כל החלה ובדיקה ①: מסיר את ⏳ מהשורה,
---    מעדכן את הספירות בכותרת הקובץ (שאילתת הספירה בסעיף 24) ומעדכן במקום את סעיפים 19 · 23 · 26 · 28.
+-- ✅ **הוחל על המסד החי ב-14/10/2026** (נכתב בענף ishay/payroll-a, בונה A; הוחל על ידי הסגן). הרישום ב-`supabase_migrations.schema_migrations`
+--    (גרסאות UTC, נקראו 14/10/2026): **24 שורות רישום, מ-20261014062215 עד 20261014074625** — לקבצים 11 ו-15 יש כמה שורות רישום כל אחד (פוצלו בהחלה),
+--    וקובץ ה-cutover `20261016000000` רשום כ-`20261014074625`. כל 21 הקבצים של הסעיף נמצאים ברישום.
+--    ההשוואה בין גוף חי לקובץ נעשתה בידי הסגן בכל החלה (בדיקה ①) ולא נבדקה מחדש כאן.
+--    הספירות של כותרת הקובץ לא רועננו עם ההחלה — ר' השורה בראש הקובץ.
 -- 📏 נבדק: כל המיגרציות רצות מאפס, בסדר שמותיהן, על העתק PGlite 17.5 של הטבלאות והפונקציות החיות
 --    (`scripts/payroll-replica/`); קובצי הבדיקה: `supabase/tests/payroll/`.
 -- 📖 החוזה: docs/specs/module_08_finance/payroll-contract.md (כולל §9 ותיקוני F1–F10).
 --
--- ⏳ 1  20261014000100_module8_payroll_config_and_helpers
+-- ✅ 1  20261014000100_module8_payroll_config_and_helpers
 --      טבלה public.payroll_config — שורה אחת (id boolean PK check(id)): legacy_writer text not null default
 --        'enabled' check in ('enabled','disabled') · final_issue_enabled bool not null default false ·
 --        review_mail_enabled bool not null default false · locked_periods date[] not null default '{}' ·
@@ -2950,7 +2969,7 @@ create policy reports_delete_by_permission on storage.objects
 --        _payroll_raise(code, msg, hint jsonb) — P0001 + detail 'PAYROLL:<CODE>' ·
 --        _payroll_actor_assert(email, module, levels[]) — 42501 + 'PAYROLL:PERMISSION_DENIED' ·
 --        _payroll_normalize_period(date) · _payroll_month_state(date) (שעון ישראל) · _payroll_config().
--- ⏳ 2  20261014000200_module8_payroll_report_identity                       (→ סעיפים 19, 28)
+-- ✅ 2  20261014000200_module8_payroll_report_identity                       (→ סעיפים 19, 28)
 --      salary_reports + report_kind ('regular'|'supplement', default 'regular') · original_report_id (FK עצמי) ·
 --        supplement_seq · review_id · operation_id uuid unique · artifact_sha256/size/mime/filename · issued_at ·
 --        issued_by · delivery_state (queued/sending/sent/failed/unknown — מטמון בלבד) · check
@@ -2962,7 +2981,7 @@ create policy reports_delete_by_permission on storage.objects
 --      טריגרים: salary_report_lines_immutable (before update/delete → PAYROLL_LINE_IMMUTABLE, לכולם) ·
 --        salary_reports_identity_guard (before update: זהות קבועה; total/file/artifact_*/operation/review/
 --        issued_* נכתבים פעם אחת → PAYROLL_REPORT_IMMUTABLE; send_status/sent_date/delivery_state פתוחים).
--- ⏳ 3  20261014000300_module8_payroll_mail_attempts_email_log                (→ סעיף 23)
+-- ✅ 3  20261014000300_module8_payroll_mail_attempts_email_log                (→ סעיף 23)
 --      טבלה public.payroll_mail_attempts (attempt_id identity PK; kind 'accountant'|'personal_review';
 --        report_id FK salary_reports; recipient_id בלי FK; state; retry_reason; prior_attempt_id FK עצמי;
 --        intended/delivered_recipient; redirected; template_name; template_sha256_used; subject;
@@ -2972,11 +2991,11 @@ create policy reports_delete_by_permission on storage.objects
 --        RLS דלוק, אפס policies, revoke all.
 --      email_log: CHECK entity_type + 'payroll_review' · CHECK status + 'unknown' · עמודה intended_recipient ·
 --        policy email_log_select_payroll_review (כספים edit בלבד).
--- ⏳ 4  20261014000400_module8_payroll_storage_narrowing                      (→ סעיף 26)
+-- ✅ 4  20261014000400_module8_payroll_storage_narrowing                      (→ סעיף 26)
 --      storage.objects: finance_insert_by_permission + name not like 'payroll/%' ·
 --        finance_update_by_permission / finance_delete_by_permission + not like 'payroll/%' ו-'salary_reports/%'.
 --        finance_read_by_permission לא השתנתה.
--- ⏳ 5  20261014000500_module8_payroll_collection_authority
+-- ✅ 5  20261014000500_module8_payroll_collection_authority
 --      טיפוס public.payroll_line (24 שדות; בלי בנק). פנימיות: payroll_collect(date,text,int) — הסמכות היחידה
 --        לאיסוף (חודש בלבד; פיצוי חוצה-חצות לפי D1) · _payroll_accountant_config() · _payroll_guard_mirror(text) ·
 --        _payroll_identity_check(date,text,int) · _payroll_version_of(payroll_line[],date,text,int) ·
@@ -2984,48 +3003,48 @@ create policy reports_delete_by_permission on storage.objects
 --        _payroll_attempt_effective_state(payroll_mail_attempts) · _payroll_report_delivery_state(salary_reports).
 --      ללקוח (authenticated, השער בגוף): payroll_preview(date,text,int) [כספים edit] · payroll_report_list()
 --        [edit/view] · payroll_report_detail(int) [edit/view] · payroll_delivery_address(text) [edit].
--- ⏳ 6  20261014000600_module8_payroll_attempt_functions
+-- ✅ 6  20261014000600_module8_payroll_attempt_functions
 --      פנימיות: _payroll_attempt_reserve(…) · _payroll_attempt_persist_unknown(bigint).
 --      service_role בלבד: payroll_attempt_claim(bigint,text) ·
 --        payroll_attempt_complete(bigint,text,text,text,bool,text,text,int,text,text).
--- ⏳ 6b 20261014000650_module8_payroll_operations_table
+-- ✅ 6b 20261014000650_module8_payroll_operations_table
 --      טבלה public.payroll_operations (operation_id uuid PK — מפתח האידמפוטנטיות מהדפדפן; review_id; period;
 --        report_kind; original_report_id FK; expected_version; state preparing/prepared/committed/failed/
 --        superseded; failure_code/detail; actor_email; prepare_attempt; reserved_report_id;
 --        reserved_supplement_seq; generated_at; artifact_*; report_id FK; accountant_attempt_id FK; created_at;
 --        updated_at) · אינדקס חלקי ייחודי payroll_operations_active_identity_uq (פעולה פעילה אחת לזהות) ·
 --        טריגר payroll_operations_set_updated_at · RLS דלוק, אפס policies, revoke all.
--- ⏳ 7  20261014000700_module8_payroll_review_tables          [B — הפסקה מגיעה מ-B דרך הסגן]
--- ⏳ 8  20261014000800_module8_payroll_integrity_guard_and_legacy_writer
+-- ✅ 7  20261014000700_module8_payroll_review_tables          [B — הפסקה מגיעה מ-B דרך הסגן]
+-- ✅ 8  20261014000800_module8_payroll_integrity_guard_and_legacy_writer
 --      טריגר assignments_payroll_guard (before insert/update/delete, SECURITY DEFINER): רק כותב שכר משייך,
 --        מבטל שיוך או מוחק שורה משויכת; בשורה משויכת קפואים actual_hours, hourly_rate_snapshot,
 --        personal_bonus, travel_amount, hostess_id, project_id, assignment_number → PAYROLL_CLAIM_IMMUTABLE.
 --      generate_salary_report(date) נכתבה מחדש — אותה חתימה ואותה צורת JSON; finalize_salary_report(int,text,text)
 --        — אותה חתימה. ה-ACL החי נשמר (authenticated, service_role; בלי anon).
--- ⏳ 9  20261014000900_module8_payroll_august_claim_repair — נתונים: 83 שיוכים לדוח 15 + גיבוי
+-- ✅ 9  20261014000900_module8_payroll_august_claim_repair — נתונים: 83 שיוכים לדוח 15 + גיבוי
 --        seed_snapshot.assignments_payroll_claim_20261014.
--- ⏳ 10 20261014001000_module8_payroll_review_template_seed   [B — הפסקה מגיעה מ-B דרך הסגן]
--- ⏳ 11 20261014001100_module8_payroll_review_core_rpcs       [B — הפסקה מגיעה מ-B דרך הסגן]
--- ⏳ 12 20261014001200_module8_payroll_review_public_rpcs     [B — הפסקה מגיעה מ-B דרך הסגן]
--- ⏳ 13 20261014001300_module8_payroll_source_correction      [B — הפסקה מגיעה מ-B דרך הסגן]
--- ⏳ 14 20261014002000_module8_payroll_operations
+-- ✅ 10 20261014001000_module8_payroll_review_template_seed   [B — הפסקה מגיעה מ-B דרך הסגן]
+-- ✅ 11 20261014001100_module8_payroll_review_core_rpcs       [B — הפסקה מגיעה מ-B דרך הסגן]
+-- ✅ 12 20261014001200_module8_payroll_review_public_rpcs     [B — הפסקה מגיעה מ-B דרך הסגן]
+-- ✅ 13 20261014001300_module8_payroll_source_correction      [B — הפסקה מגיעה מ-B דרך הסגן]
+-- ✅ 14 20261014002000_module8_payroll_operations
 --      FK payroll_operations_review_id_fkey → payroll_reviews · FK salary_reports_review_id_fkey → payroll_reviews ·
 --      אינדקס salary_reports_review_id_idx.
--- ⏳ 15 20261014002100_module8_payroll_operation_rpcs
+-- ✅ 15 20261014002100_module8_payroll_operation_rpcs
 --      authenticated: payroll_operation_begin(uuid,bigint,text,date,text,int) · payroll_operation_status(uuid) ·
 --        payroll_operation_abandon(uuid) · payroll_accountant_retry_reserve(int,bigint,text,bool).
 --      service_role: payroll_operation_snapshot(uuid,text) ·
 --        payroll_operation_record_artifact(uuid,text,text,text,int,text,text) ·
 --        payroll_operation_fail(uuid,text,text,text) · payroll_commit(uuid,text).
 --      פנימיות: _payroll_operation_mark_failed(uuid,text,text) · _payroll_commit_locked(uuid,text).
--- ⏳ 15b 20261014002110_module8_payroll_snapshot_event_date — payroll_operation_snapshot: כל שורה ב-lines
+-- ✅ 15b 20261014002110_module8_payroll_snapshot_event_date — payroll_operation_snapshot: כל שורה ב-lines
 --        מקבלת event_date (ISO) ו-assignment_number (תיקון F12). אותה חתימה ואותן הרשאות.
--- ⏳ 15c 20261014002120_module8_payroll_checker2_fixes — payroll_commit (ניסיון חדש ביותר בקריאה חוזרת;
+-- ✅ 15c 20261014002120_module8_payroll_checker2_fixes — payroll_commit (ניסיון חדש ביותר בקריאה חוזרת;
 --        deadlock ⇒ PAYROLL_BUSY) · payroll_accountant_retry_reserve (אידמפוטנטי על ניסיון בתור) ·
 --        payroll_report_detail (line_count, file_line_count; post_issue_cases רק ל-edit). אותן חתימות והרשאות.
--- ⏳ 15d 20261014002130_module8_payroll_recipient_current_and_case_basis — payroll_report_detail ו-payroll_operation_status:
+-- ✅ 15d 20261014002130_module8_payroll_recipient_current_and_case_basis — payroll_report_detail ו-payroll_operation_status:
 --        accountant_recipient_current · payroll_review_case_detail (של B): current_rows[].line_basis. אחרי 11 של B.
--- ⏳ 16 20261014003000_module8_payroll_enable_new_flow — נתונים: final_issue_enabled = review_mail_enabled = true
---        (מוחלת רק בתחילת קבלה בייצור).
--- ⏳ 17 20261016000000_module8_payroll_legacy_cutover — נתונים: legacy_writer = 'disabled'
---        (רק אחרי קבלה, אחרי הכנס, ואחרי בדיקת מקביליות בשני חיבורים).
+-- ✅ 16 20261014003000_module8_payroll_enable_new_flow — נתונים: final_issue_enabled = review_mail_enabled = true
+--        (הוחלה 14/10/2026 בבוקר, ברישום 20261014071627).
+-- ✅ 17 20261016000000_module8_payroll_legacy_cutover — נתונים: legacy_writer = 'disabled'
+--        (הוחלה 14/10/2026 בבוקר, ברישום 20261014074625, בהכרעת ישי — לפני הכנס. בדיקת המקביליות בשני חיבורים טרם בוצעה: חוב ב-`PROJECT_MASTER §6`.)
