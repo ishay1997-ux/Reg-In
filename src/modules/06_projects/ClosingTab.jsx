@@ -54,6 +54,7 @@ import {
   rowHoursError,
   eventHoursInvalid,
   eventGuestsInvalid,
+  eventHoursPlannedNotice,
   rowHoursOutOfRange,
   fileSizeText,
   changeLineText,
@@ -105,6 +106,16 @@ const SCOPE_COMMITS_NOW_NOTE =
 // שמות המיילים כפי שהם נקראים על המסך בכשל — "המסך אומר בשם איזה מייל נכשל".
 const REPORT_MAIL_NAME = 'מייל דוח-הסיכום'
 const SURVEY_MAIL_NAME = 'מייל הסקר'
+
+// התראה רכה מתחת לשדה (ענבר, לא חוסמת — "המערכת מודיעה ולא מחליטה", ⑯). ריק ⇒ כלום.
+function SoftNotice({ text, testId }) {
+  if (!text) return null
+  return (
+    <span className="text-xs font-semibold text-amber-700" role="status" data-testid={testId}>
+      {text}
+    </span>
+  )
+}
 
 function parseNumber(text) {
   if (text === '' || text === null || text === undefined) return null
@@ -274,6 +285,12 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
   )
 
   // הגבולות עצמם חיים ב-closingDraft (כלל 14) — כאן רק קוראים לפרדיקטים.
+  // שורה 5 בביקורת-הוולידציה: התראה רכה כששעות-הביצוע רחוקות מהמתוכנן (לא חוסמת).
+  const hoursNotice = eventHoursPlannedNotice(
+    eventHoursNum,
+    project?.final_start_time,
+    project?.final_end_time,
+  )
   const hoursInvalid = eventHoursInvalid(eventHoursNum)
   const guestsInvalid = eventGuestsInvalid(eventGuestsNum)
   const fieldsOk = !hoursInvalid && !guestsInvalid
@@ -557,6 +574,7 @@ export default function ClosingTab({ project, canEdit, canReadHostesses, onSaved
                 {EVENT_HOURS_ERROR}
               </span>
             )}
+            <SoftNotice text={hoursNotice} testId="closing-hours-notice" />
           </div>
 
           <div className="flex flex-col gap-1">

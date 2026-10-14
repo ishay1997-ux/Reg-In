@@ -16,6 +16,7 @@ import {
   isNoShowAttendance,
   hostessActualCost,
 } from '@/lib/projectClosing'
+import { minutesBetweenTimes } from '@/lib/projectCard'
 import { finalAssignmentRows } from '@/lib/hostesses'
 
 // ⚠️ Number('') ו-Number(null) מחזירים 0, לא NaN (המלכודת של projectClosing.js) — ריק
@@ -127,6 +128,26 @@ export function eventHoursInvalid(value) {
 export function eventGuestsInvalid(value) {
   const n = toNumberOrNull(value)
   return n === null || n < 0
+}
+
+// ✏️ ביקורת-ולידציה, שורה 5 (14/10/2026): שעות-הביצוע הן ברירת-המחדל של כל דיילת ⇒ הן שעות
+// השכר. 14 במקום 4 עברו בשקט. **התראה רכה, לא חסימה** ("המערכת מודיעה ולא מחליטה", ⑯): אירוע
+// באמת יכול להתארך. הסף — הפרש של 50% לפחות **וגם** 2 שעות לפחות (הכרעת-ישי 14/10), כדי
+// שאירוע של שעתיים שהתארך לשלוש לא יצעק. כיוון ההפרש לא משנה (גם 2 במקום 8 חשוד).
+// שעות-תכנון חסרות ⇒ אין השוואה (אין לנו מה לומר).
+export const HOURS_NOTICE_MIN_RATIO = 0.5
+export const HOURS_NOTICE_MIN_DIFF = 2
+
+// ⚠️ המתוכנן נגזר משעות-הפרויקט כאן, ולא מ-`plannedEventHours` — שם שעה חסרה הופכת ל-24
+// (ברירת-מחדל של תקרה), וכאן 24 מומצא היה מייצר אזהרה על כל אירוע.
+export function eventHoursPlannedNotice(actualHours, startTime, endTime) {
+  const actual = toNumberOrNull(actualHours)
+  const minutes = minutesBetweenTimes(startTime, endTime)
+  const planned = minutes === null ? null : minutes / 60
+  if (actual === null || planned === null || planned <= 0 || eventHoursInvalid(actual)) return ''
+  const diff = Math.abs(actual - planned)
+  if (diff < HOURS_NOTICE_MIN_DIFF || diff < planned * HOURS_NOTICE_MIN_RATIO) return ''
+  return `הוזנו ${actual} שעות, ובהצעה תוכננו ${planned}. השעות האלה הן שיגיעו לשכר — כדאי לוודא.`
 }
 
 // הגבול העליון של שעות-שורה: שעות-האירוע + 2 (אכיפת-השרת) — null כשאין שעות-אירוע.
