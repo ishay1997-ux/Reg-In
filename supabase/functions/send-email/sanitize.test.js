@@ -23,8 +23,12 @@ describe('sanitizeDetail', () => {
 
   it('index.ts מעביר את הודעת השגיאה דרך sanitizeDetail', async () => {
     const { readFileSync } = await import('node:fs')
+    const { dirname, join } = await import('node:path')
     const { fileURLToPath } = await import('node:url')
-    const source = readFileSync(fileURLToPath(new URL('./index.ts', import.meta.url)), 'utf8')
+    // נתיב שנבנה בידיים ולא `new URL('./index.ts', import.meta.url)` — knip מפרש את הצורה ההיא
+    // כייבוא, ואז דורש את תלויות ה-`jsr:` של פונקציית השרת.
+    const here = dirname(fileURLToPath(import.meta.url))
+    const source = readFileSync(join(here, 'index.ts'), 'utf8')
     expect(source).toContain("sanitizeDetail(err instanceof Error ? err.message : 'network error')")
     expect(source).not.toMatch(/errorMessage = err instanceof Error \? err\.message/)
   })

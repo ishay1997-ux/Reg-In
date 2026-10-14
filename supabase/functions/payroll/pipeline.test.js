@@ -641,6 +641,23 @@ describe('§3.2 — תשובת commit אבדה / קריסה אחרי commit', ()
     expect(out.attempt.state).toBe('sent')
   })
 
+  it('ניסיון חוזר נשאר בתור והפונקציה נפלה לפני claim ⇒ resume שולח את החדש ביותר (לא את הישן)', async () => {
+    // commit החוזר מחזיר את הניסיון החדש ביותר לדוח (502, retry בתור); 501 כבר נכשל ואינו ניתן לתפיסה.
+    const h = issueHarness('committed', {
+      payroll_commit: () =>
+        ok({ ok: true, report_id: 77, attempt_id: 502, total_amount: 272.6, line_count: 1 }),
+      payroll_attempt_claim: async (args) =>
+        args.p_attempt_id === 502
+          ? ok(await accountantClaim(h.storage, { attempt_id: 502 }))
+          : raised('NOT_CLAIMABLE'),
+    })
+    const out = await handleRequest(h.deps, { action: 'resume', operation_id: OP }, CTX)
+    expect(h.argsOf('payroll_attempt_claim').p_attempt_id).toBe(502)
+    expect(h.deps.transport).toHaveBeenCalledTimes(1)
+    expect(h.argsOf('payroll_attempt_complete').p_attempt_id).toBe(502)
+    expect(out.attempt).toMatchObject({ attempt_id: 502, state: 'sent' })
+  })
+
   it('committed + הניסיון כבר נשלח/בשליחה (NOT_CLAIMABLE) ⇒ אין שליחה שנייה', async () => {
     const h = issueHarness('committed', { payroll_attempt_claim: () => raised('NOT_CLAIMABLE') })
     const out = await handleRequest(h.deps, { action: 'resume', operation_id: OP }, CTX)
