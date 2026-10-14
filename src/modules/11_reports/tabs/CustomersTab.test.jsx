@@ -258,6 +258,16 @@ const satisfactionPayload = () =>
     ],
     chart: [
       chartOf('התפלגות הציונים', { xKey: 'score', filter_key: false, data: [{ score: 2, n: 3 }] }),
+      // ✏️ 14/10/2026 — `20261014152000_module11_m20_complaints_chart`: התלונות חוזרות, לפני החיוביים.
+      chartOf('על מה הלקוחות מתלוננים · ⁦41⁩ משובים', {
+        layout: 'horizontal',
+        labelKey: 'bar_label',
+        filter_key: 'negative_reason',
+        data: [
+          { reason: 'תפקוד דיילות', n: 17, n_prev: 11, bar_label: '⁦17⁩ משובים · אשתקד ⁦11⁩' },
+          { reason: 'אחר', n: 10, n_prev: 15, bar_label: '⁦10⁩ משובים · אשתקד ⁦15⁩' },
+        ],
+      }),
       chartOf('מה הלקוחות משבחים', { layout: 'horizontal', filter_key: false }),
     ],
     columns: [
@@ -635,13 +645,28 @@ describe('מ19 · מבט-על לקוחות', () => {
 
 describe('מ20 · שביעות רצון', () => {
   // ✏️ 23/09/2026 — ארבעה ⇐ שניים: "מה מכעיס" ו"שיעור המרוצים לפי שנה" נמחקו (הכרעת-ישי, תוכנית §6).
-  it('מצייר את שני הגרפים שנשארו', async () => {
+  // ✏️ 14/10/2026 — שניים ⇐ שלושה: התלונות חוזרות בשם מקצועי, לפני החיוביים (ישי: *"על מה התלונות"*).
+  it('מצייר שלושה גרפים — והתלונות לפני השבחים', async () => {
     callReport.mockResolvedValue(satisfactionPayload())
     renderTab(SURFACES.מ20)
-    for (const title of ['התפלגות הציונים', 'מה הלקוחות משבחים']) {
-      expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
+    const headings = []
+    for (const title of ['התפלגות הציונים', /^על מה הלקוחות מתלוננים/, 'מה הלקוחות משבחים']) {
+      headings.push(await screen.findByRole('heading', { name: title }))
     }
+    expect(
+      headings[1].compareDocumentPosition(headings[2]) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
     expect(screen.queryByRole('heading', { name: 'מה מכעיס' })).toBeNull()
+  })
+
+  it('לחיצה על סיבת-תלונה מסננת את הטבלה לאותה סיבה', async () => {
+    callReport.mockResolvedValue(satisfactionPayload())
+    renderTab(SURFACES.מ20)
+    await screen.findByTestId('report-row-drillable')
+    // הגרף השני (התלונות), הקטגוריה השנייה ("אחר") — השורה בפיקסצ'ר נושאת negative_reason 'אחר'.
+    fireEvent.click(screen.getAllByTestId('chart-select-1')[0])
+    expect(screen.getAllByTestId('report-row-drillable')).toHaveLength(1)
+    expect(screen.getByTestId('report-crossfilter-label')).toHaveTextContent('אחר')
   })
 
   it('רשימת-סיבות מוצגת כטקסט אחד, והערה ריקה אינה תא ריק', async () => {

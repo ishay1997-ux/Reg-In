@@ -553,6 +553,21 @@ describe('ChartCard — chart.labelKey', () => {
     expect(JSON.parse(dots[0].dataset.props)).toMatchObject({ x: 'לקוח חדש', y: 0 })
   })
 
+  // 📏 נמדד בדפדפן: עמודה באורך 0 (*"איחור דיילות · 0 משובים · אשתקד 1"*) נשארה בלי תווית.
+  it('עמודה שערכה 0 מקבלת גם היא תווית על קו-האפס', () => {
+    const chart = {
+      ...LABELED_CHART,
+      data: [
+        { reason: 'איחור דיילות', n: 0, bar_label: '0 משובים · אשתקד 1' },
+        { reason: 'אחר', n: 10, bar_label: '10 משובים · אשתקד 15' },
+      ],
+    }
+    render(<ChartCard chart={chart} />)
+    const dots = screen.getAllByTestId('recharts-ReferenceDot')
+    expect(dots).toHaveLength(1)
+    expect(JSON.parse(dots[0].dataset.props)).toMatchObject({ x: 0, y: 'איחור דיילות' })
+  })
+
   it('בלי labelKey — אין תווית, אין עמודה נוספת, והשוליים כשהיו', () => {
     render(<ChartCard chart={REASONS_CHART} />)
     expect(screen.queryByTestId('recharts-LabelList')).toBeNull()

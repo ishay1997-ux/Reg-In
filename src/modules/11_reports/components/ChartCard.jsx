@@ -400,6 +400,8 @@ function barLabel(horizontal) {
     const ny = Number(y) || 0
     const w = Number(width) || 0
     const h = Number(height) || 0
+    // עמודה באורך אפס מקבלת את התווית מ-`missingValueLabels` — לא פעמיים.
+    if ((horizontal ? w : h) === 0) return null
     return horizontal
       ? labelText({ x: nx + w, y: ny + h / 2, horizontal, text: value })
       : labelText({ x: nx + w / 2, y: ny, horizontal, text: value })
@@ -407,13 +409,14 @@ function barLabel(horizontal) {
 }
 
 /**
- * 🏷️ **עמודה בלי ערך עדיין אומרת למה** — Recharts אינו מצייר עמודה (וגם לא את התווית שלה) לערך `null`.
+ * 🏷️ **עמודה בלי ערך עדיין אומרת למה** — Recharts אינו מצייר עמודה (וגם לא את התווית שלה) לערך `null`
+ * או `0` (נמדד בדפדפן 14/10: *"איחור דיילות"* עם ⁦0⁩ השנה ו-⁦1⁩ אשתקד נשארה בלי תווית).
  * ⇒ נקודת-ייחוס בלתי-נראית על קו-האפס של אותה קטגוריה, שהצורה שלה היא התווית בלבד
  * (*"אין מספיק נתונים · 12 הצעות"*). 🚫 **לא `0` במקום `null`:** הטולטיפ והטבלה היו מציגים "0%" — שקר.
  */
 function missingValueLabels({ data, xKey, valueKey, labelKey, horizontal }) {
   return data
-    .filter((row) => row?.[valueKey] == null && row?.[labelKey])
+    .filter((row) => (row?.[valueKey] == null || Number(row[valueKey]) === 0) && row?.[labelKey])
     .map((row) => (
       <ReferenceDot
         key={`missing-${row[xKey]}`}
