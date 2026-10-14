@@ -949,12 +949,14 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
 // **`score`** — מה שנכנס לציון (היענות, קרבה) · **`ctx`** — הקשר תפעולי שאינו בציון
 // (עבדה אצל הלקוח, יש רכב, סימוני-חוסר). 🔑 **ההפרדה היא מפרט ולא קישוט:** צ'יפ שנראה
 // כמו מרכיב-ציון ואינו כזה מלמד את המנהלת שהמערכת שוקלת משהו שהיא אינה שוקלת.
+// ✏️ ישי 14/10 ~21:5x ("צור אחידות ב-UI"): אותה צורה, אותו משקל-גופן ואותו עובי-מסגרת לכל הצ'יפים.
+// ההבחנה של המפרט נשמרת בעדינות בלבד — `score` לבן עם מסגרת, `ctx`/`grey` (אחד מהשניים) ממולא אפור.
 const CHIP_CLASS = {
-  score: 'border-slate-400 bg-white font-semibold text-slate-800',
-  ctx: 'border-slate-200 bg-slate-100 text-slate-500',
-  grey: 'border-slate-100 bg-slate-100 text-slate-500',
+  score: 'border-slate-300 bg-white text-slate-700',
+  ctx: 'border-slate-200 bg-slate-100 text-slate-600',
+  grey: 'border-slate-200 bg-slate-100 text-slate-600',
   warn: 'border-amber-200 bg-amber-50 text-amber-700',
-  pin: 'border-green-200 bg-green-100 font-bold text-green-700',
+  pin: 'border-green-200 bg-green-50 text-green-700',
 }
 
 function Chip({ family = 'ctx', children, testId, title }) {
