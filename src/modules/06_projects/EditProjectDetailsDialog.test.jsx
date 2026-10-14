@@ -12,7 +12,10 @@ import {
   sendDateChangeReinvites,
   sendDetailsChangedMails,
 } from './api'
+import { getParamValues } from '@/api/params'
 
+// סף "משך ארוך מהרגיל" נקרא מ-params דרך הקורא המשותף — ממוקק, כדי שלא ייווצר לקוח Supabase ב-CI.
+vi.mock('@/api/params', () => ({ getParamValues: vi.fn() }))
 vi.mock('./api', () => ({
   getProjectAssignments: vi.fn(),
   updateProjectDetails: vi.fn(),
@@ -100,6 +103,7 @@ beforeEach(() => {
   })
   sendDateChangeReinvites.mockResolvedValue({ sent: 1, unknown: 0, failed: 0 })
   sendDetailsChangedMails.mockResolvedValue({ sent: 1, unknown: 0, failed: 0, blockedReason: null })
+  getParamValues.mockResolvedValue({ סף_אזהרת_משך_אירוע_שעות: '10' })
 })
 
 describe('EditProjectDetailsDialog — הנוסחים המדויקים של המוקאפ', () => {
@@ -197,11 +201,52 @@ describe('EditProjectDetailsDialog — מודיעים ולא חוסמים (S-17)
     fireEvent.change(screen.getByTestId('edit-project-end-input'), {
       target: { value: '02:00' },
     })
-    expect(await screen.findByTestId('edit-project-cross-midnight')).toHaveTextContent(
+    expect(await screen.findByTestId('edit-project-time-notices-cross-midnight')).toHaveTextContent(
       'האירוע חוצה חצות',
+    )
+    expect(screen.queryByTestId('edit-project-time-notices-long')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('edit-project-save'))
+    await waitFor(() => expect(updateProjectDetails).toHaveBeenCalledTimes(1))
+  })
+
+  // כרטיס תיקונים לפני הכנס, פריט 8 (14/10): אותן בדיקות רכות כמו בבונה ההצעה (דלת-אחות).
+  it('משך מעל הסף שבהגדרות (12): "משך ארוך מהרגיל" + חוצה חצות, והשמירה עוברת', async () => {
+    getParamValues.mockResolvedValue({ סף_אזהרת_משך_אירוע_שעות: '12' })
+    renderDialog()
+    await waitFor(() => expect(getParamValues).toHaveBeenCalledWith(['סף_אזהרת_משך_אירוע_שעות']))
+    fireEvent.change(screen.getByTestId('edit-project-start-input'), { target: { value: '18:00' } })
+    fireEvent.change(screen.getByTestId('edit-project-end-input'), { target: { value: '06:30' } })
+    expect(
+      await screen.findByTestId('edit-project-time-notices-cross-midnight'),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('edit-project-time-notices-long')).toHaveTextContent(
+      'משך ארוך מהרגיל — כדאי לוודא את השעות',
     )
     fireEvent.click(screen.getByTestId('edit-project-save'))
     await waitFor(() => expect(updateProjectDetails).toHaveBeenCalledTimes(1))
+  })
+
+  it('הפרמטר חסר במסד (הקורא זורק) ⇒ סף 10: 08:00–18:01 מסומן, 08:00–18:00 לא', async () => {
+    getParamValues.mockRejectedValue(new Error("הפרמטר 'סף אזהרה למשך אירוע' חסר בהגדרות המערכת."))
+    renderDialog()
+    await waitFor(() => expect(getParamValues).toHaveBeenCalled())
+    fireEvent.change(screen.getByTestId('edit-project-start-input'), { target: { value: '08:00' } })
+    fireEvent.change(screen.getByTestId('edit-project-end-input'), { target: { value: '18:00' } })
+    expect(screen.queryByTestId('edit-project-time-notices')).not.toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('edit-project-end-input'), { target: { value: '18:01' } })
+    expect(await screen.findByTestId('edit-project-time-notices-long')).toBeInTheDocument()
+  })
+
+  it('סיום = התחלה ⇒ "שעת הסיום זהה לשעת ההתחלה", ולא "חוצה חצות"', async () => {
+    renderDialog()
+    fireEvent.change(await screen.findByTestId('edit-project-start-input'), {
+      target: { value: '18:00' },
+    })
+    fireEvent.change(screen.getByTestId('edit-project-end-input'), { target: { value: '18:00' } })
+    expect(await screen.findByTestId('edit-project-time-notices-same')).toHaveTextContent(
+      'שעת הסיום זהה לשעת ההתחלה',
+    )
+    expect(screen.queryByTestId('edit-project-time-notices-cross-midnight')).not.toBeInTheDocument()
   })
 
   it('תאריך בעבר: הודעה רגועה, והשמירה עוברת — "הזמן מודיע, לעולם אינו מחליט"', async () => {

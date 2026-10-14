@@ -20,8 +20,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import EventTimeNotices from '@/components/EventTimeNotices'
 import Ltr from '@/components/Ltr'
 import { useToast } from '@/components/ToastProvider'
+import { getParamValues } from '@/api/params'
+import { EVENT_DURATION_WARNING_PARAM, eventTimeNotices } from '@/lib/eventTimeChecks'
 import { finalAssignmentRows } from '@/lib/hostesses'
 import { eventDaysFromToday } from '@/lib/projects'
 import {
@@ -31,7 +34,6 @@ import {
   dateChangeBanner,
   mailOutcomeMessage,
   saveSuccessMessage,
-  CROSS_MIDNIGHT_NOTICE,
   PAST_DATE_NOTICE,
   REACTIVATION_NOTICE,
 } from '@/lib/projectCard'
@@ -80,6 +82,9 @@ export default function EditProjectDetailsDialog({
   // בלי שמות (as-built ⑤ — נוסח-המונה, לעולם לא undefined ליד פסיק).
   const [approvedNames, setApprovedNames] = useState(null)
 
+  // סף "משך ארוך מהרגיל" מההגדרות. null עד שנטען, או כשלא נטען — ואז 10 (`eventDurationThreshold`).
+  const [durationThreshold, setDurationThreshold] = useState(null)
+
   const confirmedCount = Number(overviewRow?.hostesses_confirmed) || 0
   const requiredCount = Number(overviewRow?.required_hostess_count) || 0
 
@@ -105,6 +110,23 @@ export default function EditProjectDetailsDialog({
     }
   }, [open, canReadHostesses, confirmedCount, project?.project_id])
 
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    getParamValues([EVENT_DURATION_WARNING_PARAM])
+      .then((values) => {
+        if (!cancelled) setDurationThreshold(values[EVENT_DURATION_WARNING_PARAM] ?? null)
+      })
+      .catch(() => {
+        // הסף רק מודיע ולעולם אינו חוסם (S-17): פרמטר חסר (לפני שהמיגרציה שלו הוחלה) או כשל
+        // טעינה אסור שיעצרו עריכת פרטי אירוע — ההערה נשענת אז על ברירת המחדל, 10 שעות.
+        if (!cancelled) setDurationThreshold(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
   const parsedIso = parseDmyToIso(dateText)
   const dateChanged = Boolean(parsedIso) && parsedIso !== project?.final_event_date
   const newDateDays = parsedIso ? eventDaysFromToday(parsedIso, todayIso) : null
@@ -123,11 +145,11 @@ export default function EditProjectDetailsDialog({
   const reactivating =
     project?.project_status === 'event_finished' && dateChanged && (newDateDays ?? 0) >= 0
 
-  // שני המודיעים-שאינם-חוסמים (S-17): תאריך בעבר — רגוע; חוצה-חצות — ענבר. אף אחד
-  // מהם אינו משבית את השמירה — "הזמן מודיע, לעולם אינו מחליט" (⑯).
+  // המודיעים-שאינם-חוסמים (S-17): תאריך בעבר — רגוע; הערות השעות (חוצה חצות · משך ארוך ·
+  // סיום = התחלה) — ענבר, משותפות לבונה ההצעה. אף אחד מהם אינו משבית את השמירה — "הזמן
+  // מודיע, לעולם אינו מחליט" (⑯).
   const pastDate = dateChanged && newDateDays != null && newDateDays < 0
-  const crossMidnight =
-    /^\d{2}:\d{2}$/.test(startTime) && /^\d{2}:\d{2}$/.test(endTime) && endTime < startTime
+  const timeNotices = eventTimeNotices(startTime, endTime, durationThreshold)
 
   async function save() {
     const nextErrors = validateDetailsForm({ dateText, location, startTime, endTime })
@@ -340,15 +362,8 @@ export default function EditProjectDetailsDialog({
             <span className="text-xs text-slate-500">
               שינוי שעות אינו מבטל אישורים — הדיילות מקבלות עדכון עם השעות החדשות.
             </span>
-            {/* חוצה-חצות — ענבר, מודיע ואינו חוסם: 22:00–02:00 חוקי לגמרי בענף (S-17). */}
-            {crossMidnight && (
-              <span
-                className="text-xs font-semibold text-amber-700"
-                data-testid="edit-project-cross-midnight"
-              >
-                {CROSS_MIDNIGHT_NOTICE}
-              </span>
-            )}
+            {/* ענבר, מודיע ואינו חוסם: 22:00–02:00 חוקי לגמרי בענף (S-17). */}
+            <EventTimeNotices notices={timeNotices} testId="edit-project-time-notices" />
             <FieldError name="hours" message={errors.hours} />
           </div>
         </div>

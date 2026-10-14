@@ -454,11 +454,8 @@ export function computeEventHours(startTime, endTime) {
   return Math.round((diff / 60) * 100) / 100
 }
 
-// אירוע שחוצה חצות — רמז-UI בלבד (LOCAL-2), לא שגיאה: אירוע לילה הוא תקין לחלוטין.
-export function crossesMidnight(startTime, endTime) {
-  if (!startTime || !endTime) return false
-  return String(endTime) <= String(startTime)
-}
+// ✏️ 14/10/2026: `crossesMidnight` עבר ל-`eventTimeChecks.js` (`eventTimeNotices`) — שם סיום = התחלה
+// הוא "שעת הסיום זהה לשעת ההתחלה" ולא "חוצה חצות", והרמז משותף לבונה ההצעה ולדיאלוג הפרויקט.
 
 // ── מסך ניהול ההצעות (צעד 3.3) ────────────────────────────────────────────────
 // כל מה שכאן פועל על **שורות-DB גולמיות** כפי שהן חוזרות מ-listQuotes() — כלומר
@@ -483,6 +480,9 @@ export const QUOTE_SCREEN_PARAM_NAMES = {
   // גוף מייל-ההצעה (צעד 3.4). נטען יחד עם השאר כי `getQuoteScreenParams` שולפת
   // בדיוק את הערכים שכאן — הוספת שם כאן היא כל מה שנדרש כדי שהמסך יקבל אותו.
   quoteEmailTemplate: 'תבנית_מייל_הצעת_מחיר',
+  // 🆕 14/10/2026 — סף ההערה "משך ארוך מהרגיל" ליד משך האירוע (`src/lib/eventTimeChecks.js`).
+  // חסר במסד ⇒ 10 בקוד: הסף רק מודיע, ולכן אינו נכנס לאזהרת "פרמטר חסר" של המסך.
+  eventDurationWarningHours: 'סף_אזהרת_משך_אירוע_שעות',
 }
 
 // סיבות-דחייה שאינן "הפסד" ולכן יוצאות מהמכנה של שיעור-האישור (הכרעת-ישי 29/07/2026).

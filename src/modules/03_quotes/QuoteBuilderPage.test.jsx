@@ -109,3 +109,49 @@ describe('הצעה שאי-אפשר לערוך — הודעה ודרך-קדימה
     expect(screen.queryByTestId('quote-unavailable')).not.toBeInTheDocument()
   })
 })
+
+// כרטיס תיקונים לפני הכנס, פריט 8 (14/10): הערות רכות מתחת ל"משך האירוע" — מודיעות ולא חוסמות.
+describe('שעות האירוע — הערות רכות מתחת למשך', () => {
+  const draft = (start, end) => ({
+    quote_id: 5,
+    quote_status: 'in_progress',
+    customer_id: 1,
+    estimated_start_time: start,
+    estimated_end_time: end,
+    quote_services: [],
+  })
+
+  it('22:00→02:00: "האירוע חוצה חצות" בלבד (4 שעות, מתחת לסף)', async () => {
+    getQuote.mockResolvedValue(draft('22:00:00', '02:00:00'))
+    renderEdit(5)
+    expect(await screen.findByTestId('quote-time-notices-cross-midnight')).toHaveTextContent(
+      'האירוע חוצה חצות',
+    )
+    expect(screen.queryByTestId('quote-time-notices-long')).not.toBeInTheDocument()
+    expect(screen.getByTestId('quote-hours')).toHaveTextContent('4 שעות')
+  })
+
+  it('08:00→18:30 בלי הפרמטר במסד ⇒ סף 10 ⇒ "משך ארוך מהרגיל"; עם סף 12 בהגדרות ⇒ אין הערה', async () => {
+    getQuote.mockResolvedValue(draft('08:00:00', '18:30:00'))
+    const { unmount } = renderEdit(5)
+    expect(await screen.findByTestId('quote-time-notices-long')).toHaveTextContent(
+      'משך ארוך מהרגיל — כדאי לוודא את השעות',
+    )
+    unmount()
+    getQuoteScreenParams.mockResolvedValue([
+      { param_name: 'סף_אזהרת_משך_אירוע_שעות', param_value: '12' },
+    ])
+    renderEdit(5)
+    expect(await screen.findByTestId('quote-hours')).toHaveTextContent('10.5 שעות')
+    expect(screen.queryByTestId('quote-time-notices')).not.toBeInTheDocument()
+  })
+
+  it('סיום = התחלה ⇒ "שעת הסיום זהה לשעת ההתחלה" (ולא "חוצה חצות")', async () => {
+    getQuote.mockResolvedValue(draft('18:00:00', '18:00:00'))
+    renderEdit(5)
+    expect(await screen.findByTestId('quote-time-notices-same')).toHaveTextContent(
+      'שעת הסיום זהה לשעת ההתחלה',
+    )
+    expect(screen.queryByTestId('quote-time-notices-cross-midnight')).not.toBeInTheDocument()
+  })
+})
