@@ -13,14 +13,14 @@ const classOf = (label, props = {}) => {
 
 describe('StatusTag', () => {
   it('🔴 "אושרה סופית" ירוק ו-"פג תוקף" ענבר — שתי פעולות הפוכות, שני צבעים', () => {
-    expect(classOf('אושרה סופית')).toContain('bg-green-100')
-    expect(classOf('פג תוקף')).toContain('bg-amber-200')
+    expect(classOf('אושרה סופית')).toContain('bg-green-50')
+    expect(classOf('פג תוקף')).toContain('bg-amber-50')
   })
 
   it('"אישרה זמינות" אינו ירוק — היא ענתה, היא עוד לא מאושרת', () => {
     const cls = classOf('אישרה זמינות')
-    expect(cls).toContain('bg-teal-100')
-    expect(cls).not.toContain('bg-green-100')
+    expect(cls).toContain('bg-teal-50')
+    expect(cls).not.toContain('bg-green-50')
   })
 
   it('🔴 "סירבה" ו-"שוחררה" נבדלות ויזואלית — אחת החלטה שלה, השנייה של המערכת', () => {
@@ -29,12 +29,12 @@ describe('StatusTag', () => {
   })
 
   it('מצב הדיילת: פעילה ירוק · מושבתת מקווקו', () => {
-    expect(classOf('פעילה')).toContain('bg-green-100')
+    expect(classOf('פעילה')).toContain('bg-green-50')
     expect(classOf('מושבתת')).toContain('border-dashed')
   })
 
   it('🔴 תווית דינמית ("לא זמינה") מקבלת את הטון מהקורא — אין לה מפתח קבוע', () => {
-    expect(classOf('לא זמינה 15/08–20/08', { tone: 'warn' })).toContain('bg-amber-200')
+    expect(classOf('לא זמינה 15/08–20/08', { tone: 'warn' })).toContain('bg-amber-50')
   })
 
   it('תווית לא-מוכרת אינה מפילה את המסך — נופלת ל-muted', () => {
@@ -46,10 +46,10 @@ describe('StatusTag', () => {
     // שהרכיב עצמו מקיים: תווית שהוקלדה שוב ונבדלת בתו אחד נופלת ל-muted בלי שגיאה.
     // המקרה האדום (תווית לא-ממופה) חי בשומר ① של `projects.guards.test.js` — לא משוכפל.
     const CLASS_BY_TONE = {
-      ok: 'bg-green-100',
-      teal: 'bg-teal-100',
+      ok: 'bg-green-50',
+      teal: 'bg-teal-50',
       muted: 'bg-slate-100',
-      warn: 'bg-amber-200',
+      warn: 'bg-amber-50',
       dashed: 'border-dashed',
     }
     const entries = Object.entries(PROJECT_STATUS_TONES)
@@ -68,13 +68,13 @@ describe('StatusTag', () => {
     // 🔴 השמונה של `spec.md §1.1`. `ממתינה למענה` ו-`ביטלה אחרי אישור` הם muted **במכוון**.
     const expected = {
       'ממתינה למענה': 'bg-slate-100',
-      'אישרה זמינות': 'bg-teal-100',
+      'אישרה זמינות': 'bg-teal-50',
       סירבה: 'bg-slate-100',
-      'אושרה סופית': 'bg-green-100',
+      'אושרה סופית': 'bg-green-50',
       שוחררה: 'bg-slate-100',
       'ביטלה אחרי אישור': 'bg-slate-100',
-      'פג תוקף': 'bg-amber-200',
-      הושלם: 'bg-green-100',
+      'פג תוקף': 'bg-amber-50',
+      הושלם: 'bg-slate-100', // מצב-סיום ⇒ אפור (ישי 14/10)
     }
     for (const [label, expectedClass] of Object.entries(expected)) {
       expect(classOf(label), label).toContain(expectedClass)
@@ -88,7 +88,7 @@ describe('StatusTag', () => {
   it('טון danger — אדום ולא אפור (ה16: ציון<3), ולא נופל בשקט ל-muted', () => {
     const { container } = render(<StatusTag label="טעון בירור" tone="danger" />)
     const cls = container.firstChild.className
-    expect(cls).toContain('bg-red-100')
+    expect(cls).toContain('bg-red-50')
     expect(cls).toContain('text-red-700')
     expect(cls).not.toContain('bg-slate-100')
   })

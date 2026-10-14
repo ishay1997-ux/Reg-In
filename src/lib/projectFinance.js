@@ -217,9 +217,11 @@ export function deriveExpectedProfit(grossProfit, budgetDeviation) {
 // ⚠️ ‏`danger` **אינו** מששת הטונים של `StatusTag` היום — הוא הרחבה שהמוקאפ המאושר
 // `02_closing_window_approved.html` הכריז עליה במפורש (`.tag.danger`, ובנספח "מה הכרעתי
 // לבד" ④). הוספת הטון עצמו לרכיב היא עבודת שלב-3; כאן נקבע רק **איזה** טון מגיע לאיזה ציון.
+// ✏️ ישי 14/10 ~17:5x ("צבעוני מדי ולא מקצועי"): צבע רק למה שדורש טיפול — מצוין/טוב/בינוני אפורים,
+// ורק "טעון בירור" נשאר אדום (המקובל ב-Material/Carbon: צבע-סטטוס שמור לחריגה).
 const SCORE_TAGS = [
-  { min: 4, label: null, tone: 'ok' }, // התווית נקבעת פר-ציון למטה (מצוין/טוב)
-  { min: 3, label: 'בינוני', tone: 'warn' },
+  { min: 4, label: null, tone: 'muted' }, // התווית נקבעת פר-ציון למטה (מצוין/טוב)
+  { min: 3, label: 'בינוני', tone: 'muted' },
   { min: 1, label: 'טעון בירור', tone: 'danger' },
 ]
 

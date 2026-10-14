@@ -217,9 +217,9 @@ describe('deriveDueDate / deriveDaysOverdue — §7.20א, עוגן data-set §4�
 
 describe('scoreTag — ה16 (סוגר §7.80)', () => {
   it.each([
-    [5, 'מצוין', 'ok'],
-    [4, 'טוב', 'ok'],
-    [3, 'בינוני', 'warn'],
+    [5, 'מצוין', 'muted'],
+    [4, 'טוב', 'muted'],
+    [3, 'בינוני', 'muted'],
     [2, 'טעון בירור', 'danger'],
     [1, 'טעון בירור', 'danger'],
   ])('ציון %i ⇒ "%s" בטון %s', (score, label, tone) => {
@@ -232,7 +232,7 @@ describe('scoreTag — ה16 (סוגר §7.80)', () => {
   })
 
   it('ציון שהגיע כמחרוזת מה-RPC מטופל זהה', () => {
-    expect(scoreTag('4')).toEqual({ score: 4, label: 'טוב', tone: 'ok' })
+    expect(scoreTag('4')).toEqual({ score: 4, label: 'טוב', tone: 'muted' })
   })
 
   it('🔴 ציון מחוץ ל-1–5 זורק ולא נופל בשקט לאפור', () => {
