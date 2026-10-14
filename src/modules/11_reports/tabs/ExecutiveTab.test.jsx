@@ -49,8 +49,10 @@ vi.mock('recharts', () => {
     'Cell',
     'ComposedChart',
     'Label',
+    'LabelList',
     'Line',
     'LineChart',
+    'ReferenceDot',
     'ReferenceLine',
     'ResponsiveContainer',
     'Scatter',
@@ -133,7 +135,7 @@ const m2Payload = () =>
     tiles: [
       {
         key: 'revenue',
-        label: 'הכנסות מתחילת השנה',
+        label: 'הכנסות',
         value: 1962981.47,
         format: 'money',
         sub: null,
@@ -282,14 +284,33 @@ const h1Payload = (extra = {}) =>
     ],
     chart: [
       {
+        // ✏️ 14/10/2026 — צורת-השרת אחרי `20261014151000_module11_m03_chart_counts`.
         type: 'bar',
-        title: 'כסף שאבד לפי סיבה',
+        layout: 'horizontal',
+        labelKey: 'bar_label',
+        title: `על מה מפסידים הצעות · ${isolateLtr('102')} הצעות שנדחו`,
         series: [
-          { key: 'lost_sum', label: 'כסף שאבד', kind: 'bar', axis: 'left', format: 'money' },
+          {
+            key: 'lost_sum',
+            label: 'הצעות מחיר שנדחו',
+            kind: 'bar',
+            axis: 'left',
+            format: 'money',
+          },
         ],
         data: [
-          { reason: 'מחיר', lost_sum: 287782, lost_n: 41 },
-          { reason: 'פג תוקף', lost_sum: 53024, lost_n: 10 },
+          {
+            reason: 'מחיר',
+            lost_sum: 287782,
+            lost_n: 41,
+            bar_label: `${isolateLtr('41')} הצעות · ${isolateLtr('40%')} מהסכום`,
+          },
+          {
+            reason: 'פג תוקף',
+            lost_sum: 53024,
+            lost_n: 10,
+            bar_label: `${isolateLtr('10')} הצעות · ${isolateLtr('7%')} מהסכום`,
+          },
         ],
         xKey: 'reason',
         refLines: [],
@@ -297,13 +318,24 @@ const h1Payload = (extra = {}) =>
       },
       {
         type: 'bar',
+        labelKey: 'bar_label',
         title: 'שיעור סגירה לפי מאפיין',
         series: [
           { key: 'rate', label: 'שיעור סגירה', kind: 'bar', axis: 'left', format: 'percent' },
         ],
         data: [
-          { segment: 'לקוח חדש', rate: null, n: 12 },
-          { segment: 'לקוח חוזר', rate: 72, n: 343 },
+          {
+            segment: 'לקוח חדש',
+            rate: null,
+            n: 12,
+            bar_label: `אין מספיק נתונים · ${isolateLtr('12')} הצעות`,
+          },
+          {
+            segment: 'לקוח חוזר',
+            rate: 72,
+            n: 343,
+            bar_label: `${isolateLtr('72.0%')} · ${isolateLtr('343')} הצעות`,
+          },
         ],
         xKey: 'segment',
         filter_key: false,
@@ -505,7 +537,7 @@ describe('מ2 · מבט-על הנהלה', () => {
     callReport.mockResolvedValueOnce(m2Payload())
     renderTab('מ2')
 
-    expect(await screen.findByText('הכנסות מתחילת השנה')).toBeInTheDocument()
+    expect(await screen.findByText('הכנסות')).toBeInTheDocument()
     for (const label of ['שולי-רווח גולמי', 'אירועים שהסתיימו', 'נתח 5 הלקוחות הגדולים']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
@@ -613,24 +645,66 @@ describe('ה1 · סגירת הצעות', () => {
     expect(tile.textContent).not.toMatch(/0(\.0)?%/)
   })
 
-  it('לחיצה על עמודת-סיבה מסננת את טבלת-ההצעות שאבדו (סינון-צולב, לא קידוח)', async () => {
+  it('לחיצה על עמודת-סיבה פותחת את הטבלה המקופלת — כבר מסוננת (סינון-צולב, לא קידוח)', async () => {
     callReport.mockResolvedValueOnce(h1Payload())
     renderTab('מ3')
 
-    await screen.findAllByTestId('report-row-drillable')
+    // ✏️ 14/10/2026 — הטבלה מקופלת עד שמבקשים אותה; הבחירה בגרף פותחת אותה.
+    await screen.findByTestId('report-table-toggle')
+    expect(screen.queryAllByTestId('report-row-drillable')).toHaveLength(0)
     const select = screen.getAllByTestId('chart-select-1')[0]
     fireEvent.click(select)
     const rows = screen.getAllByTestId('report-row-drillable')
     expect(rows).toHaveLength(1)
     expect(rows[0]).toHaveTextContent('פג תוקף')
+    expect(screen.getByTestId('report-table-toggle')).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('שורה פותחת את הצעת-המחיר', async () => {
     callReport.mockResolvedValueOnce(h1Payload())
     const { onDrill } = renderTab('מ3')
 
-    fireEvent.click((await screen.findAllByTestId('report-row-drillable'))[0])
+    fireEvent.click(await screen.findByTestId('report-table-toggle'))
+    fireEvent.click(screen.getAllByTestId('report-row-drillable')[0])
     expect(firstDrillArg(onDrill)).toEqual({ kind: 'quote', id: 1201 })
+  })
+
+  it('🔽 הטבלה מקופלת: "פירוט לפי הצעה (N)" לפי כל ההצעות שנדחו, נפתחת ונסגרת', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
+    renderTab('מ3')
+
+    const toggle = await screen.findByTestId('report-table-toggle')
+    expect(toggle).toHaveTextContent('פירוט לפי הצעה (')
+    expect(toggle.textContent).toContain('102')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByTestId('report-table-card')).toBeNull()
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByTestId('report-table-card')).toBeInTheDocument()
+    fireEvent.click(toggle)
+    expect(screen.queryByTestId('report-table-card')).toBeNull()
+  })
+
+  it('🔽 סגירת הטבלה בזמן בחירה מנקה גם את הבחירה — הצ׳יפ לא מתאר טבלה שאינה על המסך', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
+    renderTab('מ3')
+
+    await screen.findByTestId('report-table-toggle')
+    fireEvent.click(screen.getAllByTestId('chart-select-1')[0])
+    expect(screen.getByTestId('report-clear-crossfilter')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('report-table-toggle'))
+    expect(screen.queryByTestId('report-clear-crossfilter')).toBeNull()
+    expect(screen.queryByTestId('report-table-card')).toBeNull()
+  })
+
+  it('🏷️ שני הגרפים מציגים את הכמות — תווית-השרת בטבלת-קורא-המסך', async () => {
+    callReport.mockResolvedValueOnce(h1Payload())
+    renderTab('מ3')
+
+    const tables = await screen.findAllByTestId('chart-sr-table')
+    expect(tables[0]).toHaveTextContent('הצעות · ')
+    expect(tables[0]).toHaveTextContent('מהסכום')
+    expect(tables[1]).toHaveTextContent('אין מספיק נתונים · ')
   })
 })
 
@@ -782,6 +856,7 @@ describe('מצבים ושכבת-הטמעה', () => {
     const tiles = screen.getByTestId('report-tiles')
     const reasons = screen.getByTestId('hint-reports.trends.reasons')
     const figure = screen.getAllByTestId('chart-figure')[0]
+    fireEvent.click(screen.getByTestId('report-table-toggle'))
     const tableHint = screen.getByTestId('hint-reports.trends.table')
     const table = screen.getByTestId('report-table-card')
     expect(comesBefore(link, tiles)).toBe(true)

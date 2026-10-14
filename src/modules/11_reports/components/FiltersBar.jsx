@@ -20,7 +20,7 @@
 // הלקוחות הוא תשובה נכונה, ובורר שנעלם היה מסתיר את קיום היכולת.
 
 import FilterPill from '@/components/FilterPill'
-import { PERIOD_OPTIONS } from '../reportsPeriod'
+import { PERIOD_OPTIONS, yearKey, yearOf } from '../reportsPeriod'
 
 const LABEL_CLASS = 'text-xs text-slate-500'
 // 🔤 ערך-עובדה במקום פקד — טקסט רגיל ולא גלולה, כדי שלא ייראה לחיץ.
@@ -48,6 +48,44 @@ function CustomerPicker({ customers, customerId, onCustomerChange }) {
 }
 
 /**
+ * 📅 **בורר-שנה** (14/10/2026, ישי: *"וגם מסנן לבחירת שנה"*) — `<select>` אחד אחרי הגלולות ולא
+ * עוד גלולה לכל שנה: שבע גלולות בשורה הן יותר מדי, והרשימה גדלה כל ינואר. שנה שנבחרה ⇒ אף גלולה
+ * אינה מסומנת; גלולה שנבחרה ⇒ הבורר חוזר ל-"—". ‏`years` ריק (השרת עוד לא אמר מה "היום") ⇒ אין בורר.
+ */
+function YearPicker({ years, period, onPeriodChange }) {
+  if (!years?.length) return null
+  const selected = yearOf(period)
+  return (
+    <>
+      <label className={`${LABEL_CLASS} mr-2`} htmlFor="reports-year">
+        שנה
+      </label>
+      <select
+        id="reports-year"
+        value={selected ?? ''}
+        onChange={(e) => {
+          if (e.target.value) onPeriodChange(yearKey(e.target.value))
+        }}
+        data-testid="reports-year-filter"
+        className={`rounded-full border px-3 py-1 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${
+          // 🎨 אותם שני מצבים של `FilterPill` (off / active) — בחירה נראית כמו גלולה מסומנת.
+          selected
+            ? 'border-teal-200 bg-teal-50 font-semibold text-teal-700'
+            : 'border-slate-200 bg-white text-slate-600'
+        }`}
+      >
+        <option value="">—</option>
+        {years.map((year) => (
+          <option key={year} value={String(year)}>
+            {year}
+          </option>
+        ))}
+      </select>
+    </>
+  )
+}
+
+/**
  * ‏`periodFixedLabel` · `customerFixed` — **משטח שאינו מגיב למסנן מציג עובדה, לא פקד.**
  * ✏️ **הכרעת-ישי 5, 17/09/2026** (`processes-approved.md` §👤 טיפוגרפיה וניסוח): *"לפעמים כתוב
  * הדף לא מושפע ממסנן התקופה אז למה להציג אותו בכלל??? ... תנסה להכליל את הטעות"* ⇒ *"פקד-מת
@@ -66,6 +104,8 @@ export default function FiltersBar({
   onCustomerChange,
   customerFixed,
   exportSlot,
+  hiddenPeriods,
+  years,
 }) {
   return (
     <div
@@ -81,16 +121,19 @@ export default function FiltersBar({
           {periodFixedLabel}
         </span>
       ) : (
-        PERIOD_OPTIONS.map((option) => (
-          <FilterPill
-            key={option.key}
-            on={period === option.key}
-            onClick={() => onPeriodChange(option.key)}
-            testId={`reports-period-${option.key}`}
-          >
-            {option.label}
-          </FilterPill>
-        ))
+        <>
+          {PERIOD_OPTIONS.filter((option) => !hiddenPeriods?.includes(option.key)).map((option) => (
+            <FilterPill
+              key={option.key}
+              on={period === option.key}
+              onClick={() => onPeriodChange(option.key)}
+              testId={`reports-period-${option.key}`}
+            >
+              {option.label}
+            </FilterPill>
+          ))}
+          <YearPicker years={years} period={period} onPeriodChange={onPeriodChange} />
+        </>
       )}
 
       {customerFixed ? (
