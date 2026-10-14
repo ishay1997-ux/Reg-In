@@ -189,7 +189,7 @@ describe('מצב: טיוטה מוכנה', () => {
     const headers = within(table)
       .getAllByRole('columnheader')
       .map((h) => h.textContent)
-    expect(headers).toEqual(['ת"ז', 'שם', 'פרטי בנק', 'תאריך', 'תעריף', 'שעות', 'בונוס', 'נסיעות'])
+    expect(headers).toEqual(['ת"ז', 'שם', 'פרטי-בנק', 'תאריך', 'תעריף', 'שעות', 'בונוס', 'נסיעות'])
     const rows = screen.getAllByTestId('payroll-draft-row')
     expect(rows).toHaveLength(2)
     expect(table).not.toHaveTextContent('שורת אפס')
@@ -285,7 +285,7 @@ describe('טיוטה: מתג "לפי משמרת | סיכום לפי דיילת" 
       within(table)
         .getAllByRole('columnheader')
         .map((h) => h.textContent),
-    ).toEqual(['ת"ז', 'שם', 'פרטי בנק', 'משמרות', 'סה"כ שעות'])
+    ).toEqual(['ת"ז', 'שם', 'פרטי-בנק', 'משמרות', 'סה"כ שעות'])
     const rows = screen.getAllByTestId('payroll-hostess-summary-row').map((row) =>
       within(row)
         .getAllByRole('cell')
