@@ -17,6 +17,7 @@ import {
   NO_CONTACT_MSG,
   NO_PRIMARY_MSG,
   TWO_PRIMARY_MSG,
+  companyNumberCheckDigitWarning,
 } from './customers'
 
 // 🔴 09/10/2026 — מראָה של `replace_customer_contacts`: שורה נספרת רק אם יש לה שם, ורק אז
@@ -628,5 +629,17 @@ describe('validateExtraContacts — אנשי-קשר נוספים (§7.81)', () =
     expect(validateExtraContacts([{ _rk: 2, contact_name: 'מיכל', phone: '03-1234567' }])).toEqual(
       {},
     )
+  })
+})
+
+// ביקורת-ולידציה שורה 25 (14/10/2026): ספרת-ביקורת של ח"פ — התראה רכה בלבד.
+describe('companyNumberCheckDigitWarning', () => {
+  it('ספרת ביקורת שגויה ⇒ התראה; תקינה / לא 9 ספרות ⇒ ריק', () => {
+    expect(companyNumberCheckDigitWarning('514123456')).toBe(
+      'ספרת הביקורת של מספר החברה אינה תואמת — כדאי לבדוק שהוקלד נכון.',
+    )
+    expect(companyNumberCheckDigitWarning('514123454')).toBe('')
+    expect(companyNumberCheckDigitWarning('51412')).toBe('')
+    expect(companyNumberCheckDigitWarning('')).toBe('')
   })
 })
