@@ -9,6 +9,7 @@
 // כאן יושבים **כללים עסקיים**: מה חוסם, מה מזהיר, ומה נגזר בזמן-תצוגה.
 
 import { isolatedShekels } from '@/lib/pricing'
+import { EMAIL_REGEX, ISRAELI_MOBILE_REGEX } from '@/lib/validators'
 
 const MS_PER_HOUR = 3_600_000
 const ISRAEL_TIME_ZONE = 'Asia/Jerusalem'
@@ -154,6 +155,24 @@ export function highWageWarning(hourlyRate, minWageParamValue) {
   if (rate <= min * WAGE_WARN_FACTOR || rate > min * WAGE_BLOCK_FACTOR) return null
   const factor = Math.round((rate / min) * 10) / 10
   return `השכר השעתי ${isolatedShekels(rate)} גבוה פי ${factor} משכר המינימום (${isolatedShekels(min)}). כדאי לוודא שלא נוספה ספרה.`
+}
+
+// ✏️ ביקורת-ולידציה שורות 21+22 (14/10/2026): אימייל וטלפון בטופס הדיילת היו "חובה" בלבד, בלי
+// בדיקת-פורמט — מייל זימון לכתובת שבורה נכשל רק ברגע השליחה. **חוסם** — וכל 186 הדיילות החיות
+// עומדות בשני הכללים (נמדד 14/10), כך שאף עריכה קיימת אינה נחסמת. כלל ה-050 שייך דווקא למסך
+// הדיילת (C5 §5.6.17.4, `docs/micro_guides/module-2.md:58`); הנוסח זהה למסך המשתמשים.
+// ריק ⇒ אין שגיאת-פורמט (שגיאת "יש למלא" מגיעה מבדיקת-החובה של הטופס).
+export function hostessContactErrors({ email, phone } = {}) {
+  const errors = {}
+  const mail = String(email ?? '').trim()
+  const tel = String(phone ?? '').trim()
+  if (mail !== '' && !EMAIL_REGEX.test(mail)) {
+    errors.email = 'כתובת האימייל אינה תקינה — לדוגמה: name@example.com'
+  }
+  if (tel !== '' && !ISRAELI_MOBILE_REGEX.test(tel)) {
+    errors.phone = 'מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).'
+  }
+  return errors
 }
 
 // אימייל כפול — **מזהיר ולא חוסם** (§7.65, הכרעת-ישי 31/07): תיבה משפחתית משותפת היא

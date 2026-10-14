@@ -35,6 +35,7 @@ import {
   HOSTESS_STATUS_LABELS,
   minWageError,
   highWageWarning,
+  hostessContactErrors,
   duplicateEmailWarning,
   unavailabilityLabel,
   optionalNumber,
@@ -161,6 +162,9 @@ export default function HostessFormDialog({ hostessId, onClose, onSaved }) {
     if (String(form.id_number ?? '').trim() !== '' && !isValidIsraeliId(form.id_number)) {
       found.id_number = 'מספר תעודת זהות אינו תקין'
     }
+
+    // 🔴 אימייל וטלפון — פורמט, **חוסם** (ביקורת-ולידציה שורות 21+22).
+    Object.assign(found, hostessContactErrors(form))
 
     // 🔴 שכר מתחת למינימום — **חוסם**, והרף מגיע מ-`params` ולעולם אינו מוקלד בקוד.
     if (String(form.hourly_rate ?? '').trim() !== '') {

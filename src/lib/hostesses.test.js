@@ -8,6 +8,7 @@ import {
   eventStartInstant,
   minWageError,
   highWageWarning,
+  hostessContactErrors,
   duplicateEmailWarning,
   isUnavailableOn,
   approvedButUnavailable,
@@ -1036,5 +1037,25 @@ describe('futureActiveAssignments — הקלט לחלון-האישור של §א
       row(2, 'finally_approved', '2026-08-15', 'קרוב'),
     ]
     expect(futureActiveAssignments(rows, TODAY).map((r) => r.eventName)).toEqual(['קרוב', 'רחוק'])
+  })
+})
+
+// ביקורת-ולידציה שורות 21+22 (14/10/2026): פורמט אימייל וטלפון נייד — חוסם.
+describe('hostessContactErrors', () => {
+  it('אימייל שבור ⇒ שגיאה; תקין ⇒ בלי', () => {
+    expect(hostessContactErrors({ email: 'dana-at-site', phone: '' }).email).toBe(
+      'כתובת האימייל אינה תקינה — לדוגמה: name@example.com',
+    )
+    expect(hostessContactErrors({ email: 'dana@site.co.il' })).toEqual({})
+  })
+  it('טלפון שאינו נייד 05X ⇒ שגיאה; 050-1234567 / 0501234567 ⇒ תקין', () => {
+    expect(hostessContactErrors({ phone: '03-1234567' }).phone).toBe(
+      'מספר טלפון נייד לא תקין (לדוגמה: 050-1234567).',
+    )
+    expect(hostessContactErrors({ phone: '050-1234567' })).toEqual({})
+    expect(hostessContactErrors({ phone: '0501234567' })).toEqual({})
+  })
+  it('ריק ⇒ אין שגיאת-פורמט (החובה נבדקת בנפרד)', () => {
+    expect(hostessContactErrors({ email: ' ', phone: '' })).toEqual({})
   })
 })
