@@ -86,6 +86,10 @@ export class PayrollError extends Error {
     // הקשר בטוח מהשרת: `hint` (JSON של D7) או שדות `{ok:false,…}` — למשל `report_id`, `blockers`.
     this.hint = hint ?? null
     this.data = data ?? null
+    // ההודעה העברית שהשרת עצמו ניסח (C מחזיר `message`; ב-RPC — הודעת ה-raise). משמשת כשאין
+    // לקוד נוסח משלנו, במקום "נסה שוב" כללי (בדיקת התאמה 14/10, ממצא 6).
+    const text = data?.message ?? cause?.message
+    this.serverMessage = typeof text === 'string' && /[֐-׿]/.test(text) ? text : null
   }
 }
 
@@ -248,7 +252,7 @@ export async function findPayrollReview({ period, kind, originalReportId }) {
   const data = await rpc('payroll_review_find', {
     p_period: period,
     p_kind: kind,
-    p_original: originalReportId,
+    p_original_report_id: originalReportId,
   })
   if (data === null || data?.review === null) return null
   return shaped(data, PAYROLL_REVIEW_FIELDS, 'נתוני מעקב הבדיקה')

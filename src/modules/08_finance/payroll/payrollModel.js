@@ -188,11 +188,27 @@ const ERROR_MESSAGES = {
   RECIPIENT_INVALID: 'כתובת רואה החשבון חסרה או לא תקינה. יש לתקן אותה בהגדרות',
   CONTACT_MISSING: 'אין כתובת מייל לדיילת',
   SHAPE: 'התקבלה תשובה לא צפויה מהשרת. נסה שוב',
+  OPERATION_NOT_FOUND: 'ההפקה לא נמצאה. יש לרענן את העמוד',
+  REVIEW_NOT_OPEN: 'הבדיקה לחודש הזה כבר לא פתוחה. יש לרענן את העמוד',
+  INVALID_TRANSITION: 'הפעולה כבר לא אפשרית במצב הנוכחי. יש לרענן את העמוד',
+  SALARY_LINE_DATE_MISSING: 'לאחת המשמרות חסר תאריך, ולכן הקובץ לא נבנה. הדוח לא הופק ולא נשלח',
+  MAIL_NOT_CONFIGURED: 'שליחת המיילים לא מוגדרת. יש לפנות למנהל המערכת',
+  INVALID_REQUEST: 'הבקשה לא תקינה. יש לרענן את העמוד ולנסות שוב',
+  RPC_ERROR: 'השרת החזיר תשובה לא צפויה. יש לבדוק סטטוס לפני ניסיון נוסף',
 }
+
+// קודי `SALARY_*` של בניית הקובץ (C, `document.ts`) — כולם אומרים שנתוני הדוח לא הסתדרו ולכן
+// הקובץ לא נבנה; ניסיון חוזר לא יעזור בלי תיקון הנתונים.
+const SALARY_BUILD_MESSAGE = 'נתוני הדוח לא הסתדרו בבניית הקובץ. הדוח לא הופק ולא נשלח'
 
 export function payrollErrorMessage(codeOrError) {
   const code = typeof codeOrError === 'string' ? codeOrError : codeOrError?.code
-  return ERROR_MESSAGES[code] ?? 'הפעולה נכשלה. נסה שוב'
+  if (ERROR_MESSAGES[code]) return ERROR_MESSAGES[code]
+  // אין לנו נוסח לקוד ⇒ הנוסח העברי של השרת, אם יש — לא "נסה שוב" כללי.
+  if (typeof codeOrError === 'object' && codeOrError?.serverMessage)
+    return codeOrError.serverMessage
+  if (typeof code === 'string' && code.startsWith('SALARY_')) return SALARY_BUILD_MESSAGE
+  return 'הפעולה נכשלה. נסה שוב'
 }
 
 export function isStaleCode(code) {
@@ -372,6 +388,8 @@ export function blockerText(blocker, { period }) {
       return { text: 'תבנית המייל לרואה החשבון לא תקינה בהגדרות', target: null }
     case 'OPERATION_ACTIVE':
       return { text: 'הפקה כבר בתהליך', target: { view: 'final' } }
+    case 'REVIEW_NOT_OPEN':
+      return { text: 'הבדיקה לחודש הזה כבר לא פתוחה', target: null }
     default:
       return { text: payrollErrorMessage(blocker?.code), target: null }
   }
@@ -379,7 +397,12 @@ export function blockerText(blocker, { period }) {
 
 // ── הפקה סופית: מצב הפעולה ⇒ שלב, הודעה ופעולה ────────────────────────────────
 
-const STORAGE_FAILURES = new Set(['ARTIFACT_TOO_LARGE', 'STORAGE_FAILED', 'BUILD_FAILED'])
+// ערכי `failure_code` כפי ש-C כותב אותם (בדיקת התאמה 14/10, ממצא 5).
+const STORAGE_FAILURES = new Set([
+  'ARTIFACT_TOO_LARGE',
+  'STORAGE_UPLOAD_FAILED',
+  'XLSX_BUILD_FAILED',
+])
 
 // מחזיר `{busy, tone, text, action}`. `action` ∈ resume | check_status | retry_send | null.
 export function operationStage(status) {
@@ -461,6 +484,14 @@ function accountantStage(state, next) {
   }
 }
 
+// תוצאת שליחה חוזרת לפי מצב הניסיון שחזר מהשרת (בדיקת התאמה 14/10, ממצא 3): השרת מחזיר
+// `ok:true` גם כשהניסיון נכשל או שמצבו לא ידוע — "נשלח" מוצג רק כש-`state==='sent'`.
+export function resendOutcome(state, sentText) {
+  if (state === 'sent') return { tone: 'success', text: sentText }
+  if (state === 'failed') return { tone: 'error', text: 'השליחה החוזרת נכשלה. אפשר לנסות שוב' }
+  return { tone: 'error', text: 'לא ידוע אם נשלח. יש לבדוק לפני שליחה חוזרת' }
+}
+
 // ── היסטוריה ───────────────────────────────────────────────────────────────────
 
 const ACCOUNTANT_DELIVERY = {
@@ -503,9 +534,10 @@ export function groupReports(reports) {
 }
 
 // דוח בלי קובץ מקורי (תוספת הסגן W4) — מציעים שחזור מסומן.
-export function needsReconstruction(report, artifact) {
-  if (artifact?.reference_missing) return true
-  return Boolean(report?.legacy) && !report?.artifact_available
+// צורת השרת (בדיקת התאמה 14/10, ממצא 8): ב-`payroll_report_detail` אין `artifact_available`
+// על הדוח — הקובץ נקבע לפי `artifact`: הפניה חסרה או בלי מפתח ⇒ אין קובץ מקורי.
+export function needsReconstruction(artifact) {
+  return Boolean(artifact?.reference_missing) || !artifact?.key
 }
 
 // ── שלב הבקשה והצעד הבא (כותרת העמוד) ─────────────────────────────────────────

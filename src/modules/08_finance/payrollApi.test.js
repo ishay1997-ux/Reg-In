@@ -115,6 +115,16 @@ describe('תשובת {ok:false} ⇒ זריקה עם הקוד', () => {
 })
 
 describe('findPayrollReview', () => {
+  it('שם הפרמטר לפי המסד: p_original_report_id (בדיקת התאמה 14/10)', async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: null })
+    await findPayrollReview({ period: '2026-07-01', kind: 'supplement', originalReportId: 15 })
+    expect(supabase.rpc).toHaveBeenCalledWith('payroll_review_find', {
+      p_period: '2026-07-01',
+      p_kind: 'supplement',
+      p_original_report_id: 15,
+    })
+  })
+
   it('אין בדיקה פעילה ⇒ null', async () => {
     supabase.rpc.mockResolvedValue({ data: null, error: null })
     expect(await findPayrollReview({ period: '2026-07-01', kind: 'regular' })).toBeNull()

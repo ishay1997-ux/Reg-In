@@ -11,20 +11,24 @@ import Ltr from '@/components/Ltr'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { useToast } from '@/components/ToastProvider'
 import { retryAccountantSend } from '../payrollApi'
-import { payrollErrorMessage } from './payrollModel'
+import { payrollErrorMessage, resendOutcome } from './payrollModel'
 
-export default function AccountantResend({ reportId, attempt, onCheck, onDone }) {
+// `currentRecipient` — כתובת רו"ח **הנוכחית** בהגדרות (`accountant_recipient_current`, בונה A).
+// השרת דוחה כתובת ישנה (STALE_VERSION), ולכן נשלחת ומוצגת הכתובת הנוכחית; אם השדה עוד לא
+// הגיע, נופלים לנמען של הניסיון — והשרת יחזיר את הכתובת החדשה ב-hint (ר' למטה).
+export default function AccountantResend({ reportId, attempt, currentRecipient, onCheck, onDone }) {
   const confirm = useConfirm()
   const toast = useToast()
   const [busy, setBusy] = useState(false)
   const [checked, setChecked] = useState(false)
+  const [learnedRecipient, setLearnedRecipient] = useState(null)
   const state = attempt?.state
   if (state !== 'failed' && state !== 'unknown') return null
 
   async function resend(acknowledgeUnknown) {
     setBusy(true)
     try {
-      const intended = attempt.intended_recipient
+      const intended = learnedRecipient ?? currentRecipient ?? attempt.intended_recipient
       const ok = await confirm({
         title: 'לשלוח את הדוח שוב לרואה החשבון?',
         message: (
@@ -42,15 +46,22 @@ export default function AccountantResend({ reportId, attempt, onCheck, onDone })
         confirmLabel: 'שלח שוב',
       })
       if (!ok) return
-      await retryAccountantSend({
+      const result = await retryAccountantSend({
         reportId,
         priorAttemptId: attempt.attempt_id,
         confirmedRecipient: intended,
         acknowledgeUnknown,
       })
-      toast.success('הדוח נשלח שוב לרואה החשבון')
+      const outcome = resendOutcome(result?.attempt?.state, 'הדוח נשלח שוב לרואה החשבון')
+      toast[outcome.tone](outcome.text)
     } catch (error) {
-      toast.error(payrollErrorMessage(error))
+      // הכתובת השתנתה מאז — השרת מחזיר את הנוכחית ב-hint; שומרים אותה לניסיון הבא.
+      if (error?.code === 'STALE_VERSION' && error.hint?.recipient) {
+        setLearnedRecipient(error.hint.recipient)
+        toast.error(`כתובת רואה החשבון עודכנה ל-${error.hint.recipient}. אפשר לשלוח שוב`)
+      } else {
+        toast.error(payrollErrorMessage(error))
+      }
     } finally {
       setBusy(false)
       await onDone()
