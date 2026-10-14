@@ -473,7 +473,7 @@ export default function ReportsPage() {
       })
       // דלת פותחת **דף אחר** — והמשתמשת עומדת בגובה-הגלילה של הדף הקודם.
       // ⚠️ `?.()` על המתודה עצמה: ‏`scrollTo` אינו ממומש ב-jsdom (אותו תקדים מדויק כמו
-      // `scrollIntoView` ב-`SalaryReportDialog.jsx:596`), ובלי זה כל בדיקת-דלת רועשת.
+      // `scrollIntoView` (שהיה ב-SalaryReportDialog שהוסר)), ובלי זה כל בדיקת-דלת רועשת.
       window.scrollTo?.({ top: 0, behavior: 'smooth' })
       return
     }
