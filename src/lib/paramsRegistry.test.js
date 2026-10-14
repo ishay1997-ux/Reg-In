@@ -52,6 +52,8 @@ const LIVE_SEED_PARAM_NAMES = {
     'סף_סטיית_תקציב_אחוז',
     'מקדם_אמינות_אדום',
     'מקדם_אמינות_ענבר',
+    // 🆕 14/10/2026 — סף משך האירוע, מיגרציה 20261016000100 (טרם הוחלה; 48 ⇒ 49).
+    'סף_אזהרת_משך_אירוע_שעות',
   ],
   smart_match: [
     'גולפוסט_מרחק_קמ',
@@ -89,10 +91,10 @@ const LIVE_SEED_PARAM_NAMES = {
 
 const LIVE_SEED_NAMES_FLAT = Object.values(LIVE_SEED_PARAM_NAMES).flat()
 
-describe('PARAM_REGISTRY — 48 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
-  it('48 שורות בדיוק', () => {
-    expect(PARAM_REGISTRY).toHaveLength(48)
-    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(48)
+describe('PARAM_REGISTRY — 49 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
+  it('49 שורות בדיוק', () => {
+    expect(PARAM_REGISTRY).toHaveLength(49)
+    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(49)
   })
 
   it('כל שם במרשם קיים בזרע החי (כיוון א׳ — לא נשאר שם-רפאים במרשם)', () => {

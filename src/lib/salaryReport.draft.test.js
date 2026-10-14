@@ -4,12 +4,15 @@
 // הבונה הרגיל לא נבדק כאן ולא שונה; בדיקותיו ב-`salaryReport.test.js` נשארו כמו שהן.
 
 import { describe, expect, it } from 'vitest'
-import readXlsxFile from 'read-excel-file/node'
+import readXlsxFile, { readSheetNames } from 'read-excel-file/node'
 import {
   BANK_NOT_STORED,
+  HOSTESS_SUMMARY_SHEET_NAME,
+  buildSalaryReportDocument,
   NOT_APPLICABLE,
   buildSalaryReportDraftDocument,
   buildSalaryReportReconstructionDocument,
+  salaryFileHostessSummary,
   salaryFileHoursTotal,
   salaryFilePreviewCells,
   salaryReportDraftFileName,
@@ -253,5 +256,98 @@ describe('salaryFilePreviewCells — המסך והקובץ, תא מול תא', (
     })
     const total = doc.sheet[doc.sheet.length - 1][5]
     expect(salaryFileHoursTotal(fileRows)).toBe(total.value.toFixed(2))
+  })
+})
+
+// גיליון 2 בכל שלושת הבונים (כרטיס תיקונים 14/10): קובץ אמיתי שנקרא חזרה — שני גיליונות,
+// הת"ז נשארת מחרוזת עם האפס המוביל, והסיכום שווה לגיליון 1.
+describe('גיליון 2 "סיכום לפי דיילת" — הלוך ושוב דרך קובץ xlsx', () => {
+  async function bothSheets(doc) {
+    const blob = await writeSalaryReportXlsx(doc)
+    const buffer = Buffer.from(await blob.arrayBuffer())
+    return {
+      names: await readSheetNames(buffer),
+      summary: await readXlsxFile(buffer, { sheet: HOSTESS_SUMMARY_SHEET_NAME }),
+    }
+  }
+
+  it('טיוטה: שני גיליונות; נועה (ת"ז עם 0 מוביל) ומאיה, לפי שם; סה"כ 2 משמרות · 10 שעות', async () => {
+    const doc = buildSalaryReportDraftDocument(makePreview())
+    const { names, summary } = await bothSheets(doc)
+    expect(names).toEqual(['יולי 2026', 'סיכום לפי דיילת'])
+    expect(summary[0][0]).toBe('טיוטה — לא הופק ולא נשלח — דוח שכר דיילות — יולי 2026')
+    expect(summary.slice(2)).toEqual([
+      ['ת"ז', 'שם', 'פרטי-בנק', 'משמרות', 'סה"כ שעות'],
+      ['204455667', 'מאיה כהן', '—', 1, 4],
+      ['012345678', 'נועה לוי', 'הפועלים 601-2047199', 1, 6],
+      ['סה"כ', null, null, 2, 10],
+    ])
+  })
+
+  it('שחזור: עמודת הבנק "לא נשמר בנתוני הדוח" גם בגיליון 2', () => {
+    const doc = buildSalaryReportReconstructionDocument(
+      { report_id: 15, period: '2026-08-01', total_amount: 292.6, line_count: 1 },
+      [frozenLine()],
+      { reconstructedAt: '2026-10-13T09:30:00.000Z' },
+    )
+    expect(doc.summarySheet[3].map((c) => c?.value)).toEqual([
+      '012345678',
+      'נועה לוי',
+      BANK_NOT_STORED,
+      1,
+      6,
+    ])
+  })
+
+  it('דוח רגיל (גם הדיאלוג הישן): שני גיליונות, ושורת אפס אינה נספרת', async () => {
+    const doc = buildSalaryReportDocument(
+      {
+        ok: true,
+        report_id: 15,
+        period: '2026-08-01',
+        total_amount: 292.6,
+        line_count: 2,
+        lines: [
+          { ...frozenLine(), bank_name: 'לאומי', bank_branch: '800', bank_account: '1234' },
+          { ...frozenLine({ hours: 0, travel: null, line_total: 0 }), show_in_file: false },
+        ],
+      },
+      { generatedAt: '2026-10-13T09:30:00.000Z' },
+    )
+    const { names, summary } = await bothSheets(doc)
+    expect(names).toEqual(['אוגוסט 2026', 'סיכום לפי דיילת'])
+    expect(summary.slice(3)).toEqual([
+      ['012345678', 'נועה לוי', 'לאומי 800-1234', 1, 6],
+      ['סה"כ', null, null, 1, 6],
+    ])
+  })
+})
+
+describe('salaryFileHostessSummary — המסך מול גיליון 2, תא מול תא', () => {
+  const asText = (cell) =>
+    cell.type === Number && cell.format === '0.00' ? cell.value.toFixed(2) : String(cell.value)
+
+  it('כל שורה ושורת הסה"כ שוות לגיליון 2 של קובץ הטיוטה', () => {
+    const preview = makePreview({
+      lines: [
+        previewLine(),
+        compensationLine(),
+        previewLine({ project_id: 900102, assignment_number: 2, hours: 2.5, line_total: 135.1 }),
+      ],
+    })
+    const doc = buildSalaryReportDraftDocument(preview)
+    const screenSummary = salaryFileHostessSummary(preview.lines)
+    const body = doc.summarySheet.slice(3, -1)
+    expect(screenSummary.rows.map((r) => r.cells)).toEqual(body.map((row) => row.map(asText)))
+    const footer = doc.summarySheet.at(-1)
+    expect(screenSummary.totalShifts).toBe(String(footer[3].value))
+    expect(screenSummary.totalHours).toBe(footer[4].value.toFixed(2))
+  })
+
+  it('שעה חסרה (שורה חסומה) ⇒ "—" לדיילת ולסה"כ, לא 0', () => {
+    const summary = salaryFileHostessSummary([previewLine({ hours: null }), compensationLine()])
+    expect(summary.rows.find((r) => r.cells[1] === 'נועה לוי').cells[4]).toBe(NOT_APPLICABLE)
+    expect(summary.totalHours).toBe(NOT_APPLICABLE)
+    expect(summary.totalShifts).toBe('2')
   })
 })

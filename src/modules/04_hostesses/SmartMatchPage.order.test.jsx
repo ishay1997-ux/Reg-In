@@ -289,6 +289,16 @@ describe('⏱️ אירוע מתחת ל-72 שעות — ברירת-המחדל ת
     expect(screen.getByTestId('sm-angle-fastest').className).toContain('bg-teal-50')
   })
 
+  // ישי 14/10: זמן התגובה הרגיל מוצג בכרטיס (עד היום רק מיין, בלי להיראות).
+  it('שורת זמן התגובה בכרטיס: דנה "תוך שעה", נועה "תוך 20 שעות", מיכל (לא ידוע) — בלי שורה', async () => {
+    getSmartMatchData.mockResolvedValue(withResponseTimes(anchorData(), { 1: 20, 2: 1 }))
+    render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)
+    await candidateNamesOnScreen()
+    expect(screen.getByTestId('sm-response-time-2')).toHaveTextContent('עונה בדרך כלל תוך שעה')
+    expect(screen.getByTestId('sm-response-time-1')).toHaveTextContent('עונה בדרך כלל תוך 20 שעות')
+    expect(screen.queryByTestId('sm-response-time-3')).toBeNull()
+  })
+
   it('🔴 אין למועמדות זמן-תגובה ⇒ נופלים להמלצה, לא למיון לפי שדה ריק', async () => {
     getSmartMatchData.mockResolvedValue(anchorData())
     render(<SmartMatchPage projectId={PROJECT_ID} onBack={vi.fn()} />)

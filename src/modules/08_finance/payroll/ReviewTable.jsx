@@ -17,6 +17,9 @@ import {
   actionReason,
   formatHours,
   isDecided,
+  isNoResponseCandidate,
+  lastActionAt,
+  needsContactNote,
   payrollErrorMessage,
   recipientStatus,
   resendOutcome,
@@ -95,12 +98,7 @@ function RecipientRow({
   onReload,
   onSendUpdated,
 }) {
-  const canApproveByRecord =
-    canEdit &&
-    deadlinePassed &&
-    recipient.state === 'awaiting' &&
-    !recipient.open_case_id &&
-    recipient.digest_current !== false
+  const canApproveByRecord = canEdit && deadlinePassed && isNoResponseCandidate(recipient)
   return (
     <tr data-testid={`payroll-recipient-${recipient.recipient_id}`}>
       <Td>
@@ -118,7 +116,9 @@ function RecipientRow({
         <RecipientStatus recipient={recipient} />
       </Td>
       <Td className="whitespace-nowrap">
-        <Ltr>{formatTimestamp(recipient.last_action_at, '—')}</Ltr>
+        <span data-testid="payroll-recipient-last-action">
+          <Ltr>{formatTimestamp(lastActionAt(recipient), '—')}</Ltr>
+        </span>
       </Td>
       <Td>
         {reason && (
@@ -148,7 +148,7 @@ function RecipientRow({
               }
               testId="payroll-send-updated-row"
             >
-              שלח סיכום מעודכן
+              {recipient.delivery ? 'שלח סיכום מעודכן' : 'שלח סיכום'}
             </SmallButton>
           )}
           {canApproveByRecord && (
@@ -300,7 +300,7 @@ function ResendButton({ recipient, onReload }) {
 // לעולם לא כאישור של הדיילת. אם הסיכום מעולם לא יצא אליה — חובה לתעד איך נוצר קשר.
 function NoResponseDialog({ recipient, onClose, onDone }) {
   const toast = useToast()
-  const neverSent = recipient.delivery?.state !== 'sent'
+  const neverSent = needsContactNote(recipient)
   const fields = [
     { name: 'reason', label: 'סיבה', required: true, minLength: 5, multiline: true },
     {

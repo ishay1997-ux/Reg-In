@@ -26,6 +26,7 @@ import {
   plainTextToEmailHtml,
   renderAccountantText,
   renderReviewText,
+  reviewTextToEmailHtml,
   TemplateError,
 } from './mail.ts'
 import { TRANSPORT_TIMEOUT_MS, type TransportOutcome, type TransportPayload } from './transport.ts'
@@ -462,6 +463,8 @@ export async function runOperation(
 
 interface PreparedMail {
   text: string
+  // גוף HTML מוכן (המייל לדיילת, עם קישור לחיץ). בלעדיו — `plainTextToEmailHtml(text)`.
+  html?: string
   subject: string
   filename: string
   base64: string
@@ -545,14 +548,16 @@ async function prepareReviewMail(
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{20,}$/.test(token)) {
     throw new DispatchError('TOKEN_INVALID')
   }
+  const link = `${appOrigin}/payroll-review/${token}`
   const rendered = renderReviewText(template.text, {
     hostessName,
     periodLabel: claimLabel(claim),
-    link: `${appOrigin}/payroll-review/${token}`,
+    link,
     deadline,
   })
   return {
     text: rendered.text,
+    html: reviewTextToEmailHtml(rendered.text, link),
     subject: rendered.subject,
     filename: '',
     base64: '',
@@ -651,7 +656,7 @@ async function deliverAttempt(
   const sent = await deps.transport({
     to: guard.delivered,
     subject,
-    body: plainTextToEmailHtml(mail.text),
+    body: mail.html ?? plainTextToEmailHtml(mail.text),
     filename: mail.filename,
     pdf_base64: mail.base64,
   })
