@@ -254,7 +254,7 @@ export default function TemplateEditor({ rows, values, onChange, canEdit, errors
                   שמבחין — `templateSaveVerdict` מדווחת חובה-חסרה לפני לא-מוכר. */}
               {verdict.missingRequired?.length > 0
                 ? 'החזירי את המשתנה מהרשימה שלמטה — עד אז אי-אפשר לשמור'
-                : 'מחקי את המשתנה מהטקסט — עד אז אי-אפשר לשמור'}
+                : 'מחק את המשתנה מהטקסט — עד אז אי-אפשר לשמור'}
             </div>
           )}
 

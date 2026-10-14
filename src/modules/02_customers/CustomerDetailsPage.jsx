@@ -1545,7 +1545,7 @@ function ProjectRow({ project, today, vatRate }) {
           goToCard()
         }
       }}
-      aria-label={`פתחי כרטיס פרויקט: ${project.event_name}`}
+      aria-label={`פתח כרטיס פרויקט: ${project.event_name}`}
       data-testid={`customer-project-${project.project_id}`}
     >
       <td className="py-2.5 px-3 text-sm text-slate-600">

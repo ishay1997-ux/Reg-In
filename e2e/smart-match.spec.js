@@ -247,7 +247,7 @@ test.describe('מודול 4 · מסך 2 — שיבוץ חכם', () => {
     // (`test:e2e` אינו רץ ב-CI).
     // 🔑 **האינווריאנט האמיתי, לפי שם-הבדיקה עצמה — "אינו מעמיד פנים שהציון מלא":**
     // המסך אומר במפורש על מה הציון **כן** מבוסס, עם המשקלים בפועל.
-    await expect(page.getByTestId('sm-reliability-off')).toContainText('שיעור-היענות')
+    await expect(page.getByTestId('sm-reliability-off')).toContainText('שיעור היענות')
     await expect(page.getByTestId('sm-reliability-off')).toContainText('קרבה')
     await expect(page.getByTestId('sm-reliability-off')).toContainText('%')
   })

@@ -6,12 +6,16 @@
 // ⚠️ אין תקדים לבדיקת-עמוד ב-src/modules (quotePdf.test.jsx הוא רכיב-מסמך) — הקובץ הזה
 // נכתב בסגנון בדיקות-הרכיבים (PermissionAwareEmpty.test.jsx) עם MemoryRouter סביב העמוד.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import ProjectsPage from './ProjectsPage'
 import { listProjectsOverview } from './api'
 
 vi.mock('./api', () => ({ listProjectsOverview: vi.fn() }))
+// חלון-ההתרעה של מסך הבית (קבוצה 3, 14/10/2026) — אותו ערך כמו במסד.
+vi.mock('@/api/params', () => ({
+  getParamValues: vi.fn(() => Promise.resolve({ event_warning_days: '14' })),
+}))
 
 // ⚠️ שלב 9 (Hint) — הוספת `<Hint id="projects.sort" />` מייבאת `@/contexts/AuthContext`,
 // שמייבאת `@/supabaseClient` (יוצר לקוח אמיתי בטעינה) — קובץ זה לא ייבא אף אחת מהן קודם.
@@ -200,7 +204,7 @@ describe('ProjectsPage — לשונית "בעבודה" (ברירת-מחדל)', (
     expect(screen.getAllByRole('columnheader')).toHaveLength(7)
     expect(screen.getByRole('columnheader', { name: 'לוגיסטיקה' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'לכרטיס →' })).toHaveLength(4)
-    expect(screen.getByText('ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע')).toBeInTheDocument()
+    expect(screen.getByText('מיון: חסרים קודם, ואז לפי תאריך')).toBeInTheDocument()
   })
 
   it('גלולות-הסטטוס אינן קיימות מחוץ ללשונית "הכול"', async () => {
@@ -210,10 +214,15 @@ describe('ProjectsPage — לשונית "בעבודה" (ברירת-מחדל)', (
     expect(screen.queryByTestId('projects-pill-all')).not.toBeInTheDocument()
   })
 
-  it('🔴 כלל-האדום: אפס שורות שיבוץ ⇒ שורה אדומה; חוסר עם זימונים ⇒ לא', async () => {
+  // ✏️ 14/10/2026 (קבוצה 3): אדום רק בתוך חלון-ההתרעה (14 יום) — #3 הוא בעוד 45 יום ⇒ בלי צבע.
+  // המקרה הקרוב (≤14 ⇒ אדום) נעול ב-`src/lib/projects.test.js` (isUntouchedFar).
+  it('🔴 כלל-האדום: אפס שורות שיבוץ רחוק מ-14 יום ⇒ בלי צבע; חוסר עם זימונים ⇒ לא', async () => {
     renderPage()
     await screen.findByTestId('projects-table')
-    expect(screen.getByTestId('projects-row-3').className).toContain('bg-red-50')
+    await waitFor(() =>
+      expect(screen.getByTestId('projects-row-3').className).not.toContain('bg-red-50'),
+    )
+    expect(within(screen.getByTestId('projects-row-3')).queryByText('⚠')).not.toBeInTheDocument()
     expect(screen.getByTestId('projects-row-8').className).not.toContain('bg-red-50')
   })
 
@@ -223,7 +232,7 @@ describe('ProjectsPage — לשונית "בעבודה" (ברירת-מחדל)', (
     expect(
       screen.getByText('2 זימונים ממתינים למענה — וגם אם שתיהן יאשרו, עדיין חסרות 3'),
     ).toBeInTheDocument()
-    expect(screen.getByText('לא נשלח אף זימון לדיילת')).toBeInTheDocument()
+    expect(await screen.findByText('טרם נשלחו זימונים')).toBeInTheDocument()
     // הנתיב המדורד המתועד: בלי confirmed_available המשפט של #11 נופל ל"חסרות N" — לא שגוי.
     // לשון-יחיד גם בנתיב המדורד — "חסרה 1" בשני התאים של אותה שורה: עמודת-הדיילות
     // (staffingCell) ועמודת "מה חסר" (gapSentence) מספרות את אותו חוסר באותן מילים (תוקן 19/08).
@@ -342,7 +351,7 @@ describe('ProjectsPage — לשונית "הכול": גלולות ומסנן', ()
     await screen.findByTestId('projects-table')
     expect(rowOrder()).toHaveLength(7)
     expect(rowOrder()).not.toContain(104)
-    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לחלון')
+    expect(screen.getByTestId('list-window-hidden')).toHaveTextContent('עוד 1 מחוץ לתקופה')
 
     // מעבר ל"הכול" (גלולת-חלון, לא גלולת-סטטוס) מחזיר את #104 ומכבה את רמז-החוסר.
     fireEvent.click(screen.getByTestId('list-window-all'))

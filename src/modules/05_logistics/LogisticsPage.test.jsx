@@ -565,8 +565,8 @@ describe('LogisticsPage — מקרא-הענבר, הבסיס הקצר (לילה-�
   it('המקרא הוא הבסיס המוסכם, בלי מספר ובלי שני חוקי-הטריגר', async () => {
     render(<LogisticsPage />)
     await screen.findByTestId('logistics-queue-table')
-    const legend = screen.getByText(/שורה בענבר/).closest('div')
-    expect(legend.textContent).toBe('⏱ שורה בענבר = דורש תשומת-לב. שום דבר לא ננעל.')
+    const legend = screen.getByText(/שורה מודגשת/).closest('div')
+    expect(legend.textContent).toBe('שורה מודגשת = דורשת טיפול')
   })
 
   // 🔬 בדיקת-המוטציה של צעד 2.3 נשארת — היא עברה לערוץ שעדיין נושא את הסף המספרי:

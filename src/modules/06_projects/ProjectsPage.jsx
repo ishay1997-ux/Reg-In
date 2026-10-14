@@ -60,6 +60,7 @@ import {
   filteredOutSentence,
 } from '@/lib/projects'
 import { listProjectsOverview } from './api'
+import { getParamValues } from '@/api/params'
 import ExportDialog from '@/components/ExportDialog'
 import {
   buildExportFileName,
@@ -87,7 +88,7 @@ const SUB_TONES = {
 
 // שורת-המיון — טקסט בלבד (⑧): קיימת כי סדר לא-מוסבר הוא חידה, וכותרות-העמודות אינן
 // לחיצות בכוונה — מיון לפי "תאריך" היה מחזיר בדיוק את הטעות ש-⑧ נועדה למנוע.
-const SORT_LINE = 'ממוין: חסרים תחילה, ובתוכם לפי קרבת האירוע'
+const SORT_LINE = 'מיון: חסרים קודם, ואז לפי תאריך'
 // ✏️ 25/09/2026 (סבב תיקוני-אמת, מעבר-העיניים): בלשונית "לסגירה" כל שורה נחשבת "חסרה" (`overviewHasGap` מחזירה
 // true לכל `event_finished` — מה שחסר שם הוא הסגירה עצמה), ולכן הסדר בפועל הוא קרבה בלבד. השורה אמרה "חסרים
 // תחילה", והשורה עם 7/8 ישבה שלישית. ⇒ השורה אומרת את הסדר האמיתי. (ולא שינינו את הסדר: 7/8 באירוע שכבר
@@ -186,6 +187,10 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [today, setToday] = useState(todayIso)
+  // חלון-ההתרעה של מסך הבית (`event_warning_days`) — "אף זימון" נצבע אדום רק בתוכו (קבוצה 3,
+  // 14/10/2026). `null` = טרם נטען/נכשל ⇒ ההתנהגות הקודמת (אדום לכל "אף זימון"): כשל כאן מחמיר
+  // את ההתרעה ולא מעלים אותה, ולכן אינו מפיל את המסך כולו.
+  const [warningDays, setWarningDays] = useState(null)
   const [exportOpen, setExportOpen] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
 
@@ -215,6 +220,20 @@ export default function ProjectsPage() {
         if (!cancelled) setLoading(false)
       }
     })()
+    return () => {
+      cancelled = true
+    }
+  }, [reloadTick])
+
+  useEffect(() => {
+    let cancelled = false
+    getParamValues(['event_warning_days'])
+      .then((values) => {
+        if (!cancelled) setWarningDays(values.event_warning_days)
+      })
+      .catch((err) => {
+        if (!cancelled) console.error('projects warning-days param load failed:', err)
+      })
     return () => {
       cancelled = true
     }
@@ -483,6 +502,7 @@ export default function ProjectsPage() {
                 rows={visible}
                 closing={tab === 'closing'}
                 today={today}
+                warningDays={warningDays}
                 onOpen={(id) => navigate(`/projects/${id}`)}
               />
             )}
@@ -692,7 +712,7 @@ function EmptyRows({ filtered, searched, tab, total, onClear, onClearSearch }) {
   )
 }
 
-function ProjectsTable({ rows, closing, today, onOpen }) {
+function ProjectsTable({ rows, closing, today, warningDays, onOpen }) {
   return (
     <table className="w-full border-collapse" data-testid="projects-table">
       <thead>
@@ -715,6 +735,7 @@ function ProjectsTable({ rows, closing, today, onOpen }) {
             project={project}
             closing={closing}
             today={today}
+            warningDays={warningDays}
             onOpen={() => onOpen(project.project_id)}
           />
         ))}
@@ -723,11 +744,12 @@ function ProjectsTable({ rows, closing, today, onOpen }) {
   )
 }
 
-function ProjectRow({ project, closing, today, onOpen }) {
-  const kind = overviewRowKind(project)
+function ProjectRow({ project, closing, today, warningDays, onOpen }) {
+  const ctx = { today, warningDays }
+  const kind = overviewRowKind(project, ctx)
   const label = PROJECT_STATUS_LABELS[project.project_status]
   const days = eventDaysFromToday(project.final_event_date, today)
-  const staffing = staffingCell(project)
+  const staffing = staffingCell(project, ctx)
   const logistics = logisticsCell(project)
   const linkText = closing ? 'לסגירה →' : 'לכרטיס →'
 
@@ -784,7 +806,7 @@ function ProjectRow({ project, closing, today, onOpen }) {
       <Td>
         {/* משפט במילים, לעולם לא ציון (⑧) — הנוסח מ-gapSentence בלבד, הנתיב המדורד
             (בלי confirmed_available; ההערה בראש הקובץ). */}
-        <span className={SUB_TONES[gapTone(project)]}>{gapSentence(project)}</span>
+        <span className={SUB_TONES[gapTone(project, ctx)]}>{gapSentence(project, ctx)}</span>
       </Td>
       <Td>
         <Link

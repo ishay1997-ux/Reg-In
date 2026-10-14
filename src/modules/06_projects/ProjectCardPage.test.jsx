@@ -279,7 +279,7 @@ describe('ProjectCardPage — שלוש הפעולות מול הרשאה ומצב
     expect(screen.queryByTestId('project-card-cancel-button')).not.toBeInTheDocument()
     const scope = screen.getByTestId('project-card-scope-button')
     expect(scope).toBeDisabled()
-    expect(scope).toHaveAttribute('title', "עברי ללשונית 'סגירת אירוע' לשינוי תכולה אחרי האירוע")
+    expect(scope).toHaveAttribute('title', "שינוי תכולה אחרי האירוע נעשה בלשונית 'סגירת אירוע'.")
   })
 
   it('תפקיד-צפייה: אף כפתור ואף ✎ — לא מוצג-ומושבת אלא איננו (חסימת-הרשאה מעלימה)', async () => {

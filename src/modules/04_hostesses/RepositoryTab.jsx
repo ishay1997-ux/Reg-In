@@ -424,7 +424,7 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                       onOpenCard(hostess.hostess_id)
                     }
                   }}
-                  aria-label={`פתחי כרטיס דיילת: ${hostess.full_name}`}
+                  aria-label={`פתח כרטיס דיילת: ${hostess.full_name}`}
                   className={`cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 ${hostess.status === 'active' ? '' : 'bg-slate-50'}`}
                   data-testid={`repository-row-${hostess.hostess_id}`}
                 >
@@ -456,11 +456,15 @@ export default function RepositoryTab({ onOpenCard, onEdit, onAdd, reloadKey }) 
                     </Td>
                   )}
                   <Td>
-                    <StatusTag
-                      label={state.label}
-                      tone={state.tone}
-                      testId={`repository-state-${hostess.hostess_id}`}
-                    />
+                    {/* ✏️ 14/10/2026 (סיור-השופט, קבוצה 3): "פעילה" (tone ok) היא ברירת-המחדל ואינה
+                        מקבלת תג — רק מושבתת / לא-זמינה מסומנות. */}
+                    {state.tone !== 'ok' && (
+                      <StatusTag
+                        label={state.label}
+                        tone={state.tone}
+                        testId={`repository-state-${hostess.hostess_id}`}
+                      />
+                    )}
                     {state.note && (
                       <span className="block text-xs text-slate-500">הערה: {state.note}</span>
                     )}

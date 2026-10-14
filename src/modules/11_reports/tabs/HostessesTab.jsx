@@ -200,7 +200,7 @@ export default function HostessesTab({ surface, filters, drill, onDrill, onWindo
       return (
         <>
           <ChipRow
-            label="מסנני-דף"
+            label="מסנני דף"
             chips={reliabilityChips(chips, setChip)}
             announcement={`מוצגות ${isolateLtr(payload.rows.length)} שורות`}
             testId="reports-chips-reliability"

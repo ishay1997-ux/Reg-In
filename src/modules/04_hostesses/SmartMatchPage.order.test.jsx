@@ -357,7 +357,7 @@ describe('שיבוץ חכם — מרכיב בלי נתונים בחברה נאמ
     expect(await candidateNamesOnScreen()).toEqual(['נועה', 'מיכל', 'דנה'])
     const banner = screen.getByTestId('sm-component-no-data')
     expect(banner).toHaveTextContent('מרכיב-האמינות דלוק')
-    expect(banner).toHaveTextContent('שיעור-היענות (62%)')
+    expect(banner).toHaveTextContent('שיעור היענות (62%)')
     expect(banner).toHaveTextContent('קרבה (38%)')
     expect(banner).not.toHaveTextContent('אמינות (')
     expect(screen.queryByTestId('sm-reliability-off')).toBeNull()
@@ -373,7 +373,7 @@ describe('שיבוץ חכם — מרכיב בלי נתונים בחברה נאמ
     const banner = screen.getByTestId('sm-component-no-data')
     expect(banner).toHaveTextContent('אין עדיין בחברה תשובות לזימונים')
     expect(banner).toHaveTextContent('קרבה (100%)')
-    expect(banner).not.toHaveTextContent('שיעור-היענות (')
+    expect(banner).not.toHaveTextContent('שיעור היענות (')
   })
 
   it('יש נתונים (המצב החי היום) ⇒ אין באנר "אין נתונים"', async () => {
