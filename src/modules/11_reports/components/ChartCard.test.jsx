@@ -47,8 +47,10 @@ vi.mock('recharts', () => {
     Cell: stub('Cell'),
     ComposedChart: stub('ComposedChart'),
     Label: stub('Label'),
+    LabelList: stub('LabelList'),
     Line: stub('Line'),
     LineChart: stub('LineChart'),
+    ReferenceDot: stub('ReferenceDot'),
     ReferenceLine: stub('ReferenceLine'),
     ResponsiveContainer: stub('ResponsiveContainer'),
     Scatter: stub('Scatter'),
@@ -493,6 +495,84 @@ describe('ChartCard — chart.layout: "horizontal"', () => {
   it('טבלת-קורא-המסך אינה משתנה עם הכיוון', () => {
     render(<ChartCard chart={REASONS_CHART} />)
     expect(screen.getByRole('table')).toHaveTextContent('חוסר מקצועיות של הצוות')
+  })
+})
+
+// ── 🏷️ chart.labelKey — תווית בקצה העמודה (14/10/2026) ───────────────────────
+
+const LABELED_CHART = {
+  ...REASONS_CHART,
+  title: 'על מה מפסידים הצעות',
+  labelKey: 'bar_label',
+  data: [
+    { reason: 'מחיר', n: 41, bar_label: '41 הצעות · 40% מהסכום' },
+    { reason: 'אחר', n: 1, bar_label: '1 הצעה · 1% מהסכום' },
+  ],
+}
+
+describe('ChartCard — chart.labelKey', () => {
+  it('תווית אחת על הסדרה הראשונה, מהשדה שהשרת נקב בו', () => {
+    render(<ChartCard chart={LABELED_CHART} />)
+    const lists = screen.getAllByTestId('recharts-LabelList')
+    expect(lists).toHaveLength(1)
+    expect(JSON.parse(lists[0].dataset.props).dataKey).toBe('bar_label')
+  })
+
+  // 📐 בלי מקום מימין, התווית של העמודה הארוכה נחתכת בקצה הלוח.
+  it('אופקי ⇒ שוליים ימניים לתווית · אנכי ⇒ שוליים עליונים', () => {
+    const { unmount } = render(<ChartCard chart={LABELED_CHART} />)
+    const horizontal = JSON.parse(screen.getByTestId('recharts-BarChart').dataset.props).margin
+    expect(horizontal.right).toBeGreaterThanOrEqual(150)
+    unmount()
+    render(<ChartCard chart={{ ...LABELED_CHART, layout: undefined }} />)
+    const vertical = JSON.parse(screen.getByTestId('recharts-BarChart').dataset.props).margin
+    expect(vertical.top).toBeGreaterThan(8)
+  })
+
+  // ♿ טולטיפ אינו הדרך היחידה לקרוא ערך — אותה תווית גם בטבלת-קורא-המסך.
+  it('טבלת-קורא-המסך מקבלת עמודת "פירוט" עם אותה תווית', () => {
+    render(<ChartCard chart={LABELED_CHART} />)
+    const table = screen.getByRole('table')
+    expect(table).toHaveTextContent('פירוט')
+    expect(table).toHaveTextContent('41 הצעות · 40% מהסכום')
+  })
+
+  // 🚫 Recharts אינו מצייר עמודה (ולא את התווית שלה) לערך null — אבל "אין מספיק נתונים" חייב להיאמר.
+  it('עמודה בלי ערך מקבלת את התווית על קו-האפס, ולא "0"', () => {
+    const chart = {
+      ...LABELED_CHART,
+      layout: undefined,
+      data: [
+        { reason: 'לקוח חדש', n: null, bar_label: 'אין מספיק נתונים · 12 הצעות' },
+        { reason: 'לקוח חוזר', n: 72, bar_label: '72.3% · 347 הצעות' },
+      ],
+    }
+    render(<ChartCard chart={chart} />)
+    const dots = screen.getAllByTestId('recharts-ReferenceDot')
+    expect(dots).toHaveLength(1)
+    expect(JSON.parse(dots[0].dataset.props)).toMatchObject({ x: 'לקוח חדש', y: 0 })
+  })
+
+  // 📏 נמדד בדפדפן: עמודה באורך 0 (*"איחור דיילות · 0 משובים · אשתקד 1"*) נשארה בלי תווית.
+  it('עמודה שערכה 0 מקבלת גם היא תווית על קו-האפס', () => {
+    const chart = {
+      ...LABELED_CHART,
+      data: [
+        { reason: 'איחור דיילות', n: 0, bar_label: '0 משובים · אשתקד 1' },
+        { reason: 'אחר', n: 10, bar_label: '10 משובים · אשתקד 15' },
+      ],
+    }
+    render(<ChartCard chart={chart} />)
+    const dots = screen.getAllByTestId('recharts-ReferenceDot')
+    expect(dots).toHaveLength(1)
+    expect(JSON.parse(dots[0].dataset.props)).toMatchObject({ x: 0, y: 'איחור דיילות' })
+  })
+
+  it('בלי labelKey — אין תווית, אין עמודה נוספת, והשוליים כשהיו', () => {
+    render(<ChartCard chart={REASONS_CHART} />)
+    expect(screen.queryByTestId('recharts-LabelList')).toBeNull()
+    expect(screen.getByRole('table')).not.toHaveTextContent('פירוט')
+    expect(JSON.parse(screen.getByTestId('recharts-BarChart').dataset.props).margin.right).toBe(8)
   })
 })
 

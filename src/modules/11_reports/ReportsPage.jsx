@@ -34,7 +34,14 @@ import {
 } from './reportsCatalog'
 import Envelope from './components/Envelope'
 import FiltersBar from './components/FiltersBar'
-import { DEFAULT_PERIOD, PERIOD_OPTIONS, parsePeriodParam, periodRange } from './reportsPeriod'
+import {
+  DEFAULT_PERIOD,
+  PERIOD_OPTIONS,
+  parsePeriodParam,
+  periodRange,
+  yearOf,
+  yearOptions,
+} from './reportsPeriod'
 import ReportChips from './components/ReportChips'
 import { ReportsShellContext } from './components/reportsShellContext'
 import ExecutiveTab from './tabs/ExecutiveTab'
@@ -211,6 +218,9 @@ function TabButton({ tab, active, masked, onSelect }) {
   )
 }
 
+// 🔑 קבוע ולא מערך-אינליין — כך הפרופ זהה בין רינדורים.
+const NO_ALL_PERIOD = Object.freeze(['all'])
+
 function PageHeading({ surface, windowLabel }) {
   return (
     <div className="mb-3">
@@ -311,7 +321,12 @@ export default function ReportsPage() {
   // 🔴 **והכתובת גוברת תמיד:** ברירת-המחדל חלה **רק** כש-`?period=` אינו בכתובת — אחרת
   // קישור-לדוח-מסונן ששותף היה נפתח אצל המקבל על תקופה אחרת מזו שהשולחת ראתה.
   const tabDefaultPeriod = activeTab?.defaultPeriod ?? DEFAULT_PERIOD
-  const period = parsePeriodParam(searchParams.get('period'), tabDefaultPeriod)
+  const requestedPeriod = parsePeriodParam(searchParams.get('period'), tabDefaultPeriod)
+  // ✏️ 14/10/2026 — **"הכול" שאינו "הכול"**: ‏`report_m02_exec_overview`/`report_m03_trends` ממירים
+  // `p_from = null` לתחילת השנה (`coalesce(p_from, date_trunc('year', v_to))`), כך ש"הכול" הציג בשקט
+  // את מספרי "השנה" — בכותרת בלי תאריכים. משטח שמצהיר `noAllPeriod` לא מציג את הגלולה, וכתובת
+  // ישנה עם `?period=all` נקראת אצלו כ"השנה" — מה שהמספרים באמת מראים. (התיקון בשרת: דיווח, לא כאן.)
+  const period = activeSurface?.noAllPeriod && requestedPeriod === 'all' ? 'year' : requestedPeriod
   const customerId = searchParams.get('customer')
   // 🔴 **"היום" מגיע מהשרת ולעולם לא מ-`new Date()`** (מוקש-השעון, `src/CLAUDE.md`; התקדים
   // המלא ב-`07_dashboard/api.js`). ⇒ **הטעינה הראשונה שולחת `null`**, ה-RPC בוחר את
@@ -368,7 +383,10 @@ export default function ReportsPage() {
     // מוסיפה רעש ולא מידע. ‏`periodLabel` קיים בשביל מצב-הטעינה ומצב-התקלה, שבהם "היום"
     // של השרת עדיין אינו ידוע (פריט [27]): בלעדיו השורה מתכווצת ל-*"כל הלקוחות"* לבד
     // בעוד הגלולה מסומנת *"12 חודשים"*, כלומר אוכלוסייה בלי תאריך.
-    periodLabel: period === 'all' ? null : PERIOD_OPTIONS.find((o) => o.key === period)?.label,
+    periodLabel:
+      period === 'all'
+        ? null
+        : (PERIOD_OPTIONS.find((o) => o.key === period)?.label ?? yearOf(period)?.toString()),
     hideCustomer: customerIgnored,
   })
 
@@ -397,7 +415,10 @@ export default function ReportsPage() {
     // נקבע פעם אחת ליום-עבודה: השרת מהדהד את ה-`to` ששלחנו, ולכן אין כאן לולאה — אבל
     // ההשוואה מפורשת כדי שרינדור נוסף לא ייווצר על ערך זהה.
     const day = serverWindow?.to ?? null
-    setServerToday((current) => (day && day !== current ? day : current))
+    // ✏️ 14/10/2026 — **"היום" זז רק קדימה.** בחירת שנה קודמת שולחת `to = 2025-12-31`, והשרת מהדהד
+    // אותו; קבלה עיוורת הייתה הופכת את "היום" ל-31/12/2025 — וכל גלולה אחריה ("החודש", "השנה")
+    // הייתה נמדדת מול תאריך ישן. מחרוזות-ISO משתוות לקסיקוגרפית.
+    setServerToday((current) => (day && (!current || day > current) ? day : current))
     // ✏️ **מה שהמשטח באמת מדד — ולא מה שהגלולה בחרה** (17/09/2026, פריטים [3] · [8] · [28]).
     const next = readScope(serverWindow, meta, rpc)
     setSurfaceScope((current) => (sameScope(current, next) ? current : next))
@@ -543,6 +564,8 @@ export default function ReportsPage() {
         // בתוקף ברגע שהמשתמשת עוברת למשטח שכן מסנן לפיהם — קישור-לדוח-מסונן ששותף נפתח
         // בדיוק כפי שנשלח.
         periodFixedLabel={periodIgnored ? periodFact(scope.label) : null}
+        hiddenPeriods={activeSurface?.noAllPeriod ? NO_ALL_PERIOD : undefined}
+        years={yearOptions(serverToday)}
         customers={customers}
         customerId={customerId}
         onCustomerChange={(next) => writeParams({ customer: next })}

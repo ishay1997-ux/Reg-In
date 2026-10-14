@@ -30,7 +30,8 @@ vi.mock('recharts', () => {
         {children}
       </div>
     )
-  const names = `Bar BarChart CartesianGrid Cell ComposedChart Label Line LineChart ReferenceLine
+  const names =
+    `Bar BarChart CartesianGrid Cell ComposedChart Label LabelList Line LineChart ReferenceDot ReferenceLine
     ResponsiveContainer Scatter ScatterChart Tooltip XAxis YAxis ZAxis`.split(/\s+/)
   return Object.fromEntries(names.map((name) => [name, stub(name)]))
 })

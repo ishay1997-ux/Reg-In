@@ -22,8 +22,10 @@ import {
   Cell,
   ComposedChart,
   Label,
+  LabelList,
   Line,
   LineChart,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -98,7 +100,7 @@ function guardedSelect(onSelect, series) {
  * ⚠️ **ומצב-הפריסה נשמר ב-`state` ולא ב-`focus-within`**: כך `blur` שלא יצא מהטבלה (מעבר
  * בין כפתורים) אינו מקפל אותה, וסדר-ה-CSS אינו מכריע בין שתי מחלקות שמתנגשות.
  */
-function AccessibleDataTable({ title, xKey, series, data, onSelect, unit }) {
+function AccessibleDataTable({ title, xKey, series, data, onSelect, unit, labelKey }) {
   const [expanded, setExpanded] = useState(false)
   return (
     <div
@@ -125,6 +127,11 @@ function AccessibleDataTable({ title, xKey, series, data, onSelect, unit }) {
                 {s.label}
               </th>
             ))}
+            {labelKey && (
+              <th scope="col" className="px-2 py-1 text-right">
+                פירוט
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -153,6 +160,7 @@ function AccessibleDataTable({ title, xKey, series, data, onSelect, unit }) {
                   {formatByType(row[s.key], s.format ?? unit)}
                 </td>
               ))}
+              {labelKey && <td className="px-2 py-1 text-right">{row[labelKey]}</td>}
             </tr>
           ))}
         </tbody>
@@ -168,8 +176,10 @@ function AccessibleDataTable({ title, xKey, series, data, onSelect, unit }) {
  * ⚠️ **וכל ערך בשורה נפרד** — §⑤ #4: שני ערכים-צמודים באותה תווית מפוצלים למשפטים נפרדים
  * ולא מבודדים כרצף.
  */
-function HebrewTooltip({ active, payload, label, unit }) {
+function HebrewTooltip({ active, payload, label, unit, labelKey }) {
   if (!active || !payload?.length) return null
+  // ✏️ 14/10/2026 — `chart.labelKey`: אותה תווית שבקצה העמודה, גם כאן (שורה אחרונה, טקסט-השרת כפי שהוא).
+  const extra = labelKey ? payload[0]?.payload?.[labelKey] : null
   return (
     <div
       dir="rtl"
@@ -182,6 +192,11 @@ function HebrewTooltip({ active, payload, label, unit }) {
           {entry.name}: {formatByType(entry.value, entry.unit ?? unit)}
         </p>
       ))}
+      {extra && (
+        <p className="text-slate-600" data-testid="chart-tooltip-label">
+          {extra}
+        </p>
+      )}
     </div>
   )
 }
@@ -337,6 +352,92 @@ function barCells({ data, xKey, selected, series, selectable, idPrefix, seriesIn
 }
 
 /**
+ * 🏷️ **תווית בקצה העמודה — `chart.labelKey` (14/10/2026, ישי: *"בדרך כלל כותבים כמות גם?"*).**
+ * הטקסט מגיע **מוכן מהשרת** בשדה-הדאטום ש-`labelKey` נוקב בו (למשל *"41 הצעות · 40% מהסכום"*) —
+ * ניסוחי הדוחות חיים בגוף ה-SQL (הכרעת-ישי 23/09), והרכיב רק מציב אותו.
+ * 🔴 **בידוד RTL (U+2067…U+2069) ולא `direction` על ה-`<text>`:** הגרף יושב בתוך `dir="ltr"`
+ * (§⑤ #1), ובלי הבידוד סדר-הרצפים מתהפך — *"מהסכום 40% · הצעות 41"*. הבידוד הופך את התווית
+ * לפסקת-RTL אחת שממוקמת בנקודת-העיגון; העיגון עצמו נשאר LTR כמו כל הגרף.
+ * 📐 אופקי ⇒ מימין לקצה העמודה (שם הוא נגמר בציר-LTR) · אנכי ⇒ מעל העמודה, ממורכז.
+ * ⚠️ עמודה בלי ערך (שיעור `null` מתחת לסף) מקבלת את התווית על קו-הבסיס — שם היא אומרת *"אין מספיק נתונים"*.
+ */
+const RLI = '\u2067'
+const PDI = '\u2069'
+function labelText({ x, y, horizontal, text, stacked = false }) {
+  const common = { fill: AXIS_TEXT, fontSize: 13, 'data-testid': 'chart-bar-label' }
+  if (horizontal) {
+    return (
+      <text {...common} x={x + 6} y={y} dominantBaseline="central" textAnchor="start">
+        {`${RLI}${text}${PDI}`}
+      </text>
+    )
+  }
+  // 📏 עמודה אנכית ריקה: *"אין מספיק נתונים · 12 הצעות"* רחב מרוחב-הקטגוריה ונוגע בציר —
+  // ⇒ שתי שורות, מפוצל בנקודה-האמצעית (נמדד בצילום 14/10/2026).
+  const lines = stacked ? String(text).split(' · ') : [text]
+  if (lines.length > 1) {
+    return (
+      <text {...common} x={x} y={y - 6 - (lines.length - 1) * 16} textAnchor="middle">
+        {lines.map((line, index) => (
+          <tspan key={line} x={x} dy={index === 0 ? 0 : 16}>
+            {`${RLI}${line}${PDI}`}
+          </tspan>
+        ))}
+      </text>
+    )
+  }
+  return (
+    <text {...common} x={x} y={y - 6} textAnchor="middle">
+      {`${RLI}${text}${PDI}`}
+    </text>
+  )
+}
+
+function barLabel(horizontal) {
+  return function BarEndLabel({ x, y, width, height, value }) {
+    if (value === undefined || value === null || value === '') return null
+    const nx = Number(x) || 0
+    const ny = Number(y) || 0
+    const w = Number(width) || 0
+    const h = Number(height) || 0
+    // עמודה באורך אפס מקבלת את התווית מ-`missingValueLabels` — לא פעמיים.
+    if ((horizontal ? w : h) === 0) return null
+    return horizontal
+      ? labelText({ x: nx + w, y: ny + h / 2, horizontal, text: value })
+      : labelText({ x: nx + w / 2, y: ny, horizontal, text: value })
+  }
+}
+
+/**
+ * 🏷️ **עמודה בלי ערך עדיין אומרת למה** — Recharts אינו מצייר עמודה (וגם לא את התווית שלה) לערך `null`
+ * או `0` (נמדד בדפדפן 14/10: *"איחור דיילות"* עם ⁦0⁩ השנה ו-⁦1⁩ אשתקד נשארה בלי תווית).
+ * ⇒ נקודת-ייחוס בלתי-נראית על קו-האפס של אותה קטגוריה, שהצורה שלה היא התווית בלבד
+ * (*"אין מספיק נתונים · 12 הצעות"*). 🚫 **לא `0` במקום `null`:** הטולטיפ והטבלה היו מציגים "0%" — שקר.
+ */
+function missingValueLabels({ data, xKey, valueKey, labelKey, horizontal }) {
+  return data
+    .filter((row) => (row?.[valueKey] == null || Number(row[valueKey]) === 0) && row?.[labelKey])
+    .map((row) => (
+      <ReferenceDot
+        key={`missing-${row[xKey]}`}
+        x={horizontal ? 0 : row[xKey]}
+        y={horizontal ? row[xKey] : 0}
+        r={0}
+        ifOverflow="visible"
+        shape={({ cx, cy }) =>
+          labelText({
+            x: Number(cx) || 0,
+            y: Number(cy) || 0,
+            horizontal,
+            text: row[labelKey],
+            stacked: true,
+          })
+        }
+      />
+    ))
+}
+
+/**
  * 🔑 **מרנדר-סדרה אחד לכל שבעת סוגי-הגרף** — עמודה או קו, לפי `series[].kind` (C8).
  *
  * 🔴 **למה אחד ולא שלושה:** ‏jscpd מדד שלושה עותקים של אותו בלוק-פרופס (עמודה ב-`BarBody`,
@@ -361,6 +462,8 @@ function seriesNode({
   stacked = false,
   allSeries,
   radius = [4, 4, 0, 0],
+  labelKey,
+  horizontal = false,
 }) {
   const kind = s.kind ?? defaultKind
   const yAxisId = axisIds ? (s.axis === 'right' ? 'right' : 'left') : undefined
@@ -414,13 +517,28 @@ function seriesNode({
         idPrefix,
         seriesIndex: index,
       })}
+      {/* 🏷️ התווית רק על הסדרה הראשונה — היא מתארת את הקטגוריה, לא את כל סדרותיה. */}
+      {labelKey && index === 0 && <LabelList dataKey={labelKey} content={barLabel(horizontal)} />}
     </Bar>
   )
 }
 
-function BarSeries({ idPrefix, data, xKey, series, onSelect, selected, stacked, radius }) {
+function BarSeries({
+  idPrefix,
+  data,
+  xKey,
+  series,
+  onSelect,
+  selected,
+  stacked,
+  radius,
+  labelKey,
+  horizontal,
+}) {
   return series.map((s, index) =>
     seriesNode({
+      labelKey,
+      horizontal,
       s,
       index,
       idPrefix,
@@ -452,14 +570,21 @@ function LineSeries({ series, onSelect }) {
 const commonGrid = (horizontalBars = false) => (
   <CartesianGrid stroke="#F1F5F9" vertical={horizontalBars} horizontal={!horizontalBars} />
 )
-const commonTooltip = (unit) => (
-  <Tooltip content={<HebrewTooltip unit={unit} />} cursor={{ fill: '#F1F5F9' }} />
+const commonTooltip = (unit, labelKey) => (
+  <Tooltip
+    content={<HebrewTooltip unit={unit} labelKey={labelKey} />}
+    cursor={{ fill: '#F1F5F9' }}
+  />
 )
 // ⚠️ `reversed={false}` מפורש: ציר-הזמן רץ LTR בתוך עמוד RTL — **הכרעה קיימת** (ת1,
 // *"ינואר משמאל… כמו אקסל ובנק-ישראל"*), לא בחירה של הרכיב.
 const categoryAxis = (xKey) => <XAxis dataKey={xKey} reversed={false} {...axisProps()} />
 
 const CHART_MARGIN = { top: 8, right: 8, bottom: 4, left: 4 }
+// 🏷️ מקום לתווית-הקצה (`labelKey`): מימין לעמודה האופקית הארוכה ביותר, או מעל העמודה האנכית הגבוהה.
+// ‏170px = תווית בת ~22 תווים ב-13px (*"41 הצעות · 40% מהסכום"*) + ריווח.
+const labelMargin = (horizontal) =>
+  horizontal ? { ...CHART_MARGIN, right: 170 } : { ...CHART_MARGIN, top: 24 }
 
 /**
  * ‏**ערוץ-הצורה בפיזור** (`chart.shape_key`, תוספת C8 16/09) — 📑ב#10, במילותיו:
@@ -678,13 +803,13 @@ function BarAxes({ horizontal, xKey, data, domain, format }) {
 }
 
 function BarBody({ chart, idPrefix, onSelect, selected }) {
-  const { type, data = [], xKey, series = [], domain, refLines, unit, layout } = chart
+  const { type, data = [], xKey, series = [], domain, refLines, unit, layout, labelKey } = chart
   const horizontal = layout === 'horizontal'
   return (
     <BarChart
       data={data}
       accessibilityLayer
-      margin={CHART_MARGIN}
+      margin={labelKey ? labelMargin(horizontal) : CHART_MARGIN}
       // §5.2ב: היסטוגרמה = `BarChart` על דליים מחושבים-מראש, עם `barCategoryGap={0}`
       // לרצף-חזותי. אין ב-Recharts primitive ייעודי.
       barCategoryGap={type === 'histogram' ? 0 : '20%'}
@@ -700,7 +825,9 @@ function BarBody({ chart, idPrefix, onSelect, selected }) {
         format={valueFormat(series, unit)}
       />
       {renderRefLines(refLines)}
-      {commonTooltip(unit)}
+      {labelKey &&
+        missingValueLabels({ data, xKey, valueKey: series[0]?.key, labelKey, horizontal })}
+      {commonTooltip(unit, labelKey)}
       {BarSeries({
         idPrefix,
         data,
@@ -708,6 +835,8 @@ function BarBody({ chart, idPrefix, onSelect, selected }) {
         series,
         onSelect,
         selected,
+        labelKey,
+        horizontal,
         stacked: type === 'stackedBar',
         // עמודה אופקית גדלה ימינה ⇒ הפינות המעוגלות הן הימניות.
         radius: horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0],
@@ -931,6 +1060,7 @@ export default function ChartCard({
             data={data}
             unit={unit}
             onSelect={onSelect}
+            labelKey={chart.labelKey}
           />
         </>
       )}
