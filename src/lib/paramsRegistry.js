@@ -10,6 +10,7 @@
 // קיימים בשום מקום ולכן נכתבים כאן, לא משוכפלים ממקום אחר.
 
 import {
+  isValidHttpsUrl,
   isValidVatPercent,
   isValidPositiveInt,
   isValidNonNegativePrice,
@@ -74,14 +75,8 @@ function paramBoolean(value) {
 // קישור https תקין. אף שורה חיה מבין ה-47 אינה מסוג `url` נכון לרגע זה (הפרמטר היחיד
 // שהיה זקוק לו, `קישור_בסיס_סקר_לקוחות`, נמחק ב-Q-2) — אבל §2.8 דורש את הפרדיקט כחלק
 // מהחוזה (שורת-URL עתידית לא תדרוש קובץ שני), ולכן הוא מחובר ב-KIND_RULES למטה.
-function isValidHttpsUrl(value) {
-  if (isBlank(value)) return false
-  try {
-    return new URL(String(value).trim()).protocol === 'https:'
-  } catch {
-    return false
-  }
-}
+// ✏️ 14/10/2026: הפרדיקט עצמו עבר ל-`src/lib/validators.js` (`isValidHttpsUrl`) — צרכן שני:
+// קישור-התמונה בטופס המוצר (ביקורת-ולידציה שורה 20).
 
 // ── ולידציה לפי קינד — ההודעה תמיד אומרת מה כן תקין (§2.8) ─────────────────
 //

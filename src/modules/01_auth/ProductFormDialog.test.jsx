@@ -66,3 +66,31 @@ describe('מחיר ועלות — עקביות ותקרת-שפיות', () => {
     )
   })
 })
+
+// ביקורת-ולידציה שורה 20 (14/10/2026): קישור-תמונה שהוקלד חייב https://; ערך קיים שלא נגעו בו — לא נחסם.
+describe('קישור לתמונה', () => {
+  it('קישור חדש בלי https ⇒ שגיאה; https ⇒ בלי', () => {
+    render(<ProductFormDialog open onOpenChange={vi.fn()} editingProduct={PRODUCT} />)
+    const img = screen.getByTestId('product-form-image')
+    fireEvent.change(img, { target: { value: 'www.site.co.il/a.png' } })
+    fireEvent.blur(img)
+    expect(screen.getByTestId('product-field-error-image_url')).toHaveTextContent(
+      'הקישור צריך להתחיל ב-https://',
+    )
+    fireEvent.change(img, { target: { value: 'https://site.co.il/a.png' } })
+    fireEvent.blur(img)
+    expect(screen.queryByTestId('product-field-error-image_url')).toBeNull()
+  })
+
+  it('ערך-Seed ישן שלא נגעו בו ⇒ לא חוסם עריכה אחרת', () => {
+    render(
+      <ProductFormDialog
+        open
+        onOpenChange={vi.fn()}
+        editingProduct={{ ...PRODUCT, image_url: 'png.web/img/' }}
+      />,
+    )
+    fireEvent.blur(screen.getByTestId('product-form-image'))
+    expect(screen.queryByTestId('product-field-error-image_url')).toBeNull()
+  })
+})

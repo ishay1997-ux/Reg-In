@@ -26,11 +26,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { PRODUCT_CATEGORY_LABELS, PRODUCT_UNITS } from '@/lib/catalog'
-import { isValidNonNegativePrice, isValidSku } from '@/lib/validators'
+import { isValidHttpsUrl, isValidNonNegativePrice, isValidSku } from '@/lib/validators'
 import { isolatedShekels } from '@/lib/pricing'
 import { createProduct, updateProduct } from '@/modules/01_auth/pricesApi'
 import { cn } from '@/lib/utils'
 import Hint from '@/components/Hint'
+import CharCounter from '@/components/CharCounter'
 
 const EMPTY_FORM = {
   sku: '',
@@ -83,9 +84,23 @@ function CostNotice({ form }) {
 // הכללים עצמם קצרים ומקומיים לטופס הזה (בניגוד ללקוחות, שם הם חיים ב-src/lib/customers.js
 // כי גם מסכים אחרים מוודאים לקוח). כאן אין צרכן שני — המרכיבים הכלליים (SKU/מחיר) כן
 // מיובאים מ-validators.js ולא נכתבים מחדש.
-function validateProductField(name, value) {
+// ✏️ ביקורת-ולידציה שורה 20 (14/10/2026): תקרת-אורך לשם הפריט (הארוך בקטלוג החי — 21 תווים),
+// וקישור-תמונה חייב https://. ⚠️ **רק קישור שהמשתמש שינה נבדק:** 11 מתוך 12 המוצרים החיים
+// נושאים ערך-Seed שאינו https (נמדד 14/10), וחסימה עליו הייתה מונעת כל עריכה אחרת — גם תיקון
+// מחיר — עד שמישהו "מתקן" שדה שלא נגע בו. הקישור אינו מוצג כרגע בשום מסמך (`grep image_url`).
+const ITEM_NAME_MAX = 120
+const IMAGE_URL_MESSAGE = 'הקישור צריך להתחיל ב-https://'
+
+function imageUrlError(text, initialImageUrl) {
+  if (text === '' || text === String(initialImageUrl ?? '').trim()) return ''
+  return isValidHttpsUrl(text) ? '' : IMAGE_URL_MESSAGE
+}
+
+function validateProductField(name, value, initialImageUrl = '') {
   const text = String(value ?? '').trim()
   switch (name) {
+    case 'image_url':
+      return imageUrlError(text, initialImageUrl)
     case 'sku':
       if (text === '') return 'יש להזין מק"ט'
       return isValidSku(text) ? '' : 'אותיות גדולות, ספרות ומקפים בלבד (לא בתחילת המק"ט)'
@@ -105,9 +120,12 @@ function validateProductField(name, value) {
   }
 }
 
-function validateProductForm(form) {
+function validateProductForm(form, initialImageUrl) {
   return Object.fromEntries(
-    Object.keys(form).map((name) => [name, validateProductField(name, form[name])]),
+    Object.keys(form).map((name) => [
+      name,
+      validateProductField(name, form[name], initialImageUrl),
+    ]),
   )
 }
 
@@ -138,15 +156,20 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
     setFieldErrors((prev) => (prev[name] ? { ...prev, [name]: '' } : prev))
   }
 
+  const initialImageUrl = editingProduct?.image_url ?? ''
+
   function handleBlur(name) {
-    setFieldErrors((prev) => ({ ...prev, [name]: validateProductField(name, form[name]) }))
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: validateProductField(name, form[name], initialImageUrl),
+    }))
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setFormError('')
 
-    const errors = validateProductForm(form)
+    const errors = validateProductForm(form, initialImageUrl)
     setFieldErrors(errors)
     if (Object.values(errors).some(Boolean)) return
 
@@ -262,6 +285,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
             <label className="text-sm text-slate-700">שם הפריט</label>
             <Input
               value={form.item_name}
+              maxLength={ITEM_NAME_MAX}
               onChange={(e) => setField('item_name', e.target.value)}
               onBlur={() => handleBlur('item_name')}
               placeholder="תג שם רגיל - ממותג"
@@ -269,6 +293,7 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
               data-testid="product-form-name"
             />
             <FieldError name="item_name" message={fieldErrors.item_name} />
+            <CharCounter value={form.item_name} max={ITEM_NAME_MAX} testId="product-name-counter" />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -315,10 +340,15 @@ export default function ProductFormDialog({ open, onOpenChange, editingProduct, 
                 value={form.image_url}
                 dir="ltr"
                 onChange={(e) => setField('image_url', e.target.value)}
+                onBlur={() => handleBlur('image_url')}
                 placeholder="https://..."
-                className="h-auto p-3 rounded-lg border-slate-300"
+                className={cn(
+                  'h-auto p-3 rounded-lg border-slate-300',
+                  fieldErrors.image_url && 'border-red-500 focus-visible:ring-red-300',
+                )}
                 data-testid="product-form-image"
               />
+              <FieldError name="image_url" message={fieldErrors.image_url} />
             </div>
           </div>
 

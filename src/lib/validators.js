@@ -46,6 +46,17 @@ export function isValidPositivePrice(value) {
   return Number.isFinite(n) && n > 0
 }
 
+// קישור https תקין (עבר לכאן מ-`paramsRegistry.js` 14/10/2026 — צרכן שני: קישור-התמונה במוצר).
+// ריק ⇒ false; המסך מחליט אם ריק מותר.
+export function isValidHttpsUrl(value) {
+  if (isBlank(value)) return false
+  try {
+    return new URL(String(value).trim()).protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 // ✏️ ביקורת-ולידציה שורה 13 (14/10/2026): פסיק עשרוני ⇒ נקודה, בשדות **שעות** בלבד. בטלפון
 // ובמקלדת עברית `6,5` טבעי לגמרי, ו-`Number('6,5')` הוא NaN ⇒ "חובה להזין שעות — מספר בין 0.5
 // ל-24", הודעה שמבלבלת כי 6,5 בטווח. רק פסיק **אחד בין ספרות** מתורגם; כל קלט אחר חוזר כמו שהוא.
