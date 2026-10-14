@@ -14,6 +14,7 @@ import {
   sortOverviewProjects,
   overviewHasGap,
   overviewRowKind,
+  isUntouchedFar,
   staffingCell,
   logisticsCell,
   overviewTiles,
@@ -192,7 +193,7 @@ describe('gapSentence — עמודת "מה חסר": משפט במילים, לע�
   it('ממתין לסגירה רגיל — מפרט מה נדרש להזין', () => {
     expect(
       gapSentence({ ...base, project_status: 'event_finished', assignments_row_count: 5 }),
-    ).toBe('ממתין להזנת שעות בפועל, כמות אורחים ודוח-סיכום')
+    ).toBe('חסרים: שעות, אורחים, דוח סיכום')
   })
 
   it('אצל הכספים — אינו דורש פעולה ממנהלת הפרויקטים', () => {
@@ -615,7 +616,7 @@ describe('gapTone — צבע עמודת "מה חסר" צמוד לענפי gapSen
     ).toBe('miss')
     expect(
       gapTone(overviewRow({ project_status: 'event_finished', assignments_row_count: 7 })),
-    ).toBe('hint')
+    ).toBe('done')
     expect(gapTone(overviewRow({ hostesses_confirmed: 1, assignments_row_count: 9 }))).toBe('hint')
     expect(
       gapTone(overviewRow({ project_status: 'ready', hostesses_confirmed: 6, logistics_ready: 2 })),
@@ -693,5 +694,41 @@ describe('filteredOutSentence — המונה של מצב-הריק-אחרי-סי�
   it('רבים ויחיד', () => {
     expect(filteredOutSentence(8)).toBe('8 פרויקטים קיימים ואינם מוצגים כרגע.')
     expect(filteredOutSentence(1)).toBe('פרויקט אחד קיים ואינו מוצג כרגע.')
+  })
+})
+
+// ✏️ 14/10/2026 (סיור-השופט, קבוצה 3): "אף זימון" אדום רק בתוך חלון-ההתרעה של מסך הבית.
+describe('isUntouchedFar — "אף זימון" אדום רק בתוך event_warning_days', () => {
+  const today = '2026-08-01'
+  const ctx = { today, warningDays: '14' }
+  const untouched = (date) => overviewRow({ final_event_date: date, assignments_row_count: 0 })
+
+  it('בדיוק 14 ימים — עדיין בתוך החלון: אדום, ⚠ והמשפט האדום', () => {
+    const p = untouched('2026-08-15')
+    expect(isUntouchedFar(p, ctx)).toBe(false)
+    expect(overviewRowKind(p, ctx)).toBe('red')
+    expect(gapSentence(p, ctx)).toBe('לא נשלח אף זימון לדיילת')
+    expect(gapTone(p, ctx)).toBe('miss')
+    expect(staffingCell(p, ctx).tone).toBe('miss')
+  })
+
+  it('15 ימים — מחוץ לחלון: בלי צבע-שורה, אפור "טרם נשלחו זימונים"', () => {
+    const p = untouched('2026-08-16')
+    expect(isUntouchedFar(p, ctx)).toBe(true)
+    expect(overviewRowKind(p, ctx)).toBe('plain')
+    expect(gapSentence(p, ctx)).toBe('טרם נשלחו זימונים')
+    expect(gapTone(p, ctx)).toBe('done')
+    expect(staffingCell(p, ctx).tone).toBe('done')
+  })
+
+  it('אירוע שעבר בלי זימונים נשאר אדום; סף לא ידוע ⇒ ההתנהגות הקודמת (אדום)', () => {
+    const past = untouched('2026-07-20')
+    expect(overviewRowKind({ ...past, project_status: 'event_finished' }, ctx)).toBe('red')
+    expect(overviewRowKind(untouched('2026-12-01'), { today, warningDays: null })).toBe('red')
+    expect(overviewRowKind(untouched('2026-12-01'))).toBe('red')
+  })
+
+  it('פרויקט עם שורות-שיבוץ — לעולם לא "רחוק-ללא-זימון"', () => {
+    expect(isUntouchedFar(overviewRow({ final_event_date: '2026-12-01' }), ctx)).toBe(false)
   })
 })

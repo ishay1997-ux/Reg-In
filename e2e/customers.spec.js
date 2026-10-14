@@ -123,7 +123,9 @@ test.describe('לקוחות (מודול 2) — קבלה E2E (guide ⑦)', () => 
     const restoredRow = page
       .locator('[data-testid^="customer-row-"]')
       .filter({ hasText: TEST_COMPANY_NAME })
-    await expect(restoredRow.getByText('פעיל', { exact: true })).toBeVisible()
+    // לקוח פעיל אינו נושא תג (קבוצה 3, 14/10/2026) — שוחזר = השורה כאן, בלי "לא פעיל".
+    await expect(restoredRow).toBeVisible()
+    await expect(restoredRow.getByText('לא פעיל')).toHaveCount(0)
   })
 
   test('blocked-role (STAFF=לוגיסטיקה): אין מודול לקוחות בסרגל וגישה ישירה ל-/customers חסומה', async ({

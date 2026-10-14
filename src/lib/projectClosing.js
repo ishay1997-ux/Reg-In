@@ -195,7 +195,7 @@ export function closingValidationSummary(draft) {
   if (invalidHours > 0) {
     missing.push(countPhrase(invalidHours, 'שעה בפועל אחת שגויה', 'שעות בפועל שגויות'))
   }
-  if (!draft?.hasReport) missing.push('דוח-סיכום')
+  if (!draft?.hasReport) missing.push('דוח סיכום')
 
   if (missing.length === 0) return null
   return `לא ניתן לסגור: חסרים ${joinHebrewList(missing)}.`

@@ -65,7 +65,7 @@ import ClosingTab from './ClosingTab'
 // הסטטוסים שאחרי הסגירה התפעולית — "שינוי תכולה" מושבת-ומנומק עליהם (חסימת-מצב, ㉔),
 // בשונה מחסימת-הרשאה שמעלימה. ‏cancelled מטופל בנפרד (הכפתור הראשי יורד מפרויקט מת).
 const POST_EVENT_STATUSES = ['event_finished', 'awaiting_invoice', 'awaiting_payment', 'finished']
-const SCOPE_BLOCKED_TITLE = "עברי ללשונית 'סגירת אירוע' לשינוי תכולה אחרי האירוע"
+const SCOPE_BLOCKED_TITLE = "שינוי תכולה אחרי האירוע נעשה בלשונית 'סגירת אירוע'."
 
 const TAB_KEYS = { logistics: 'logistics', team: 'team', closing: 'closing' }
 
@@ -492,7 +492,7 @@ function IdentityCard({
           <Sub>
             {located
               ? 'אותר על המפה — משמש לדירוג הקרבה בשיבוץ'
-              : 'טרם אותר על המפה — דירוג הקרבה בשיבוץ יהיה ניטרלי'}
+              : 'המיקום לא אותר במפה, והמרחק לא ישוקלל בשיבוץ'}
           </Sub>
         </Cell>
 

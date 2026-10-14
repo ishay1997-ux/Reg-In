@@ -276,7 +276,8 @@ test.describe('עמוד הלקוח (מודול 3 / צעד 3.5) — CEO', () => {
     // בדיוק סוג הכשל שאזהרה אמורה למנוע. אין כאן ענף-אישור — הוא היה משנה דאטה אמיתית.
     await dialog.getByRole('button', { name: 'ביטול' }).click()
     await expect(dialog).toBeHidden()
-    await expect(row.getByText('פעיל', { exact: true })).toBeVisible()
+    // לקוח פעיל אינו נושא תג (קבוצה 3, 14/10/2026) — נשאר פעיל = אין "לא פעיל".
+    await expect(row.getByText('לא פעיל')).toHaveCount(0)
   })
 })
 

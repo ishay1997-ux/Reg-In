@@ -108,7 +108,7 @@ test.describe('מודול 6 · לשונית-הסגירה — עד סף-השלי�
     await expect(summary).toContainText('לא ניתן לסגור: חסרים')
     // שני חסרים ודאיים על טיוטה ריקה: שעות-האירוע ודוח-הסיכום (קיימים בכל תרחיש).
     await expect(summary).toContainText('שעות ביצוע בפועל')
-    await expect(summary).toContainText('דוח-סיכום')
+    await expect(summary).toContainText('דוח סיכום')
   })
 })
 
