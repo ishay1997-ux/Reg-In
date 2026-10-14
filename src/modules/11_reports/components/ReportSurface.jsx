@@ -14,8 +14,9 @@
 // משטח מחזיר שגיאת-"פונקציה לא נמצאה", והמסך מציג את **מצב-התקלה** עם *"נסי שוב"* —
 // 🔴 **ולעולם לא "אין נתונים"**, שהוא בדיוק מצג-השווא שמדריך-המיקרו §4.3 אוסר.
 
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { ChevronDown } from 'lucide-react'
 import Disclosure from '@/components/Disclosure'
 import FilterPill from '@/components/FilterPill'
 import Hint from '@/components/Hint'
@@ -516,6 +517,39 @@ function EmptyPage({
  *
  * כל השבע מקבלות את ה-payload **אחרי** `transformPayload`.
  */
+/**
+ * 🔽 **טבלה מקופלת — `tableToggle` (14/10/2026, ישי על "סגירת הצעות": *"יש שם רק מלא שורות"*).**
+ * הגרף עונה על השאלה, והטבלה היא פירוט — ולכן היא סגורה עד שמבקשים אותה. **לחיצה על עמודה בגרף
+ * פותחת אותה כבר מסוננת** (הסינון-הצולב לא נעלם מאחורי כפתור). סגירה בזמן בחירה גם מנקה את הבחירה —
+ * אחרת הצ'יפ *"× נקה בחירה"* היה מתאר טבלה שאינה על המסך.
+ * ⚠️ **לא `Disclosure`:** הוא `<details>` לא-מבוקר, ופתיחה מתוך הגרף מחייבת מצב מבוקר.
+ */
+function CollapsibleTable({ label, shown, onToggle, children }) {
+  const id = useId()
+  if (!label) return children
+  return (
+    <>
+      <button
+        type="button"
+        aria-expanded={shown}
+        aria-controls={id}
+        onClick={onToggle}
+        data-testid="report-table-toggle"
+        className="mb-3 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-600 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+      >
+        {label}
+        <ChevronDown
+          aria-hidden="true"
+          className={`size-4 shrink-0 text-slate-400 transition-transform ${shown ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <div id={id} hidden={!shown}>
+        {shown ? children : null}
+      </div>
+    </>
+  )
+}
+
 export default function ReportSurface({
   surface,
   filters,
@@ -531,7 +565,10 @@ export default function ReportSurface({
   renderBeforeTable,
   renderExtras,
   chartAction,
+  tableToggle,
 }) {
+  // 🔽 ר' `CollapsibleTable` — רלוונטי רק למשטח שמסר `tableToggle`.
+  const [tableOpen, setTableOpen] = useState(false)
   // 🚪 המעטפת יודעת מה ממוסך ואיפה יושבת שורת-המסננים; המשטח אינו יודע אף אחד מהשניים.
   const shell = useContext(ReportsShellContext)
   const [reloadTick, setReloadTick] = useState(0)
@@ -798,48 +835,58 @@ export default function ReportSurface({
         </div>
       )}
 
-      {/* 🏷️ הכותרת קודמת לשורת-הפעולה ולרמז — נמדד בצילום: שורת "לחיצה על שורה…" מעל
+      <CollapsibleTable
+        label={tableToggle?.(payload) ?? null}
+        shown={tableOpen || Boolean(selection)}
+        onToggle={() => {
+          const shown = tableOpen || Boolean(selection)
+          if (shown && selection) setSelectionState({ key: requestKey, selection: null })
+          setTableOpen(!shown)
+        }}
+      >
+        {/* 🏷️ הכותרת קודמת לשורת-הפעולה ולרמז — נמדד בצילום: שורת "לחיצה על שורה…" מעל
           הכותרת נקראה כאילו היא הכותרת. */}
-      {!selection && surface.topN && (
-        <TopNTitle
-          label={surface.topN}
-          rowTotal={payload.meta?.row_total}
-          shown={rawPayload?.rows?.length ?? payload.rows.length}
-        />
-      )}
-      {payload.columns?.length > 0 && renderBeforeTable?.(payload)}
-      {/* 🔴 **והשורה נעלמת בזמן סינון-צולב — נמדד 16/09/2026, וזה היה שקר על המסך:**
+        {!selection && surface.topN && (
+          <TopNTitle
+            label={surface.topN}
+            rowTotal={payload.meta?.row_total}
+            shown={rawPayload?.rows?.length ?? payload.rows.length}
+          />
+        )}
+        {payload.columns?.length > 0 && renderBeforeTable?.(payload)}
+        {/* 🔴 **והשורה נעלמת בזמן סינון-צולב — נמדד 16/09/2026, וזה היה שקר על המסך:**
           ‏`RowCapNote` נמדד תמיד מול `payload.rows.length` (התקרה שהשרת החזיר), בעוד הטבלה
           שמתחתיו מציגה את `selectedRows`. ⇒ לחיצה על עמודה שהותירה ⁦2⁩ שורות השאירה מעליה
           *"מוצגות ⁦50⁩ מתוך ⁦731⁩ שורות"*. 🔑 **ולמה להסתיר ולא לעדכן את המונה:** ההכרזה
           החיה (📐9) כבר אומרת *"מסונן ל…; ⁦2⁩ שורות"*, ושני מונים שונים לאותה טבלה הם בדיוק
           הכפילות ש-D-25 נולד כדי למחוק. הצ'יפ *"× נקי בחירה"* מחזיר את השורה. */}
-      {/* ✏️ **והמונה נמדד מול השורות ה*גולמיות*, לפני הטרנספורם של הלשונית (16/09/2026):**
+        {/* ✏️ **והמונה נמדד מול השורות ה*גולמיות*, לפני הטרנספורם של הלשונית (16/09/2026):**
           🔴 נמדד במ16 — המטען מחזיר `rows=50` ו-`row_total=50` (כלומר **אין תקרה**), אבל
           שבב-הלקוח *"רק בלי דירוג"* מצמצם ל-⁦17⁩ ⇒ השורה הופיעה ואמרה *"מוצגות ⁦17⁩ מתוך ⁦50⁩
           שורות"* מעל פאג'ר שאומר *"1–17 מתוך 17"*. **צמצום-לקוח נקרא כתקרת-שרת**, והוא
           בדיוק ההפך: השרת מסר הכול. ⇒ המונה הוא `rawPayload.rows.length`, וסינון-לקוח
           פשוט מכבה את השורה. */}
-      {!selection && !surface.topN && (
-        <RowCapNote
-          rowTotal={payload.meta?.row_total}
-          shown={rawPayload?.rows?.length ?? payload.rows.length}
+        {!selection && !surface.topN && (
+          <RowCapNote
+            rowTotal={payload.meta?.row_total}
+            shown={rawPayload?.rows?.length ?? payload.rows.length}
+          />
+        )}
+        <ReportTable
+          hidePager={Boolean(surface.topN)}
+          columns={payload.columns}
+          rows={selectedRows}
+          page={page}
+          onPage={setPage}
+          sort={payload.meta?.sort ?? sortFromColumns(payload.columns)}
+          onDrill={rowDoors ? rowDrill : undefined}
+          announcement={announcement}
+          caption={surface.name}
         />
-      )}
-      <ReportTable
-        hidePager={Boolean(surface.topN)}
-        columns={payload.columns}
-        rows={selectedRows}
-        page={page}
-        onPage={setPage}
-        sort={payload.meta?.sort ?? sortFromColumns(payload.columns)}
-        onDrill={rowDoors ? rowDrill : undefined}
-        announcement={announcement}
-        caption={surface.name}
-      />
-      {payload.meta?.extra_tables?.map((table) => (
-        <ExtraTable key={table.title} table={table} onDrill={rowDrill} />
-      ))}
+        {payload.meta?.extra_tables?.map((table) => (
+          <ExtraTable key={table.title} table={table} onDrill={rowDrill} />
+        ))}
+      </CollapsibleTable>
 
       <Footers notes={payload.meta?.notes} />
       {renderExtras?.(payload)}
