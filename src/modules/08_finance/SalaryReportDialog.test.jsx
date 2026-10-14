@@ -261,6 +261,21 @@ describe('SalaryReportDialog — פאנל-הקדם-הפקה (הכרעת-ישי 2
     expect(screen.queryByTestId('salary-report-preflight')).not.toBeInTheDocument()
   })
 
+  // F12 (14/10/2026): בשום מסך אין סכום מחושב בש"ח — גם לא בחלון הישן.
+  it('אחרי ההפקה: בלי "סה"כ לתשלום" ובלי עמודת סה"כ; שורת הסיכום בשעות', async () => {
+    generateAndSendSalaryReport.mockResolvedValue(generateResult())
+    renderDialog()
+    await screen.findByTestId('salary-report-preflight')
+    await clickGenerateAndConfirm()
+    const table = await screen.findByTestId('salary-report-result-table')
+    expect(screen.getByTestId('salary-report-result')).not.toHaveTextContent('סה"כ לתשלום')
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent)
+    expect(headers).not.toContain('סה"כ')
+    expect(table).toHaveTextContent('סה"כ שעות')
+  })
+
   it('פער-חודשים: דילוג על חודש מגלגל את שורותיו לדוח הזה — והפאנל נוקב בחודשים בשמם', async () => {
     // האחרון שהופק הוא יוני 2026; הנבחר (ברירת-המחדל) ספטמבר 2026 ⇒ יולי ואוגוסט חסרים.
     listSalaryReports.mockResolvedValue([reportRow({ period: '2026-06-01' })])
@@ -774,7 +789,7 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
   // **מעגל**, בעוד הגיליון שהולך לרו"ח כותב את אותו תעריף ב-`#,##0.00`. תעריף שברי הוא ערך
   // אפשרי (`hourly_rate` הוא `numeric` בלי סקאלה, נכתב משדה-טקסט חופשי), ואז השורה על המסך
   // שהמנהלת מאשרת **אינה מתחברת**: 34 × 6.00 אינו 205.92.
-  it('תעריף שברי מוצג במלואו והשורה מתיישבת (34.32 × 6.00 = 205.92) — ותעריף שלם נשאר "43 ₪"', async () => {
+  it('תעריף שברי מוצג במלואו (34.32) ותעריף שלם נשאר "43 ₪"; סכום השורה לא מוצג (F12)', async () => {
     const fractional = actualLine({ rate: 34.32, hours: 6, bonus: 0, travel: 0, lineTotal: 205.92 })
     generateAndSendSalaryReport.mockResolvedValue(
       generateResult({ lines: [fractional, compensationLine()] }),
@@ -798,12 +813,10 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
     expect(within(table).queryByText('34 ₪')).not.toBeInTheDocument()
     expect(within(table).queryByText('34.00 ₪')).not.toBeInTheDocument()
 
-    // ההתיישבות נמדדת מהמסך עצמו, לא מהפיקסצ'ר: שעות × תעריף כפי שהם **מוצגים**.
-    const num = (text) => Number(text.replace(/[^\d.-]/g, ''))
-    const shownHours = num(within(row).getByText('6.00').textContent)
-    const shownRate = num(within(row).getByText('34.32 ₪').textContent)
-    const shownTotal = num(within(row).getByText('205.92 ₪').textContent)
-    expect(shownHours * shownRate).toBeCloseTo(shownTotal, 2)
+    // ✏️ 14/10/2026 (F12): סכום השורה כבר לא מוצג על המסך, ולכן אין "התיישבות" לבדוק כאן —
+    // הסכום נבדק בהתאמה הפנימית של `salaryReport.js`. נשארים השעות והתעריף כפי שהם מוצגים.
+    expect(within(row).getByText('6.00')).toBeInTheDocument()
+    expect(within(row).queryByText('205.92 ₪')).not.toBeInTheDocument()
 
     // תעריף שלם נשאר כפי שהמוקאפ המאושר מצייר — "43 ₪", לא "43.00 ₪".
     const compRow = within(table).getByText('אורלי שני').closest('tr')
@@ -840,7 +853,8 @@ describe('SalaryReportDialog — "ייצא ושלח" (המסלול הבלתי-ה
 
     const note = screen.getByTestId('salary-report-omitted-note')
     expect(note).toHaveTextContent('שורה אחת')
-    expect(note).toHaveTextContent('0.00 ₪')
+    expect(note).toHaveTextContent('באפס')
+    expect(note).not.toHaveTextContent('₪')
     expect(note).toHaveTextContent('2')
   })
 

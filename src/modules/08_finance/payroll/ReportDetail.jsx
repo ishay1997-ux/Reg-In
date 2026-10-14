@@ -89,8 +89,8 @@ export default function ReportDetail({ reportId, update, canEdit, page }) {
     )
   }
 
-  // הצורה: פריט-הרשימה + השדות הנוספים (חוזה §4.3 "adds"); אם השרת עוטף ב-`report` — אותו דבר.
-  const report = detail.report ?? detail
+  // צורת השרת: פרטי הדוח עטופים ב-`report` (§4.3 + F6; שער-הצורה ב-payrollApi דורש אותו).
+  const report = detail.report
   return (
     <div className="flex flex-col gap-4" data-testid="payroll-detail">
       <Card>
@@ -210,9 +210,7 @@ function FileActions({ report, detail }) {
         >
           הורד שחזור
         </Button>
-        <p className="text-xs text-slate-600">
-          השחזור נבנה מנתוני הדוח השמורים ומסומן ככזה. הוא לא נשמר, לא נשלח ואינו מחליף את המקור.
-        </p>
+        <p className="text-xs text-slate-600">קובץ משוחזר מנתוני הדוח, לעיון בלבד</p>
         {downloadError && <Banner tone="error">{downloadError}</Banner>}
       </div>
     )
@@ -251,6 +249,18 @@ function Delivery({ report, detail, canEdit, onReload }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-semibold text-slate-700">שליחה לרואה החשבון:</span>
         <StatusTag label={tag.label} tone={tag.tone} testId="payroll-detail-delivery-tag" />
+        {/* F13: הנמען המקורי בלבד. D10: הנמען והזמן באותה שורה, בלי "נשלח" שני. */}
+        {latest?.intended_recipient && (
+          <span className="text-slate-700" data-testid="payroll-detail-latest">
+            אל <Ltr>{latest.intended_recipient}</Ltr>
+            {latest.completed_at && (
+              <>
+                {' '}
+                · <Ltr>{formatTimestampFull(latest.completed_at)}</Ltr>
+              </>
+            )}
+          </span>
+        )}
       </div>
       {report.delivery_state === 'failed' && <p>הדוח נשמר אבל לא נשלח. אפשר לשלוח שוב</p>}
       {report.delivery_state === 'unknown' && (
@@ -266,26 +276,21 @@ function Delivery({ report, detail, canEdit, onReload }) {
           />
         </div>
       )}
-      {attempts.length > 0 && (
-        <ul className="flex flex-col gap-1 text-slate-700" data-testid="payroll-detail-attempts">
-          {attempts.map((attempt) => {
-            const attemptTag = accountantDeliveryTag(attempt.state)
-            return (
-              <li key={attempt.attempt_id} className="flex flex-wrap items-center gap-2">
-                <StatusTag label={attemptTag.label} tone={attemptTag.tone} />
-                {/* F13 (14/10): המסך מציג תמיד את הנמען המקורי. הכתובת שאליה המייל נמסר בפועל
-                    (מנגנון הבטיחות) נשמרת במסד בלבד ואינה מוצגת. */}
-                <span>
-                  אל <Ltr>{attempt.intended_recipient}</Ltr>
-                </span>
-                <span>
-                  ·{' '}
+      {attempts.length > 1 && (
+        <div data-testid="payroll-detail-attempts">
+          <p className="text-xs font-semibold text-slate-600">ניסיונות קודמים</p>
+          <ul className="flex flex-col gap-1 text-slate-700">
+            {attempts
+              .filter((attempt) => attempt.attempt_id !== latest?.attempt_id)
+              .map((attempt) => (
+                <li key={attempt.attempt_id}>
+                  {accountantDeliveryTag(attempt.state).label} · אל{' '}
+                  <Ltr>{attempt.intended_recipient}</Ltr> ·{' '}
                   <Ltr>{formatTimestampFull(attempt.completed_at ?? attempt.created_at, '—')}</Ltr>
-                </span>
-              </li>
-            )
-          })}
-        </ul>
+                </li>
+              ))}
+          </ul>
+        </div>
       )}
     </div>
   )
@@ -338,9 +343,6 @@ function FrozenLines({ lines, page, onPage }) {
   return (
     <Card testId="payroll-detail-lines">
       <h3 className="mb-1 text-sm font-bold text-slate-800">שורות הדוח</h3>
-      <p className="mb-2 text-xs text-slate-600">
-        פרטי בנק אינם נשמרים בנתוני הדוח; הם מופיעים רק בקובץ שנשלח.
-      </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[700px] text-sm">
           <thead>
@@ -373,7 +375,7 @@ function FrozenLines({ lines, page, onPage }) {
                   <Ltr>{line.id_number}</Ltr>
                 </Td>
                 <Td>
-                  <Ltr>{Number(line.hours).toFixed(2)}</Ltr>
+                  <Ltr>{formatHours(line.hours)}</Ltr>
                 </Td>
                 <Td>
                   <Money amount={line.rate} exact />

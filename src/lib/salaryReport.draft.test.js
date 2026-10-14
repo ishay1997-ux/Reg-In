@@ -19,6 +19,7 @@ import {
   frozenLine,
   makePreview,
   previewLine,
+  reportDetail,
   reportItem,
 } from '@/modules/08_finance/payroll/testFixtures'
 
@@ -185,6 +186,17 @@ describe('buildSalaryReportReconstructionDocument — שחזור לדוח בלי
         reconstructedAt: at,
       }),
     ).toThrow(expect.objectContaining({ code: 'SALARY_TOTAL_MISMATCH' }))
+  })
+
+  // תיקון בודק 2 (14/10): השחזור נכשל תמיד כי התשובה האמיתית עוטפת את הדוח ב-`report`.
+  // כאן נבנה השחזור בדיוק מצורת השרת (`detail.report` + `detail.lines`), כפי שהמסך קורא לו.
+  it('נבנה מצורת השרת האמיתית — detail.report (עם line_count) ו-detail.lines', () => {
+    const detail = reportDetail({ report: { report_id: 15, period: '2026-08-01' } })
+    const doc = buildSalaryReportReconstructionDocument(detail.report, detail.lines, {
+      reconstructedAt: at,
+    })
+    expect(doc.fileName).toBe('08_2026_Payroll_Report_RECONSTRUCTED.xlsx')
+    expect(doc.totals.lineCount).toBe(2)
   })
 
   it('בלי מועד שחזור ⇒ אין קובץ', () => {

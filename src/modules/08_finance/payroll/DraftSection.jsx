@@ -25,15 +25,16 @@ import {
 } from './payrollModel'
 
 const BASIS_LABELS = { actual: 'עבודה', cancellation_compensation: 'פיצוי ביטול' }
+// D4: שורה אחת שאומרת מה חסר ואיפה משלימים. (כרטיס הדיילת נמצא במודול "דיילות"; מנהלת
+// הכספים חסומה ממנו, ולכן אין כאן קישור — היא מעבירה למי שאחראית על הדיילות.)
+const BLOCKER_FIX = {
+  IDENTITY_MISSING: 'חסרה ת"ז או שם. יש להשלים בכרטיס הדיילת',
+  COMP_HOURS_MISSING: 'חסרות שעות האירוע לחישוב הפיצוי. יש להשלים בכרטיס הפרויקט',
+}
+
 const DEFECT_LABELS = {
   IDENTITY_MISSING: 'חסרים שם או ת"ז',
   COMP_HOURS_MISSING: 'חסרות שעות לחישוב פיצוי',
-}
-
-function bankText(line) {
-  if (!line.bank_account) return null
-  const numeric = line.bank_branch ? `${line.bank_branch}-${line.bank_account}` : line.bank_account
-  return { name: line.bank_name ?? '', numeric }
 }
 
 export default function DraftSection({
@@ -97,7 +98,10 @@ export default function DraftSection({
   const allZero = !empty && Number(totals.total_amount) === 0
   const hoursTotal = totals.hours_total ?? hoursSum(lines)
   const monthEnded = preview.month_state === 'ended'
-  const missingBank = lines.filter((l) => l.show_in_file && !l.bank_account)
+  // D2: נספרות דיילות, לא שורות.
+  const missingBank = [
+    ...new Set(lines.filter((l) => l.show_in_file && !l.bank_account).map((l) => l.hostess_name)),
+  ]
   const zeroDurationCount = lines.filter((l) =>
     (l.warnings ?? []).includes('COMP_DURATION_ZERO'),
   ).length
@@ -117,13 +121,8 @@ export default function DraftSection({
     }
   }
 
-  const startDisabledReason = !canEdit
-    ? null
-    : !monthEnded
-      ? monthNotEndedMessage(preview.period)
-      : hasBlockers
-        ? 'יש לתקן את השורות החסומות לפני שליחת הסיכומים'
-        : null
+  // החסימה מוסברת פעם אחת, בהודעה שמעל (מדריך UX D4). מתחת לכפתור — רק סיבת החודש (D11).
+  const startDisabledReason = canEdit && !monthEnded ? monthNotEndedMessage(preview.period) : null
 
   return (
     <div className="flex flex-col gap-4" data-testid="payroll-draft">
@@ -145,13 +144,6 @@ export default function DraftSection({
           value={hoursTotal === null ? null : <Ltr>{formatHours(hoursTotal)}</Ltr>}
           emptyText="—"
           testId="payroll-tile-hours"
-        />
-        <StatTile
-          label="ממתינות לסגירת שעות"
-          value={pending.ok === false ? null : <Ltr>{pending.assignment_count ?? 0}</Ltr>}
-          emptyText="לא ידוע"
-          sub={pending.ok === false ? 'הבדיקה לא הצליחה' : 'משמרות'}
-          testId="payroll-tile-pending"
         />
       </div>
 
@@ -178,17 +170,12 @@ export default function DraftSection({
 
       {hasBlockers && (
         <Banner tone="error" testId="payroll-blockers">
-          <p className="font-semibold">
-            {countPhrase(blockedCount, 'שורה אחת חסומה', 'שורות חסומות')} — אי אפשר לשלוח סיכומים עד
-            שיתוקנו
-          </p>
-          <ul className="mt-1 list-disc pr-5">
-            {blockers.map((b) => (
-              <li key={b.code}>
-                {DEFECT_LABELS[b.code] ?? payrollErrorMessage(b.code)}: <Ltr>{b.count}</Ltr>
-              </li>
-            ))}
-          </ul>
+          {blockers.map((b) => (
+            <p key={b.code}>
+              {countPhrase(b.count, 'שורה אחת חסומה', `שורות חסומות`)}:{' '}
+              {BLOCKER_FIX[b.code] ?? payrollErrorMessage(b.code)}
+            </p>
+          ))}
           {firstBlockedIndex >= 0 && (
             <Button
               type="button"
@@ -197,7 +184,7 @@ export default function DraftSection({
               onClick={() => onPage(Math.floor(firstBlockedIndex / 50) + 1)}
               data-testid="payroll-blockers-goto"
             >
-              מעבר לשורה החסומה הראשונה
+              מעבר לשורה החסומה
             </Button>
           )}
         </Banner>
@@ -226,7 +213,7 @@ export default function DraftSection({
                 <Button
                   type="button"
                   className="h-auto px-4 py-2"
-                  disabled={Boolean(startDisabledReason) || startingReview}
+                  disabled={Boolean(startDisabledReason) || hasBlockers || startingReview}
                   onClick={onStartReview}
                   data-testid="payroll-start-review"
                 >
@@ -259,11 +246,6 @@ export default function DraftSection({
         {startDisabledReason && !preview.active_review && !empty && (
           <p className="mb-2 text-sm text-slate-700" data-testid="payroll-start-reason">
             {startDisabledReason}
-          </p>
-        )}
-        {hasBlockers && !empty && (
-          <p className="mb-2 text-sm text-slate-700" data-testid="payroll-draft-reason">
-            את הטיוטה אפשר להוריד אחרי תיקון השורות החסומות
           </p>
         )}
         {downloadError && (
@@ -319,29 +301,30 @@ function DraftDetails({ preview, missingBank, zeroDurationCount }) {
       {accountant.template_valid === false && (
         <p className="text-amber-800">תבנית המייל לרואה החשבון לא תקינה בהגדרות.</p>
       )}
+      {missingBank.length > 0 && (
+        <Disclosure
+          summary={countPhrase(missingBank.length, 'דיילת אחת בלי פרטי בנק', 'דיילות בלי פרטי בנק')}
+          testId="payroll-missing-bank-summary"
+        >
+          <p>{missingBank.join(', ')}</p>
+        </Disclosure>
+      )}
       <Disclosure summary="פרטים נוספים" testId="payroll-draft-details">
         <p>
           נאסף ב-<Ltr>{formatTimestampFull(preview.captured_at, '—')}</Ltr>
         </p>
-        <p data-testid="payroll-zero-lines">
-          {zeroLines === 0
-            ? 'אין שורות באפס'
-            : `${countPhrase(zeroLines, 'שורה אחת באפס', 'שורות באפס')} — נשמרות בדוח ולא נכנסות לקובץ לרואה החשבון`}
-        </p>
-        <p data-testid="payroll-missing-bank">
-          {missingBank.length === 0
-            ? 'לכל הדיילות בקובץ יש פרטי בנק'
-            : `${countPhrase(missingBank.length, 'שורה אחת', 'שורות')} בלי פרטי בנק: ${[
-                ...new Set(missingBank.map((l) => l.hostess_name)),
-              ].join(', ')}`}
-        </p>
+        {zeroLines > 0 && (
+          <p data-testid="payroll-zero-lines">
+            {countPhrase(zeroLines, 'שורה אחת באפס', 'שורות באפס')} — נשמרות בדוח ולא נכנסות לקובץ
+            לרואה החשבון
+          </p>
+        )}
         {zeroDurationCount > 0 && (
           <p>
             {countPhrase(zeroDurationCount, 'שורת פיצוי אחת', 'שורות פיצוי')} עם שעת התחלה זהה לשעת
             הסיום — נרשמות עם 0 שעות
           </p>
         )}
-        <p>בונוס ונסיעות בשורות פיצוי ביטול מוצגים כקו (—) ולא כאפס: הם אינם חלק מהפיצוי.</p>
       </Disclosure>
     </div>
   )
@@ -354,8 +337,6 @@ function DraftTable({ rows, offset }) {
         <thead>
           <tr>
             <Th className="w-[26%]">דיילת</Th>
-            <Th>ת"ז</Th>
-            <Th>פרטי בנק</Th>
             <Th>שעות</Th>
             <Th>תעריף</Th>
             <Th>בונוס</Th>
@@ -365,7 +346,6 @@ function DraftTable({ rows, offset }) {
         <tbody>
           {rows.map((line, i) => {
             const defects = line.defects ?? []
-            const bank = bankText(line)
             const isComp = line.line_basis === 'cancellation_compensation'
             return (
               <tr
@@ -385,28 +365,22 @@ function DraftTable({ rows, offset }) {
                       {defects.map((d) => DEFECT_LABELS[d] ?? payrollErrorMessage(d)).join(' · ')}
                     </div>
                   )}
+                  {line.show_in_file && !line.bank_account && (
+                    <span
+                      className="mt-1 inline-block rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-900"
+                      data-testid="payroll-missing-bank-tag"
+                    >
+                      חסרים פרטי בנק
+                    </span>
+                  )}
                   {!line.show_in_file && defects.length === 0 && (
                     <div className="mt-1 text-xs text-slate-600">
                       באפס — לא נכנסת לקובץ לרואה החשבון
                     </div>
                   )}
                 </Td>
-                <Td>{line.id_number ? <Ltr>{line.id_number}</Ltr> : <NotApplicable />}</Td>
                 <Td>
-                  {bank ? (
-                    <span>
-                      {bank.name} <Ltr>{bank.numeric}</Ltr>
-                    </span>
-                  ) : (
-                    <NotApplicable />
-                  )}
-                </Td>
-                <Td>
-                  {line.hours == null ? (
-                    <NotApplicable />
-                  ) : (
-                    <Ltr>{Number(line.hours).toFixed(2)}</Ltr>
-                  )}
+                  {line.hours == null ? <NotApplicable /> : <Ltr>{formatHours(line.hours)}</Ltr>}
                 </Td>
                 <Td>
                   {line.rate == null ? <NotApplicable /> : <Money amount={line.rate} exact />}

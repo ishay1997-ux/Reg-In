@@ -588,6 +588,29 @@ describe('קריאות S1/S2', () => {
     expect(mocks.rpc).not.toHaveBeenCalled()
   })
 
+  // F13 (14/10/2026): כשהמייל הופנה לכתובת הבדיקה, החלון הישן מציג את הנמען המקורי.
+  it('listSalaryReports מעדיפה intended_recipient על recipient (F13)', async () => {
+    mocks.from.mockImplementation((table) => {
+      if (table === 'salary_reports') {
+        return queryStub({ data: [{ report_id: 9, period: '2026-07-01' }], error: null })
+      }
+      return queryStub({
+        data: [
+          {
+            entity_id: 9,
+            recipient: 'ishay1997@gmail.com',
+            intended_recipient: 'office@accountant.example',
+            created_at: '2026-10-13T00:00:00Z',
+          },
+        ],
+        error: null,
+      })
+    })
+    await expect(listSalaryReports()).resolves.toEqual([
+      { report_id: 9, period: '2026-07-01', sent_to: 'office@accountant.example' },
+    ])
+  })
+
   // רשימה ריקה אינה מחייבת פנייה שנייה — ומדידה זולה שמונעת שאילתה מיותרת בכל טעינה.
   it('אין דוחות ⇒ `email_log` אינה נשאלת כלל', async () => {
     const seen = []

@@ -15,7 +15,16 @@ import ReasonDialog from './ReasonDialog'
 import { Td, Th } from './payrollUi'
 import { actionReason, formatHours, payrollErrorMessage, recipientStatus } from './payrollModel'
 
-export default function ReviewTable({ rows, page, onPage, review, canEdit, onOpenCase, onReload }) {
+export default function ReviewTable({
+  rows,
+  page,
+  onPage,
+  review,
+  canEdit,
+  onOpenCase,
+  onReload,
+  onSendUpdated,
+}) {
   const info = review.review
   const paged = paginate(rows, page)
   const [noResponseFor, setNoResponseFor] = useState(null)
@@ -48,6 +57,7 @@ export default function ReviewTable({ rows, page, onPage, review, canEdit, onOpe
                 onOpenCase={onOpenCase}
                 onNoResponse={() => setNoResponseFor(recipient)}
                 onReload={onReload}
+                onSendUpdated={onSendUpdated}
               />
             ))}
           </tbody>
@@ -76,6 +86,7 @@ function RecipientRow({
   onOpenCase,
   onNoResponse,
   onReload,
+  onSendUpdated,
 }) {
   const canApproveByRecord =
     canEdit &&
@@ -98,7 +109,6 @@ function RecipientRow({
       </Td>
       <Td>
         <RecipientStatus recipient={recipient} />
-        <DeliveryLine delivery={recipient.delivery} />
       </Td>
       <Td className="whitespace-nowrap">
         <Ltr>{formatTimestamp(recipient.last_action_at, '—')}</Ltr>
@@ -119,6 +129,19 @@ function RecipientRow({
             </SmallButton>
           )}
           {canEdit && <ResendButton recipient={recipient} onReload={onReload} />}
+          {canEdit && recipient.digest_current === false && (
+            <SmallButton
+              onClick={() =>
+                onSendUpdated({
+                  hostessId: recipient.hostess_id,
+                  hostessName: recipient.hostess_name,
+                })
+              }
+              testId="payroll-send-updated-row"
+            >
+              שלח סיכום מעודכן
+            </SmallButton>
+          )}
           {canApproveByRecord && (
             <SmallButton onClick={onNoResponse} testId="payroll-approve-by-record">
               אשר לפי תיעוד
@@ -169,21 +192,6 @@ function RecipientStatus({ recipient }) {
       {Icon && <Icon aria-hidden="true" className="size-3.5 shrink-0" />}
       {status.label}
     </span>
-  )
-}
-
-// פרטי המשלוח בשורה משנית אפורה — "נשלח 13/10 21:04". בלי צ'יפ, ובלי ההפניה הפנימית (F13).
-function DeliveryLine({ delivery }) {
-  if (!delivery) return null
-  const at = formatTimestamp(delivery.completed_at)
-  let text = null
-  if (delivery.state === 'sent') text = at ? `נשלח ${at}` : 'נשלח'
-  else if (delivery.state === 'failed' && at) text = `ניסיון אחרון ${at}`
-  if (!text) return null
-  return (
-    <div className="mt-1 text-xs text-slate-600" data-testid="payroll-delivery-line">
-      {text}
-    </div>
   )
 }
 

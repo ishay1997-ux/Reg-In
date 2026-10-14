@@ -344,29 +344,31 @@ function OperationProgress({ opId, update, canEdit }) {
         )}
       </Banner>
       <div className="mt-3 flex flex-wrap gap-2">
-        {canEdit && stage.action === 'resume' && (
-          <>
-            <Button
-              type="button"
-              className="h-auto px-4 py-2"
-              disabled={actionBusy}
-              onClick={() => act(() => resumePayrollOperation(opId))}
-              data-testid="payroll-operation-resume"
-            >
-              המשך
-            </Button>
-            <Button
-              type="button"
-              variant="link"
-              className="h-auto p-0 text-slate-700 underline"
-              disabled={actionBusy}
-              onClick={() => act(() => abandonPayrollOperation(opId))}
-              data-testid="payroll-operation-abandon"
-            >
-              בטל את ההפקה הזו
-            </Button>
-          </>
-        )}
+        {canEdit &&
+          stage.action === 'resume' &&
+          (status.state === 'preparing' || status.state === 'prepared') && (
+            <>
+              <Button
+                type="button"
+                className="h-auto px-4 py-2"
+                disabled={actionBusy}
+                onClick={() => act(() => resumePayrollOperation(opId))}
+                data-testid="payroll-operation-resume"
+              >
+                המשך
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-slate-700 underline"
+                disabled={actionBusy}
+                onClick={() => act(() => abandonPayrollOperation(opId))}
+                data-testid="payroll-operation-abandon"
+              >
+                בטל את ההפקה הזו
+              </Button>
+            </>
+          )}
         {canEdit && (stage.action === 'retry_send' || stage.action === 'check_status') && (
           <AccountantResend
             reportId={status.report_id}
