@@ -158,6 +158,18 @@ begin
     'decision', jsonb_build_object('state', r.state, 'at', r.decided_at),
     'open_case', case when c.case_id is null then null
                       else jsonb_build_object('category', c.category, 'created_at', c.created_at) end,
+    -- הפנייה האחרונה שנסגרה (לפני הפקה) של הדיילת בסבב — כדי שסיבת ההחלטה תגיע אליה (F5:
+    -- "a reason ... and the hostess sees it"; ממצא אבטחה 14.10). לפי דיילת ולא לפי נמענת: אחרי
+    -- תיקון הנמענת מתחלפת, והפנייה שייכת לנמענת הקודמת. בלי מזהים ובלי סכומים.
+    'last_case', (select jsonb_build_object('category', lc.category, 'status', lc.status,
+                                            'resolution_reason', lc.resolution_reason,
+                                            'resolved_at', lc.resolved_at)
+                    from public.payroll_review_cases lc
+                   where lc.review_id = v.review_id and lc.hostess_id = r.hostess_id
+                     and lc.phase = 'pre_issue'
+                     and lc.status in ('resolved_rejected', 'resolved_noted', 'resolved_accepted')
+                   order by lc.resolved_at desc nulls last, lc.case_id desc
+                   limit 1),
     -- לפני ההפקה: אפשר לאשר כל עוד לא אישרה ואין פנייה פתוחה; אפשר לדווח כל עוד אין פנייה פתוחה
     -- (גם אחרי שאישרה — זה פותח את הבדיקה מחדש). אחרי ההפקה: רק לדווח.
     'can_approve', v_phase = 'pre_issue' and r.state <> 'hostess_approved' and c.case_id is null,

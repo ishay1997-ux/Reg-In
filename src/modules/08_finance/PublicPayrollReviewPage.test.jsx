@@ -296,6 +296,66 @@ describe('אישור', () => {
   })
 })
 
+describe('החלטה על פנייה — הסיבה מגיעה לדיילת', () => {
+  it('דחייה ⇒ "הפנייה שלך טופלה: <הסיבה>"', async () => {
+    await openReady({
+      ...SUMMARY,
+      decision: { state: 'manager_resolved', at: '2026-08-02T07:00:00Z' },
+      last_case: {
+        category: 'hours',
+        status: 'resolved_rejected',
+        resolution_reason: 'לפי דוח הנוכחות 6 שעות',
+        resolved_at: '2026-08-02T07:00:00Z',
+      },
+    })
+    expect(screen.getByTestId('review-last-case')).toHaveTextContent(
+      'הפנייה שלך טופלה: לפי דוח הנוכחות 6 שעות',
+    )
+    // השורה הכללית לא מופיעה בנוסף
+    expect(screen.queryByTestId('review-decision')).toBeNull()
+  })
+
+  it('טופל מחוץ לדוח ⇒ "הפנייה שלך התקבלה: <הסיבה>"', async () => {
+    const base = { category: 'hours', resolved_at: '2026-08-02T07:00:00Z' }
+    await openReady({
+      ...SUMMARY,
+      last_case: { ...base, status: 'resolved_noted', resolution_reason: 'יטופל בדוח ההשלמה' },
+    })
+    expect(screen.getByTestId('review-last-case')).toHaveTextContent(
+      'הפנייה שלך התקבלה: יטופל בדוח ההשלמה',
+    )
+  })
+
+  it('תוקן ⇒ "הפנייה שלך התקבלה" בלי סיבה', async () => {
+    await openReady({
+      ...SUMMARY,
+      last_case: {
+        category: 'hours',
+        status: 'resolved_accepted',
+        resolution_reason: 'תוקן לפי דוח נוכחות',
+        resolved_at: '2026-08-02T07:00:00Z',
+      },
+    })
+    expect(screen.getByTestId('review-last-case')).toHaveTextContent(/^הפנייה שלך התקבלה$/)
+  })
+
+  it('פנייה פתוחה חדשה גוברת על ההחלטה הקודמת', async () => {
+    await openReady({
+      ...SUMMARY,
+      decision: { state: 'objection_open', at: '2026-08-03T07:00:00Z' },
+      open_case: { category: 'hours', created_at: '2026-08-03T07:00:00Z' },
+      last_case: {
+        category: 'hours',
+        status: 'resolved_rejected',
+        resolution_reason: 'סיבה ישנה',
+        resolved_at: '2026-08-02T07:00:00Z',
+      },
+    })
+    expect(screen.queryByTestId('review-last-case')).toBeNull()
+    expect(screen.getByTestId('review-decision')).toHaveTextContent('הפנייה שלך בטיפול')
+  })
+})
+
 describe('"יש טעות"', () => {
   it('שליחה ריקה ⇒ סיכום שגיאות שמקבל פוקוס, ושגיאה ליד כל שדה שחוזרת על שמו; אין קריאה לשרת', async () => {
     await openReady()

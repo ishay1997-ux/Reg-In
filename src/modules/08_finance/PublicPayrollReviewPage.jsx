@@ -344,7 +344,12 @@ function ReviewBody({
         )}
       </header>
 
-      <DecisionLine decision={summary.decision} openCase={summary.open_case} />
+      {/* כשיש החלטה על פנייה — השורה שלה (עם הסיבה) מחליפה את "הפנייה שלך טופלה" הכללית. */}
+      {summary.last_case && !summary.open_case ? (
+        <LastCaseLine lastCase={summary.last_case} />
+      ) : (
+        <DecisionLine decision={summary.decision} openCase={summary.open_case} />
+      )}
 
       {outcome && <OutcomeBanner outcomeKey={outcome} onReload={onReload} />}
 
@@ -401,6 +406,36 @@ function ReviewBody({
         />
       )}
     </div>
+  )
+}
+
+// ההחלטה על הפנייה האחרונה שנסגרה — הסיבה שהמנהלת כתבה מגיעה לדיילת (F5; ממצא אבטחה 14.10).
+// דחייה: "הפנייה שלך טופלה: <סיבה>" · טופל מחוץ לדוח: "הפנייה שלך התקבלה: <סיבה>" · תוקן: "הפנייה שלך התקבלה".
+// הסיבה היא טקסט חופשי של המנהלת ⇒ dir="auto", ובלי סימני כיווניות מוזרקים.
+const LAST_CASE_TEXT = {
+  resolved_rejected: 'הפנייה שלך טופלה',
+  resolved_noted: 'הפנייה שלך התקבלה',
+  resolved_accepted: 'הפנייה שלך התקבלה',
+}
+
+function LastCaseLine({ lastCase }) {
+  const text = LAST_CASE_TEXT[lastCase?.status]
+  if (!text) return null
+  const reason =
+    lastCase.status === 'resolved_accepted' ? '' : String(lastCase.resolution_reason ?? '').trim()
+  return (
+    <p
+      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+      data-testid="review-last-case"
+    >
+      {text}
+      {reason && (
+        <>
+          {': '}
+          <span dir="auto">{reason}</span>
+        </>
+      )}
+    </p>
   )
 }
 

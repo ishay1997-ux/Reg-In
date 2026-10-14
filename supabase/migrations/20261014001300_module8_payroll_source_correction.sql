@@ -103,6 +103,12 @@ begin
     perform public._payroll_raise('PERMISSION_DENIED',
       'אפשר לתקן רק את השיבוץ שהדיילת ציינה בפנייה פתוחה.', null);
   end if;
+  -- הידוק (ממצא אבטחה 14.10): הדיילת מערערת רק על שעות (F11), ולכן במסלול הכספים דרך פנייה
+  -- מותר לתקן רק שעות. בונוס — רק בעלת הרשאת פרויקטים.
+  if v_authority = 'finance_case' and p_field <> 'actual_hours' then
+    perform public._payroll_raise('PERMISSION_DENIED',
+      'דרך פנייה של דיילת אפשר לתקן רק שעות.', null);
+  end if;
   -- גם בעלת הרשאת פרויקטים: פנייה שצוינה חייבת להתאים לשיבוץ, אחרת היינו סוגרים פנייה זרה.
   if p_case_id is not null and not v_case_ok then
     perform public._payroll_raise('INVALID_ARGUMENT', 'הפנייה שצוינה לא שייכת לשיבוץ הזה או כבר טופלה.', null);

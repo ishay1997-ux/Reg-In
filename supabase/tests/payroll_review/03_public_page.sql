@@ -64,7 +64,8 @@ begin
   assert res ->> 'state' = 'ok', res::text;
   assert (select array_agg(k order by k) from jsonb_object_keys(res) k) = array[
     'can_approve', 'can_object', 'compensation_hours', 'deadline', 'decision', 'digest', 'first_name', 'kind',
-    'open_case', 'period', 'phase', 'rows', 'state', 'supplement_seq', 'total_hours'];
+    'last_case', 'open_case', 'period', 'phase', 'rows', 'state', 'supplement_seq', 'total_hours'];
+  assert res -> 'last_case' = 'null'::jsonb;
   assert (res ->> 'total_hours')::numeric = 11 and (res ->> 'compensation_hours')::numeric = 0, res::text;
   assert res ->> 'first_name' = 'נועה' and res ->> 'phase' = 'pre_issue' and res ->> 'period' = '2026-07-01';
   assert jsonb_array_length(res -> 'rows') = 2;
@@ -211,6 +212,31 @@ begin
   res := public.payroll_review_public_get(test.tok(900002));
   assert not (res ->> 'can_approve')::boolean and not (res ->> 'can_object')::boolean;
   assert res -> 'open_case' ->> 'category' = 'hours';
+end $$;
+
+-- test: the manager's reason reaches the hostess — last closed case (rejected / noted / accepted), no ids or money
+do $$
+declare res jsonb; v_case bigint;
+begin
+  select case_id into v_case from public.payroll_review_cases where hostess_id = 900002;
+  update public.payroll_review_cases
+     set status = 'resolved_rejected', resolution_reason = 'לפי דוח הנוכחות 6 שעות', resolved_at = now()
+   where case_id = v_case;
+  update public.payroll_review_recipients set state = 'manager_resolved' where hostess_id = 900002 and is_current;
+  perform test.act_as_anon();
+  res := public.payroll_review_public_get(test.tok(900002));
+  assert res -> 'open_case' = 'null'::jsonb, res::text;
+  assert res -> 'last_case' ->> 'status' = 'resolved_rejected', res::text;
+  assert res -> 'last_case' ->> 'resolution_reason' = 'לפי דוח הנוכחות 6 שעות';
+  assert res -> 'last_case' ->> 'category' = 'hours' and res -> 'last_case' ->> 'resolved_at' is not null;
+  assert (select array_agg(k order by k) from jsonb_object_keys(res -> 'last_case') k)
+         = array['category', 'resolution_reason', 'resolved_at', 'status'];
+  -- פנייה פתוחה שוב (פנייה חדשה) לא מוחקת את ההחלטה הקודמת, אבל open_case מוצג
+  perform test.act_as_owner();
+  update public.payroll_review_cases set status = 'resolved_accepted', resolution_reason = 'תוקן', resolved_at = now()
+   where case_id = v_case;
+  perform test.act_as_anon();
+  assert public.payroll_review_public_get(test.tok(900002)) -> 'last_case' ->> 'status' = 'resolved_accepted';
 end $$;
 
 -- test: missing shift with no row selected is a valid objection

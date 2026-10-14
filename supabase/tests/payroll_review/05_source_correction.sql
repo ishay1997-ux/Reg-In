@@ -48,6 +48,13 @@ do $$ begin
                          test.cid())) = 'PERMISSION_DENIED';
 end $$;
 
+-- test: finance through a case may correct hours only — bonus → PERMISSION_DENIED (hardening, 14.10)
+do $$ begin
+  perform test.act_as('fin@test.local');
+  assert test.err(format($q$select public.correct_unclaimed_assignment(900101,900001,1,'personal_bonus',0,50,'לפי דוח נוכחות',%s)$q$,
+                         test.cid())) = 'PERMISSION_DENIED';
+end $$;
+
 -- test: source rules — field, reason, stale expected value, bounds, no_show
 do $$ begin
   perform test.act_as('fin@test.local');
@@ -56,7 +63,9 @@ do $$ begin
   assert test.err(format($q$select public.correct_unclaimed_assignment(900101,900001,1,'actual_hours',5,7.5,'לפי דוח נוכחות',%s)$q$, test.cid())) = 'STALE_VERSION';
   assert test.err(format($q$select public.correct_unclaimed_assignment(900101,900001,1,'actual_hours',6,8.5,'לפי דוח נוכחות',%s)$q$, test.cid())) = 'CORRECTION_OUT_OF_BOUNDS';
   assert test.err(format($q$select public.correct_unclaimed_assignment(900101,900001,1,'actual_hours',6,-1,'לפי דוח נוכחות',%s)$q$, test.cid())) = 'CORRECTION_OUT_OF_BOUNDS';
-  assert test.err(format($q$select public.correct_unclaimed_assignment(900101,900001,1,'personal_bonus',0,5001,'לפי דוח נוכחות',%s)$q$, test.cid())) = 'CORRECTION_OUT_OF_BOUNDS';
+  perform test.act_as('pm@test.local');
+  assert test.err($q$select public.correct_unclaimed_assignment(900101,900001,1,'personal_bonus',0,5001,'לפי דוח נוכחות')$q$) = 'CORRECTION_OUT_OF_BOUNDS';
+  perform test.act_as('fin@test.local');
   perform test.act_as_owner();
   update public.assignments set attendance_status = 'no_show', no_show_reason = 'sick', actual_hours = 0
    where project_id = 900101 and hostess_id = 900001;
