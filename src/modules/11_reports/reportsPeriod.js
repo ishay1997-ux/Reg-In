@@ -37,8 +37,35 @@ const PERIOD_KEYS = new Set(PERIOD_OPTIONS.map((o) => o.key))
  * גוברת תמיד — אחרת קישור-לדוח-מסונן ששותף היה נפתח על תקופה אחרת אצל המקבל.
  */
 export function parsePeriodParam(value, fallback = DEFAULT_PERIOD) {
-  if (PERIOD_KEYS.has(value)) return value
+  if (PERIOD_KEYS.has(value) || yearOf(value) !== null) return value
   return PERIOD_KEYS.has(fallback) ? fallback : DEFAULT_PERIOD
+}
+
+/**
+ * 📅 **בחירת שנה קלנדרית מלאה — מפתח `yYYYY`** (14/10/2026, ישי: *"וגם מסנן לבחירת שנה"*).
+ * ‏`y2025` ⇒ `2025-01-01` עד `2025-12-31`. "אשתקד" של הדוחות נמדד על אותם ימים שנה אחורה (בשרת),
+ * ולכן על שנה מלאה הוא נעשה שנה מלאה מול שנה מלאה — בלי שינוי בשרת.
+ * 🔑 **מפתח בכתובת ולא פרמטר נפרד** — כך קישור-לדוח-מסונן ששותף נפתח על אותה שנה, ו"חזור" משחזר אותה.
+ * 🚫 טווח-השנים סגור (2000–2100): מפתח שבור בכתובת נופל לברירת-המחדל, לא לשאילתה על שנה 0.
+ */
+export function yearOf(periodKey) {
+  const match = /^y(\d{4})$/.exec(String(periodKey ?? ''))
+  if (!match) return null
+  const year = Number(match[1])
+  return year >= 2000 && year <= 2100 ? year : null
+}
+
+export const yearKey = (year) => `y${year}`
+
+/**
+ * השנים שמוצעות בבורר — **השנתיים הקודמות לשנת "היום" של השרת**. השנה הנוכחית אינה כאן כי יש לה
+ * גלולה (*"השנה"*). ‏"היום" עוד לא ידוע ⇒ רשימה ריקה, והבורר ממתין לו (אותו כלל של `periodRange`).
+ * 📏 שנתיים ולא יותר: הדאטה במערכת מתחילה ב-2024 (נמדד 14/10/2026), ושנה בלי דאטה היא בורר שמוביל לדף ריק.
+ */
+export function yearOptions(todayIso) {
+  const year = Number(String(todayIso ?? '').slice(0, 4))
+  if (!Number.isInteger(year) || year < 2000) return []
+  return [year - 1, year - 2]
 }
 
 /**
@@ -57,6 +84,12 @@ export function parsePeriodParam(value, fallback = DEFAULT_PERIOD) {
 export function periodRange(periodKey, todayIso) {
   if (periodKey === 'all' || !/^\d{4}-\d{2}-\d{2}$/.test(String(todayIso ?? ''))) {
     return { from: null, to: null }
+  }
+  const year = yearOf(periodKey)
+  if (year !== null) {
+    // שנה שעוד לא נגמרה נחתכת ב"היום" — אחרת "אשתקד" היה משווה שנה חלקית לשנה מלאה.
+    const end = `${year}-12-31`
+    return { from: `${year}-01-01`, to: end < todayIso ? end : todayIso }
   }
   const [y, m, d] = todayIso.split('-').map(Number)
   const pad = (n) => String(n).padStart(2, '0')
