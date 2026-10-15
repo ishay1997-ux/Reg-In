@@ -54,7 +54,7 @@ flowchart LR
 ## 4. נוהל שחזור מאסון וגיבויים (Disaster Recovery & Restore)
 
 ### מדיניות גיבויים
-1. **גיבויים מנוהלים ב-Supabase:** גיבוי יומי מלא אוטומטי של בסיס הנתונים + יומני עסקאות (WAL) המאפשרים שחזור לנקודת זמן (Point-in-Time Recovery).
+1. ✏️ **תוקן 15/10/2026 — אין גיבויים מנוהלים זמינים לנו.** כאן היה כתוב "גיבוי יומי מלא + PITR". נבדק מול התיעוד של Supabase ([Database Backups](https://supabase.com/docs/guides/platform/backups)) ומול תוכנית הארגון (`free`): גיבויים יומיים נגישים רק ב-Pro ומעלה, ו-PITR הוא תוסף בתשלום. Supabase ממליצה לפרויקט חינמי לייצא בעצמו ולשמור מחוץ לאתר. **הגיבוי בפועל:** `npm run freeze:snapshot` ⇐ `OneDrive\REGIN\freeze-snapshots\` (ר' `scripts/freeze/README.md` ו-`FREEZE.md`). גיבוי לפני שינוי נקודתי בנתונים: טבלאות `seed_snapshot.*` במסד עצמו.
 2. **סנכרון סכמה מנוהל ב-Git:** הקובץ [docs/schema.sql](schema.sql) משמש כמקור אמת ארכיוני לכל מבנה הטבלאות, הפונקציות, הטריגרים ומדיניות ה-RLS.
 
 ### נוהל שחזור מתקלה (Rollback Procedure)
@@ -64,6 +64,6 @@ flowchart LR
 2. **תקלת מיגרציה / נתונים (Database Corruption):**
    - **בליעת נתונים מקומית:** שימוש בסקריפטי שחזור ייעודיים (כגון `scripts/restore_quotes_*.sql`).
    - **כשל סכמה חמור:** מיגרציות ב-Postgres הן Append-Only — תיקון מתבצע תמיד על ידי כתיבת מיגרציית תיקון חדשה קדימה (ולא עריכת קובץ קיים).
-   - במקרה קיצון של אובדן נתונים כולל: שחזור ה-Snapshot האחרון מתוך לוח הניהול של Supabase.
+   - במקרה קיצון של אובדן נתונים כולל: `npm run freeze:restore -- --from=<תיקיית הגיבוי>` מהגיבוי האחרון ב-OneDrive (לוח הניהול של Supabase לא מחזיק גיבויים בתוכנית החינמית).
 
 </div>
