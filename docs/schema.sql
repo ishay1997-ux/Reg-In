@@ -2754,6 +2754,12 @@ create policy feedback_ai_insights_select_by_permission on feedback_ai_insights
 --   → supabase/migrations/20260723120500_module3_pg_cron_expiry_and_cleanup.sql
 -- module6-event-finished         · '0 2 * * *'  · מעבירה פרויקטים שתאריכם עבר ל-event_finished
 --   → supabase/migrations/20260814141052_module6_status_machine_and_cron.sql
+--
+-- ✏️ 15/10/2026 (הקפאה): module3-quote-expiry ו-module6-event-finished רצות רק כש-
+--   public.nightly_status_jobs_enabled() מחזירה true — כלומר params.עדכון_סטטוסים_לילי_פעיל = 'true'
+--   (נזרע 'false'; מתג "עדכון סטטוסים אוטומטי בלילה" במסך ההגדרות, קבוצת "טכני").
+--   ניקוי login_attempts אינו תלוי במתג. הפונקציה: execute ל-postgres ו-service_role בלבד.
+--   → supabase/migrations/20261016000300_nightly_status_jobs_toggle.sql (הנוסח הנוכחי של שתי הפקודות)
 
 
 -- ============================================================

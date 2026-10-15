@@ -33,11 +33,30 @@ function DialogOverlay({ className, ...props }) {
   )
 }
 
-function DialogContent({ className, children, showCloseButton = true, ...props }) {
+// לחיצה על הודעה קופצת (ToastProvider, ‏data-toast-region) אינה "לחיצה מחוץ לחלון": בלי זה, סגירת
+// הודעת-שגיאה ב-X סוגרת גם את החלון שמתחתיה, והקלט שלא נשמר בו אובד (בודק נפרד, 15/10/2026).
+export function keepOpenOnToast(onInteractOutside) {
+  return (event) => {
+    if (event.target instanceof Element && event.target.closest('[data-toast-region]')) {
+      event.preventDefault()
+      return
+    }
+    onInteractOutside?.(event)
+  }
+}
+
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  onInteractOutside,
+  ...props
+}) {
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
+        onInteractOutside={keepOpenOnToast(onInteractOutside)}
         data-slot="dialog-content"
         className={cn(
           // ⚠️ ‏overflow-hidden כאן הוא load-bearing: כשהגלילה הייתה על האלמנט המעוגל עצמו,

@@ -40,3 +40,13 @@ deno.lock
 # בכל `git status` וקונפליקטים מיותרים בין מכונות. המסמכים עצמם כן מקומטים
 # (למשל docs/guides/working-card-with-claude.docx).
 ~$*
+
+# כלים מקומיים — לא חלק מהקוד (נוסף בהקפאה, 15/10/2026).
+# supabase/.temp: מטמון של ה-CLI של Supabase (גרסה אחרונה שנבדקה); נוצר מחדש בכל הרצה.
+# .playwright-mcp: צילומים ויומנים של שרת ה-MCP של Playwright מסיורי-מסך.
+# .agents / .codex: הגדרות מקומיות של Codex (עותק ישן של סקילי הפרויקט מ-11/09 ושרת MCP);
+#   מקור-האמת של הסקילים הוא .claude/skills — עותק שני שנפרד ממנו הוא בדיוק הכפילות שישי ביקש למנוע.
+supabase/.temp/
+.playwright-mcp/
+.agents/
+.codex/

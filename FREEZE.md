@@ -1,0 +1,78 @@
+<div dir="rtl">
+
+# 🧊 REG-IN — מצב הקפאה ואיך חוזרים
+
+> **הוקפא:** 15/10/2026, יום אחרי הכנס. **הכרעת-ישי:** *"כרגע הפרויקט מוקפא... להכין הכל להקפאה ככה שגם עוד שנה נדע מה צריך לעשות"*.
+> **הקוד הקפוא:** מה שב-`main` — `git log -1 origin/main`. ‏**האתר החי:** הפריסה האחרונה של `main` ב-Vercel.
+> **המסמך הזה לא מעתיק מצב.** כל מספר כאן מצביע על המקום שבו בודקים אותו.
+
+---
+
+## 1. מה קורה לפרויקט בזמן ההקפאה — בלי שאף אחד נוגע
+
+| מה | מה יקרה | איך בודקים |
+|---|---|---|
+| **מסד הנתונים (Supabase, תוכנית חינמית)** | פרויקט חינמי **מושהה אוטומטית** אחרי כ-7 ימים בלי פעילות; Supabase שולחת מייל אזהרה כשבוע לפני. אחרי השהיה: **90 יום** לחזרה בלחיצה אחת ("Resume project"). אחרי 90 יום — רק הורדת קובץ גיבוי מהלוח ושחזור **לפרויקט חדש** (§3ב). | [Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing) · לוח Supabase ⇐ הפרויקט `Reg-In` |
+| **האתר (Vercel)** | נשאר באוויר, אבל כשהמסד מושהה — המסכים לא נטענים (אין נתונים, אין התחברות). | פתיחת האתר |
+| **נתוני ההדגמה** | נשארים חיים (הכרעת-ישי 15/10). שתי משימות-הלילה שמזיזות סטטוסים (תפוגת הצעות, "האירוע הסתיים") **כבויות** דרך המתג "עדכון סטטוסים אוטומטי בלילה" (הגדרות ⇐ טכני). ⚠️ התאריכים עצמם מוחלטים: בעוד שנה כל האירועים בעבר. | `select public.nightly_status_jobs_enabled();` |
+| **גיבויים של Supabase** | **אין.** בתוכנית החינמית אין גיבוי יומי נגיש. הגיבוי היחיד הוא שלנו (§2). | [Database Backups](https://supabase.com/docs/guides/platform/backups) |
+| **Dependabot** | עדכוני-גרסה מושבתים (`open-pull-requests-limit: 0`); התראות אבטחה ממשיכות. | `.github/dependabot.yml` |
+
+---
+
+## 2. נתוני ההדגמה — גיבוי, מחיקה בפעולה אחת, שחזור אחד-לאחד
+
+הכלים: `scripts/freeze/` — **ההוראות המלאות, השמירות וסדר ההרצה ב-[`scripts/freeze/README.md`](scripts/freeze/README.md).**
+
+| פקודה | מה היא עושה |
+|---|---|
+| `npm run freeze:snapshot` | גיבוי מלא (כל הטבלאות, המשתמשים, הקבצים, מוני-המספור) ל-`OneDrive\REGIN\freeze-snapshots\<תאריך-שעה>\`, עם `manifest.json` (ספירה ו-md5 לכל טבלה) |
+| `npm run freeze:wipe` | מוחק את נתוני העסק. דורש הקלדת `מחק את כל הנתונים`, וגיבוי מ-24 השעות האחרונות שתואם למסד |
+| `npm run freeze:restore -- --from=<תיקייה>` | ברירת מחדל `--verify-only`: בודק שהגיבוי שלם בלי לגעת בנתונים. עם `--apply` והקלדת `החזר את כל הנתונים` — משחזר ובודק md5 מול הגיבוי |
+
+🔒 **הגיבויים לעולם לא בריפו** — הריפו ציבורי, והגיבוי מחזיק סיסמאות מוצפנות ונתוני בנק לדוגמה.
+📦 **ארכיון מחוץ לריפו:** `OneDrive\REGIN\freeze-2026-10\` — תיקיית העבודה של הכנס (`payroll-work`, כולל צילומים ויומנים), תיקיית הראיות (`Reg-In-evidence`), וקבצים יתומים מ-22/09 (סקריפט ייצוא הפרמטרים, תבנית PDF להצעת מחיר) שלא חוברו לשום פקודה.
+
+---
+
+## 3. איך חוזרים לעבוד — לפי הסדר
+
+### א. המסד חי, או מושהה פחות מ-90 יום
+1. לוח Supabase ⇐ הפרויקט `Reg-In` (`yfeovxppnfoafmfbdfvh`, אזור `eu-west-3`) ⇐ **Resume project** אם צריך.
+2. מחשב: Node 20 ומעלה (נבדק על 24.18), `npm ci`, וקובץ `.env.local` לפי `.env.example`.
+3. `npm run gate` — חייב לצאת 0. ואז `npm run smoke` מול `npm run dev`.
+4. להחזיר את Dependabot: `open-pull-requests-limit` ל-5 בשני הבלוקים.
+5. אם נתוני ההדגמה "הזדקנו" ורוצים את מצב 15/10: קודם `freeze:snapshot` (גיבוי של המצב הנוכחי — השחזור מסרב בלעדיו, כדי שמה שנוצר מאז לא ייעלם), אחר כך `freeze:restore -- --from=<הגיבוי של 15/10> --verify-only`, ואז אותה פקודה עם `--apply`.
+
+### ב. עברו יותר מ-90 יום — פרויקט Supabase חדש
+1. בלוח Supabase: להוריד את קובץ הגיבוי ואת קבצי ה-Storage, ולשחזר לפרויקט חדש ([Restore to a new project](https://supabase.com/docs/guides/platform/migrating-within-supabase/dashboard-restore)). **הכתובת (ref) תשתנה.**
+2. לבדוק שהסכמה תואמת ל-`docs/schema.sql` ולתיקיית `supabase/migrations/`. אם הגיבוי לא עלה — לבנות את הסכמה מהמיגרציות, ואז `freeze:restore --apply` מגיבוי ה-OneDrive.
+3. **כל מקום שמחזיק את הכתובת הישנה:** `.env.local` · משתני הסביבה ב-Vercel (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) · `.mcp.json` · `AGENTS.md` · `CLAUDE.md` §2.2 · ‏`.codex/config.toml` (מקומי) · ומסמכים רבים ב-`docs/` (היסטוריים — לא חובה לעדכן). חיפוש: `git grep -l yfeovxppnfoafmfbdfvh`.
+4. **פונקציות השרת** (4: `send-email`, `payroll`, `classify-feedback`, `draft-followup`) — פריסה מחדש, וסודות לפי השמות בקוד: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `MAKE_EMAIL_WEBHOOK_URL`, `PAYROLL_ALLOWED_ORIGINS`, `GEMINI_API_KEY`, `GEMINI_MODEL`. חיפוש: `git grep "Deno.env.get" supabase/functions`.
+5. **הגדרות Auth** בלוח (Site URL, כתובות הפניה, Google Sign-In) ו**משימות `pg_cron`** (3) — לוודא שעלו עם הגיבוי.
+6. ואז §3א שלבים 2–5.
+
+---
+
+## 4. איפה כל דבר
+
+| צריך | פותחים |
+|---|---|
+| חוקי הפרויקט, שערי איכות, מלכודות שקטות | [`CLAUDE.md`](CLAUDE.md) |
+| מפת הקוד | [`docs/CODE_MAP.md`](docs/CODE_MAP.md) |
+| מצב אחרון שנכתב לפני ההקפאה | [`STATUS.md`](STATUS.md) (ראש הקובץ) |
+| **כל החובות הפתוחים — רשם אחד** | [`docs/PROJECT_MASTER.md`](docs/PROJECT_MASTER.md) §6 — `grep '🚧' docs/PROJECT_MASTER.md` |
+| סביבות, סודות, שחזור | [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md) |
+| מה תוכנן להמשך (מודול 10 ואילך) | [`docs/guides/00_roadmap.md`](docs/guides/00_roadmap.md) §3 |
+| תיק הכנס (לוח המצב, כרטיסי הסוכנים, מסלול ההדגמה, סקריפטי נתוני ההדגמה) | [`docs/archive/2026-10-conference/`](docs/archive/2026-10-conference/) |
+
+---
+
+## 5. מלכודות שכדאי לדעת לפני שנוגעים (בנוסף ל-`CLAUDE.md` §3)
+
+1. **מסד אחד לפיתוח ולאתר החי.** כל שינוי נתונים מהמחשב מופיע מיד באתר. `freeze:wipe` מוחק גם את האתר.
+2. **מיילים יוצאים באמת.** שומר-הנמענים (`supabase/functions/payroll/guard.ts`) קיים **רק** בדוח השכר. מייל סגירה, סקר, הצעת מחיר והזמנות נשלחים לכתובת שבנתונים — ולכן כל איש קשר בנתוני ההדגמה הוא כתובת של ישי (`ishay1997+<תג>@gmail.com`). חוב F14.4 ב-§6.
+3. **הריפו ציבורי.** לא מקמטים נתונים אמיתיים, גיבויים או פרטים של צד שלישי.
+4. **ענפים:** אחרי ההקפאה נשארו רק `main` ו-`dev`. עבודה חדשה — ענף `ishay/<נושא>` מ-`main` (כלל 10 ב-`CLAUDE.md`).
+
+</div>

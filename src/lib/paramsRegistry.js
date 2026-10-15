@@ -854,6 +854,15 @@ export const PARAM_REGISTRY = [
     kind: 'email',
     group: 'integration_tech',
   },
+  // 🆕 15/10/2026 — הקפאת הפרויקט, מיגרציה 20261016000300 (50 ⇒ 51). ישי: מתג אחד לשתי משימות-הלילה, כבוי בהקפאה.
+  {
+    name: 'עדכון_סטטוסים_לילי_פעיל',
+    label: 'עדכון סטטוסים אוטומטי בלילה',
+    hint: 'כשהמתג פעיל, בכל לילה הצעות שעבר תוקפן מסומנות "פג תוקף" ואירועים שהתקיימו עוברים ל"האירוע הסתיים"',
+    kind: 'boolean',
+    group: 'integration_tech',
+    affects: 'כבוי: הסטטוסים של הצעות ופרויקטים נשארים כמו שהם עד שמישהו משנה אותם ידנית',
+  },
 ]
 
 const REGISTRY_BY_NAME = new Map(PARAM_REGISTRY.map((entry) => [entry.name, entry]))
