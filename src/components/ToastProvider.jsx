@@ -83,10 +83,13 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={api}>
       {children}
       {/* מרכז-תחתון, צף, לא חוסם; RTL. ה-live-region עבר לכל toast בנפרד (למטה) כדי ששגיאה תוכרז
-          assertive (role=alert) והצלחה/מידע polite (role=status) — במקום polite אחיד לכולם (תיקון 11/07). */}
+          assertive (role=alert) והצלחה/מידע polite (role=status) — במקום polite אחיד לכולם (תיקון 11/07).
+          z-[60] ולא z-50: חלונות Radix (Dialog/AlertDialog/Sheet) יושבים על z-50 ונטענים מאוחר יותר ב-DOM,
+          כך שהרקע הכהה שלהם כיסה הודעת-שגיאה שנפתחה מתוך החלון (15/10, חלון זמינות-הדיילת).
+          pointer-events-auto: חלון מודאלי של Radix מכבה pointer-events על ה-body — בלי זה אי-אפשר לסגור את ההודעה. */}
       <div
         dir="rtl"
-        className="fixed bottom-4 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 flex-col items-center gap-2 px-4"
+        className="pointer-events-auto fixed bottom-4 left-1/2 z-[60] flex w-full max-w-sm -translate-x-1/2 flex-col items-center gap-2 px-4"
       >
         {toasts.map((t) => {
           const v = VARIANTS[t.variant] ?? VARIANTS.info
