@@ -18,15 +18,19 @@ function accessToken() {
 }
 
 // ניסיון חוזר רק על תקלות-רשת ו-429/5xx — שאילתה שנכשלה בגלל SQL שגוי לא תצליח בפעם השנייה.
-async function withRetry(fn, attempts = 4) {
+// ✏️ 15/10/2026: הגיבוי האמיתי הראשון נפל על 429 ("ThrottlerException") אחרי ~80 טבלאות — ה-Management API
+// מגביל קצב לדקה, ו-9 שניות המתנה בסך הכול (1.5/3/4.5) לא הספיקו לחלון להתאפס. עכשיו: Retry-After אם השרת
+// שלח אותו, אחרת המתנה מכפילה 5→10→20→40→60 שניות; עד 7 ניסיונות (~2.5 דקות לפני שמוותרים).
+async function withRetry(fn, attempts = 7) {
   let lastError
   for (let i = 0; i < attempts; i += 1) {
     try {
       return await fn()
     } catch (error) {
       lastError = error
-      if (!error.retryable) throw error
-      await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
+      if (!error.retryable || i === attempts - 1) throw error
+      const waitMs = error.retryAfterMs ?? Math.min(60_000, 5_000 * 2 ** i)
+      await new Promise((r) => setTimeout(r, waitMs))
     }
   }
   throw lastError
@@ -51,6 +55,8 @@ export async function sql(query) {
       const text = (await res.text()).slice(0, 400)
       const err = new Error(`SQL נכשל (${res.status}): ${text}`)
       err.retryable = res.status === 429 || res.status >= 500
+      const retryAfterSec = Number(res.headers.get('retry-after'))
+      if (retryAfterSec > 0) err.retryAfterMs = Math.min(120_000, retryAfterSec * 1000)
       throw err
     }
     return res.json()
