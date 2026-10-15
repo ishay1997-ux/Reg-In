@@ -952,9 +952,10 @@ function EventRow({ row, now, canEdit, busy, context, onAction }) {
 // ✏️ ישי 14/10 ~21:5x ("צור אחידות ב-UI"): אותה צורה, אותו משקל-גופן ואותו עובי-מסגרת לכל הצ'יפים.
 // ההבחנה של המפרט נשמרת בעדינות בלבד — `score` לבן עם מסגרת, `ctx`/`grey` (אחד מהשניים) ממולא אפור.
 const CHIP_CLASS = {
+  // ישי 15/10: כל הצ'יפים בסגנון של "קרובה" — לבן עם מסגרת, הכי קריא ("נראה יותר קריא").
   score: 'border-slate-300 bg-white text-slate-700',
-  ctx: 'border-slate-200 bg-slate-100 text-slate-600',
-  grey: 'border-slate-200 bg-slate-100 text-slate-600',
+  ctx: 'border-slate-300 bg-white text-slate-700',
+  grey: 'border-slate-300 bg-white text-slate-700',
   warn: 'border-amber-200 bg-amber-50 text-amber-700',
   pin: 'border-green-200 bg-green-50 text-green-700',
 }
