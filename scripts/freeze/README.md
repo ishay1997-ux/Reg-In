@@ -36,6 +36,13 @@ npm run freeze:restore -- --from=<dir> --apply           # later: bring everythi
   It then asks you to type `מחק את כל הנתונים` exactly.
 - **Restore `--apply`** asks you to type `החזר את כל הנתונים` exactly. It refuses if the schema
   version changed since the snapshot, unless you pass `--allow-schema-drift`.
+- **Restore `--apply` on a database that still has data** first needs the same fresh-snapshot
+  guard as wipe: a snapshot from the last 24 hours that matches the live data. Otherwise everything
+  created since the snapshot you restore from would vanish. So the order is `freeze:snapshot`, then
+  `freeze:restore --from=<older snapshot> --apply`. On a wiped database (the wiped set is empty)
+  there is nothing to lose, and the guard is skipped.
+- **Sequences** are reset only for the tables that are restored. Kept tables (`params`, `roles`…)
+  keep their live counters, so a new row there never collides with an existing id.
 - The phrase is read from stdin, so it can also be piped in. Anything else exits without touching
   the database.
 
@@ -45,7 +52,9 @@ npm run freeze:restore -- --from=<dir> --apply           # later: bring everythi
   backup. Take a new snapshot. You may delete the half folder.
 - **Restore `--apply`:** each API call is its own transaction, so some tables may be filled and
   others empty. Run the same `--apply` command again. It starts by truncating the whole wiped set,
-  so a rerun starts clean and never duplicates rows.
+  so a rerun starts clean and never duplicates rows. While a restore is running, the snapshot folder
+  holds `restore-in-progress.json`; when it is there, the rerun skips the fresh-snapshot guard (the
+  live data is a partial copy of that same snapshot). The file is removed when the restore succeeds.
 - **Exit codes:**
   - `0` — OK.
   - `1` — failure or mismatch.

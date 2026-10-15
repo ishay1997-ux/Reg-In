@@ -89,6 +89,7 @@ export function ToastProvider({ children }) {
           pointer-events-auto: חלון מודאלי של Radix מכבה pointer-events על ה-body — בלי זה אי-אפשר לסגור את ההודעה. */}
       <div
         dir="rtl"
+        data-toast-region=""
         className="pointer-events-auto fixed bottom-4 left-1/2 z-[60] flex w-full max-w-sm -translate-x-1/2 flex-col items-center gap-2 px-4"
       >
         {toasts.map((t) => {

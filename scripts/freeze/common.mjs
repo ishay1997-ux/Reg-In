@@ -5,7 +5,16 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createInterface } from 'node:readline'
 import { sql } from './api.mjs'
-import { canonicalStatsSql, checkConfirmation, lit, sha256 } from './lib.mjs'
+import {
+  canonicalStatsSql,
+  checkConfirmation,
+  compareStats,
+  formatComparison,
+  lit,
+  pickFreshSnapshot,
+  qualify,
+  sha256,
+} from './lib.mjs'
 
 export function defaultSnapshotRoot() {
   const oneDrive = process.env.OneDrive || 'C:\\Users\\ishay\\OneDrive'
@@ -111,4 +120,33 @@ export async function requirePhrase(phrase) {
     err.exitCode = 2
     throw err
   }
+}
+
+// שומר "צילום טרי שתואם למסד": מחזיר רשימת סיבות-סירוב (ריקה = מותר לדרוס את סט-המחיקה).
+// משותף ל-freeze:wipe ול-freeze:restore --apply — שניהם עושים TRUNCATE, ושניהם חייבים להבטיח
+// ששום דבר שנכתב אחרי הצילום האחרון לא נעלם בלי גיבוי.
+export async function checkFreshSnapshotGuard(root, publicTables, wipe) {
+  const { chosen, rejected } = pickFreshSnapshot(listSnapshotCandidates(root), Date.now())
+  for (const r of rejected) console.log(`  נדחה: ${r.dir} — ${r.reason}`)
+  if (!chosen) return [`אין צילום תקף מ-24 השעות האחרונות ב-${root}`]
+  console.log(`  צילום נבחר: ${chosen.dir} (${chosen.manifest.createdAt})`)
+
+  const reasons = []
+  const notInManifest = wipe.filter((t) => !chosen.manifest.tables[`public.${t}`])
+  if (notInManifest.length) reasons.push(`טבלאות שלא צולמו: ${notInManifest.join(', ')}`)
+
+  const keys = Object.fromEntries(publicTables.map((t) => [`public.${t}`, qualify('public', t)]))
+  const live = await tableStats(keys)
+  const expected = {}
+  for (const t of publicTables) {
+    const m = chosen.manifest.tables[`public.${t}`]
+    // md5 נדרש רק לטבלאות שנמחקות; לשמורות — מספר-שורות (הן לא נמחקות, אז שינוי-ערך לא אובד).
+    if (m) expected[`public.${t}`] = { rows: m.rows, md5: wipe.includes(t) ? m.md5 : null }
+  }
+  const bad = compareStats(expected, live).filter((r) => r.status !== 'OK')
+  if (bad.length) {
+    console.log(formatComparison(bad))
+    reasons.push(`${bad.length} טבלאות השתנו מאז הצילום — צלמו מחדש`)
+  }
+  return reasons
 }

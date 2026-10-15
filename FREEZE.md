@@ -42,7 +42,7 @@
 2. מחשב: Node 20 ומעלה (נבדק על 24.18), `npm ci`, וקובץ `.env.local` לפי `.env.example`.
 3. `npm run gate` — חייב לצאת 0. ואז `npm run smoke` מול `npm run dev`.
 4. להחזיר את Dependabot: `open-pull-requests-limit` ל-5 בשני הבלוקים.
-5. אם נתוני ההדגמה "הזדקנו" ורוצים את מצב 15/10: `freeze:restore -- --verify-only` ואז `--apply` מהגיבוי האחרון.
+5. אם נתוני ההדגמה "הזדקנו" ורוצים את מצב 15/10: קודם `freeze:snapshot` (גיבוי של המצב הנוכחי — השחזור מסרב בלעדיו, כדי שמה שנוצר מאז לא ייעלם), אחר כך `freeze:restore -- --from=<הגיבוי של 15/10> --verify-only`, ואז אותה פקודה עם `--apply`.
 
 ### ב. עברו יותר מ-90 יום — פרויקט Supabase חדש
 1. בלוח Supabase: להוריד את קובץ הגיבוי ואת קבצי ה-Storage, ולשחזר לפרויקט חדש ([Restore to a new project](https://supabase.com/docs/guides/platform/migrating-within-supabase/dashboard-restore)). **הכתובת (ref) תשתנה.**

@@ -12,11 +12,16 @@
 // 🔴 אם --apply נכשל באמצע: כל קריאה ל-API היא טרנזקציה נפרדת, ולכן חלק מהטבלאות כבר מלאות וחלק
 //   ריקות/חלקיות. התיקון: להריץ שוב את אותה פקודת --apply. היא אידמפוטנטית — היא מתחילה ב-TRUNCATE
 //   של כל סט-המחיקה, כך שהריצה השנייה מתחילה מאפס ולא מכפילה שורות. auth ו-storage מוסיפים רק חסרים.
+//   🔑 שומר "צילום טרי" (למטה) לא חוסם את הריצה החוזרת: לפני ה-TRUNCATE נכתב קובץ-סימון
+//   restore-in-progress.json בתיקיית הצילום, ונמחק רק בסיום מוצלח. כשהוא קיים — הנתונים החיים הם
+//   שחזור חלקי מאותו צילום עצמו, ואין בהם שום דבר שלא נמצא כבר בתיקייה.
 
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { serviceRoleKey, sql, uploadObject } from './api.mjs'
 import {
+  checkFreshSnapshotGuard,
+  defaultSnapshotRoot,
   listFks,
   listTables,
   readJsonLines,
@@ -122,8 +127,22 @@ async function verifyOnly(dir, manifest) {
   }
 }
 
-async function restoreSequences(manifest) {
-  for (const s of manifest.sequences.filter((x) => x.schema === 'public')) {
+// ✏️ 15/10/2026 (בודק נפרד, חובה א): רק רצפים שבבעלות טבלה ששוחזרה. קודם הוחזרו *כל* רצפי public —
+// גם של טבלאות שנשמרות (params, roles…), שלא נמחקו ושייתכן שגדלו מאז הצילום. נמדד: params_param_id_seq
+// היה 64 בצילום ו-65 חי; החזרה ל-64 הייתה גורמת להוספה הבאה ל-params להיכשל על מפתח כפול.
+async function restoreSequences(manifest, restoreSet) {
+  const owned = await sql(`
+    select s.relname as seq
+      from pg_class s
+      join pg_depend d on d.objid = s.oid and d.deptype in ('a', 'i')
+      join pg_class t on t.oid = d.refobjid
+      join pg_namespace n on n.oid = s.relnamespace
+     where s.relkind = 'S' and n.nspname = 'public'
+       and t.relname in (${restoreSet.map(lit).join(', ') || 'null'})`)
+  const restoredSeqs = new Set(owned.map((o) => o.seq))
+  for (const s of manifest.sequences.filter(
+    (x) => x.schema === 'public' && restoredSeqs.has(x.name),
+  )) {
     const seq = lit(qualify(s.schema, s.name))
     const q =
       s.last_value === null
@@ -185,7 +204,32 @@ async function apply(dir, manifest, args) {
   const notInSnapshot = wipe.filter((t) => !manifest.tables[`public.${t}`])
   if (notInSnapshot.length) console.warn(`⚠ לא בצילום, לא ישוחזרו: ${notInSnapshot.join(', ')}`)
 
+  // ✏️ 15/10/2026 (בודק נפרד, חובה ב): --apply דורס את סט-המחיקה החי. אם יש בו נתונים, הם חייבים
+  // להיות מגובים בצילום טרי שתואם למסד (אותו שומר כמו freeze:wipe) — אחרת כל מה שנוצר מאז הצילום
+  // שממנו משחזרים נעלם בלי דרך חזרה. מסד שכבר נמחק (סט-המחיקה ריק) — אין מה לאבד, אין צורך בשומר.
+  const root = args.snapshots ? resolveDir(args.snapshots) : defaultSnapshotRoot()
+  const guardLiveData = async () => {
+    const liveRows = await tableStats(
+      Object.fromEntries(wipe.map((t) => [`public.${t}`, qualify('public', t)])),
+    )
+    if (Object.values(liveRows).every((x) => x.rows === 0)) return []
+    return checkFreshSnapshotGuard(root, [...publicLive.keys()], wipe)
+  }
+  const marker = join(dir, 'restore-in-progress.json')
+  const resuming = existsSync(marker)
+  if (resuming) console.warn(`⚠ נמצא ${marker} — ממשיכים שחזור שנקטע מאותו צילום (השומר מדולג).`)
+  const refuse = resuming ? [] : await guardLiveData()
+  if (refuse.length) {
+    throw new Error(
+      `השחזור סורב — במסד יש נתונים שאין להם גיבוי טרי: ${refuse.join(' · ')}. ` +
+        'הריצו קודם npm run freeze:snapshot, ואז שוב את הפקודה הזו.',
+    )
+  }
+
   await requirePhrase(RESTORE_PHRASE)
+  const again = resuming ? [] : await guardLiveData()
+  if (again.length) throw new Error(`השחזור סורב אחרי ההקלדה: ${again.join(' · ')}`)
+  writeFileSync(marker, `${JSON.stringify({ startedAt: new Date().toISOString() })}\n`)
 
   const list = restoreSet.map((t) => `public.${ident(t)}`).join(', ')
   await sql(`set local session_replication_role = replica;\ntruncate table ${list};`)
@@ -201,7 +245,7 @@ async function apply(dir, manifest, args) {
     })
     console.log(`  public.${table.padEnd(40)} ${String(n).padStart(6)}`)
   }
-  await restoreSequences(manifest)
+  await restoreSequences(manifest, restoreSet)
   await restoreAuth(dir, manifest)
   console.log(`  קבצי-אחסון שהועלו מחדש: ${await restoreStorage(dir, manifest)}`)
 
@@ -217,6 +261,7 @@ async function apply(dir, manifest, args) {
   const users = await sql(`select count(*)::int as n from auth.users`)
   console.log(`  auth.users חי: ${users[0].n} (בצילום: ${manifest.tables['auth.users']?.rows})`)
   if (failed.length) return 1
+  rmSync(marker, { force: true })
   return drift.length ? 3 : 0
 }
 

@@ -13,24 +13,14 @@
 
 import { sql } from './api.mjs'
 import {
+  checkFreshSnapshotGuard,
   defaultSnapshotRoot,
-  listSnapshotCandidates,
   listTables,
   requirePhrase,
   resolveDir,
   tableStats,
 } from './common.mjs'
-import {
-  KEEP,
-  WIPE_PHRASE,
-  compareStats,
-  formatComparison,
-  ident,
-  parseArgs,
-  partitionTables,
-  pickFreshSnapshot,
-  qualify,
-} from './lib.mjs'
+import { KEEP, WIPE_PHRASE, ident, parseArgs, partitionTables, qualify } from './lib.mjs'
 
 function printPlan(wipe, keep, missingKeep) {
   console.log(`\nיימחקו (TRUNCATE) — ${wipe.length} טבלאות:`)
@@ -41,33 +31,6 @@ function printPlan(wipe, keep, missingKeep) {
   console.log('\nלא נגיעה בכלל: auth.*, storage.*, seed_snapshot.*, סכמה ופונקציות.')
 }
 
-// מחזיר רשימת סיבות-סירוב (ריקה = מותר למחוק).
-async function checkGuards(root, publicTables, wipe) {
-  const { chosen, rejected } = pickFreshSnapshot(listSnapshotCandidates(root), Date.now())
-  for (const r of rejected) console.log(`  נדחה: ${r.dir} — ${r.reason}`)
-  if (!chosen) return [`אין צילום תקף מ-24 השעות האחרונות ב-${root}`]
-  console.log(`  צילום נבחר: ${chosen.dir} (${chosen.manifest.createdAt})`)
-
-  const reasons = []
-  const notInManifest = wipe.filter((t) => !chosen.manifest.tables[`public.${t}`])
-  if (notInManifest.length) reasons.push(`טבלאות שלא צולמו: ${notInManifest.join(', ')}`)
-
-  const keys = Object.fromEntries(publicTables.map((t) => [`public.${t}`, qualify('public', t)]))
-  const live = await tableStats(keys)
-  const expected = {}
-  for (const t of publicTables) {
-    const m = chosen.manifest.tables[`public.${t}`]
-    // md5 נדרש רק לטבלאות שנמחקות; לשמורות — מספר-שורות (הן לא נמחקות, אז שינוי-ערך לא אובד).
-    if (m) expected[`public.${t}`] = { rows: m.rows, md5: wipe.includes(t) ? m.md5 : null }
-  }
-  const bad = compareStats(expected, live).filter((r) => r.status !== 'OK')
-  if (bad.length) {
-    console.log(formatComparison(bad))
-    reasons.push(`${bad.length} טבלאות השתנו מאז הצילום — צלמו מחדש`)
-  }
-  return reasons
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   const root = args.snapshots ? resolveDir(args.snapshots) : defaultSnapshotRoot()
@@ -76,7 +39,7 @@ async function main() {
   printPlan(wipe, keep, missingKeep)
 
   console.log('\nבדיקת שומרים:')
-  const reasons = await checkGuards(root, publicTables, wipe)
+  const reasons = await checkFreshSnapshotGuard(root, publicTables, wipe)
   for (const r of reasons) console.log(`  ✗ ${r}`)
   if (!reasons.length) console.log('  ✓ כל השומרים עברו')
 
@@ -86,6 +49,9 @@ async function main() {
   }
   if (reasons.length) throw new Error('המחיקה סורבה — לא בוצע שום שינוי.')
   await requirePhrase(WIPE_PHRASE)
+  // שוב, אחרי ההקלדה: בין הבדיקה הראשונה לבין ההקלדה מישהו יכול היה לכתוב למסד.
+  const again = await checkFreshSnapshotGuard(root, publicTables, wipe)
+  if (again.length) throw new Error(`המחיקה סורבה אחרי ההקלדה: ${again.join(' · ')}`)
 
   // טרנזקציה אחת: replica כדי שאף טריגר TRUNCATE (יומן/מייל) לא ירוץ. בלי CASCADE בכוונה —
   // אם טבלה שמורה מצביעה על טבלה נמחקת, Postgres ייכשל ולא ימחק "בשקט" גם אותה.
