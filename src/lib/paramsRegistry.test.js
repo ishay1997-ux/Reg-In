@@ -88,15 +88,15 @@ const LIVE_SEED_PARAM_NAMES = {
     'תבנית_מייל_שחרור_משמרת',
     'תבנית_תזכורת_משמרת',
   ],
-  integration_tech: ['מייל_משרד_רואי_חשבון'],
+  integration_tech: ['מייל_משרד_רואי_חשבון', 'עדכון_סטטוסים_לילי_פעיל'],
 }
 
 const LIVE_SEED_NAMES_FLAT = Object.values(LIVE_SEED_PARAM_NAMES).flat()
 
-describe('PARAM_REGISTRY — 50 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
-  it('50 שורות בדיוק', () => {
-    expect(PARAM_REGISTRY).toHaveLength(50)
-    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(50)
+describe('PARAM_REGISTRY — 51 שורות, זהות-בית לאוכלוסיית-היעד (שני כיוונים)', () => {
+  it('51 שורות בדיוק', () => {
+    expect(PARAM_REGISTRY).toHaveLength(51)
+    expect(LIVE_SEED_NAMES_FLAT).toHaveLength(51)
   })
 
   it('כל שם במרשם קיים בזרע החי (כיוון א׳ — לא נשאר שם-רפאים במרשם)', () => {
