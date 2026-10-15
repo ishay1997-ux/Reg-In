@@ -90,6 +90,11 @@ export function ToastProvider({ children }) {
       <div
         dir="rtl"
         data-toast-region=""
+        // לחיצה על הודעה לא "מתפשטת" לדף: Radix (‏DismissableLayer, ‏deferPointerDownOutside) מחליט אם
+        // לסגור חלון פתוח רק ב-click על ה-document — ובאותו רגע ה-X כבר הסיר את ההודעה מה-DOM, כך
+        // שבדיקת `closest('[data-toast-region]')` נכשלת. ‏stopPropagation הוא המנגנון ש-Radix עצמו מכבד
+        // ("interaction intercepted"). נמדד באתר החי 15/10/2026: בלעדיו ה-X סגר גם את החלון.
+        onClick={(event) => event.stopPropagation()}
         className="pointer-events-auto fixed bottom-4 left-1/2 z-[60] flex w-full max-w-sm -translate-x-1/2 flex-col items-center gap-2 px-4"
       >
         {toasts.map((t) => {
